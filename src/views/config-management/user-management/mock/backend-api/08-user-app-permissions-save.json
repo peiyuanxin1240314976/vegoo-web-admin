@@ -1,0 +1,44 @@
+{
+  "_comment": "配置管理 - 用户管理 - 应用权限弹窗保存（allowedAppUuids）。",
+  "fieldDescription": {
+    "request": {
+      "userId": { "type": "number", "required": true, "description": "用户主键。" },
+      "allowedAppUuids": {
+        "type": "string[]",
+        "required": true,
+        "description": "允许访问的应用 appUuid 列表；空数组表示全部不选（以产品/后端语义为准）。"
+      }
+    },
+    "response": {
+      "success": { "type": "boolean", "required": true, "description": "是否保存成功。" }
+    }
+  },
+  "sampleRequest": {
+    "userId": 101,
+    "allowedAppUuids": [
+      "550e8400-e29b-41d4-a716-446655440001",
+      "550e8400-e29b-41d4-a716-446655440002"
+    ]
+  },
+  "sampleResponse": {
+    "success": true
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/config-management/user/app-permissions",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "{ userId, allowedAppUuids }",
+    "responseBody": "HTTP 200 且 code=200 时 data 为 { success: boolean }（与 sampleResponse 同形）。"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "弹窗内点击保存",
+        "detail": "提交当前多选结果与 userId。",
+        "prerequisite": "options 已加载成功"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "保存中禁用重复提交。"
+  }
+}

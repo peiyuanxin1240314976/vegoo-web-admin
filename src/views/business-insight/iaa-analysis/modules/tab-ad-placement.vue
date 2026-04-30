@@ -59,9 +59,10 @@
           </template>
           <div v-if="loading" class="iaa-chart-sk iaa-chart-sk--line"></div>
           <ArtTable
-            v-else
+            v-else-if="hasTableData"
             :data="tableData"
             :columns="tableColumns"
+            :max-height="800"
             row-key="placementName"
             :stripe="true"
             :border="false"
@@ -76,6 +77,7 @@
               </span>
             </template>
           </ArtTable>
+          <ElEmpty v-else class="iaa-panel-empty iaa-panel-empty--table" description="暂无数据" />
         </ElCard>
       </div>
 
@@ -129,12 +131,22 @@
   import type { ColumnOption } from '@/types'
   import type { IaaFilterState, IaaPlacementTabData, IaaPlacementTableRow } from '../types'
   import { fetchIaaPlacementTabData } from '@/api/business-insight'
+  import { useIaaPageLoading } from '../composables/useIaaPageLoading'
 
   defineOptions({ name: 'IaaTabAdPlacement' })
 
   const props = defineProps<{ filter: IaaFilterState }>()
 
   const loading = ref(false)
+  const pageLoading = useIaaPageLoading()
+
+  watch(loading, (v) => {
+    pageLoading?.setTabLoading('adPlacement', v)
+  })
+
+  onMounted(() => {
+    pageLoading?.setTabLoading('adPlacement', loading.value)
+  })
 
   const metricTabs = [
     { key: 'revenue', label: '收入' },
@@ -148,6 +160,7 @@
 
   const kpis = computed(() => tabData.value?.kpis ?? [])
   const tableData = computed(() => tabData.value?.tableRows ?? [])
+  const hasTableData = computed(() => tableData.value.length > 0)
   const placementInsight = computed(() => tabData.value?.placementInsight ?? '')
   const donutList = computed(() => tabData.value?.donut ?? [])
 
@@ -191,12 +204,6 @@
       label: '展示用户',
       minWidth: 80,
       formatter: (r: IaaPlacementTableRow) => r.impressionUsers.toLocaleString()
-    },
-    {
-      prop: 'fillRate',
-      label: '充填率',
-      minWidth: 72,
-      formatter: (r: IaaPlacementTableRow) => `${r.fillRate}%`
     },
     { prop: 'status', label: '状态', minWidth: 72, useSlot: true, slotName: 'status' }
   ])
@@ -497,6 +504,10 @@
     border: 1px solid var(--default-border);
     border-radius: 8px;
 
+    &:not(.iaa-kpi--sk) {
+      @include iaa-panel-hover;
+    }
+
     &[data-accent='teal'] .iaa-kpi__value {
       color: var(--art-primary);
     }
@@ -715,6 +726,17 @@
     :deep(.el-table__body tr:hover td.el-table__cell) {
       background: rgb(59 130 246 / 8%) !important;
     }
+  }
+
+  .iaa-panel-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .iaa-panel-empty--table {
+    min-height: 240px;
   }
 
   /* ——— 状态 ——— */

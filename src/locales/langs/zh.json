@@ -228,15 +228,8 @@
     "cockpit": {
       "title": "经营驾驶舱"
     },
-    "dashboard": {
-      "title": "投放管理",
-      "console": "工作台",
-      "bigScreen": "投放分析",
-      "financeScreen": "广告平台分析",
-      "deepAnalysis": "深度分析"
-    },
     "monetization": {
-      "title": "变现管理",
+      "title": "变现管理(M)",
       "monetizationAnalysis": "变现分析",
       "appHealth": "App健康管理",
       "deepAnalysis": "深度分析",
@@ -244,7 +237,7 @@
       "ltvPrediction": "LTV预测与用户分层"
     },
     "productOperations": {
-      "title": "商品运营",
+      "title": "商品运营(M)",
       "reviewsRatingsMonitor": "评论与评分监控",
       "orderRefundAnalysis": "订单退款分析",
       "thirdPartyStores": "三方商店",
@@ -266,14 +259,14 @@
       },
       "iapAnalysis": "IAP 分析",
       "iaaAnalysis": "IAA 分析",
-      "ecpmAnalysis": "ECPM分析",
-      "adPlatformDetail": "广告平台详情",
+      "ecpmAnalysis": "ECPM分析(D)",
+      "adPlatformDetail": "广告平台详情(M)",
       "adPlatformInfo": "广告平台信息",
       "adPlatformDetailEmpty": "在此汇总各广告平台维度数据，可进入下级查看应用侧表现。",
       "backToAdPlatformDetail": "返回广告平台详情",
       "appAdPlatformPerformance": "应用广告平台表现",
       "appAdPlatformPerformanceEmpty": "页面内容建设中",
-      "revenueDeviation": "预估收入偏差",
+      "revenueDeviation": "预估收入偏差(D)",
       "iaaTabs": {
         "adType": "广告类型",
         "adPlatform": "广告平台",
@@ -284,7 +277,7 @@
       }
     },
     "productInsight": {
-      "title": "产品洞察",
+      "title": "产品洞察(M)",
       "businessReport": "报告管理"
     },
     "result": {
@@ -299,28 +292,29 @@
       "serverError": "500"
     },
     "accountManagement": {
-      "title": "账户管理",
+      "title": "账户管理(M)",
       "adAccount": "广告账户",
       "agency": "代理商管理",
       "bcManagement": "BC管理",
-      "openAccount": "开户管理"
+      "openAccount": "开户主体管理"
     },
     "configManagement": {
       "title": "平台管理",
       "applicationManagement": "应用管理",
-      "appStoreManagement": "应用商店管理",
+      "appStoreManagement": "应用商店管理(M)",
       "appAssignment": "应用分配",
       "optimizerManagement": "优化师管理",
       "userManagement": "用户管理",
       "roleManagement": "角色与权限管理",
-      "accountManagement": "账户管理",
-      "adAccountManagement": "广告账户管理",
-      "countryManagement": "国家管理",
-      "exchangeRateManagement": "汇率管理",
-      "costCoefficient": "成本系数管理",
+      "accountManagement": "账户管理(M)",
+      "adAccountManagement": "广告账户管理(弃)",
+      "countryManagement": "国家管理(M)",
+      "exchangeRateManagement": "汇率管理(M)",
+      "costCoefficient": "成本系数管理(M)",
       "perfConfig": "绩效配置",
-      "orderImport": "导入商店订单",
-      "orderImportReport": "导入报告"
+      "orderImport": "导入商店订单(M)",
+      "orderImportReport": "导入报告(M)",
+      "notificationConfig": "通知配置"
     },
     "userGrowth": {
       "title": "用户增长",
@@ -332,19 +326,19 @@
       "campaignDetail": "广告系列详情",
       "adDetail": "广告详情",
       "adEdit": "广告编辑",
-      "conversionManagement": "转化管理",
-      "agencyAnalysis": "代投分析",
-      "paidAnalysis": "付费分析",
-      "performanceAnalysis": "人员成效",
+      "conversionManagement": "转化管理(M)",
+      "agencyAnalysis": "代投分析(D)",
+      "paidAnalysis": "付费分析(D)",
+      "performanceAnalysis": "人员成效(M)",
       "performanceComparison": "对比分析",
-      "realTimeData": "实时数据",
-      "overallRecovery": "整体回收",
-      "comprehensiveAnalysis": "综合分析",
+      "realTimeData": "实时数据(D)",
+      "overallRecovery": "整体回收(M)",
+      "comprehensiveAnalysis": "综合分析(D)",
       "alertManagement": "预警管理",
       "platformAnalysisDetail": "应用详情"
     },
     "system": {
-      "title": "系统管理",
+      "title": "系统管理(M)",
       "userCenter": "个人中心",
       "menu": "菜单管理"
     }
@@ -440,12 +434,13 @@
     "filterApp": "全部应用",
     "filterConversionType": "全部转化类型",
     "filterStatus": "全部状态",
-    "searchPlaceholder": "搜索转化名称、应用包名...",
+    "searchPlaceholder": "搜索转化名称、应用ID...",
     "addMapping": "新增映射",
     "totalRecords": "共 {n} 条记录",
     "platform": "终端平台",
     "mccAccount": "MCC 账户",
     "appPackage": "应用包名",
+    "appId": "应用ID",
     "conversionName": "转化名称",
     "conversionId": "转化 ID",
     "platformConversionType": "广告平台转化类型",
@@ -480,6 +475,7 @@
     "deleteDialogDangerLine2": "删除后，该转化事件将不再在系统中显示",
     "deleteDialogConfirmButton": "确认删除",
     "adPlatform": "广告平台",
+    "selectTerminalPlatform": "请选择终端平台",
     "selectAdPlatform": "请选择广告平台",
     "selectApp": "请选择应用",
     "selectOrEnterConversionName": "请选择或输入转化名称",
@@ -487,15 +483,24 @@
     "confirm": "确定",
     "saveChanges": "保存修改",
     "cancel": "取消",
+    "mccAccountPlaceholder": "请输入 MCC 账户",
+    "hintMccManual": "请填写广告平台侧的 MCC / 经理账户标识",
+    "billingCpi": "CPI",
+    "billingCpa": "CPA",
+    "billingCpe": "CPE",
     "hintAfterSelectPlatform": "选择广告平台后自动加载",
     "hintAppFromPlatform": "从广告平台接口实时获取",
     "hintConversionNameFromPlatform": "广告平台返回的原始转化名称",
-    "hintConversionIdAuto": "选择转化名称后自动获取",
+    "hintConversionIdAuto": "从列表选择时带入平台转化 ID；手动输入转化名称后，失焦时生成时间戳作为转化 ID",
     "hintSystemDisplayName": "内部显示用，建议中文简称",
     "conversionIdAutoFilled": "自动填入",
     "remarksOptional": "可选，输入备注信息",
     "remarks": "备注",
     "conversionType": "转化类型",
+    "conversionDisplayType": "转化展示分类",
+    "selectConversionType": "请选择转化类型",
+    "loadConversionTypeOptionsFailed": "转化类型选项加载失败，已使用本地备选列表",
+    "loadConversionTypeOptionsEmpty": "转化类型接口返回为空，已使用本地备选列表",
     "conversionTypePaid": "付费转化",
     "conversionTypeActivation": "激活转化",
     "conversionTypeBehavior": "行为转化",
@@ -571,7 +576,7 @@
         "deviationCoef": "难度系数",
         "minProfit": "最低利润",
         "adSpend": "广告支出",
-        "calculatedSpend": "预算",
+        "calculatedSpend": "计算消耗",
         "roi": "ROI",
         "commissionSpend": "代投消耗",
         "estimatedProfit": "预估利润",
@@ -580,6 +585,19 @@
         "status": "状态"
       }
     },
+    "tableSwitch": {
+      "ariaLabel": "绩效表切换",
+      "period": "按应用绩效评估",
+      "recent": "近7天绩效评估",
+      "summaryLabel": "合计/均值",
+      "empty": "暂无应用绩效数据",
+      "total": "共 {n} 条",
+      "pageSize": "{n}条/页",
+      "allLabel": "全部",
+      "statusRunning": "投放中",
+      "statusPaused": "已暂停",
+      "statusWarning": "预警中"
+    },
     "appTableHeader": {
       "hint": "计算日期：2026-01-01 至 2026-03-04｜应用层级预估利润基于真实收入计算，广告平台预估利润基于回收计算"
     },
@@ -587,10 +605,73 @@
       "title": "说明：",
       "items": [
         "应用层级的预估利润计算于真实收入统计，广告平台的预估利润需于回收计费。",
-        "对于 LAP 应用，按 ROI 评估时，基于应用层级 ROI 来判断是否达标。",
+        "对于 IAP 应用，按 ROI 评估时，基于应用层级 ROI 来判断是否达标。",
         "结算周期为自然月/自然季度；历史绩效数据为示例，后续可接入真实接口并调整展示口径。",
         "地域层级或分层规则（如分层范围、规则）随投放分层需求与判断范式调整。"
       ]
+    }
+  },
+  "realtimeDashboard": {
+    "header": {
+      "lastUpdate": "⏱ 最后更新：{time}",
+      "waiting": "—",
+      "manualRefresh": "↻ 手动刷新",
+      "autoRefreshSettings": "⚙ 设置自动刷新"
+    },
+    "banner": {
+      "autoRefreshHint": "实时数据每 {minutes} 分钟会自动更新一次；如需最新数据请点击",
+      "manualRefresh": "手动刷新",
+      "shortcut": "《快捷》",
+      "nextAutoRefresh": "下次自动刷新："
+    },
+    "filters": {
+      "app": "应用筛选",
+      "allAppsPlaceholder": "全部应用",
+      "searchPlaceholder": "搜索类别/应用名称/应用简称",
+      "adPlatform": "广告平台",
+      "allPlatformsPlaceholder": "全部广告平台",
+      "query": "查询"
+    },
+    "skeleton": {
+      "bottomTitle": "实时小时消耗趋势对比"
+    },
+    "kpi": {
+      "onlineApps": "在线应用数",
+      "unitCount": "个",
+      "totalApps": "共 {n} 个应用",
+      "todaySpend": "全应用今日花费",
+      "wowChange": "周环比",
+      "roiAvg": "全应用实时ROI均值",
+      "roiTargetLine": "达标线 {n}%",
+      "badgeReach": "达标",
+      "warningApps": "预警应用",
+      "warnOverBudget": "超预算",
+      "warnLowActive": "低活跃"
+    },
+    "card": {
+      "todaySpend": "今日花费",
+      "todayInstalls": "今日安装",
+      "liveCpi": "实时CPI",
+      "activeSeriesLabel": "活跃系列",
+      "activeSeries": "{n} 个",
+      "currentRoi": "当前量目ROI"
+    },
+    "chart": {
+      "empty": "暂无数据",
+      "roiSeries": "ROI",
+      "bottomTitle": "实时小时消耗趋势对比"
+    },
+    "dialog": {
+      "title": "自动刷新间隔",
+      "minutesLabel": "间隔（分钟）",
+      "hint": "可设置 1–60 分钟，默认 30 分钟。"
+    },
+    "composable": {
+      "filterLoadFailed": "筛选项加载失败",
+      "dashboardLoadFailed": "实时数据加载失败",
+      "appDetailLoadFailed": "应用详情加载失败",
+      "allApps": "全部应用",
+      "allAdPlatforms": "全部广告平台"
     }
   },
   "table": {

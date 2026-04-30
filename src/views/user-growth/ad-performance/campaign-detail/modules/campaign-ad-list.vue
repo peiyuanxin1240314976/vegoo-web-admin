@@ -10,7 +10,7 @@
             type="button"
             class="cal__tab"
             :class="{ 'is-active': activeStatus === tab.value }"
-            @click="activeStatus = tab.value"
+            @click="onSwitchStatus(tab.value)"
           >
             {{ tab.label }}
           </button>
@@ -18,7 +18,7 @@
       </div>
     </template>
 
-    <ElTable :data="filteredRows" size="small" style="width: 100%" stripe>
+    <ElTable :data="props.rows" size="small" style="width: 100%" stripe>
       <ElTableColumn prop="adGroupName" label="广告组" min-width="180">
         <template #default="{ row }">
           <span class="cal__ad-name">{{ row.adGroupName }}</span>
@@ -48,11 +48,15 @@
         <template #default="{ row }"> ${{ row.cpi.toFixed(2) }} </template>
       </ElTableColumn>
 
-      <ElTableColumn label="ROI" width="80" align="right">
+      <ElTableColumn label="ROI1" width="88" align="right">
         <template #default="{ row }">
-          <span :class="row.roi >= 100 ? 'cal__roi--good' : 'cal__roi--warn'">
-            {{ row.roi }}%
-          </span>
+          <span :class="roiToneClass(row.roi1)">{{ formatRoiPct(row.roi1) }}</span>
+        </template>
+      </ElTableColumn>
+
+      <ElTableColumn label="总ROI" width="88" align="right">
+        <template #default="{ row }">
+          <span :class="roiToneClass(row.roiTotal)">{{ formatRoiPct(row.roiTotal) }}</span>
         </template>
       </ElTableColumn>
 
@@ -62,14 +66,14 @@
             <button type="button" class="cal__action-btn" title="查看" @click="goToAdDetail(row)">
               <el-icon><View /></el-icon>
             </button>
-            <button
+            <!-- <button
               type="button"
               class="cal__action-btn cal__action-btn--warn"
               title="暂停"
               @click.stop="onPauseAd(row)"
             >
               <el-icon><VideoPause /></el-icon>
-            </button>
+            </button> -->
           </div>
         </template>
       </ElTableColumn>
@@ -78,23 +82,32 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed } from 'vue'
+  import { ref, watch } from 'vue'
   import { useRouter } from 'vue-router'
-  import { ElMessage } from 'element-plus'
-  import { View, VideoPause } from '@element-plus/icons-vue'
-  import { fetchCampaignDetailAdGroupAction } from '@/api/user-growth/ad-performance'
+  // import { ElMessage } from 'element-plus'
+  import {
+    View
+    // VideoPause
+  } from '@element-plus/icons-vue'
+  // import { fetchCampaignDetailAdGroupAction } from '@/api/user-growth/ad-performance'
   import type { CampaignAdRow } from '../types'
 
   defineOptions({ name: 'CampaignAdList' })
 
-  const emit = defineEmits<{ 'refresh-ad-list': [] }>()
+  type StatusFilter = 'all' | 'active' | 'paused' | 'completed'
+
+  const emit = defineEmits<{
+    'refresh-ad-list': []
+    'change-status': [StatusFilter]
+  }>()
 
   const props = withDefaults(
     defineProps<{
       rows?: CampaignAdRow[]
       campaignId?: string
+      status?: StatusFilter
     }>(),
-    { rows: () => [], campaignId: '' }
+    { rows: () => [], campaignId: '', status: 'all' }
   )
 
   const router = useRouter()
@@ -106,27 +119,25 @@
     })
   }
 
-  async function onPauseAd(row: CampaignAdRow) {
-    const cid = props.campaignId
-    if (!cid) {
-      ElMessage.error('缺少广告系列 ID')
-      return
-    }
-    try {
-      const res = await fetchCampaignDetailAdGroupAction({
-        campaignId: cid,
-        adId: row.id,
-        actionType: 'pause'
-      })
-      if (res.message) ElMessage.success(res.message)
-      else ElMessage.success('操作成功')
-      emit('refresh-ad-list')
-    } catch {
-      ElMessage.error('操作失败')
-    }
-  }
-
-  type StatusFilter = 'all' | 'active' | 'paused' | 'completed'
+  // async function onPauseAd(row: CampaignAdRow) {
+  //   const cid = props.campaignId
+  //   if (!cid) {
+  //     ElMessage.error('缺少广告系列 ID')
+  //     return
+  //   }
+  //   try {
+  //     const res = await fetchCampaignDetailAdGroupAction({
+  //       campaignId: cid,
+  //       adId: row.id,
+  //       actionType: 'pause'
+  //     })
+  //     if (res.message) ElMessage.success(res.message)
+  //     else ElMessage.success('操作成功')
+  //     emit('refresh-ad-list')
+  //   } catch {
+  //     ElMessage.error('操作失败')
+  //   }
+  // }
 
   const statusTabs: { value: StatusFilter; label: string }[] = [
     { value: 'all', label: '全部' },
@@ -135,12 +146,20 @@
     { value: 'completed', label: '完成' }
   ]
 
-  const activeStatus = ref<StatusFilter>('all')
+  const activeStatus = ref<StatusFilter>(props.status)
 
-  const filteredRows = computed(() => {
-    if (activeStatus.value === 'all') return props.rows
-    return props.rows.filter((r) => r.status === activeStatus.value)
-  })
+  watch(
+    () => props.status,
+    (v) => {
+      if (v && activeStatus.value !== v) activeStatus.value = v
+    }
+  )
+
+  function onSwitchStatus(v: StatusFilter) {
+    if (activeStatus.value === v) return
+    activeStatus.value = v
+    emit('change-status', v)
+  }
 
   function statusLabel(s: string) {
     const map: Record<string, string> = { active: '启用', paused: '暂停', completed: '完成' }
@@ -149,6 +168,15 @@
 
   function formatK(v: number): string {
     return v >= 1000 ? `${(v / 1000).toFixed(0)}K` : String(v)
+  }
+
+  function formatRoiPct(v: number): string {
+    if (!Number.isFinite(v)) return '—'
+    return `${v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`
+  }
+
+  function roiToneClass(v: number): string {
+    return Number.isFinite(v) && v >= 100 ? 'cal__roi--good' : 'cal__roi--warn'
   }
 </script>
 

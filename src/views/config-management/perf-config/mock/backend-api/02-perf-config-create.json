@@ -1,5 +1,5 @@
 {
-  "_comment": "新建绩效配置。",
+  "_comment": "新建绩效配置。step1 维度与 cockpit meta-filter-options 的 value 对齐。",
   "fieldDescription": {
     "request": {
       "step1": { "type": "PerfStep1Form", "required": true, "description": "基础信息。" },
@@ -11,15 +11,55 @@
         "description": "保存方式。"
       }
     },
+    "PerfStep1Form": {
+      "appId": {
+        "type": "string",
+        "required": true,
+        "description": "应用；cockpit appOptions[].value。"
+      },
+      "appName": { "type": "string", "required": true, "description": "应用展示名。" },
+      "platform": {
+        "type": "string",
+        "required": true,
+        "description": "终端平台；cockpit platformOptions[].value。"
+      },
+      "sourceList": {
+        "type": "string[]",
+        "required": true,
+        "description": "广告平台多选；元素为 cockpit sourceOptions[].value；至少 1 项。"
+      },
+      "runStatus": {
+        "type": "string",
+        "required": true,
+        "enum": ["running", "paused", "stopped"],
+        "description": "投放状态。"
+      },
+      "allowMulti": { "type": "boolean", "required": true, "description": "是否允许多投。" }
+    },
+    "PerfStep2Form": {
+      "evalMethod": {
+        "type": "string",
+        "required": true,
+        "enum": ["ROI", "CPA"],
+        "description": "评估方式。"
+      },
+      "evalDays": { "type": "number", "required": true, "description": "评估天数。" },
+      "targetRate": { "type": "number", "required": true, "description": "达标要求。" },
+      "minRate": { "type": "number", "required": true, "description": "最低要求。" },
+      "difficultyFactor": { "type": "number", "required": true, "description": "难度系数。" },
+      "minProfit": { "type": "number|null", "required": true, "description": "最低利润。" },
+      "extraCondition": { "type": "string", "required": true, "description": "附加条件。" }
+    },
     "response": {
       "id": { "type": "string", "required": true, "description": "新增配置 ID。" }
     }
   },
   "sampleRequest": {
     "step1": {
-      "appName": "BloodSugar",
-      "appPlatform": "android",
-      "adPlatforms": ["Google"],
+      "appId": "com.blood.sugar.monitor",
+      "appName": "BloodSugar2",
+      "platform": "0",
+      "sourceList": ["1"],
       "runStatus": "running",
       "allowMulti": true
     },
@@ -37,10 +77,12 @@
   "sampleResponse": {
     "data": {
       "id": "PF-009",
-      "appName": "BloodSugar",
+      "appId": "com.blood.sugar.monitor",
+      "appName": "BloodSugar2",
       "appIcon": "#3B82F6",
-      "appPlatform": "android",
-      "adPlatform": "Google",
+      "platform": "0",
+      "source": "1",
+      "sourceList": ["1"],
       "runStatus": "running",
       "allowMulti": true,
       "activeVersion": {

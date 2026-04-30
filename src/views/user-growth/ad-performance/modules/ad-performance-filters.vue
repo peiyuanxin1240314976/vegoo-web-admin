@@ -1,29 +1,31 @@
 <template>
   <div class="ad-performance-filters">
     <div class="ad-performance-filters__left">
-      <div class="ad-performance-filter-chip ad-performance-filter-chip--static">
-        <ElIcon class="ad-performance-filter-chip__icon"><Calendar /></ElIcon>
-        <span class="ad-performance-filter-chip__label">
-          {{ tr('adPerformance.filterDate', '日期') }}
-        </span>
-        <span class="ad-performance-filter-chip__value">{{ dateRangeLabel }}</span>
-      </div>
+      <AppDatePicker
+        v-model="dateRangeValue"
+        type="daterange"
+        value-format="YYYY-MM-DD"
+        range-separator="~"
+        :start-placeholder="tr('adPerformance.startDate', '开始日期')"
+        :end-placeholder="tr('adPerformance.endDate', '结束日期')"
+        class="ad-performance-date-picker"
+        :prefix-icon="Calendar"
+      />
 
-      <ElSelect
-        :model-value="draft.app"
+      <AppPlatformSearchSelect
+        :model-value="draft.appId"
+        mode="app"
         :placeholder="tr('adPerformance.filterApp', '应用')"
-        class="ad-performance-filter-select"
-        :prefix-icon="Grid"
+        :search-placeholder="tr('adPerformance.filterApp', '应用')"
+        class="ad-performance-filter-select ad-performance-filter-select--app"
+        input-class="ad-performance-filter-select__input"
+        dropdown-class="ad-performance-filter-popper"
+        :setting-apps="settingAppsForSelect"
+        :height="36"
+        :min-width="134"
+        :max-width="220"
         @update:model-value="onAppChange"
-      >
-        <ElOption :label="appAllLabel" value="" />
-        <ElOption
-          v-for="opt in appOptionsForSelect"
-          :key="opt.value"
-          :label="opt.label"
-          :value="opt.value"
-        />
-      </ElSelect>
+      />
 
       <ElSelect
         :model-value="draft.adPlatform"
@@ -73,70 +75,44 @@
         />
       </ElSelect>
 
-      <ElButton
-        round
-        class="ad-performance-filter-action-btn ad-performance-filter-action-btn--query"
-        :disabled="!isDirty"
-        @click="onQuery"
-      >
+      <ElButton type="primary" plain round @click="onQuery">
         {{ tr('adPerformance.query', '查询') }}
       </ElButton>
-      <ElButton
-        round
-        class="ad-performance-filter-action-btn ad-performance-filter-action-btn--export"
-        @click="$emit('export')"
-      >
+      <!-- <ElButton type="primary" plain round @click="$emit('export')">
         {{ tr('adPerformance.exportReport', '导出报表') }}
-      </ElButton>
+      </ElButton> -->
       <ElButton
-        round
         aria-label="刷新数据"
-        class="ad-performance-filter-action-btn ad-performance-filter-action-btn--refresh"
+        type="primary"
+        plain
+        round
         :icon="RefreshRight"
         @click="$emit('refresh')"
       />
-    </div>
-
-    <div
-      class="ad-performance-date-slider"
-      :style="dateSliderStyle"
-      role="tablist"
-      aria-label="日期筛选"
-    >
-      <div class="ad-performance-date-slider__thumb" aria-hidden="true" />
-      <button
-        v-for="opt in dateRangeOptions"
-        :key="opt.key"
-        type="button"
-        class="ad-performance-date-slider__item"
-        :class="{ 'is-active': opt.key === activeDateKey }"
-        role="tab"
-        :aria-selected="opt.key === activeDateKey"
-        @click="onDateChange(opt.key)"
-      >
-        {{ opt.label }}
-      </button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { Calendar, Flag, Grid, Promotion, RefreshRight, User } from '@element-plus/icons-vue'
+  import { Calendar, Flag, Promotion, RefreshRight, User } from '@element-plus/icons-vue'
   import { computed, ref, watch } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { useI18n } from 'vue-i18n'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
+  import { useCockpitMetaFilterOptions } from '@/composables/use-cockpit-meta-filter'
+  import type { CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
   import type { AdPerformanceFilter, AdPerformanceMetaFilterResponse } from '../types'
-  import { cloneAppDate, formatYYYYMMDD, getAppNow, getAppTodayYYYYMMDD } from '@/utils/app-now'
 
   defineOptions({ name: 'AdPerformanceFilters' })
 
   const { t, te } = useI18n()
   const tr = (key: string, fallback: string) => (te(key) ? t(key) : fallback)
+  const { cockpitMeta, ensureCockpitMetaLoaded } = useCockpitMetaFilterOptions()
 
   const props = withDefaults(
     defineProps<{
       filter: AdPerformanceFilter
       appCount?: number
-      /** 来自 meta-filter-options；未就绪时用本地默认选项 */
       metaOptions?: AdPerformanceMetaFilterResponse | null
     }>(),
     { appCount: 0, metaOptions: null }
@@ -150,18 +126,7 @@
 
   const draft = ref<AdPerformanceFilter>({ ...props.filter })
 
-  const isDirty = computed(() => {
-    const a = props.filter
-    const b = draft.value
-    return (
-      String(a.startDate ?? '') !== String(b.startDate ?? '') ||
-      String(a.endDate ?? '') !== String(b.endDate ?? '') ||
-      String(a.app ?? '') !== String(b.app ?? '') ||
-      String(a.adPlatform ?? '') !== String(b.adPlatform ?? '') ||
-      String(a.account ?? '') !== String(b.account ?? '') ||
-      String(a.country ?? '') !== String(b.country ?? '')
-    )
-  })
+  void ensureCockpitMetaLoaded()
 
   function onQuery() {
     emit('search', { ...draft.value })
@@ -171,44 +136,8 @@
     draft.value = { ...draft.value, ...partial }
   }
 
-  type DatePresetKey = 'today' | 'yesterday' | 'last7d' | 'month'
-
-  function resolvePresetRange(key: DatePresetKey): { startDate: string; endDate: string } {
-    const today = getAppNow()
-    if (key === 'today') {
-      const ymd = getAppTodayYYYYMMDD()
-      return { startDate: ymd, endDate: ymd }
-    }
-    if (key === 'yesterday') {
-      const d = cloneAppDate(today)
-      d.setDate(d.getDate() - 1)
-      const ymd = formatYYYYMMDD(d)
-      return { startDate: ymd, endDate: ymd }
-    }
-    if (key === 'last7d') {
-      const end = formatYYYYMMDD(today)
-      const startD = cloneAppDate(today)
-      startD.setDate(startD.getDate() - 6)
-      const start = formatYYYYMMDD(startD)
-      return { startDate: start, endDate: end }
-    }
-    // month：本月 1 号 ~ 今天
-    const end = formatYYYYMMDD(today)
-    const startD = cloneAppDate(today)
-    startD.setDate(1)
-    const start = formatYYYYMMDD(startD)
-    return { startDate: start, endDate: end }
-  }
-
-  const activeDateKey = ref<DatePresetKey>('today')
-
-  function onDateChange(key: DatePresetKey) {
-    activeDateKey.value = key
-    patchDraft(resolvePresetRange(key))
-  }
-
-  function onAppChange(v: string) {
-    patchDraft({ app: v ?? '' })
+  function onAppChange(v: string | string[]) {
+    patchDraft({ appId: v })
   }
 
   function onAdPlatformChange(v: string) {
@@ -223,36 +152,17 @@
     patchDraft({ country: v ?? '' })
   }
 
-  const dateRangeOptions = computed(() => {
-    return [
-      { key: 'today' as const, label: '今日' },
-      { key: 'yesterday' as const, label: '昨日' },
-      { key: 'last7d' as const, label: '近7天' },
-      { key: 'month' as const, label: '本月' }
-    ]
+  const dateRangeValue = computed<[string, string] | null>({
+    get() {
+      const start = draft.value.startDate?.trim()
+      const end = draft.value.endDate?.trim()
+      if (start && end) return [start, end]
+      return null
+    },
+    set(v) {
+      if (v) patchDraft({ startDate: v[0], endDate: v[1] })
+    }
   })
-
-  const dateRangeLabel = computed(() => {
-    const hit = dateRangeOptions.value.find((item) => item.key === activeDateKey.value)
-    const label = hit?.label ?? '自定义'
-    const start = draft.value.startDate?.trim() || '-'
-    const end = draft.value.endDate?.trim() || '-'
-    return `${label} ${start} ~ ${end}`
-  })
-
-  const activeDateIndex = computed(() => {
-    const idx = dateRangeOptions.value.findIndex((item) => item.key === activeDateKey.value)
-    return idx >= 0 ? idx : 0
-  })
-
-  const dateSliderStyle = computed(() => {
-    return {
-      '--date-slider-count': String(dateRangeOptions.value.length),
-      '--date-slider-index': String(activeDateIndex.value)
-    } as Record<string, string>
-  })
-
-  const appAllLabel = computed(() => (props.appCount ? `全部(${props.appCount})` : '全部'))
 
   const defaultAppOptions = [
     { value: 'Weather5', label: 'Weather5' },
@@ -275,6 +185,21 @@
     const m = props.metaOptions?.appOptions?.filter((o) => o.value !== '')
     if (m?.length) return m
     return defaultAppOptions
+  })
+
+  const settingAppsForSelect = computed<CockpitSettingAppItem[]>(() => {
+    const fromCockpit = cockpitMeta.value?.settingApps ?? []
+    if (fromCockpit.length) return fromCockpit
+
+    return appOptionsForSelect.value.map((opt, index) => ({
+      sAppId: String(opt.value ?? ''),
+      nPlatform: '',
+      platformName: '',
+      sAppName: String(opt.label ?? ''),
+      sAppShortName: String(opt.label ?? ''),
+      nCategory: `fallback-${index}`,
+      categoryName: '应用'
+    }))
   })
 
   const adPlatformOptionsForSelect = computed(() => {
@@ -300,22 +225,11 @@
     ]
   })
 
-  watch(
-    () => [draft.value.startDate, draft.value.endDate] as const,
-    () => {
-      const current = {
-        startDate: String(draft.value.startDate ?? '').trim(),
-        endDate: String(draft.value.endDate ?? '').trim()
-      }
-      const presets: DatePresetKey[] = ['today', 'yesterday', 'last7d', 'month']
-      const hit = presets.find((k) => {
-        const r = resolvePresetRange(k)
-        return r.startDate === current.startDate && r.endDate === current.endDate
-      })
-      activeDateKey.value = hit ?? 'today'
-    },
-    { immediate: true }
-  )
+  const firstAppId = computed(() => {
+    const firstSettingAppId = String(settingAppsForSelect.value[0]?.sAppId ?? '').trim()
+    if (firstSettingAppId) return firstSettingAppId
+    return String(appOptionsForSelect.value[0]?.value ?? '').trim()
+  })
 
   watch(
     () => props.filter,
@@ -324,10 +238,20 @@
     },
     { deep: true, immediate: true }
   )
+
+  watch(
+    [() => draft.value.appId, firstAppId],
+    ([appId, fallbackAppId]) => {
+      if ((Array.isArray(appId) ? appId.length > 0 : !!appId) || !fallbackAppId) return
+      patchDraft({ appId: fallbackAppId })
+    },
+    { immediate: true }
+  )
 </script>
 
 <style scoped lang="scss">
-  /* ── 整体筛选栏容器 ─────────────────────────────────────────── */
+  @use '../../styles/app-platform-select-ad-theme.scss' as apSelect;
+
   .ad-performance-filters {
     display: flex;
     flex-wrap: wrap;
@@ -346,7 +270,6 @@
       0 0 40px rgb(59 130 246 / 8%);
   }
 
-  /* ── 左侧筛选项行 ────────────────────────────────────────────── */
   .ad-performance-filters__left {
     display: flex;
     flex: 1;
@@ -356,62 +279,126 @@
     min-width: 0;
   }
 
-  /* ── 日期显示徽章 ────────────────────────────────────────────── */
-  .ad-performance-filter-chip {
-    --ad-performance-filter-accent: #10b981;
-
-    display: inline-flex;
-    gap: 7px;
-    align-items: center;
-    min-height: 40px;
-    padding: 0 14px;
-    font-size: 14px;
-    color: var(--el-text-color-regular);
-    white-space: nowrap;
-    background: rgb(16 185 129 / 8%);
-    border: 1px solid rgb(16 185 129 / 30%);
-    border-radius: 9999px;
-    box-shadow: 0 0 16px rgb(16 185 129 / 10%);
+  .ad-performance-date-picker {
+    width: 280px;
+    min-width: 280px;
+    max-width: 100%;
   }
 
-  .ad-performance-filter-chip__icon {
-    font-size: 16px;
-    color: var(--ad-performance-filter-accent);
-    filter: drop-shadow(0 0 6px rgb(16 185 129 / 55%));
+  :deep(.ad-performance-date-picker) {
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
+    --el-date-editor-width: 280px;
+    --el-date-editor-daterange-width: 280px;
   }
 
-  .ad-performance-filter-chip__label {
-    font-size: 13px;
+  :deep(.ad-performance-date-picker .el-input__wrapper),
+  :deep(.ad-performance-date-picker .el-range-editor.el-input__wrapper),
+  :deep(.ad-performance-date-picker.el-date-editor) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    border-radius: var(--el-border-radius-base, 4px) !important;
+    box-shadow: none !important;
+    transition:
+      border-color 0.22s ease,
+      box-shadow 0.22s ease,
+      background 0.22s ease;
+  }
+
+  :deep(.ad-performance-date-picker.el-date-editor) {
+    width: 280px !important;
+    min-width: 280px;
+    max-width: 280px;
+    height: 36px;
+    padding: 0 10px;
+  }
+
+  :deep(.ad-performance-date-picker.el-date-editor .el-range-input) {
+    font-size: 12px;
+    color: var(--el-text-color-primary);
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  :deep(.ad-performance-date-picker.el-date-editor .el-range-separator) {
+    font-size: 12px;
     color: var(--el-text-color-secondary);
   }
 
-  .ad-performance-filter-chip__value {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--ad-performance-filter-accent);
-    text-shadow: 0 0 10px rgb(16 185 129 / 50%);
+  :deep(.ad-performance-date-picker.el-date-editor .el-range__icon) {
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
-  /* ── 下拉选择器 ──────────────────────────────────────────────── */
+  :deep(.ad-performance-date-picker.el-date-editor .el-range__close-icon) {
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+  }
+
+  :deep(.ad-performance-date-picker.el-date-editor:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
+  }
+
+  :deep(.ad-performance-date-picker.el-date-editor.is-active),
+  :deep(.ad-performance-date-picker.el-date-editor:focus-within) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
+  }
+
   .ad-performance-filter-select {
     width: 134px;
     min-width: 110px;
     max-width: 100%;
   }
 
-  :deep(.ad-performance-filter-select) {
-    --el-input-focus-border-color: #10b981;
-    --el-border-color-hover: rgb(16 185 129 / 75%);
-    --el-color-primary: #10b981;
-    --el-border-color-focus: #10b981;
-    --el-component-size: 40px;
+  .ad-performance-filter-select--app {
+    width: 134px;
+    min-width: 134px;
+    max-width: 220px;
   }
 
-  :deep(.ad-performance-filter-select .el-input__wrapper) {
+  @include apSelect.apply-app-platform-select-ad-theme(
+    '.ad-performance-filters__left',
+    'ad-performance-filter-select__input',
+    'ad-performance-filter-popper',
+    220px,
+    134px,
+    220px
+  );
+
+  :deep(.ad-performance-filter-select),
+  :deep(.ad-performance-filter-select__input) {
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
+  }
+
+  :deep(.ad-performance-filter-select .el-select__wrapper),
+  :deep(.ad-performance-filter-select .el-input__wrapper),
+  :deep(.ad-performance-filter-select__input) {
     padding: 0 12px;
-    background: rgb(16 185 129 / 6%);
-    border: 1px solid rgb(16 185 129 / 28%);
-    border-radius: 9999px;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
     box-shadow: none;
     transition:
       border-color 0.22s ease,
@@ -432,146 +419,81 @@
   :deep(.ad-performance-filter-select .el-input__prefix-inner svg) {
     width: 16px;
     height: 16px;
-    color: #10b981;
-    filter: drop-shadow(0 0 5px rgb(16 185 129 / 50%));
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
-  :deep(.ad-performance-filter-select .el-select__caret) {
-    color: #10b981;
+  :deep(.ad-performance-filter-select .el-select__caret),
+  :deep(.ad-performance-filter-select__input .app-platform-search-select__suffix) {
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
-  :deep(.ad-performance-filter-select .el-input__wrapper.is-focus) {
-    background: rgb(16 185 129 / 10%) !important;
-    border-color: #10b981 !important;
-    box-shadow: 0 0 0 2px rgb(16 185 129 / 20%) !important;
+  :deep(.ad-performance-filter-select .el-select__wrapper.is-focused),
+  :deep(.ad-performance-filter-select .el-input__wrapper.is-focus),
+  :deep(.ad-performance-filter-select__input.is-open) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
   }
 
-  :deep(.ad-performance-filter-select .el-input__wrapper:hover) {
-    border-color: rgb(16 185 129 / 60%);
-    box-shadow: 0 0 12px rgb(16 185 129 / 18%);
+  :deep(.ad-performance-filter-select .el-select__wrapper:hover),
+  :deep(.ad-performance-filter-select .el-input__wrapper:hover),
+  :deep(.ad-performance-filter-select__input:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
   }
 
-  /* ── 操作按钮 ─────────────────────────────────────────────────── */
   .ad-performance-filter-action-btn {
-    --el-button-size: 40px;
-    --el-button-bg-color: rgb(16 185 129 / 8%);
-    --el-button-text-color: #10b981;
-    --el-button-border-color: rgb(16 185 129 / 40%);
-    --el-button-hover-text-color: #34d399;
-    --el-button-hover-border-color: #10b981;
-    --el-button-hover-bg-color: rgb(16 185 129 / 16%);
-    --el-button-active-text-color: #34d399;
-    --el-button-active-border-color: #10b981;
-    --el-button-active-bg-color: rgb(16 185 129 / 22%);
+    --el-button-size: 36px;
+    --el-button-bg-color: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    );
+    --el-button-text-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-button-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-button-hover-text-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-button-hover-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-button-hover-bg-color: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 8%,
+      transparent
+    );
+    --el-button-active-text-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-button-active-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-button-active-bg-color: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 10%,
+      transparent
+    );
 
     font-size: 14px;
-    box-shadow: 0 0 14px rgb(16 185 129 / 12%);
-    transition:
-      box-shadow 0.22s ease,
-      transform 0.18s ease;
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: 0 0 14px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 12%, transparent);
+    transition: box-shadow 0.22s ease;
 
     &:hover {
-      box-shadow: 0 0 22px rgb(16 185 129 / 28%);
-      transform: translateY(-1px);
-    }
-
-    &:active {
-      transform: translateY(0);
+      box-shadow: 0 0 22px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 28%, transparent);
     }
   }
 
   :deep(.ad-performance-filter-action-btn .el-icon) {
     font-size: 16px;
-    color: #10b981;
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   .ad-performance-filter-action-btn:focus-visible {
-    box-shadow: 0 0 0 3px rgb(16 185 129 / 40%);
+    box-shadow: 0 0 0 3px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 40%, transparent);
   }
 
-  .ad-performance-filters__date-tabs {
-    flex: none;
-  }
-
-  /* ── 日期切换滑动条 ─────────────────────────────────────────── */
-  .ad-performance-date-slider {
-    position: relative;
-    display: inline-grid;
-    flex-shrink: 0;
-    grid-template-columns: repeat(var(--date-slider-count), 1fr);
-    align-items: center;
-    height: var(--date-slider-height);
-    padding: var(--date-slider-pad);
-    overflow: hidden;
-    user-select: none;
-    background: rgb(255 255 255 / 5%);
-    border: 1px solid rgb(16 185 129 / 25%);
-    border-radius: 9999px;
-    box-shadow:
-      inset 0 1px 0 rgb(255 255 255 / 8%),
-      0 0 20px rgb(16 185 129 / 10%);
-
-    --date-slider-height: 40px;
-    --date-slider-pad: 4px;
-    --date-slider-thumb-radius: 9999px;
-    --date-slider-inner-width: calc(100% - var(--date-slider-pad) * 2);
-    --date-slider-step: calc(var(--date-slider-inner-width) / var(--date-slider-count));
-  }
-
-  .ad-performance-date-slider__thumb {
-    position: absolute;
-    top: var(--date-slider-pad);
-    bottom: var(--date-slider-pad);
-    left: calc(var(--date-slider-pad) + var(--date-slider-step) * var(--date-slider-index));
-    width: var(--date-slider-step);
-    background: linear-gradient(90deg, #10b981, #34d399);
-    border-radius: var(--date-slider-thumb-radius);
-    box-shadow:
-      0 0 0 1px rgb(255 255 255 / 10%) inset,
-      0 0 16px rgb(16 185 129 / 45%),
-      0 0 30px rgb(16 185 129 / 20%);
-    transition:
-      left 180ms ease,
-      width 180ms ease;
-
-    @media (prefers-reduced-motion: reduce) {
-      transition: none;
-    }
-  }
-
-  .ad-performance-date-slider__item {
-    position: relative;
-    z-index: 1;
-    height: calc(var(--date-slider-height) - var(--date-slider-pad) * 2);
-    padding: 0 16px;
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--el-text-color-secondary);
-    white-space: nowrap;
-    touch-action: manipulation;
-    cursor: pointer;
-    background: transparent;
-    border: none;
-    border-radius: 9999px;
-    outline: none;
-    transition: color 0.18s ease;
-  }
-
-  .ad-performance-date-slider__item:hover {
-    color: var(--el-text-color-primary);
-  }
-
-  .ad-performance-date-slider__item.is-active {
-    font-weight: 700;
-    color: #fff;
-    text-shadow: 0 0 10px rgb(255 255 255 / 55%);
-  }
-
-  .ad-performance-date-slider__item:focus-visible {
-    box-shadow: 0 0 0 2px rgb(16 185 129 / 40%);
-  }
-
-  /* ── 小屏响应 ─────────────────────────────────────────────────── */
   @media (width <= 768px) {
     .ad-performance-filters {
       flex-direction: column;
@@ -583,12 +505,12 @@
       justify-content: flex-start;
     }
 
-    .ad-performance-date-slider {
+    .ad-performance-date-picker,
+    .ad-performance-filter-select,
+    .ad-performance-filter-select--app {
       width: 100%;
-    }
-
-    .ad-performance-date-slider__item {
-      padding: 0 10px;
+      min-width: 0;
+      max-width: 100%;
     }
   }
 </style>

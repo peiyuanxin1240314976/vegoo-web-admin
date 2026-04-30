@@ -11,8 +11,42 @@ alwaysApply: true
 
 - **`mock/backend-api/*.json` 为接口契约的源文件**：由**前端**在仓库内维护，在 JSON 中定义 `fieldDescription`（请求/响应字段说明）、`sampleRequest`、`sampleResponse`、`api`（路径、方法、requestBody/responseBody 摘要）等。**后端按该契约实现**接口路径、入参、出参结构与语义，**不是**由后端先定一套字段再要求前端改契约迁就。
 - **联调顺序建议**：先有契约 JSON（及同目录 `README.md` 接口清单）→ 前端 `types.ts` / `src/api/*.ts` 与契约对齐 → 后端按 JSON 开发与自测 → 前后端联调。
+- **不阻塞主流程（强制）**：对接/整理契约时，必须保证页面在 **接口未返回、返回为空、或请求失败** 的情况下依然能进入并完成主流程的浏览/操作路径（至少能看到完整 UI 框架 + 合理空态/占位），禁止把页面“是否可用”绑定到接口“必须有数据”这一前提上。
 - **变更流程**：增删改字段或业务含义时，须**前后端协商一致**后，**优先更新契约 JSON**（及 README），再同步改前端类型与请求封装、Mock、后端实现；禁止长期存在「文档一套、接口一套、前端一套」。
+- **字段与数据字典**：新建或修订契约 JSON 时，**逐字段**对照 `.cursor/rules/backend-fields.mdc`：`fieldDescription` 与 `sampleRequest` / `sampleResponse` 中的字段名、业务含义须可映射到字典；无法映射时须在 `_comment` 或 `mock/backend-api/README.md` 说明，并推动补全字典条目。
+- **契约键名（驼峰 · 禁止下划线）**：`sampleRequest` / `sampleResponse` / `fieldDescription` 所涉**业务字段键名**须 **camelCase**，**不得**含 `_`（禁止 `s_*`、`n_*`、`date_start`、`request_quantity` 等）；细则见 **`backend-fields.mdc`**「接口契约与 HTTP JSON 命名」。
+- **请求体日期范围**：凡表示查询/筛选时间范围的入参，键名须为 **`startDate`**、**`endDate`**（推荐值 `YYYY-MM-DD` 字符串，与模块约定一致）；详见 `backend-fields.mdc`「接口请求 · 日期范围」。
+- **筛选入参枚举类型**：请求体键名须符合 `backend-fields.mdc` **「接口请求 · 统一筛选维度键名」**；广告平台用 **`source`**（**string**，如 `\"1\"`），**勿**在 `sampleRequest` 请求体中使用 `n_source` 作键名；**勿**写 JSON number。「全部」用 `\"\"` 等规则见 `backend-fields.mdc`「接口请求 · 筛选「全部」」与「接口请求 · 筛选字段类型（枚举 string）」。
+- **应用 / 平台 / 国家 / 账户筛选键名**：凡页面或接口**实际提供**对应筛选时，请求体使用 **`appId`**、**`platform`**、**`countryCode`**、**`account`**（均为 `string`）及 **`source`**，键名与 `backend-fields.mdc`「接口请求 · 统一筛选维度键名」一致；**未**在 UI 出现的维度不得仅为对齐字典而写入契约或 POST body（见该节「与页面一致」）。
 - 网关真实路径与示例 URL 不一致时，在对应 `mock/backend-api/README.md` 或 JSON `_comment` 中注明；以前端 `src/api` 实际请求为准联调。
+- **公用 cockpit 顶栏 `meta-filter-options`（硬性要求）**：
+  - **统一接口**：**`GET`** `/api/v1/datacenter/analysis/cockpit/meta-filter-options`（即 **`${ANALYSIS_API_BASE}/cockpit/meta-filter-options`**）。**无 query、无 body**，仅依赖全局 **`Authorization`**（与其它 GET meta 类接口一致）。这是全项目 **通用的顶栏筛选项下拉**（应用 / 终端平台 / 广告平台 / 国家等与 **`CockpitMetaFilterOptionsData`** 同构的选项）。与本文件下文「新契约优先 POST」为 **明确例外**。
+  - **实现与类型**：HTTP 封装为 **`fetchCockpitMetaFilterOptions`**（`request.get`，`@/api/cockpit-meta-filter`），类型为 **`@/types/cockpit-meta-filter`** 之 **`CockpitMetaFilterOptionsData`**。业务 **POST** 与下拉联动的入参键名为 **`appId`** / **`platform`** / **`source`** / **`countryCode`** / **`account`**（见 **`backend-fields.mdc`**「接口请求 · 统一筛选维度键名」）及 **`paid-analysis/mock/backend-api/README.md` 附录 A**（指业务 POST 请求体，非本 GET）。
+  - **页面与 Mock 开发（直接读数据，不要当业务接口再拉一遍）**：同构顶栏下拉的选项 **直接从 Pinia 读** **`useCockpitMetaFilterStore().data`**（或组合式 **`useCockpitMetaFilterOptions()`** 返回的 **`cockpitMeta`**），绑定 `appOptions` / `platformOptions` / `sourceOptions` / `countryOptions` 即可。**不要**在页面里把「再调一次 `fetchCockpitMetaFilterOptions`」当作常规写法。数据由 **路由守卫预加载** + **同标签 `sessionStorage`** 填充；**`ensureLoaded()`** 仅作兜底（例如极早挂载且 `data` 仍为空时），非日常入口。
+  - **Mock / 契约（禁止重复 JSON）**：凡顶栏筛选与上述接口 **同构**（仅依赖 `appOptions`、`platformOptions`、`sourceOptions`、`countryOptions` 等公用形态），**不得**在该模块 `mock/backend-api` 再新增 `*meta-filter-options*.json` 或等价重复契约。**仅在** 模块 `mock/backend-api/README.md`（及需要时在 `mock/README.md`）中 **用表格一行 + 附录/引用** 标注：接口 URL、`fetch*` 名、**无独立 JSON**、说明详见 **付费分析 `backend-api/README.md` 附录 A**。整理契约时 **不** 为该机造「占位 JSON」凑数。
+  - **例外**：若某页顶栏在公用四类之外还有 **本页独有** 筛选项（如转化类型、商品类型），**仅** 为 **独有维度** 维护独立契约 JSON（独立 endpoint）；**仍不得** 把与 cockpit 同构的四类选项再复制进该 JSON 或另建「整页 meta」重复契约。
+  - **驾驶舱视图**：勿为 `src/views/cockpit` 在 mock 目录 **额外** 增改仅服务于同构顶栏的契约；顶栏联调以上述公用接口与类型为准。
+
+## 七、非阻塞主流程与空数据策略（强制）
+
+> 目标：接口联调期间/线上异常时，页面仍能展示与操作，不因“暂无数据”或“接口未就绪”阻塞主流程。
+
+### 7.1 契约层（backend-api JSON）必须描述「空数据」与「失败兜底」
+
+- **空数据形态（必须明确）**：对所有列表/表格/图表接口，在 `fieldDescription.response`（或 `apiSuggestion.notes`）中写清：
+  - 数组字段在无数据时返回 `[]`（例如 `records/items/series/options`），而不是 `null`；
+  - 计数字段在无数据时返回 `0`（例如 `total`）；
+  - 可选字段缺失/空串的语义（例如筛选条件未命中、权限不足、后端尚未接入）。
+- **示例覆盖**：
+  - `sampleResponse` 仍以“可联调的完整示例”为主（尤其表格 ≥3 条）；
+  - 若该接口存在关键 UI 分支依赖空态（例如“无匹配结果”“无权限”“首次进入无数据”），应在 `apiSuggestion` 中补充对应空态约定（必要时另加 `sampleResponseEmpty`（可选字段）描述空数据业务体结构）。
+- **保持 shape 稳定**：即使无数据，也应返回与有数据时相同的业务体结构（同名键、同层级），避免前端分支判断复杂化。
+
+### 7.2 前端对接（types / fetch / 页面）必须做到「不阻塞」
+
+- **默认值兜底（必须）**：页面/组件状态初始化时给出可渲染的默认结构（如 `records: []`、`total: 0`、图表 `categories: [] / series: []` 等），避免 `undefined` 导致渲染报错。
+- **加载与空态**：接口加载时允许展示骨架屏/占位；接口返回空数组时展示空态，但 **页面布局与筛选区/Tab/操作按钮** 不应消失。
+- **错误降级**：请求失败应可提示错误（toast/空态文案均可），但不得阻塞用户继续切换 Tab、修改筛选或再次发起查询。
 
 ## 一、接口地址抽象：路由 → 模块 → 功能
 
@@ -56,7 +90,7 @@ alwaysApply: true
 
 ### 推荐拆分方式（按 UI 边界）
 
-- **筛选项**：`meta-filter-options`
+- **筛选项**：与同构驾驶舱顶栏一致时复用公用 **`.../cockpit/meta-filter-options`**（见上文「公用 cockpit 顶栏 meta-filter-options」）；**独有**维度再拆独立 `meta-*` endpoint。勿为前者再建模块内 `*meta-filter-options*.json`。
 - **概览聚合**：`overview`（若仍过大，继续拆：`overview/kpi`、`overview/trend`、`overview/distribution`、`overview/alerts`）
 - **表格**：按 tab/维度拆 `table/campaign`、`table/country`、`table/owner`、`table/account`
 - **详情**：按实体 + 维度拆（例如 `campaign-detail`；若详情内含多 tab 且数据量大，可继续拆 `campaign-detail/ad-group`、`campaign-detail/date`、`campaign-detail/country`）
@@ -92,6 +126,8 @@ src/views/<模块>/<页面>/
 
 每个接口对应一个 JSON 文件，至少包含：
 
+> **硬性例外**：与篇首 **公用 cockpit 顶栏 `meta-filter-options`** 同构的能力 **不** 使用本目录 JSON，仅在 **`mock/backend-api/README.md`** 标注（见该节）。
+
 - `_comment`：一句话描述接口与页面模块的对应关系（可引用对应类型）
 - `fieldDescription`：
   - `request`：每个字段必须有 `type`、`required`、`description`；有枚举就写 `enum`；有默认值就写 `default`
@@ -105,6 +141,34 @@ src/views/<模块>/<页面>/
 
 - **禁止**只写“见后端返回”或只给一个大对象示例不解释字段。
 - 每个字段的 `description` 要能直接用于联调沟通：含义、单位、范围（例如百分比是 0-100 还是 0-1）、空值策略、格式（日期格式等）。
+- **筛选类 `request` 字段**：若字段为枚举型筛选（如广告平台 **`source`**），`fieldDescription.request` 的 `type` 须为 **`string`**（键名驼峰，勿 `n_source`），且 `sampleRequest` 中的示例值类型须与 `type` 一致，详见 `backend-fields.mdc`「接口请求 · 筛选字段类型（枚举 string）」。
+
+### 导出 / 下载类接口（HTTP 文件流 · 硬性）
+
+凡页面「导出 / 下载 Excel·CSV 等文件」能力在 **`mock/backend-api` 立约并联调**时，**必须**按 **HTTP 二进制文件流** 描述与实现，**禁止**把该导出 endpoint 的**主响应**约定为「仅返回 JSON（内含 Base64 文件、或仅 `downloadUrl` 字符串）」来冒充文件下载（**例外**：若产品明确为**异步导出**，任务状态与结果 URL 应使用**独立契约** endpoint，与「即时流式下载」拆分，不在此混用同一语义）。
+
+- **契约 JSON**：`fieldDescription.response` 须写清响应为 **非 JSON 业务体**（原始字节流），并说明 **`Content-Type`**、**`Content-Disposition`**（文件名）等响应头约定；`sampleResponse` 可用 `_note` 或占位说明「二进制流无法用 JSON 表达」，**不得**用伪业务 JSON 充当文件内容示例。
+- **后端**：响应体为 **stream / blob**（整块 `application/octet-stream` 或具体 MIME 亦可），按需 chunked；无数据时仍返回合法空文件或仅表头的流，头字段与有数据时保持一致。
+- **前端 `src/api`**：使用 `responseType: 'blob'` 或项目既有 **`requestBlob`** 等封装，从响应头解析文件名；Mock 分支返回 **`Blob`** + 文件名，与契约一致。
+
+### 同模块 `sampleResponse` 形态复用
+
+- 同一 `mock/backend-api` 目录（同一业务聚合单元）内，**同类 UI**（分页列表、KPI 卡片、趋势序列、meta 下拉等）的 **`sampleResponse` 业务体**尽量与存量契约 **结构一致**（键名层级、列表字段名、分页字段等），便于前端复用解析逻辑。
+- 细则与整理时验收步骤见：`.cursor/skills/module-api-contract-audit/SKILL.md` **§0.5**；新增接口优先对齐本目录已有 JSON。
+
+### 表格类 `sampleResponse` 示例条数（硬性）
+
+- 若 **`sampleResponse` 含服务主界面数据表格** 的数组（常见键名：`records`、`items`、`rows`、`list`；或 `fieldDescription.response` 中明示为该接口主表格数据数组），则该数组内 **至少 3 条** 与 `fieldDescription` 对齐的 **完整** 示例项：可对照表头/列渲染，**禁止**用空对象、仅含主键字段或 `...` 占位糊弄联调。
+- **树形表格**（含嵌套 `children`）：示例中用于表格展示、且结构完整的节点 **合计不少于 3 个**（可跨层级）；若业务上必须少于 3 条才能说明特殊结构，须在 `_comment` 或 `apiSuggestion` 中写明原因，并仍应优先对齐「≥3 条」以便 UI 联调。
+- **不适用本条**：详情单对象、KPI/卡片、无表格数组的导出 URL/文件流响应、以及 **非表格主数据** 的辅助数组（如图例、单条趋势点）；**meta 下拉** 的 `options` 等 **不强制** 3 条（表格列若依赖其长度另有产品约定时除外）。
+
+### 表格/列表示例中的枚举须写全（硬性）
+
+- 凡 **`fieldDescription` 中对某字段列出闭合 `enum` 数组**（不含仅占位/口语描述的开放式取值），且该字段出现在 **`sampleResponse` 的主表格行 / 树表节点 / 主列表项**中，则示例 **在多行（或多节点）之间须使该字段的每一个枚举取值至少出现一次**（不要求枚举的笛卡尔积全排列，按列分别覆盖即可）。
+- **`platform`、`status`、计费类型、树节点 `level`** 等影响 **标签颜色、禁用态、展开逻辑** 的字段，**必须**在示例中穷尽 `enum`；若未覆盖，视为契约未就绪。
+- **meta 类 `options`**：若在选项项的 `value`（或同类字段）上声明了闭合 `enum`，**`sampleResponse` 中的 `options` 须包含全部 `value` 取值**（可与 label 一一对应），避免联调时漏状态。
+- **例外**：`enum` 项过多（如 >15）或明确标注「引用数据字典动态扩展」的，须在 `_comment` 或 `apiSuggestion` 写明「示例仅覆盖 UI 分支必填子集」，并列出 **须在联调中覆盖的最小集合**；不得以例外为由长期省略 **状态/level** 等少数取值的示例。
+- 与 **`backend-fields.mdc`** 中业务枚举一致时，契约 `enum` 与示例取值须可互证。
 
 ### JSON 模板（新接口可直接复制）
 
@@ -162,7 +226,7 @@ src/views/<模块>/<页面>/
 
 1. `mock/README.md`：说明用途、与 `types.ts` / 入口组件关系、数据从哪来（静态 / MSW / 聚合 `data.ts`）。
 2. `mock/backend-api/README.md`：父级 API 路径（与路由层级一致）、接口清单表、拆分原则与 P0/P1。
-3. `mock/backend-api/01-*.json` 起：一接口一文件，含完整 `fieldDescription`、`sampleRequest`、`sampleResponse`、`api`、`apiSuggestion`（推荐）。
+3. `mock/backend-api/01-*.json` 起：一接口一文件，含完整 `fieldDescription`、`sampleRequest`、`sampleResponse`、`api`、`apiSuggestion`（推荐）；**若含主表格数据数组**，`sampleResponse` 须满足上文「表格类示例条数」及「表格/列表示例中的枚举须写全」。
 4. （推荐）`mock/api-mock/*.json`：与各契约 `sampleResponse` 结构一致，便于复制到联调工具或接入 MSW。
 
 参考实现：`src/views/user-growth/real-time-data/mock/`。

@@ -110,7 +110,6 @@
     ElCascader,
     ElCheckbox,
     ElCheckboxGroup,
-    ElDatePicker,
     ElInput,
     ElInputTag,
     ElInputNumber,
@@ -124,6 +123,7 @@
     ElTreeSelect,
     type FormInstance
   } from 'element-plus'
+  import AppDatePicker from '../AppDatePicker.vue'
   import { calculateResponsiveSpan, type ResponsiveBreakpoint } from '@/utils/form/responsive'
 
   defineOptions({ name: 'ArtSearchBar' })
@@ -137,10 +137,10 @@
     checkbox: ElCheckbox, // 复选框
     checkboxgroup: ElCheckboxGroup, // 复选框组
     radiogroup: ElRadioGroup, // 单选框组
-    date: ElDatePicker, // 日期选择器
-    daterange: ElDatePicker, // 日期范围选择器
-    datetime: ElDatePicker, // 日期时间选择器
-    datetimerange: ElDatePicker, // 日期时间范围选择器
+    date: AppDatePicker, // 日期选择器
+    daterange: AppDatePicker, // 日期范围选择器
+    datetime: AppDatePicker, // 日期时间选择器
+    datetimerange: AppDatePicker, // 日期时间范围选择器
     rate: ElRate, // 评分
     slider: ElSlider, // 滑块
     cascader: ElCascader, // 级联选择器
@@ -242,10 +242,14 @@
   const rootProps = ['label', 'labelWidth', 'key', 'type', 'hidden', 'span', 'slots']
 
   const getProps = (item: SearchFormItem) => {
-    if (item.props) return item.props
-    const props = { ...item }
-    rootProps.forEach((key) => delete (props as Record<string, any>)[key])
-    return props
+    const base = item.props
+      ? { ...item.props }
+      : (() => {
+          const p = { ...item }
+          rootProps.forEach((key) => delete (p as Record<string, any>)[key])
+          return p
+        })()
+    return base
   }
 
   // 获取插槽

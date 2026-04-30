@@ -1,53 +1,78 @@
 {
-  "_comment": "人员绩效 - 对比页添加对比候选列表。按当前筛选条件重新拉取，并排除已选人员。",
+  "_comment": "人员绩效对比页 - 「添加对比人员」弹窗候选列表。与列表页 compare 请求维度一致：personFilter / appFilter / statusFilter / keyword；excludeIds 排除已在对比条中的人员。",
   "fieldDescription": {
     "request": {
-      "startDate": { "type": "string", "required": true, "description": "开始日期，YYYY-MM-DD。" },
-      "endDate": { "type": "string", "required": true, "description": "结束日期，YYYY-MM-DD。" },
-      "personId": {
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "开始日期，YYYY-MM-DD（含）。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": true,
+        "description": "结束日期，YYYY-MM-DD（含）。"
+      },
+      "personFilter": {
         "type": "string",
         "required": false,
-        "description": "人员筛选 ID，空表示全部。"
+        "description": "人员筛选；\"\" 表示全部；与列表页、list-filter-options 一致。"
       },
-      "appCategory": { "type": "string", "required": false, "description": "应用分类筛选。" },
-      "status": {
+      "appFilter": {
         "type": "string",
         "required": false,
-        "enum": ["pass", "fail"],
-        "description": "达标状态筛选。"
+        "description": "应用分类；\"\" 表示全部。"
       },
-      "keyword": { "type": "string", "required": false, "description": "关键字搜索。" },
+      "statusFilter": {
+        "type": "string",
+        "required": false,
+        "enum": ["", "达标", "未达标"],
+        "description": "达标状态；与列表页 Chip 一致。"
+      },
+      "keyword": { "type": "string", "required": false, "description": "姓名关键字；空表示不限。" },
       "excludeIds": {
         "type": "string[]",
         "required": true,
-        "description": "已加入对比的人员 ID 列表，接口需排除。"
+        "description": "已选对比人员 id，不得出现在本页结果中。"
       },
-      "current": { "type": "number", "required": true, "description": "页码。" },
-      "size": { "type": "number", "required": true, "description": "每页数量。" }
+      "current": { "type": "number", "required": true, "description": "页码，从 1 起。" },
+      "size": { "type": "number", "required": true, "description": "每页条数。" }
     },
     "response": {
-      "list": { "type": "CompareCandidate[]", "required": true, "description": "候选人员列表。" },
-      "total": { "type": "number", "required": true, "description": "候选总数。" }
+      "list": {
+        "type": "CompareCandidate[]",
+        "required": true,
+        "description": "候选列表（当前页）。"
+      },
+      "total": {
+        "type": "number",
+        "required": true,
+        "description": "候选总人数（筛选 + exclude 后）。"
+      }
     },
     "CompareCandidate": {
       "id": { "type": "string", "required": true, "description": "人员 ID。" },
       "name": { "type": "string", "required": true, "description": "姓名。" },
-      "level": { "type": "string", "required": true, "description": "职级。" },
-      "status": { "type": "string", "required": true, "description": "达标状态文案。" },
-      "statusClass": { "type": "string", "required": true, "description": "状态样式码。" },
+      "level": { "type": "string", "required": true, "description": "职级文案。" },
+      "status": { "type": "string", "required": true, "description": "达标状态展示文案。" },
+      "statusClass": {
+        "type": "string",
+        "required": true,
+        "enum": ["over", "pass", "near", "fail"],
+        "description": "状态样式，与列表页一致。"
+      },
       "score": { "type": "number", "required": true, "description": "绩效得分。" }
     }
   },
   "sampleRequest": {
-    "startDate": "2026-03-20",
-    "endDate": "2026-03-26",
-    "personId": "",
-    "appCategory": "",
-    "status": "",
+    "startDate": "2026-03-28",
+    "endDate": "2026-04-04",
+    "personFilter": "",
+    "appFilter": "",
+    "statusFilter": "",
     "keyword": "",
     "excludeIds": ["zhang3", "li4"],
     "current": 1,
-    "size": 10
+    "size": 50
   },
   "sampleResponse": {
     "list": [
@@ -66,21 +91,52 @@
         "status": "达标",
         "statusClass": "pass",
         "score": 90
+      },
+      {
+        "id": "wu10",
+        "name": "吴十",
+        "level": "初级优化师",
+        "status": "接近达标",
+        "statusClass": "near",
+        "score": 78
+      },
+      {
+        "id": "wang5",
+        "name": "王五",
+        "level": "优化师",
+        "status": "未达标",
+        "statusClass": "fail",
+        "score": 72
       }
     ],
-    "total": 2
+    "total": 4
   },
   "api": {
-    "url": "POST /api/user-growth/performance-analysis/compare-candidates",
+    "url": "POST /api/v1/datacenter/analysis/user-growth/performance-analysis/compare-candidates",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "startDate, endDate, personId?, appCategory?, status?, keyword?, excludeIds, current, size",
+    "requestBody": "startDate, endDate, personFilter?, appFilter?, statusFilter?, keyword?, excludeIds, current, size",
     "responseBody": "list, total"
   },
   "apiSuggestion": {
     "notes": [
-      "接口内部先按筛选条件查询，再应用 excludeIds 过滤，最后分页。",
-      "返回顺序建议按 score desc，再按 name 升序保证稳定性。"
+      "建议默认按 score 降序、name 升序稳定排序。",
+      "路由进入对比页时 personFilter/statusFilter/keyword 可从 query 透传，与列表页一致。"
     ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "打开「添加对比人员」弹窗",
+        "detail": "PerformanceComparison 中 showAddModal 为 true 时可立即请求或等用户点「刷新候选」；当前实现为点击刷新拉取。",
+        "prerequisite": "已选日期区间 selectedDateRange；excludeIds 为当前已选人员 id。"
+      },
+      {
+        "moment": "点击「刷新候选」",
+        "detail": "loadCompareCandidates：携带路由 query 中的筛选与当前日期、excludeIds。"
+      }
+    ],
+    "defaultSelection": "筛选空串表示不限；current=1、size 建议 ≥ 已选上限以便一屏展示。",
+    "dedupe": "弹窗重复打开可复用上次结果或强制刷新，由产品决定。"
   }
 }

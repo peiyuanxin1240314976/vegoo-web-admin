@@ -5,8 +5,8 @@
       <div class="wcc-title-left">
         <span class="wcc-title-app">整体</span>
         <span class="wcc-title-app">全部平台</span>
-        <span class="wcc-title-badge">月报</span>
-        <span class="wcc-title-date">2025年12月</span>
+        <span class="wcc-title-badge">{{ reportLabel }}</span>
+        <span class="wcc-title-date">{{ titleDateText }}</span>
       </div>
       <div class="wcc-title-stats">
         <div class="wcc-stat">
@@ -59,7 +59,11 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="row in campaigns" :key="row.id" :class="{ paused: row.status === 'paused' }">
+            <tr
+              v-for="row in pagedCampaigns"
+              :key="row.id"
+              :class="{ paused: row.status === 'paused' }"
+            >
               <td>{{ row.app }}</td>
               <td>{{ row.platform }}</td>
               <td>
@@ -109,6 +113,17 @@
           </tbody>
         </table>
       </div>
+      <div class="wcc-pagination">
+        <ElPagination
+          small
+          background
+          layout="prev, pager, next"
+          :total="campaignsTotal"
+          :page-size="resolvedPageSize"
+          :current-page="paginationCurrentPage"
+          @current-change="handlePageChange"
+        />
+      </div>
     </div>
 
     <!-- ── 底部推送 ────────────────────────────────────────────── -->
@@ -118,7 +133,7 @@
         {{ totalSpendDisplay }}
       </span>
       <div class="wcc-push-right">
-        <span class="wcc-push-last">上次推送：2026-01-02 09:00 飞书群《经营月报》</span>
+        <span class="wcc-push-last">{{ lastPushText }}</span>
         <button class="wcc-push-btn" type="button" @click="openPushModal()">立即推送</button>
       </div>
     </div>
@@ -126,7 +141,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, inject, onMounted, onUnmounted } from 'vue'
+  import { ref, computed, inject, onMounted, onUnmounted, watch } from 'vue'
   import * as echarts from 'echarts'
   import { businessReportContextKey } from '../composables/business-report-context'
   import { campaignData } from '../mockData'
@@ -145,6 +160,27 @@
   const ctx = inject(businessReportContextKey)
 
   const campaigns = computed(() => ctx?.campaigns.value?.rows ?? monthlyCampaignsMock)
+  const responseCurrentPage = computed(() => {
+    const page = ctx?.campaigns.value?.currentPage ?? 1
+    return page > 0 ? page : 1
+  })
+  const resolvedPageSize = computed(() => {
+    const size = ctx?.campaigns.value?.pageSize ?? 20
+    return size > 0 ? size : 20
+  })
+  const paginationCurrentPage = ref(1)
+  const reportLabel = computed(() => {
+    if (ctx?.period.value === 'daily') return '日报'
+    if (ctx?.period.value === 'weekly') return '周报'
+    return '月报'
+  })
+  const titleDateText = computed(() => {
+    const range = ctx?.reportRange.value
+    if (!range) return '--'
+    if (ctx?.period.value === 'weekly') return `${range.startDate} - ${range.endDate}`
+    if (ctx?.period.value === 'daily') return range.startDate
+    return range.startDate.slice(0, 7)
+  })
 
   const activeCount = computed(() => campaigns.value.filter((c) => c.status === 'active').length)
   const pausedCount = computed(() => campaigns.value.filter((c) => c.status === 'paused').length)
@@ -156,6 +192,30 @@
     }, 0)
     return '$' + sum.toLocaleString('en-US')
   })
+  const lastPushText = computed(
+    () =>
+      ctx?.getLastPushText?.(ctx?.period.value ?? 'monthly') ??
+      `上次推送：-- 飞书群《经营${reportLabel.value}》`
+  )
+
+  const campaignsTotal = computed(() => ctx?.campaigns.value?.total ?? campaigns.value.length)
+  const pagedCampaigns = computed(() => campaigns.value)
+
+  watch(
+    [campaigns, responseCurrentPage],
+    () => {
+      paginationCurrentPage.value = responseCurrentPage.value
+    },
+    { immediate: true }
+  )
+
+  const handlePageChange = (page: number) => {
+    if (ctx?.setCampaignsPage) {
+      ctx.setCampaignsPage(page)
+      return
+    }
+    paginationCurrentPage.value = page
+  }
 
   const miniChartRef = ref<HTMLElement>()
   let chart: echarts.ECharts | null = null
@@ -350,6 +410,18 @@
     background: rgb(255 255 255 / 2%);
     border: 1px solid rgb(255 255 255 / 7%);
     border-radius: 10px;
+  }
+
+  .wcc-pagination {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+  }
+
+  :deep(.wcc-pagination .el-pagination) {
+    --el-pagination-bg-color: rgb(255 255 255 / 3%);
+    --el-pagination-button-color: rgb(255 255 255 / 70%);
+    --el-pagination-hover-color: var(--art-primary);
   }
 
   .table-title {

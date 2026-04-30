@@ -83,7 +83,7 @@
         </ElTableColumn>
 
         <!-- 操作 -->
-        <ElTableColumn label="操作" width="76" align="center" fixed="right">
+        <!-- <ElTableColumn label="操作" width="76" align="center" fixed="right">
           <template #default>
             <div class="adcr__actions">
               <button type="button" class="adcr__action-btn" title="查看">
@@ -94,7 +94,7 @@
               </button>
             </div>
           </template>
-        </ElTableColumn>
+        </ElTableColumn> -->
       </ElTable>
     </div>
 
@@ -108,7 +108,11 @@
 
 <script setup lang="ts">
   import { ref, computed } from 'vue'
-  import { VideoPlay, Picture, View, VideoPause } from '@element-plus/icons-vue'
+  import {
+    VideoPlay,
+    Picture
+    // View, VideoPause
+  } from '@element-plus/icons-vue'
   import type { AdCreativeItem } from '../types'
 
   defineOptions({ name: 'AdDetailCreative' })

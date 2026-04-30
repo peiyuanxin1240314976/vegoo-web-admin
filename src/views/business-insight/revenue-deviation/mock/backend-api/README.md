@@ -8,7 +8,7 @@
 ## 拆分原则
 
 - 每个契约对应**一个明确 UI 区块**（KPI、趋势、平台表、原因饼图、对账建议、国家 Top10、历史表、矩阵表），避免单接口返回整页不可裁剪的大包。
-- 筛选入参统一包含日期范围、`source`（广告平台，可选）、`s_app_id`（应用，可选），与 `backend-fields.mdc` 一致。
+- 筛选入参统一包含日期范围、`source`（广告平台，可选）、**`appIds: string[]`**（应用；不限为 `[]`）；页面 state 仍用 `s_app_id` 字符串，由 `src/api/revenue-deviation.ts` 的 `normalizeQuery` 写入 `appIds`。
 
 ## 接口清单
 

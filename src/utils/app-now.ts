@@ -5,20 +5,9 @@
  * 上线后：只需要把 `getFixedNow()` 改为返回 `new Date()`（或改为读取环境变量）即可全局恢复真实今天。
  */
 
-/** 固定“今天”为 2026-03-15（本地时区 00:00:00） */
+/** 动态返回“今天”（真实当前时间） */
 function getFixedNow(): Date {
-  // 保持“日期固定”，但沿用真实的时分秒，避免导出文件名/日志时间等出现大量重复
-  const real = new Date()
-  // month: 0-11
-  return new Date(
-    2026,
-    2,
-    5,
-    real.getHours(),
-    real.getMinutes(),
-    real.getSeconds(),
-    real.getMilliseconds()
-  )
+  return new Date()
 }
 
 export function getAppNow(): Date {

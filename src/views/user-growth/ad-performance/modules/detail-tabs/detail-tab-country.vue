@@ -91,8 +91,17 @@
         </ElTableColumn>
         <ElTableColumn prop="estimatedProfit" label="预估利润" width="110" align="right">
           <template #default="{ row }">
-            <span :class="profitClass(row.estimatedProfit)">
-              {{ row.estimatedProfit >= 0 ? '+' : '' }}{{ formatMoney(row.estimatedProfit, 0) }}
+            <span class="ap-profit">
+              <span
+                class="ap-profit__tip"
+                :class="[profitClass(row.estimatedProfit), trendClass(row.estimatedProfit)]"
+                aria-hidden="true"
+              >
+                <span class="ap-profit__arrow"></span>
+              </span>
+              <span class="ap-profit__value" :class="profitClass(row.estimatedProfit)">
+                {{ row.estimatedProfit >= 0 ? '+' : '' }}{{ formatMoney(row.estimatedProfit, 0) }}
+              </span>
             </span>
           </template>
         </ElTableColumn>
@@ -174,6 +183,12 @@
 
   function profitClass(profit: number): string {
     return profit >= 0 ? 'is-profit-up' : 'is-profit-down'
+  }
+
+  function trendClass(n: number): string {
+    if (n > 0) return 'is-trend-up'
+    if (n < 0) return 'is-trend-down'
+    return 'is-trend-flat'
   }
 
   function getTrendPoints(row: AdPerformanceDetailMarketRow): number[] {
@@ -498,6 +513,48 @@
   .is-profit-down {
     font-weight: 800;
     color: var(--art-danger);
+  }
+
+  .ap-profit {
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+    justify-content: flex-end;
+    white-space: nowrap;
+  }
+
+  .ap-profit__tip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 18px;
+    padding: 0 6px;
+    background: color-mix(in srgb, currentcolor 10%, transparent);
+    border: 1px solid color-mix(in srgb, currentcolor 28%, transparent);
+    border-radius: 9999px;
+    box-shadow: 0 0 0 1px color-mix(in srgb, currentcolor 8%, transparent) inset;
+  }
+
+  .ap-profit__arrow {
+    width: 0;
+    height: 0;
+    opacity: 0.95;
+  }
+
+  .ap-profit__tip.is-trend-up .ap-profit__arrow {
+    border-right: 5px solid transparent;
+    border-bottom: 7px solid currentcolor;
+    border-left: 5px solid transparent;
+  }
+
+  .ap-profit__tip.is-trend-down .ap-profit__arrow {
+    border-top: 7px solid currentcolor;
+    border-right: 5px solid transparent;
+    border-left: 5px solid transparent;
+  }
+
+  .ap-profit__tip.is-trend-flat {
+    display: none;
   }
 
   .ad-performance-detail-insight {

@@ -9,7 +9,9 @@
         "enum": ["quarter", "month"],
         "description": "统计口径类型。"
       },
-      "periodValue": { "type": "string", "required": true, "description": "口径值。" }
+      "periodValue": { "type": "string", "required": true, "description": "口径值。" },
+      "startDate": { "type": "string", "required": true, "description": "开始日期，YYYY-MM-DD。" },
+      "endDate": { "type": "string", "required": true, "description": "结束日期，YYYY-MM-DD。" }
     },
     "response": {
       "title": { "type": "string", "required": true, "description": "面板标题。" },
@@ -24,7 +26,13 @@
       "roi": { "type": "number", "required": true, "description": "ROI，单位 %，范围 0-100。" }
     }
   },
-  "sampleRequest": { "personId": "u_001", "periodType": "month", "periodValue": "2026-03" },
+  "sampleRequest": {
+    "personId": "u_001",
+    "periodType": "month",
+    "periodValue": "2026-03",
+    "startDate": "2026-03-01",
+    "endDate": "2026-03-30"
+  },
   "sampleResponse": {
     "title": "月度 ROI 趋势（近 3 周）",
     "points": [
@@ -41,7 +49,7 @@
     "url": "POST /api/user-growth/my-performance/roi-trend",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "personId, periodType, periodValue",
+    "requestBody": "personId, periodType, periodValue, startDate, endDate",
     "responseBody": "title, points"
   }
 }

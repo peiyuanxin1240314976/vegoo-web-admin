@@ -4,56 +4,48 @@
     <header class="iap-analysis-page__section--filters iap-entry-1">
       <div class="iap-filters-inner">
         <div class="iap-filters-row">
-          <div class="iap-filter-chip iap-filter-chip--static">
+          <!-- <div class="iap-filter-chip iap-filter-chip--static">
             <ElIcon class="iap-filter-chip__icon"><Calendar /></ElIcon>
             <span class="iap-filter-chip__label">日期</span>
             <span class="iap-filter-chip__value">{{ dateChipText }}</span>
-          </div>
-          <ElDatePicker
+          </div> -->
+          <AppDatePicker
             v-model="filters.date"
             type="date"
+            :shortcuts="dateShortcuts"
             value-format="YYYY-MM-DD"
             format="YYYY-MM-DD"
             placeholder="选择日期"
             class="iap-filter-date"
           />
-          <ElSelect
-            v-model="filters.app"
+          <AppPlatformSearchSelect
+            v-model="filters.appId"
+            mode="app"
             placeholder="应用"
-            class="iap-filter-select"
-            :prefix-icon="Grid"
-          >
-            <ElOption label="全部" value="all" />
-            <ElOption label="Weather5" value="weather5" />
-            <ElOption label="PhoneTracker" value="phonetracker" />
-            <ElOption label="YearCam" value="yearcam" />
-            <ElOption label="AgeCam" value="agecam" />
-          </ElSelect>
-          <ElSelect
-            v-model="filters.platform"
-            placeholder="终端平台"
-            class="iap-filter-select"
-            :prefix-icon="Monitor"
-          >
-            <ElOption label="Android&iOS" value="all" />
-            <ElOption label="iOS" value="ios" />
-            <ElOption label="Android" value="android" />
-          </ElSelect>
+            search-placeholder="应用"
+            class="iap-filter-select iap-filter-select--app"
+            input-class="iap-filter-select__input"
+            :setting-apps="settingAppsForSelect"
+            :height="36"
+            :min-width="150"
+            :max-width="240"
+          />
           <ElSelect
             v-model="filters.country"
             placeholder="国家"
             class="iap-filter-select"
             :prefix-icon="Flag"
           >
-            <ElOption label="全部" value="all" />
-            <ElOption label="US" value="us" />
-            <ElOption label="KR" value="kr" />
-            <ElOption label="DE" value="de" />
-            <ElOption label="JP" value="jp" />
+            <ElOption
+              v-for="opt in countrySelectOptions"
+              :key="opt.value === '' ? '__all_country__' : opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
           </ElSelect>
           <div class="iap-filter-actions">
-            <ElButton round class="iap-search-btn" @click="handleSearch">检索</ElButton>
-            <ElButton round class="iap-search-btn" @click="onExportClick">导出</ElButton>
+            <ElButton type="primary" plain round @click="handleSearch">搜索</ElButton>
+            <!-- <ElButton type="primary" plain round @click="onExportClick">导出</ElButton> -->
           </div>
         </div>
       </div>
@@ -126,13 +118,51 @@
 </template>
 
 <script setup lang="ts">
-  import { Calendar, Flag, Grid, Monitor } from '@element-plus/icons-vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
+  import { Flag } from '@element-plus/icons-vue'
+  import { storeToRefs } from 'pinia'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import { getAppTodayYYYYMMDD } from '@/utils/app-now'
+  import { dateShortcuts } from '@/utils/form/date-shortcuts'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
+  import type { CockpitMetaOptionItem, CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
   import IAPChannelTab from './IAPChannelTab.vue'
   import IAPProductTab from './IAPProductTab.vue'
   import IAPOrderTab from './IAPOrderTab.vue'
 
   defineOptions({ name: 'IAPAnalysis' })
+
+  const metaStore = useCockpitMetaFilterStore()
+  const { data: cockpitMeta } = storeToRefs(metaStore)
+
+  function fallbackOptions(label: string): CockpitMetaOptionItem[] {
+    return [{ label, value: '' }]
+  }
+
+  const appSelectOptions = computed(() => {
+    const list = cockpitMeta.value?.appOptions
+    return list?.length ? list : fallbackOptions('全部')
+  })
+  const countrySelectOptions = computed(() => {
+    const list = cockpitMeta.value?.countryOptions
+    return list?.length ? list : fallbackOptions('全部')
+  })
+  const settingAppsForSelect = computed<CockpitSettingAppItem[]>(() => {
+    const fromCockpit = cockpitMeta.value?.settingApps ?? []
+    if (fromCockpit.length) return fromCockpit
+
+    return appSelectOptions.value
+      .filter((opt) => opt.value !== '')
+      .map((opt, index) => ({
+        sAppId: String(opt.value ?? ''),
+        nPlatform: '',
+        platformName: '',
+        sAppName: String(opt.label ?? ''),
+        sAppShortName: String(opt.label ?? ''),
+        nCategory: `fallback-${index}`,
+        categoryName: '应用'
+      }))
+  })
 
   const activeTab = ref<'channel' | 'product' | 'order'>('channel')
 
@@ -143,21 +173,25 @@
   ]
 
   const filters = reactive({
-    app: 'all',
-    platform: 'all',
-    country: 'all',
+    appId: [] as string[],
+    platform: '',
+    country: '',
     date: getAppTodayYYYYMMDD()
   })
 
-  const appliedFilters = ref({ ...filters })
+  const appliedFilters = ref<{ appId: string[]; platform: string; country: string; date: string }>({
+    ...filters
+  })
   const searchToken = ref(0)
+  const hasSyncedInitialAutoApp = ref(false)
 
-  const dateChipText = computed(() => filters.date || '—')
+  // const dateChipText = computed(() => filters.date || '-')
 
   const bootLoading = ref(true)
   let bootTimer: ReturnType<typeof setTimeout> | null = null
 
   onMounted(() => {
+    void metaStore.ensureLoaded()
     bootTimer = setTimeout(() => {
       bootLoading.value = false
       bootTimer = null
@@ -179,9 +213,20 @@
     }, 260)
   }
 
-  function onExportClick() {
-    /* 演示占位，与改版前一致不接真实导出 */
-  }
+  watch(
+    () => filters.appId,
+    (appId) => {
+      // AppPlatformSearchSelect 会自动选首个应用；首屏把该值同步到 appliedFilters 并触发一次查询。
+      if (hasSyncedInitialAutoApp.value) return
+      if (Array.isArray(appId) ? appId.length === 0 : !appId) return
+      hasSyncedInitialAutoApp.value = true
+      handleSearch()
+    }
+  )
+
+  // function onExportClick() {
+  //   // 占位，保留原交互
+  // }
 </script>
 
 <style scoped lang="scss">
@@ -218,19 +263,19 @@
     display: inline-flex;
     gap: 7px;
     align-items: center;
-    min-height: 40px;
+    min-height: 36px;
     padding: 0 14px;
     white-space: nowrap;
-    background: rgb(16 185 129 / 8%);
-    border: 1px solid rgb(16 185 129 / 30%);
-    border-radius: 9999px;
-    box-shadow: 0 0 16px rgb(16 185 129 / 10%);
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: 0 0 16px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 10%, transparent);
   }
 
   .iap-filter-chip__icon {
     font-size: 16px;
-    color: #10b981;
-    filter: drop-shadow(0 0 6px rgb(16 185 129 / 55%));
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   .iap-filter-chip__label {
@@ -241,8 +286,7 @@
   .iap-filter-chip__value {
     font-size: 13px;
     font-weight: 600;
-    color: #10b981;
-    text-shadow: 0 0 10px rgb(16 185 129 / 50%);
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   .iap-filter-date {
@@ -251,12 +295,12 @@
     min-width: 140px;
   }
 
-  :deep(.iap-filter-date .el-input__wrapper) {
-    min-height: 40px;
+  :deep(.iap-filter-date.el-date-editor) {
+    min-height: 36px;
     padding: 0 12px;
-    background: rgb(16 185 129 / 6%);
-    border: 1px solid rgb(16 185 129 / 28%);
-    border-radius: 9999px;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
     box-shadow: none;
     transition:
       border-color 0.22s ease,
@@ -264,15 +308,40 @@
       background 0.22s ease;
   }
 
+  :deep(.iap-filter-date .el-input__wrapper) {
+    padding: 0;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  :deep(.iap-filter-date.el-date-editor.is-active),
   :deep(.iap-filter-date .el-input__wrapper.is-focus) {
-    background: rgb(16 185 129 / 10%) !important;
-    border-color: #10b981 !important;
-    box-shadow: 0 0 0 2px rgb(16 185 129 / 20%) !important;
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
+  }
+
+  :deep(.iap-filter-date:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
   }
 
   :deep(.iap-filter-date .el-input__inner) {
     font-size: 13px;
     color: var(--el-text-color-primary);
+  }
+
+  :deep(.iap-filter-date .el-input__prefix-inner),
+  :deep(.iap-filter-date .el-input__icon) {
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   .iap-filter-select {
@@ -281,19 +350,28 @@
     max-width: 100%;
   }
 
-  :deep(.iap-filter-select) {
-    --el-input-focus-border-color: #10b981;
-    --el-border-color-hover: rgb(16 185 129 / 75%);
-    --el-color-primary: #10b981;
-    --el-border-color-focus: #10b981;
-    --el-component-size: 40px;
+  .iap-filter-select--app {
+    width: 150px;
+    min-width: 150px;
+    max-width: 240px;
   }
 
-  :deep(.iap-filter-select .el-input__wrapper) {
+  :deep(.iap-filter-select) {
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
+  }
+
+  :deep(.iap-filter-select .el-select__wrapper),
+  :deep(.iap-filter-select .el-input__wrapper),
+  :deep(.iap-filter-select__input) {
     padding: 0 12px;
-    background: rgb(16 185 129 / 6%);
-    border: 1px solid rgb(16 185 129 / 28%);
-    border-radius: 9999px;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
     box-shadow: none;
     transition:
       border-color 0.22s ease,
@@ -306,26 +384,36 @@
     color: var(--el-text-color-primary);
   }
 
-  :deep(.iap-filter-select .el-input__prefix-inner svg) {
+  :deep(.iap-filter-select .el-input__prefix-inner svg),
+  :deep(.iap-filter-select__input .app-platform-search-select__suffix) {
     width: 16px;
     height: 16px;
-    color: #10b981;
-    filter: drop-shadow(0 0 5px rgb(16 185 129 / 50%));
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   :deep(.iap-filter-select .el-select__caret) {
-    color: #10b981;
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
-  :deep(.iap-filter-select .el-input__wrapper.is-focus) {
-    background: rgb(16 185 129 / 10%) !important;
-    border-color: #10b981 !important;
-    box-shadow: 0 0 0 2px rgb(16 185 129 / 20%) !important;
+  :deep(.iap-filter-select .el-select__wrapper.is-focused),
+  :deep(.iap-filter-select .el-input__wrapper.is-focus),
+  :deep(.iap-filter-select__input.is-open) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
   }
 
-  :deep(.iap-filter-select .el-input__wrapper:hover) {
-    border-color: rgb(16 185 129 / 60%);
-    box-shadow: 0 0 12px rgb(16 185 129 / 18%);
+  :deep(.iap-filter-select .el-select__wrapper:hover),
+  :deep(.iap-filter-select .el-input__wrapper:hover),
+  :deep(.iap-filter-select__input:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
   }
 
   .iap-filter-actions {
@@ -335,30 +423,27 @@
   }
 
   .iap-search-btn {
-    --el-button-size: 40px;
+    --el-button-size: 36px;
 
-    height: 40px;
+    height: 36px;
     padding: 0 20px;
     font-size: 14px;
-    color: var(--art-success);
-    background: color-mix(in srgb, var(--art-success) 16%, transparent);
-    border: 1px solid color-mix(in srgb, var(--art-success) 45%, transparent);
-    box-shadow:
-      0 0 18px color-mix(in srgb, var(--art-success) 20%, transparent),
-      inset 0 1px 0 rgb(255 255 255 / 10%);
-    transition:
-      box-shadow 0.22s ease,
-      transform 0.18s ease;
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: 0 0 18px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 20%, transparent);
+    transition: box-shadow 0.22s ease;
 
     &:hover {
-      box-shadow:
-        0 0 26px color-mix(in srgb, var(--art-success) 34%, transparent),
-        inset 0 1px 0 rgb(255 255 255 / 16%);
-      transform: translateY(-1px);
-    }
-
-    &:active {
-      transform: translateY(0);
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 8%,
+        transparent
+      );
+      box-shadow: 0 0 26px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 28%, transparent);
     }
   }
 
@@ -369,8 +454,8 @@
     gap: 8px;
     padding: 4px;
     margin-bottom: 16px;
-    background: color-mix(in srgb, var(--default-box-color) 75%, transparent);
-    border: 1px solid color-mix(in srgb, var(--art-success) 35%, var(--default-border));
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
     border-radius: 9999px;
   }
 
@@ -393,19 +478,29 @@
       box-shadow 0.15s ease;
 
     &:hover {
-      color: var(--art-success);
-      background: color-mix(in srgb, var(--art-success) 12%, transparent);
+      color: var(--theme-color, var(--art-primary, #3b82f6));
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 12%,
+        transparent
+      );
     }
 
     &.is-active {
       font-weight: 700;
-      color: var(--art-success);
-      background: color-mix(in srgb, var(--art-success) 18%, transparent);
-      box-shadow: 0 0 0 1px color-mix(in srgb, var(--art-success) 45%, transparent) inset;
+      color: var(--theme-color, var(--art-primary, #3b82f6));
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 18%,
+        transparent
+      );
+      box-shadow: 0 0 0 1px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 45%, transparent) inset;
     }
 
     &:focus-visible {
-      box-shadow: 0 0 0 2px color-mix(in srgb, var(--art-success) 45%, transparent);
+      box-shadow: 0 0 0 2px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 45%, transparent);
     }
   }
 
@@ -448,8 +543,12 @@
       padding: 14px 16px;
     }
 
-    .iap-filter-select {
+    .iap-filter-select,
+    .iap-filter-select--app {
       flex: 1 1 calc(50% - 6px);
+      width: auto;
+      min-width: 0;
+      max-width: 100%;
     }
 
     .iap-filter-actions {

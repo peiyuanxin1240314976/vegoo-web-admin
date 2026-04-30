@@ -4,8 +4,13 @@
     "triggers": [
       {
         "moment": "广告详情页首屏",
-        "detail": "`ad-detail/index.vue` 挂载时按路由 `adId` 拉取概览 KPI 与结构数据。",
-        "prerequisite": "有效 `adId`。"
+        "detail": "`ad-detail/index.vue` 挂载时按路由 `adId` 与日期范围拉取概览 KPI 与结构数据。",
+        "prerequisite": "有效 `adId`；`startDate`/`endDate` 与系列详情一致。"
+      },
+      {
+        "moment": "标题行日期范围变更",
+        "detail": "再次请求本接口刷新 KPI、趋势与素材表。",
+        "prerequisite": "仍在本页且已加载完成。"
       },
       {
         "moment": "顶栏暂停等操作成功后",
@@ -19,7 +24,17 @@
   "fieldDescription": {
     "request": {
       "adId": { "type": "string", "required": true, "description": "广告组唯一标识。" },
-      "campaignId": { "type": "string", "required": true, "description": "所属广告系列 ID。" }
+      "campaignId": { "type": "string", "required": true, "description": "所属广告系列 ID。" },
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "查询起始日期（含），`YYYY-MM-DD`，与系列详情筛选一致。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": true,
+        "description": "查询结束日期（含），`YYYY-MM-DD`。"
+      }
     },
     "response": {
       "adId": { "type": "string", "required": true, "description": "广告组 ID。" },
@@ -147,7 +162,9 @@
   },
   "sampleRequest": {
     "adId": "1",
-    "campaignId": "0032021863838Z7"
+    "campaignId": "0032021863838Z7",
+    "startDate": "2026-01-01",
+    "endDate": "2026-01-31"
   },
   "sampleResponse": {
     "adId": "1",
@@ -214,7 +231,7 @@
     "url": "POST /api/v1/datacenter/analysis/ad-performance/campaign-detail/ad-detail/overview",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "adId, campaignId",
+    "requestBody": "adId, campaignId, startDate, endDate",
     "responseBody": "AdDetailData"
   },
   "apiSuggestion": {

@@ -15,9 +15,10 @@
       <div class="iap-actions">
         <div class="iap-pill">
           <span class="iap-pill__label">时间范围</span>
-          <ElDatePicker
+          <AppDatePicker
             v-model="dateRange"
             type="daterange"
+            :shortcuts="dateRangeShortcuts"
             size="small"
             range-separator="-"
             start-placeholder="开始日期"
@@ -68,19 +69,39 @@
     </div>
 
     <!-- KPI 指标卡片行 -->
-    <div class="iap-kpi-row iap-entry-3">
-      <div v-for="(kpi, i) in kpiList" :key="kpi.label" class="iap-kpi-card iap-neon-surface">
-        <div class="iap-kpi-top">
-          <span class="iap-kpi-label">{{ kpi.label }}</span>
-          <div :ref="(el) => setKpiSparklineRef(i, el)" class="iap-kpi-sparkline" />
+    <ElSkeleton :loading="detailLoading" animated :throttle="0">
+      <template #template>
+        <div class="iap-kpi-row iap-entry-3">
+          <div
+            v-for="i in 6"
+            :key="'iap-sk-kpi-' + i"
+            class="iap-kpi-card iap-neon-surface iap-detail-sk-kpi"
+          >
+            <div class="iap-kpi-top">
+              <ElSkeletonItem variant="text" class="iap-detail-sk-line iap-detail-sk-line--label" />
+              <ElSkeletonItem variant="rect" class="iap-detail-sk-spark" />
+            </div>
+            <ElSkeletonItem variant="text" class="iap-detail-sk-line iap-detail-sk-line--value" />
+            <ElSkeletonItem variant="text" class="iap-detail-sk-line iap-detail-sk-line--sub" />
+          </div>
         </div>
-        <div class="iap-kpi-value">{{ kpi.value }}</div>
-        <div class="iap-kpi-change" :class="kpi.trend === 'up' ? 'is-up' : 'is-down'">
-          <ElIcon><component :is="kpi.trend === 'up' ? ArrowUp : ArrowDown" /></ElIcon>
-          {{ kpi.change }} 环比
+      </template>
+      <template #default>
+        <div class="iap-kpi-row iap-entry-3">
+          <div v-for="(kpi, i) in kpiList" :key="kpi.label" class="iap-kpi-card iap-neon-surface">
+            <div class="iap-kpi-top">
+              <span class="iap-kpi-label">{{ kpi.label }}</span>
+              <div :ref="(el) => setKpiSparklineRef(i, el)" class="iap-kpi-sparkline" />
+            </div>
+            <div class="iap-kpi-value">{{ kpi.value }}</div>
+            <div class="iap-kpi-change" :class="kpi.trend === 'up' ? 'is-up' : 'is-down'">
+              <ElIcon><component :is="kpi.trend === 'up' ? ArrowUp : ArrowDown" /></ElIcon>
+              {{ kpi.change }} 环比
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+      </template>
+    </ElSkeleton>
 
     <!-- Tab 切换 -->
     <nav class="iap-tab-bar iap-entry-4">
@@ -99,162 +120,262 @@
 
     <!-- 产品统计 Tab -->
     <main v-if="activeTab === 'product'" class="iap-tab-content">
-      <div class="iap-section-card iap-neon-surface">
-        <div class="iap-section-title iap-card-title-text">产品SKU订单分析</div>
-        <ElTable :data="skuData" class="iap-dark-table" size="small" row-key="name">
-          <ElTableColumn prop="name" label="产品名称" min-width="145" show-overflow-tooltip />
-          <ElTableColumn prop="type" label="类型" width="75">
-            <template #default="{ row }">
-              <ElTag :class="row.type === '订阅' ? 'iap-tag--sub' : 'iap-tag--iap'" size="small">
-                {{ row.type }}
-              </ElTag>
-            </template>
-          </ElTableColumn>
-          <ElTableColumn prop="orders" label="订单数" width="100" align="left" />
-          <ElTableColumn prop="revenue" label="收入(USD)" width="110" align="left" />
-          <ElTableColumn prop="ratio" label="占比" width="180" align="left">
-            <template #default="{ row }">
-              <div class="iap-ratio-wrap">
-                <div class="iap-ratio-bar" :style="{ width: row.ratio }"></div>
-                <span class="iap-ratio-text">{{ row.ratio }}</span>
+      <ElSkeleton :loading="tabContentSkeleton" animated :throttle="0">
+        <template #template>
+          <div class="iap-section-card iap-neon-surface iap-detail-sk-section">
+            <ElSkeletonItem variant="text" class="iap-detail-sk-line iap-detail-sk-line--title" />
+            <ElSkeletonItem variant="rect" class="iap-detail-sk-table" />
+          </div>
+          <div class="iap-bottom-three-col">
+            <div class="iap-section-card iap-neon-surface iap-flex-1 iap-detail-sk-section">
+              <ElSkeletonItem variant="text" class="iap-detail-sk-line iap-detail-sk-line--title" />
+              <div class="iap-detail-sk-seg">
+                <ElSkeletonItem
+                  v-for="n in 4"
+                  :key="'ps-' + n"
+                  variant="text"
+                  class="iap-detail-sk-line iap-detail-sk-line--seg"
+                />
               </div>
-            </template>
-          </ElTableColumn>
-          <ElTableColumn prop="arpu" label="ARPU" width="110" align="left" />
-          <ElTableColumn prop="conversion" label="转化率" width="110" align="left" />
-          <ElTableColumn prop="retention" label="续费率" width="110" align="left">
-            <template #default="{ row }">
-              <span :class="parseFloat(row.retention) > 60 ? 'iap-text-green' : 'iap-text-orange'">
-                {{ row.retention }}
-              </span>
-            </template>
-          </ElTableColumn>
-          <ElTableColumn prop="churn" label="退款率" width="110" align="left" />
-          <ElTableColumn prop="trend" label="趋势" width="130" align="left">
-            <template #default="{ row }">
-              <div
-                class="iap-sku-trend-spark"
-                :ref="(el) => setSkuTrendSparklineRef(row.name, el)"
-              />
-            </template>
-          </ElTableColumn>
-        </ElTable>
-      </div>
+            </div>
+            <div class="iap-section-card iap-neon-surface iap-flex-1 iap-detail-sk-section">
+              <ElSkeletonItem variant="text" class="iap-detail-sk-line iap-detail-sk-line--title" />
+              <ElSkeletonItem variant="rect" class="iap-detail-sk-chart-sm" />
+            </div>
+            <div class="iap-section-card iap-neon-surface iap-flex-1 iap-detail-sk-section">
+              <ElSkeletonItem variant="text" class="iap-detail-sk-line iap-detail-sk-line--title" />
+              <ElSkeletonItem variant="rect" class="iap-detail-sk-chart-sm" />
+            </div>
+          </div>
+        </template>
+        <template #default>
+          <div class="iap-section-card iap-neon-surface">
+            <div class="iap-section-title iap-card-title-text">产品SKU订单分析</div>
+            <ElTable :data="skuData" class="iap-dark-table" size="small" row-key="name">
+              <ElTableColumn prop="name" label="产品名称" min-width="145" show-overflow-tooltip />
+              <ElTableColumn prop="type" label="类型" width="75">
+                <template #default="{ row }">
+                  <ElTag
+                    :class="row.type === '订阅' ? 'iap-tag--sub' : 'iap-tag--iap'"
+                    size="small"
+                  >
+                    {{ row.type }}
+                  </ElTag>
+                </template>
+              </ElTableColumn>
+              <ElTableColumn prop="orders" label="订单数" width="100" align="left" />
+              <ElTableColumn prop="revenue" label="收入(USD)" width="110" align="left" />
+              <ElTableColumn prop="ratio" label="占比" width="180" align="left">
+                <template #default="{ row }">
+                  <div class="iap-ratio-wrap">
+                    <div class="iap-ratio-bar" :style="{ width: row.ratio }"></div>
+                    <span class="iap-ratio-text">{{ row.ratio }}</span>
+                  </div>
+                </template>
+              </ElTableColumn>
+              <ElTableColumn prop="arpu" label="ARPU" width="110" align="left" />
+              <ElTableColumn prop="conversion" label="转化率" width="110" align="left" />
+              <ElTableColumn prop="retention" label="续订率" width="110" align="left">
+                <template #default="{ row }">
+                  <span
+                    :class="parseFloat(row.retention) > 60 ? 'iap-text-green' : 'iap-text-orange'"
+                  >
+                    {{ row.retention }}
+                  </span>
+                </template>
+              </ElTableColumn>
+              <ElTableColumn prop="churn" label="退款率" width="110" align="left" />
+              <ElTableColumn prop="trend" label="趋势" width="130" align="left">
+                <template #default="{ row }">
+                  <div
+                    class="iap-sku-trend-spark"
+                    :ref="(el) => setSkuTrendSparklineRef(row.name, el)"
+                  />
+                </template>
+              </ElTableColumn>
+            </ElTable>
+          </div>
 
-      <div class="iap-bottom-three-col">
-        <div class="iap-section-card iap-neon-surface iap-flex-1">
-          <div class="iap-section-title iap-card-title-text">用户分层分布</div>
-          <div class="iap-segment-list">
-            <div v-for="seg in userSegments" :key="seg.label" class="iap-segment-row">
-              <div class="iap-seg-left">
-                <span class="iap-seg-label">{{ seg.label }}</span>
-                <span class="iap-seg-count">{{ seg.count }}</span>
+          <div class="iap-bottom-three-col">
+            <div class="iap-section-card iap-neon-surface iap-flex-1">
+              <div class="iap-section-title iap-card-title-text">用户分层分布</div>
+              <div class="iap-segment-list">
+                <div v-for="seg in userSegments" :key="seg.label" class="iap-segment-row">
+                  <div class="iap-seg-left">
+                    <span class="iap-seg-label">{{ seg.label }}</span>
+                    <span class="iap-seg-count">{{ seg.count }}</span>
+                  </div>
+                  <div class="iap-seg-bar-wrap">
+                    <div
+                      class="iap-seg-bar"
+                      :style="{ width: seg.pct, background: seg.color }"
+                    ></div>
+                  </div>
+                  <span class="iap-seg-arpu">{{ seg.arpu }}</span>
+                </div>
               </div>
-              <div class="iap-seg-bar-wrap">
-                <div class="iap-seg-bar" :style="{ width: seg.pct, background: seg.color }"></div>
+            </div>
+            <div class="iap-section-card iap-neon-surface iap-flex-1">
+              <div class="iap-section-title iap-card-title-text">订阅周期分布</div>
+              <div class="iap-donut-wrap">
+                <div class="iap-donut-center">
+                  <div class="iap-donut-num">{{ subscriptionTotal }}</div>
+                  <div class="iap-donut-sub">订阅人数</div>
+                </div>
+                <div ref="donutRef" class="iap-donut-chart"></div>
               </div>
-              <span class="iap-seg-arpu">{{ seg.arpu }}</span>
+              <div class="iap-donut-legend">
+                <span v-for="item in donutData" :key="item.name" class="iap-legend-item">
+                  <i :style="{ background: item.color }"></i>{{ item.name }} {{ item.pct }}
+                </span>
+              </div>
+            </div>
+            <div class="iap-section-card iap-neon-surface iap-flex-1">
+              <div class="iap-section-title iap-card-title-text">续费周期分析</div>
+              <div ref="renewRef" class="iap-renew-chart"></div>
             </div>
           </div>
-        </div>
-        <div class="iap-section-card iap-neon-surface iap-flex-1">
-          <div class="iap-section-title iap-card-title-text">订阅周期分布</div>
-          <div class="iap-donut-wrap">
-            <div class="iap-donut-center">
-              <div class="iap-donut-num">{{ subscriptionTotal }}</div>
-              <div class="iap-donut-sub">订阅人数</div>
-            </div>
-            <div ref="donutRef" class="iap-donut-chart"></div>
-          </div>
-          <div class="iap-donut-legend">
-            <span v-for="item in donutData" :key="item.name" class="iap-legend-item">
-              <i :style="{ background: item.color }"></i>{{ item.name }} {{ item.pct }}
-            </span>
-          </div>
-        </div>
-        <div class="iap-section-card iap-neon-surface iap-flex-1">
-          <div class="iap-section-title iap-card-title-text">续费周期分析</div>
-          <div ref="renewRef" class="iap-renew-chart"></div>
-        </div>
-      </div>
+        </template>
+      </ElSkeleton>
     </main>
 
     <!-- 用户分析 Tab -->
     <main v-if="activeTab === 'user'" class="iap-tab-content">
-      <div class="iap-two-col-grid">
-        <div class="iap-section-card iap-neon-surface">
-          <div class="iap-section-title iap-card-title-text">用户分层价值分析</div>
-          <ElTable :data="userValueData" class="iap-dark-table" size="small">
-            <ElTableColumn prop="segment" label="用户分层" width="120" align="left" />
-            <ElTableColumn prop="count" label="用户数" width="80" align="left" />
-            <ElTableColumn prop="ratio" label="占比" width="65" align="left" />
-            <ElTableColumn prop="arpu" label="ARPU" width="75" align="left" />
-            <ElTableColumn prop="conversion" label="转化率" width="75" align="left" />
-            <ElTableColumn prop="retention" label="续费率" width="75" align="left">
-              <template #default="{ row }">
-                <span
-                  :class="parseFloat(row.retention) > 60 ? 'iap-text-green' : 'iap-text-orange'"
-                >
-                  {{ row.retention }}
-                </span>
-              </template>
-            </ElTableColumn>
-            <ElTableColumn prop="churn" label="退款率" width="75" align="left" />
-          </ElTable>
-        </div>
-        <div class="iap-section-card iap-neon-surface">
-          <div class="iap-section-title iap-card-title-text">Top 10 国家用户分布</div>
-          <div ref="countryRef" class="iap-country-chart"></div>
-        </div>
-      </div>
-      <div class="iap-two-col-grid iap-mt-16">
-        <div class="iap-section-card iap-neon-surface">
-          <div class="iap-section-title iap-card-title-text">新老用户付费行为对比</div>
-          <div ref="userCompareRef" class="iap-user-compare-chart"></div>
-        </div>
-        <div class="iap-section-card iap-neon-surface">
-          <div class="iap-section-title iap-card-title-text">用户首次付费时间分布</div>
-          <div ref="firstPayRef" class="iap-first-pay-chart"></div>
-        </div>
-      </div>
+      <ElSkeleton :loading="tabContentSkeleton" animated :throttle="0">
+        <template #template>
+          <div class="iap-two-col-grid">
+            <div class="iap-section-card iap-neon-surface iap-detail-sk-section">
+              <ElSkeletonItem variant="text" class="iap-detail-sk-line iap-detail-sk-line--title" />
+              <ElSkeletonItem
+                variant="rect"
+                class="iap-detail-sk-table iap-detail-sk-table--short"
+              />
+            </div>
+            <div class="iap-section-card iap-neon-surface iap-detail-sk-section">
+              <ElSkeletonItem variant="text" class="iap-detail-sk-line iap-detail-sk-line--title" />
+              <ElSkeletonItem variant="rect" class="iap-detail-sk-chart-md" />
+            </div>
+          </div>
+          <div class="iap-two-col-grid iap-mt-16">
+            <div class="iap-section-card iap-neon-surface iap-detail-sk-section">
+              <ElSkeletonItem variant="text" class="iap-detail-sk-line iap-detail-sk-line--title" />
+              <ElSkeletonItem variant="rect" class="iap-detail-sk-chart-md" />
+            </div>
+            <div class="iap-section-card iap-neon-surface iap-detail-sk-section">
+              <ElSkeletonItem variant="text" class="iap-detail-sk-line iap-detail-sk-line--title" />
+              <ElSkeletonItem variant="rect" class="iap-detail-sk-chart-md" />
+            </div>
+          </div>
+        </template>
+        <template #default>
+          <div class="iap-two-col-grid">
+            <div class="iap-section-card iap-neon-surface">
+              <div class="iap-section-title iap-card-title-text">用户分层价值分析</div>
+              <ElTable :data="userValueData" class="iap-dark-table" size="small">
+                <ElTableColumn prop="segment" label="用户分层" width="120" align="left" />
+                <ElTableColumn prop="count" label="用户数" width="80" align="left" />
+                <ElTableColumn prop="ratio" label="占比" width="65" align="left" />
+                <ElTableColumn prop="arpu" label="ARPU" width="75" align="left" />
+                <ElTableColumn prop="conversion" label="转化率" width="75" align="left" />
+                <ElTableColumn prop="retention" label="续订率" width="75" align="left">
+                  <template #default="{ row }">
+                    <span
+                      :class="parseFloat(row.retention) > 60 ? 'iap-text-green' : 'iap-text-orange'"
+                    >
+                      {{ row.retention }}
+                    </span>
+                  </template>
+                </ElTableColumn>
+                <ElTableColumn prop="churn" label="退款率" width="75" align="left" />
+              </ElTable>
+            </div>
+            <div class="iap-section-card iap-neon-surface">
+              <div class="iap-section-title iap-card-title-text">Top 10 国家用户分布</div>
+              <div ref="countryRef" class="iap-country-chart"></div>
+            </div>
+          </div>
+          <div class="iap-two-col-grid iap-mt-16">
+            <div class="iap-section-card iap-neon-surface">
+              <div class="iap-section-title iap-card-title-text">新老用户付费行为对比</div>
+              <div ref="userCompareRef" class="iap-user-compare-chart"></div>
+            </div>
+            <div class="iap-section-card iap-neon-surface">
+              <div class="iap-section-title iap-card-title-text">用户首次付费时间分布</div>
+              <div ref="firstPayRef" class="iap-first-pay-chart"></div>
+            </div>
+          </div>
+        </template>
+      </ElSkeleton>
     </main>
 
     <!-- 趋势分析 Tab -->
     <main v-if="activeTab === 'trend'" class="iap-tab-content">
-      <div class="iap-section-card iap-neon-surface">
-        <div class="iap-section-title iap-section-title--legend">
-          <span class="iap-card-title-text">订单数 vs 收入 日趋势</span>
-          <div class="iap-legend-right">
-            <span class="iap-legend-dot iap-legend-dot--teal"></span>订单数
-            <span class="iap-legend-dot iap-legend-dot--purple"></span>收入
+      <ElSkeleton :loading="tabContentSkeleton" animated :throttle="0">
+        <template #template>
+          <div class="iap-section-card iap-neon-surface iap-detail-sk-section">
+            <div class="iap-detail-sk-title-row">
+              <ElSkeletonItem variant="text" class="iap-detail-sk-line iap-detail-sk-line--title" />
+              <ElSkeletonItem
+                variant="text"
+                class="iap-detail-sk-line iap-detail-sk-line--legend"
+              />
+            </div>
+            <ElSkeletonItem variant="rect" class="iap-detail-sk-chart-lg" />
           </div>
-        </div>
-        <div ref="trendRef" class="iap-trend-chart-lg"></div>
-      </div>
-      <div class="iap-three-col-grid iap-mt-16">
-        <div class="iap-section-card iap-neon-surface">
-          <div class="iap-section-title iap-card-title-text">ARPU 日趋势</div>
-          <div ref="arpuTrendRef" class="iap-trend-chart-sm"></div>
-        </div>
-        <div class="iap-section-card iap-neon-surface">
-          <div class="iap-section-title iap-card-title-text">转化率 & 续费率 趋势</div>
-          <div ref="convTrendRef" class="iap-trend-chart-sm"></div>
-        </div>
-        <div class="iap-section-card iap-neon-surface">
-          <div class="iap-section-title iap-card-title-text">退款率 趋势</div>
-          <div ref="churnTrendRef" class="iap-trend-chart-sm"></div>
-        </div>
-      </div>
+          <div class="iap-three-col-grid iap-mt-16">
+            <div class="iap-section-card iap-neon-surface iap-detail-sk-section">
+              <ElSkeletonItem variant="text" class="iap-detail-sk-line iap-detail-sk-line--title" />
+              <ElSkeletonItem variant="rect" class="iap-detail-sk-chart-sm" />
+            </div>
+            <div class="iap-section-card iap-neon-surface iap-detail-sk-section">
+              <ElSkeletonItem variant="text" class="iap-detail-sk-line iap-detail-sk-line--title" />
+              <ElSkeletonItem variant="rect" class="iap-detail-sk-chart-sm" />
+            </div>
+            <div class="iap-section-card iap-neon-surface iap-detail-sk-section">
+              <ElSkeletonItem variant="text" class="iap-detail-sk-line iap-detail-sk-line--title" />
+              <ElSkeletonItem variant="rect" class="iap-detail-sk-chart-sm" />
+            </div>
+          </div>
+        </template>
+        <template #default>
+          <div class="iap-section-card iap-neon-surface">
+            <div class="iap-section-title iap-section-title--legend">
+              <span class="iap-card-title-text">订单数 vs 收入 日趋势</span>
+              <div class="iap-legend-right">
+                <span class="iap-legend-dot iap-legend-dot--teal"></span>订单数
+                <span class="iap-legend-dot iap-legend-dot--purple"></span>收入
+              </div>
+            </div>
+            <div ref="trendRef" class="iap-trend-chart-lg"></div>
+          </div>
+          <div class="iap-three-col-grid iap-mt-16">
+            <div class="iap-section-card iap-neon-surface">
+              <div class="iap-section-title iap-card-title-text">ARPU 日趋势</div>
+              <div ref="arpuTrendRef" class="iap-trend-chart-sm"></div>
+            </div>
+            <div class="iap-section-card iap-neon-surface">
+              <div class="iap-section-title iap-card-title-text">转化率 & 续订率 趋势</div>
+              <div ref="convTrendRef" class="iap-trend-chart-sm"></div>
+            </div>
+            <div class="iap-section-card iap-neon-surface">
+              <div class="iap-section-title iap-card-title-text">退款率 趋势</div>
+              <div ref="churnTrendRef" class="iap-trend-chart-sm"></div>
+            </div>
+          </div>
+        </template>
+      </ElSkeleton>
     </main>
   </div>
 </template>
 
 <script setup lang="ts">
   import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { useRoute, useRouter } from 'vue-router'
   import { getAppTodayYYYYMMDD } from '@/utils/app-now'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import { ArrowUp, ArrowDown, Download, Monitor } from '@element-plus/icons-vue'
-  import * as echarts from 'echarts'
+  import { echarts } from '@/plugins/echarts'
   import {
     fetchIapDetailKpi,
     fetchIapDetailProduct,
@@ -274,12 +395,10 @@
   const router = useRouter()
 
   const appName = computed(() => (route.query.app as string) || 'PhoneTracker')
-  /** 详情接口入参：优先 query.s_app_id（Overview 跳转），否则回退 app（历史链接） */
+  /** 详情接口入参：来自路由 query.appId */
   const s_app_id = computed(() => {
-    const sid = (route.query.s_app_id as string)?.trim()
-    if (sid) return sid
-    const legacy = (route.query.app as string)?.trim()
-    return legacy || 'phonetracker'
+    const appId = (route.query.appId as string)?.trim()
+    return appId || 'phonetracker'
   })
 
   function goBack() {
@@ -299,6 +418,12 @@
   const country = ref('all')
   const platform = ref('all')
   const activeTab = ref<'product' | 'user' | 'trend'>('product')
+
+  /** 筛选变更：KPI + 当前 Tab 数据重拉 */
+  const detailLoading = ref(false)
+  /** 切换 Tab 且需请求契约数据时 */
+  const tabPanelLoading = ref(false)
+  const tabContentSkeleton = computed(() => detailLoading.value || tabPanelLoading.value)
 
   const tabs = [
     { key: 'product' as const, label: '产品统计' },
@@ -340,13 +465,13 @@
   const convTrendRef = ref<HTMLElement>()
   const churnTrendRef = ref<HTMLElement>()
 
-  const chartInstances: echarts.ECharts[] = []
+  const chartInstances: Array<ReturnType<typeof echarts.init>> = []
 
   const kpiSparklineRefs = ref<(HTMLElement | null)[]>([])
   const skuTrendSparklineRefs = ref<Record<string, HTMLElement | null>>({})
 
   /** 主图表：入场 + 数据更新动效（option 可覆盖 animation*） */
-  const iapChartAnim: echarts.EChartsOption = {
+  const iapChartAnim: import('echarts').EChartsOption = {
     animation: true,
     animationDuration: 880,
     animationEasing: 'cubicOut',
@@ -356,7 +481,7 @@
   }
 
   /** KPI / SKU 迷你图：更短，避免列表里拖沓 */
-  const iapSparklineAnim: echarts.EChartsOption = {
+  const iapSparklineAnim: import('echarts').EChartsOption = {
     animation: true,
     animationDuration: 480,
     animationEasing: 'cubicOut',
@@ -367,7 +492,7 @@
 
   function initChart(
     el: HTMLElement | undefined,
-    option: echarts.EChartsOption,
+    option: import('echarts').EChartsOption,
     animVariant: 'full' | 'spark' = 'full'
   ) {
     if (!el) return
@@ -408,7 +533,7 @@
   }
 
   /** 坐标轴悬浮：指示线 + 轴上高亮类目文案 */
-  const iapTooltipAxis: echarts.TooltipComponentOption = {
+  const iapTooltipAxis: import('echarts').TooltipComponentOption = {
     trigger: 'axis',
     confine: true,
     backgroundColor: 'rgba(24, 24, 27, 0.96)',
@@ -430,7 +555,7 @@
     }
   }
 
-  const iapTooltipAxisShadow: echarts.TooltipComponentOption = {
+  const iapTooltipAxisShadow: import('echarts').TooltipComponentOption = {
     trigger: 'axis',
     confine: true,
     backgroundColor: 'rgba(24, 24, 27, 0.96)',
@@ -452,7 +577,7 @@
     }
   }
 
-  const iapTooltipItem: echarts.TooltipComponentOption = {
+  const iapTooltipItem: import('echarts').TooltipComponentOption = {
     trigger: 'item',
     confine: true,
     backgroundColor: 'rgba(24, 24, 27, 0.96)',
@@ -879,7 +1004,7 @@
       backgroundColor: 'transparent',
       tooltip: { ...iapTooltipAxis },
       grid: { top: 20, right: 16, bottom: iapGridBottomForCategoryLen(crLen), left: 50 },
-      legend: { data: ['转化率', '续费率'], textStyle: { color: '#94a3b8', fontSize: 10 }, top: 0 },
+      legend: { data: ['转化率', '续订率'], textStyle: { color: '#94a3b8', fontSize: 10 }, top: 0 },
       xAxis: {
         type: 'category',
         data: data.dates,
@@ -898,7 +1023,7 @@
           itemStyle: { color: '#6c63ff' }
         },
         {
-          name: '续费率',
+          name: '续订率',
           type: 'line',
           data: data.retention,
           smooth: true,
@@ -981,11 +1106,26 @@
   async function ensureActiveTabLoaded() {
     const p = params()
     if (activeTab.value === 'product' && !detailProduct.value) {
-      detailProduct.value = await fetchIapDetailProduct(p)
+      tabPanelLoading.value = true
+      try {
+        detailProduct.value = await fetchIapDetailProduct(p)
+      } finally {
+        tabPanelLoading.value = false
+      }
     } else if (activeTab.value === 'user' && !detailUser.value) {
-      detailUser.value = await fetchIapDetailUser(p)
+      tabPanelLoading.value = true
+      try {
+        detailUser.value = await fetchIapDetailUser(p)
+      } finally {
+        tabPanelLoading.value = false
+      }
     } else if (activeTab.value === 'trend' && !detailTrend.value) {
-      detailTrend.value = await fetchIapDetailTrend(p)
+      tabPanelLoading.value = true
+      try {
+        detailTrend.value = await fetchIapDetailTrend(p)
+      } finally {
+        tabPanelLoading.value = false
+      }
     }
   }
 
@@ -1001,13 +1141,18 @@
 
   /** 09-detail-kpi + 当前 Tab 对应契约接口 */
   async function refreshDetailScope() {
-    const p = params()
-    detailKpis.value = (await fetchIapDetailKpi(p)).kpis
-    detailProduct.value = null
-    detailUser.value = null
-    detailTrend.value = null
-    await ensureActiveTabLoaded()
-    resetChartsAndRedraw()
+    detailLoading.value = true
+    try {
+      const p = params()
+      detailKpis.value = (await fetchIapDetailKpi(p)).kpis
+      detailProduct.value = null
+      detailUser.value = null
+      detailTrend.value = null
+      await ensureActiveTabLoaded()
+      resetChartsAndRedraw()
+    } finally {
+      detailLoading.value = false
+    }
   }
 
   watch(activeTab, async () => {
@@ -1052,7 +1197,7 @@
     width: 100%;
     min-height: 100%;
     padding: 16px 20px;
-    overflow: auto;
+    overflow: hidden;
     font-size: 13px;
     color: var(--art-gray-900);
     background: transparent;
@@ -1179,13 +1324,14 @@
 
   .iap-kpi-card {
     padding: 12px 14px;
-    background: var(--default-box-color);
-    border: 1px solid var(--default-border);
-    border-radius: 10px;
-    transition: border-color 0.2s;
+    border-radius: 14px;
+    transition:
+      box-shadow var(--duration-normal, 250ms) var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
+      border-color var(--duration-fast, 150ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
+      filter var(--duration-fast, 150ms) var(--ease-out, cubic-bezier(0, 0, 0.2, 1));
 
     &:hover {
-      border-color: var(--art-gray-400);
+      filter: brightness(1.05) saturate(1.06);
     }
   }
 
@@ -1304,6 +1450,8 @@
   }
 
   .iap-neon-surface {
+    @extend %iap-neon-surface;
+
     @include ap.ap-card-title-hover('.iap-card-title-text');
   }
 
@@ -1610,6 +1758,104 @@
 
     &--purple {
       background: #a78bfa;
+    }
+  }
+
+  /* 详情页骨架：与 KPI / 分区卡结构对齐 */
+  .iap-detail-sk-kpi .iap-kpi-top {
+    margin-bottom: 8px;
+  }
+
+  .iap-detail-sk-spark {
+    width: 100%;
+    height: 44px;
+  }
+
+  .iap-detail-sk-line {
+    height: 11px;
+    border-radius: 6px;
+  }
+
+  .iap-detail-sk-line--label {
+    width: 52%;
+  }
+
+  .iap-detail-sk-line--value {
+    width: 64%;
+    height: 22px;
+  }
+
+  .iap-detail-sk-line--sub {
+    width: 46%;
+  }
+
+  .iap-detail-sk-section {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0;
+  }
+
+  .iap-detail-sk-line--title {
+    width: 40%;
+    height: 13px;
+    margin-bottom: 12px;
+  }
+
+  .iap-detail-sk-table {
+    flex: 1;
+    width: 100%;
+    min-height: 220px;
+  }
+
+  .iap-detail-sk-table--short {
+    min-height: 200px;
+  }
+
+  .iap-detail-sk-chart-sm {
+    flex: 1;
+    width: 100%;
+    min-height: 180px;
+  }
+
+  .iap-detail-sk-chart-md {
+    width: 100%;
+    min-height: 180px;
+  }
+
+  .iap-detail-sk-chart-lg {
+    width: 100%;
+    min-height: 260px;
+  }
+
+  .iap-detail-sk-seg {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .iap-detail-sk-line--seg {
+    width: 88%;
+  }
+
+  .iap-detail-sk-title-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .iap-detail-sk-line--legend {
+    flex-shrink: 0;
+    width: 120px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .iap-detail-sk-kpi,
+    .iap-detail-sk-section {
+      :deep(.el-skeleton.is-animated .el-skeleton__item) {
+        animation: none;
+      }
     }
   }
 </style>

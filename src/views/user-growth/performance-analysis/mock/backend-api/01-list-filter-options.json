@@ -1,0 +1,86 @@
+{
+  "_comment": "人员绩效列表页 - 本页独有筛选项（人员 / 应用分类 / 达标状态）。与驾驶舱公用 GET meta-filter-options 无关，勿混用；本页若未来与 cockpit 顶栏同构四类维度联动，仍只读 useCockpitMetaFilterStore().data，不在此 JSON 重复。",
+  "fieldDescription": {
+    "request": {
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "查询开始日期（含），YYYY-MM-DD。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": true,
+        "description": "查询结束日期（含），YYYY-MM-DD。"
+      }
+    },
+    "response": {
+      "personOptions": {
+        "type": "Array<{ label: string; value: string }>",
+        "required": true,
+        "description": "人员筛选；「全部」value 为 \"\"；其余 value 与列表行 id 或人员标识一致，须与 performance-list 入参 personFilter 对齐。"
+      },
+      "appCategoryOptions": {
+        "type": "Array<{ label: string; value: string }>",
+        "required": true,
+        "description": "应用分类筛选；「全部」value 为 \"\"；与 performance-list 入参 appFilter 对齐。"
+      },
+      "statusOptions": {
+        "type": "Array<{ label: string; value: string }>",
+        "required": true,
+        "description": "达标状态筛选；「全部」value 为 \"\"；「达标」「未达标」value 与 performance-list 入参 statusFilter 文案一致。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "startDate": "2026-03-28",
+    "endDate": "2026-04-04"
+  },
+  "sampleResponse": {
+    "personOptions": [
+      { "label": "全部", "value": "" },
+      { "label": "张三", "value": "zhang3" },
+      { "label": "李四", "value": "li4" },
+      { "label": "王五", "value": "wang5" },
+      { "label": "赵六", "value": "zhao6" }
+    ],
+    "appCategoryOptions": [
+      { "label": "全部", "value": "" },
+      { "label": "天气类", "value": "天气类" },
+      { "label": "健康类", "value": "健康类" },
+      { "label": "工具类", "value": "工具类" }
+    ],
+    "statusOptions": [
+      { "label": "全部", "value": "" },
+      { "label": "达标", "value": "达标" },
+      { "label": "未达标", "value": "未达标" }
+    ]
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/user-growth/performance-analysis/list-filter-options",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "startDate, endDate",
+    "responseBody": "personOptions, appCategoryOptions, statusOptions"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "选项可随日期范围变化（如新入职人员）；与 compare-candidates 的筛选口径应一致。",
+      "本接口不是 cockpit 公用 meta-filter-options，不得复用或复制其契约 JSON。"
+    ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "列表页首屏初始化",
+        "detail": "PerformanceList 进入后，在拉列表前或并行请求，用于渲染人员 / 应用分类 / 达标状态 Chip 数据源。",
+        "prerequisite": "登录态；日期范围可先取默认最近 7 天对应的 startDate/endDate。"
+      },
+      {
+        "moment": "用户切换日期范围",
+        "detail": "若产品要求选项随统计期变化，可在日期确认后重新请求；否则可仅依赖首屏一次加载。"
+      }
+    ],
+    "defaultSelection": "personFilter/appFilter/statusFilter 均映射为 \"\" 表示全部；与选项第一项一致。",
+    "dedupe": "可与 performance-list 首屏并行；无强依赖顺序。"
+  }
+}

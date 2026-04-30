@@ -228,13 +228,6 @@
     "cockpit": {
       "title": "Cockpit"
     },
-    "dashboard": {
-      "title": "Delivery Management",
-      "console": "Console",
-      "bigScreen": "Delivery Analysis",
-      "financeScreen": "Channel Analysis",
-      "deepAnalysis": "Deep Analysis"
-    },
     "monetization": {
       "title": "Monetization",
       "monetizationAnalysis": "Monetization Analysis",
@@ -320,7 +313,8 @@
       "costCoefficient": "Cost Coefficient",
       "perfConfig": "Performance Config",
       "orderImport": "Import Store Orders",
-      "orderImportReport": "Import Report"
+      "orderImportReport": "Import Report",
+      "notificationConfig": "Notification Settings"
     },
     "userGrowth": {
       "title": "User Growth",
@@ -440,12 +434,13 @@
     "filterApp": "All Apps",
     "filterConversionType": "All Conversion Types",
     "filterStatus": "All Status",
-    "searchPlaceholder": "Search conversion name, package name...",
+    "searchPlaceholder": "Search conversion name, app ID...",
     "addMapping": "Add Mapping",
     "totalRecords": "Total {n} records",
     "platform": "Device Platform",
     "mccAccount": "MCC Account",
     "appPackage": "App Package",
+    "appId": "App ID",
     "conversionName": "Conversion Name",
     "conversionId": "Conversion ID",
     "platformConversionType": "Ad Platform Conversion Type",
@@ -480,6 +475,7 @@
     "deleteDialogDangerLine2": "After deletion, this conversion event will no longer be shown in the system.",
     "deleteDialogConfirmButton": "Confirm Delete",
     "adPlatform": "Ad Platform",
+    "selectTerminalPlatform": "Please select device platform",
     "selectAdPlatform": "Please select ad platform",
     "selectApp": "Please select application",
     "selectOrEnterConversionName": "Please select or enter conversion name",
@@ -487,15 +483,24 @@
     "confirm": "Confirm",
     "saveChanges": "Save Changes",
     "cancel": "Cancel",
+    "mccAccountPlaceholder": "Enter MCC account",
+    "hintMccManual": "Enter the MCC / manager account ID from the ad platform",
+    "billingCpi": "CPI",
+    "billingCpa": "CPA",
+    "billingCpe": "CPE",
     "hintAfterSelectPlatform": "Automatically load after selecting ad platform",
     "hintAppFromPlatform": "Obtained in real-time from the ad platform interface",
     "hintConversionNameFromPlatform": "Original conversion name returned by the ad platform",
-    "hintConversionIdAuto": "Automatically obtained after selecting conversion name",
+    "hintConversionIdAuto": "Choosing from the list fills the platform conversion ID; after typing a name manually, a timestamp is generated as conversion ID on blur",
     "hintSystemDisplayName": "For internal display, Chinese abbreviation recommended",
     "conversionIdAutoFilled": "Automatically filled",
     "remarksOptional": "Optional, enter remarks",
     "remarks": "Remarks",
     "conversionType": "Conversion Type",
+    "conversionDisplayType": "Conversion display category",
+    "selectConversionType": "Please select conversion type",
+    "loadConversionTypeOptionsFailed": "Failed to load conversion type options; using local fallback list",
+    "loadConversionTypeOptionsEmpty": "Conversion type API returned empty; using local fallback list",
     "conversionTypePaid": "Paid Conversion",
     "conversionTypeActivation": "Activation Conversion",
     "conversionTypeBehavior": "Behavior Conversion",
@@ -580,6 +585,19 @@
         "status": "Status"
       }
     },
+    "tableSwitch": {
+      "ariaLabel": "Performance table switch",
+      "period": "By App Performance",
+      "recent": "Recent 7-Day Performance",
+      "summaryLabel": "Total / Average",
+      "empty": "No app performance data",
+      "total": "Total {n} apps",
+      "pageSize": "{n} rows / page",
+      "allLabel": "All",
+      "statusRunning": "Running",
+      "statusPaused": "Paused",
+      "statusWarning": "Warning"
+    },
     "appTableHeader": {
       "hint": "Calc period: 2026-01-01 to 2026-03-04 | App-level est. profit is based on actual revenue; ad-platform est. profit is based on payback."
     },
@@ -591,6 +609,69 @@
         "Cycles follow calendar month/quarter; history data is mock for now and can be replaced by real APIs later.",
         "Geo-level / segmentation rules (ranges, criteria) may change with media segmentation strategy and evaluation framework."
       ]
+    }
+  },
+  "realtimeDashboard": {
+    "header": {
+      "lastUpdate": "⏱ Last updated: {time}",
+      "waiting": "—",
+      "manualRefresh": "↻ Refresh",
+      "autoRefreshSettings": "⚙ Auto-refresh"
+    },
+    "banner": {
+      "autoRefreshHint": "Data refreshes every {minutes} minutes. For the latest numbers, click",
+      "manualRefresh": "Refresh",
+      "shortcut": "(shortcut)",
+      "nextAutoRefresh": "Next auto-refresh:"
+    },
+    "filters": {
+      "app": "App",
+      "allAppsPlaceholder": "All apps",
+      "searchPlaceholder": "Search category / name / short name",
+      "adPlatform": "Ad platform",
+      "allPlatformsPlaceholder": "All platforms",
+      "query": "Apply"
+    },
+    "skeleton": {
+      "bottomTitle": "Hourly spend comparison"
+    },
+    "kpi": {
+      "onlineApps": "Apps online",
+      "unitCount": "",
+      "totalApps": "{n} apps total",
+      "todaySpend": "Spend today (all apps)",
+      "wowChange": "WoW",
+      "roiAvg": "Avg. live ROI (all apps)",
+      "roiTargetLine": "Target {n}%",
+      "badgeReach": "On target",
+      "warningApps": "Apps in alert",
+      "warnOverBudget": "Over budget",
+      "warnLowActive": "Low activity"
+    },
+    "card": {
+      "todaySpend": "Spend today",
+      "todayInstalls": "Installs today",
+      "liveCpi": "Live CPI",
+      "activeSeriesLabel": "Active series",
+      "activeSeries": "{n} active",
+      "currentRoi": "Current ROI"
+    },
+    "chart": {
+      "empty": "No data",
+      "roiSeries": "ROI",
+      "bottomTitle": "Hourly spend comparison"
+    },
+    "dialog": {
+      "title": "Auto-refresh interval",
+      "minutesLabel": "Interval (minutes)",
+      "hint": "Between 1 and 60 minutes. Default is 30."
+    },
+    "composable": {
+      "filterLoadFailed": "Failed to load filters",
+      "dashboardLoadFailed": "Failed to load realtime data",
+      "appDetailLoadFailed": "Failed to load app detail",
+      "allApps": "All apps",
+      "allAdPlatforms": "All ad platforms"
     }
   },
   "table": {

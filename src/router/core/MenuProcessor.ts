@@ -17,6 +17,23 @@ import { formatMenuTitle } from '@/utils'
 
 export class MenuProcessor {
   /**
+   * 已弃用的菜单/路由前缀（历史工作台 / dashboard / console）
+   * 这些路由可能仍会被后端菜单下发；前端侧需兜底过滤，避免注册后出现在 worktab 中。
+   */
+  private static readonly DEPRECATED_ROUTE_PREFIXES = ['/dashboard']
+
+  /**
+   * 已弃用的路由 name（历史工作台 / dashboard）
+   */
+  private static readonly DEPRECATED_ROUTE_NAMES = new Set([
+    'Dashboard',
+    'Console',
+    'BigScreen',
+    'FinanceScreen',
+    'DeepAnalysis'
+  ])
+
+  /**
    * 获取菜单数据
    */
   async getMenuList(): Promise<AppRouteRecord[]> {
@@ -28,6 +45,10 @@ export class MenuProcessor {
     } else {
       menuList = await this.processBackendMenu()
     }
+
+    // 过滤已弃用的 dashboard/console 路由（后端菜单可能仍在下发）
+    menuList = this.filterDeprecatedRoutes(menuList)
+    menuList = this.mergeHiddenRoutes(menuList, asyncRoutes)
 
     // 在规范化路径之前，验证原始路径配置
     this.validateMenuPaths(menuList)
@@ -45,11 +66,19 @@ export class MenuProcessor {
   private async processFrontendMenu(): Promise<AppRouteRecord[]> {
     const userStore = useUserStore()
     const roles = userStore.info?.roles ?? []
+    const routeNames = userStore.info?.permissionConfig?.routePermissions?.routeNames ?? []
 
     let menuList = [...asyncRoutes]
 
-    // 根据接口返回的 permissions（已映射到 roles）过滤菜单；包含 SuperAdmin 时不做过滤，展示全部
-    if (roles.length > 0 && !roles.includes(MenuProcessor.SUPER_ADMIN)) {
+    const useRouteNamesMenu =
+      import.meta.env.VITE_USE_ROUTE_NAMES_MENU === 'true' &&
+      routeNames.length > 0 &&
+      !roles.includes(MenuProcessor.SUPER_ADMIN)
+
+    if (useRouteNamesMenu) {
+      menuList = this.filterMenuByRouteNames(menuList, routeNames)
+    } else if (roles.length > 0 && !roles.includes(MenuProcessor.SUPER_ADMIN)) {
+      // 根据接口返回的 permissions（已映射到 roles）过滤菜单；包含 SuperAdmin 时不做过滤，展示全部
       menuList = this.filterMenuByRoles(menuList, roles)
     }
 
@@ -108,6 +137,122 @@ export class MenuProcessor {
     }
 
     return { ...backendItem, children: merged }
+  }
+
+  private mergeHiddenRoutes(
+    menuList: AppRouteRecord[],
+    staticList: AppRouteRecord[]
+  ): AppRouteRecord[] {
+    const merged = menuList.map((item) => this.cloneRoute(item))
+
+    for (const staticRoute of staticList) {
+      const existing = this.findMatchingRoute(merged, staticRoute)
+      if (existing) {
+        this.mergeHiddenChildren(existing, staticRoute)
+        continue
+      }
+
+      const hiddenBranch = this.extractHiddenRouteBranch(staticRoute)
+      if (hiddenBranch) {
+        merged.push(hiddenBranch)
+      }
+    }
+
+    return merged
+  }
+
+  private mergeHiddenChildren(target: AppRouteRecord, source: AppRouteRecord): void {
+    const hiddenChildren =
+      source.children
+        ?.map((child) => this.extractHiddenRouteBranch(child))
+        .filter((child): child is AppRouteRecord => child !== null) ?? []
+
+    if (!hiddenChildren.length) {
+      return
+    }
+
+    const targetChildren = [...(target.children ?? [])]
+
+    for (const hiddenChild of hiddenChildren) {
+      const existingChild = this.findMatchingRoute(targetChildren, hiddenChild)
+      if (existingChild) {
+        this.mergeHiddenChildren(existingChild, hiddenChild)
+        continue
+      }
+
+      targetChildren.push(hiddenChild)
+    }
+
+    target.children = targetChildren
+  }
+
+  private extractHiddenRouteBranch(route: AppRouteRecord): AppRouteRecord | null {
+    const hiddenChildren =
+      route.children
+        ?.map((child) => this.extractHiddenRouteBranch(child))
+        .filter((child): child is AppRouteRecord => child !== null) ?? []
+
+    const shouldKeepSelf = Boolean(route.meta?.isHide)
+    if (!shouldKeepSelf && hiddenChildren.length === 0) {
+      return null
+    }
+
+    return {
+      ...route,
+      meta: shouldKeepSelf
+        ? { ...route.meta }
+        : {
+            ...route.meta,
+            isHide: true
+          },
+      children: hiddenChildren.length ? hiddenChildren : route.children ? [] : undefined
+    }
+  }
+
+  private findMatchingRoute(
+    routes: AppRouteRecord[],
+    target: Pick<AppRouteRecord, 'name' | 'path'>
+  ): AppRouteRecord | undefined {
+    return routes.find((route) => {
+      if (route.name && target.name) {
+        return String(route.name) === String(target.name)
+      }
+      return route.path === target.path
+    })
+  }
+
+  private cloneRoute(route: AppRouteRecord): AppRouteRecord {
+    return {
+      ...route,
+      meta: { ...route.meta },
+      children: route.children?.map((child) => this.cloneRoute(child))
+    }
+  }
+
+  /**
+   * 按后端下发的路由 name 集合过滤菜单（与 permissionConfig.routePermissions.routeNames 对齐）
+   * 父级 name 可不在列表中，只要子树过滤后仍有节点则保留父级。
+   */
+  private filterMenuByRouteNames(menu: AppRouteRecord[], routeNames: string[]): AppRouteRecord[] {
+    return menu.reduce((acc: AppRouteRecord[], item) => {
+      const currentName = item.name ? String(item.name) : ''
+      const children = item.children?.length
+        ? this.filterMenuByRouteNames(item.children, routeNames)
+        : item.children
+
+      const selfMatched = currentName ? routeNames.includes(currentName) : false
+      const hiddenRoute = Boolean(item.meta?.isHide)
+      const hasChildren = Boolean(children?.length)
+
+      if (selfMatched || hiddenRoute || hasChildren) {
+        acc.push({
+          ...item,
+          children
+        })
+      }
+
+      return acc
+    }, [])
   }
 
   /**
@@ -173,6 +318,38 @@ export class MenuProcessor {
 
         // 其他情况过滤掉
         return false
+      })
+  }
+
+  /**
+   * 过滤已弃用的菜单项（dashboard / console）
+   * - 支持 top-level: /dashboard
+   * - 支持 children 相对路径：console（父级为 /dashboard）
+   * - 支持通过 route.name 过滤
+   */
+  private filterDeprecatedRoutes(menuList: AppRouteRecord[], parentPath = ''): AppRouteRecord[] {
+    const shouldDrop = (route: AppRouteRecord): boolean => {
+      const name = route.name ? String(route.name) : ''
+      if (name && MenuProcessor.DEPRECATED_ROUTE_NAMES.has(name)) return true
+
+      const rawPath = String(route.path || '')
+      const fullPath = this.buildFullPath(rawPath, parentPath)
+
+      return MenuProcessor.DEPRECATED_ROUTE_PREFIXES.some(
+        (prefix) => fullPath === prefix || fullPath.startsWith(`${prefix}/`)
+      )
+    }
+
+    return menuList
+      .filter((route) => !shouldDrop(route))
+      .map((route) => {
+        if (!route.children?.length) return route
+
+        const nextParentPath = this.buildFullPath(String(route.path || ''), parentPath)
+        return {
+          ...route,
+          children: this.filterDeprecatedRoutes(route.children, nextParentPath)
+        }
       })
   }
 

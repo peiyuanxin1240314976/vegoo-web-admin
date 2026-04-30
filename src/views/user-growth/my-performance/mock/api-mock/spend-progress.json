@@ -1,7 +1,45 @@
 {
   "_comment": "POST spend-progress",
   "sampleResponse": {
-    "month": { "title": "月度花费达成", "data": { "spend": 12200, "target": 13000, "rate": 94 } },
-    "quarter": { "title": "季度花费达成", "data": { "spend": 32800, "target": 36000, "rate": 91 } }
+    "month": {
+      "title": "月度消耗进度",
+      "list": [
+        {
+          "label": "总消耗",
+          "value": "$31,521.26 / $37,825.51",
+          "rate": 83,
+          "type": "success"
+        },
+        {
+          "label": "Weather8",
+          "value": "$16,091.42",
+          "rate": 90,
+          "type": "success"
+        },
+        {
+          "label": "AgeCam",
+          "value": "$4,569.04",
+          "rate": 90,
+          "type": "success"
+        },
+        {
+          "label": "Weather9",
+          "value": "$4,293.23",
+          "rate": 90,
+          "type": "success"
+        }
+      ]
+    },
+    "quarter": {
+      "title": "季度消耗进度",
+      "list": [
+        {
+          "label": "总消耗",
+          "value": "$95,120.00 / $110,000.00",
+          "rate": 86,
+          "type": "success"
+        }
+      ]
+    }
   }
 }

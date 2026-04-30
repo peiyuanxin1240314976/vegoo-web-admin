@@ -5,25 +5,34 @@
     <div class="or-filters-wrap or-entry-1">
       <div class="or-filters-inner">
         <div class="or-filters-row">
-          <div class="or-filter-chip or-filter-chip--static">
-            <ElIcon class="or-filter-chip__icon"><Calendar /></ElIcon>
-            <span class="or-filter-chip__label">统计周期</span>
-            <span class="or-filter-chip__value">{{ dateRangeLabel }}</span>
-          </div>
-          <ElSelect
-            v-model="filters.s_app_id"
-            class="or-filter-select"
-            :prefix-icon="Grid"
-            placeholder="应用"
+          <AppDatePicker
+            v-model="dateRangeModel"
+            type="daterange"
+            unlink-panels
+            :shortcuts="dateShortcuts"
+            range-separator="~"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            format="YYYY-MM-DD"
+            value-format="YYYY-MM-DD"
+            :prefix-icon="Calendar"
+            clearable
+            class="or-filter-date"
             popper-class="or-filter-popper"
-          >
-            <ElOption
-              v-for="opt in appOptions"
-              :key="opt.value"
-              :label="opt.label"
-              :value="opt.value"
-            />
-          </ElSelect>
+          />
+          <AppPlatformSearchSelect
+            v-model="filters.s_app_id"
+            mode="app"
+            placeholder="应用"
+            search-placeholder="应用"
+            class="or-filter-select or-filter-select--app"
+            input-class="or-filter-select__input"
+            :setting-apps="settingAppsForSelect"
+            :height="36"
+            :min-width="150"
+            :max-width="240"
+            dropdown-class="or-filter-popper"
+          />
           <ElSelect
             v-model="filters.source"
             class="or-filter-select"
@@ -33,7 +42,7 @@
           >
             <ElOption
               v-for="opt in sourceOptions"
-              :key="opt.value"
+              :key="opt.value === '' ? '__or_all_src__' : opt.value"
               :label="opt.label"
               :value="opt.value"
             />
@@ -48,13 +57,13 @@
           >
             <ElOption
               v-for="opt in countryOptions"
-              :key="opt.value"
+              :key="opt.value === '' ? '__or_all_country__' : opt.value"
               :label="opt.label"
               :value="opt.value"
             />
           </ElSelect>
           <div class="or-filter-actions">
-            <ElButton round class="or-search-btn" @click="handleSearch">检索</ElButton>
+            <ElButton type="primary" plain round @click="handleSearch">查询</ElButton>
           </div>
         </div>
       </div>
@@ -92,9 +101,14 @@
 
 <script setup lang="ts">
   import type { Component } from 'vue'
-  import { Calendar, Flag, Grid, Promotion } from '@element-plus/icons-vue'
+  import { Calendar, Flag, Promotion } from '@element-plus/icons-vue'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
+  import type { CockpitMetaOptionItem, CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import type { OverallRecoveryTabKey, OverallRecoveryFilterState } from './types'
+  import { resolveDateRangeFromPreset } from './utils/buildApiParams'
   import { useOverallRecoveryFilters } from './composables/useOverallRecoveryFilters'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import TabOverall from './modules/tab-overall.vue'
   import TabOrganic from './modules/tab-organic.vue'
 
@@ -107,22 +121,53 @@
 
   const activeTab = ref<OverallRecoveryTabKey>('overall')
 
+  const defaultRange = resolveDateRangeFromPreset('30d')
   const filters = reactive<OverallRecoveryFilterState>({
-    dateRange: '30d',
-    s_app_id: 'all',
-    source: 'all',
-    s_country_code: 'all'
+    startDate: defaultRange.startDate,
+    endDate: defaultRange.endDate,
+    s_app_id: [],
+    source: '',
+    s_country_code: ''
   })
 
   const appliedFilters = ref<OverallRecoveryFilterState>({ ...filters })
   const searchToken = ref(0)
+  const hasSyncedInitialAutoApp = ref(false)
 
-  const { appOptions, sourceOptions, countryOptions } = useOverallRecoveryFilters()
-
-  const dateRangeLabel = computed(() => {
-    if (filters.dateRange === '30d') return '近30天'
-    return filters.dateRange
+  const { appOptions, sourceOptions, countryOptions, settingApps } = useOverallRecoveryFilters()
+  const settingAppsForSelect = computed<CockpitSettingAppItem[]>(() => {
+    if (settingApps.value.length) return settingApps.value
+    return appOptions.value
+      .filter((opt: CockpitMetaOptionItem) => opt.value !== '')
+      .map((opt: CockpitMetaOptionItem, index: number) => ({
+        sAppId: String(opt.value ?? ''),
+        nPlatform: '',
+        platformName: '',
+        sAppName: String(opt.label ?? ''),
+        sAppShortName: String(opt.label ?? ''),
+        nCategory: `fallback-${index}`,
+        categoryName: '应用'
+      }))
   })
+
+  const dateRangeModel = computed<[string, string] | null>({
+    get() {
+      if (!filters.startDate || !filters.endDate) return null
+      return [filters.startDate, filters.endDate]
+    },
+    set(v) {
+      if (v?.[0] && v?.[1]) {
+        filters.startDate = v[0]
+        filters.endDate = v[1]
+        return
+      }
+      const d = resolveDateRangeFromPreset('30d')
+      filters.startDate = d.startDate
+      filters.endDate = d.endDate
+    }
+  })
+
+  const dateShortcuts = dateRangeShortcuts
 
   const tabComponents: Record<OverallRecoveryTabKey, Component> = {
     overall: TabOverall,
@@ -135,6 +180,17 @@
     appliedFilters.value = { ...filters }
     searchToken.value += 1
   }
+
+  watch(
+    () => filters.s_app_id,
+    (appId) => {
+      // AppPlatformSearchSelect 自动选中首个应用后，首屏立即同步查询参数。
+      if (hasSyncedInitialAutoApp.value) return
+      if (Array.isArray(appId) ? appId.length === 0 : !appId) return
+      hasSyncedInitialAutoApp.value = true
+      handleSearch()
+    }
+  )
 </script>
 
 <style scoped lang="scss">
@@ -179,62 +235,100 @@
   }
 
   .or-search-btn {
-    --el-button-size: 40px;
+    --el-button-size: 36px;
 
-    height: 40px;
+    height: 36px;
     padding: 0 20px;
     font-size: 14px;
-    color: var(--art-success);
-    background: color-mix(in srgb, var(--art-success) 16%, transparent);
-    border: 1px solid color-mix(in srgb, var(--art-success) 45%, transparent);
-    box-shadow:
-      0 0 18px color-mix(in srgb, var(--art-success) 20%, transparent),
-      inset 0 1px 0 rgb(255 255 255 / 10%);
-    transition:
-      box-shadow 0.22s ease,
-      transform 0.18s ease;
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: 0 0 18px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 20%, transparent);
+    transition: box-shadow 0.22s ease;
 
     &:hover {
-      box-shadow:
-        0 0 26px color-mix(in srgb, var(--art-success) 34%, transparent),
-        inset 0 1px 0 rgb(255 255 255 / 16%);
-      transform: translateY(-1px);
-    }
-
-    &:active {
-      transform: translateY(0);
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 8%,
+        transparent
+      );
+      box-shadow: 0 0 26px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 28%, transparent);
     }
   }
 
-  .or-filter-chip {
-    display: inline-flex;
-    gap: 7px;
-    align-items: center;
-    min-height: 40px;
-    padding: 0 14px;
-    white-space: nowrap;
-    background: rgb(16 185 129 / 8%);
-    border: 1px solid rgb(16 185 129 / 30%);
-    border-radius: 9999px;
-    box-shadow: 0 0 16px rgb(16 185 129 / 10%);
+  .or-filter-date {
+    flex: 0 0 auto;
+    width: 320px;
+    min-width: 0;
+    max-width: 100%;
   }
 
-  .or-filter-chip__icon {
+  :deep(.or-filter-date.el-date-editor) {
+    flex: 0 0 auto;
+    width: 320px;
+    max-width: 100%;
+
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
+  }
+
+  :deep(.or-filter-date .el-range__icon) {
     font-size: 16px;
-    color: #10b981;
-    filter: drop-shadow(0 0 6px rgb(16 185 129 / 55%));
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
-  .or-filter-chip__label {
-    font-size: 12px;
+  :deep(.or-filter-date .el-range-input) {
+    font-size: 14px;
+    color: var(--el-text-color-primary);
+  }
+
+  :deep(.or-filter-date .el-range-separator) {
     color: var(--el-text-color-secondary);
   }
 
-  .or-filter-chip__value {
-    font-size: 13px;
-    font-weight: 600;
-    color: #10b981;
-    text-shadow: 0 0 10px rgb(16 185 129 / 50%);
+  :deep(.or-filter-date .el-range__close-icon) {
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+  }
+
+  :deep(.or-filter-date.el-date-editor .el-range-input) {
+    width: 42%;
+  }
+
+  :deep(.or-filter-date .el-input__wrapper) {
+    min-height: 36px;
+    padding: 0 12px;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: none;
+    transition:
+      border-color 0.22s ease,
+      box-shadow 0.22s ease,
+      background 0.22s ease;
+  }
+
+  :deep(.or-filter-date .el-input__wrapper.is-focus) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
+  }
+
+  :deep(.or-filter-date .el-input__wrapper:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
   }
 
   .or-filter-select {
@@ -248,20 +342,28 @@
     min-width: 140px;
   }
 
-  :deep(.or-filter-select) {
-    --el-input-focus-border-color: #10b981;
-    --el-border-color-hover: rgb(16 185 129 / 75%);
-    --el-color-primary: #10b981;
-    --el-border-color-focus: #10b981;
-    --el-component-size: 40px;
+  .or-filter-select--app {
+    width: 150px;
+    min-width: 150px;
+    max-width: 240px;
   }
 
-  :deep(.or-filter-select .el-select__wrapper) {
-    min-height: 40px;
+  :deep(.or-filter-select) {
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
+  }
+
+  :deep(.or-filter-select .el-select__wrapper),
+  :deep(.or-filter-select__input) {
+    min-height: 36px;
     padding: 0 12px;
-    background: rgb(16 185 129 / 6%);
-    border: 1px solid rgb(16 185 129 / 28%);
-    border-radius: 9999px;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
     box-shadow: none;
     transition:
       border-color 0.22s ease,
@@ -286,23 +388,31 @@
   :deep(.or-filter-select .el-select__prefix svg) {
     width: 16px;
     height: 16px;
-    color: #10b981;
-    filter: drop-shadow(0 0 5px rgb(16 185 129 / 50%));
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
-  :deep(.or-filter-select .el-select__caret) {
-    color: #10b981;
+  :deep(.or-filter-select .el-select__caret),
+  :deep(.or-filter-select__input .app-platform-search-select__suffix) {
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
-  :deep(.or-filter-select .el-select__wrapper.is-focused) {
-    background: rgb(16 185 129 / 10%) !important;
-    border-color: #10b981 !important;
-    box-shadow: 0 0 0 2px rgb(16 185 129 / 20%) !important;
+  :deep(.or-filter-select .el-select__wrapper.is-focused),
+  :deep(.or-filter-select__input.is-open) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
   }
 
-  :deep(.or-filter-select .el-select__wrapper:hover) {
-    border-color: rgb(16 185 129 / 60%);
-    box-shadow: 0 0 12px rgb(16 185 129 / 18%);
+  :deep(.or-filter-select .el-select__wrapper:hover),
+  :deep(.or-filter-select__input:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
   }
 
   .or-tab-nav {
@@ -312,8 +422,8 @@
     gap: 8px;
     padding: 4px;
     margin-bottom: 16px;
-    background: color-mix(in srgb, var(--default-box-color) 75%, transparent);
-    border: 1px solid color-mix(in srgb, var(--art-success) 35%, var(--default-border));
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
     border-radius: 9999px;
   }
 
@@ -336,19 +446,29 @@
       box-shadow 0.15s ease;
 
     &:hover {
-      color: var(--art-success);
-      background: color-mix(in srgb, var(--art-success) 12%, transparent);
+      color: var(--theme-color, var(--art-primary, #3b82f6));
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 12%,
+        transparent
+      );
     }
 
     &.is-active {
       font-weight: 700;
-      color: var(--art-success);
-      background: color-mix(in srgb, var(--art-success) 18%, transparent);
-      box-shadow: 0 0 0 1px color-mix(in srgb, var(--art-success) 45%, transparent) inset;
+      color: var(--theme-color, var(--art-primary, #3b82f6));
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 18%,
+        transparent
+      );
+      box-shadow: 0 0 0 1px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 45%, transparent) inset;
     }
 
     &:focus-visible {
-      box-shadow: 0 0 0 2px color-mix(in srgb, var(--art-success) 45%, transparent);
+      box-shadow: 0 0 0 2px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 45%, transparent);
     }
   }
 
@@ -365,8 +485,18 @@
       padding: 14px 16px;
     }
 
+    .or-filter-date {
+      flex: 1 1 100%;
+      width: 100%;
+    }
+
+    :deep(.or-filter-date.el-date-editor) {
+      width: 100%;
+    }
+
     .or-filter-select,
-    .or-filter-select--wide {
+    .or-filter-select--wide,
+    .or-filter-select--app {
       flex: 1 1 calc(50% - 6px);
     }
 
@@ -392,20 +522,19 @@
 </style>
 
 <style lang="scss">
-  /* 挂载在 body（popper），须非 scoped；避免下拉被内容遮挡 */
   .or-filter-popper.el-popper {
     z-index: var(--z-dropdown) !important;
     background: rgb(10 10 14 / 96%) !important;
-    border: 1px solid rgb(96 165 250 / 28%) !important;
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
     border-radius: 12px !important;
     box-shadow:
       0 16px 48px rgb(0 0 0 / 55%),
-      0 0 0 1px rgb(16 185 129 / 12%),
+      0 0 0 1px color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 12%, transparent),
       0 0 32px rgb(59 130 246 / 15%) !important;
   }
 
   .or-filter-popper .el-popper__arrow::before {
     background: rgb(10 10 14 / 96%) !important;
-    border: 1px solid rgb(96 165 250 / 25%) !important;
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
   }
 </style>

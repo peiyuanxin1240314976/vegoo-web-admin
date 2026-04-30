@@ -17,9 +17,8 @@
 | `README.md` | 本说明 |
 | `backend-api/README.md` | 父级 API、接口清单、优先级 |
 | `backend-api/01-*.json` … | 各接口字段解释 + `sampleRequest` / `sampleResponse` |
-| `api-mock/*.json` | 与对应 `backend-api/*.json` 的 `sampleResponse` 对齐的示例响应 |
-| `api-mock/*.json` | 与 backend-api sampleResponse 对齐的示例 JSON |
-| `../mocks/review-monitor-api-mock.ts` | Mock 实现，引用 api 中的 mockSummaryData、mockReviewList、mockTemplates |
+| `api-mock/*.json` | 与对应 `backend-api/*.json` 的 `sampleResponse` 对齐的示例 JSON |
+| `review-monitor-api-mock.ts` | Mock 实现（`mockFetch*`），引用 `../api/reviewMonitor` 中 mock 常量 |
 
 ## 与代码的对应关系
 

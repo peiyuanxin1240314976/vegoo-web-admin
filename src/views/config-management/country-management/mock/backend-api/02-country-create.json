@@ -17,6 +17,11 @@
         "required": true,
         "description": "Google Ads Criteria ID。"
       },
+      "flagIconUrl": {
+        "type": "string",
+        "required": true,
+        "description": "国旗图标 URL；由 `POST .../flag-icon/upload` 返回的 `url` 填入；无图标时传空字符串。"
+      },
       "nameCn": { "type": "string", "required": true, "description": "中文名称。" },
       "nameEn": { "type": "string", "required": true, "description": "英文名称。" },
       "aliases": { "type": "string[]", "required": true, "description": "别名数组，最多 5 项。" },
@@ -44,6 +49,7 @@
     "code": "SE",
     "code3": "752",
     "criteriaId": "2752",
+    "flagIconUrl": "",
     "nameCn": "瑞典",
     "nameEn": "Sweden",
     "aliases": ["Sweden", "Sverige"],
@@ -60,6 +66,7 @@
       "code": "SE",
       "code3": "752",
       "criteriaId": "2752",
+      "flagIconUrl": "",
       "nameCn": "瑞典",
       "nameEn": "Sweden",
       "aliases": ["Sweden", "Sverige"],

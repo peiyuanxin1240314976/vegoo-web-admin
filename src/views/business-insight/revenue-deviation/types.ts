@@ -9,7 +9,7 @@ export type RevenueDeviationQuery = {
   /** 广告平台 slug，空为全部（与页面 `platform` 筛选项一致） */
   source?: string
   /** 应用，空为全部 */
-  s_app_id?: string
+  s_app_id?: string | string[]
   /**
    * 右上角「平台」筛选（广告平台编码，空为全部）
    * 当前产品要求：作为全局筛选参数，下方所有卡片接口均透传
@@ -36,6 +36,17 @@ export type RevenueDeviationMatrixRowDim = 'app' | 'platform' | 'date'
 export type RevenueDeviationMatrixColDim = 'platform' | 'date'
 
 export type RevenueDeviationMatrixQuery = RevenueDeviationQuery
+
+/** POST 网关请求体（`api/revenue-deviation` 中 `normalizeQuery` 产出） */
+export type RevenueDeviationPostBody = {
+  t_start_date: string
+  t_end_date: string
+  source: string
+  appIds: string[]
+  row_dim: RevenueDeviationMatrixRowDim
+  col_dim: RevenueDeviationMatrixColDim
+  matrix_source?: string
+}
 
 /** 01-overview-kpis */
 export type RevenueDeviationOverviewKpis = {
@@ -102,9 +113,7 @@ export type RevenueDeviationHistoryRow = {
   d_deviation_rate_pct: number
 }
 
-/** 08-table-matrix */
-export type MatrixPlatformKey = 'admob' | 'facebook' | 'applovin' | 'vungle'
-
+/** 08-table-matrix：列 key 与行内字段名一一对应，由接口动态给出（不止固定四家平台） */
 export type RevenueDeviationMatrixCell = {
   estimated: string
   real: string
@@ -115,15 +124,12 @@ export type RevenueDeviationMatrixRow = {
   s_app_name: string
   s_app_icon_emoji: string
   s_icon_color: string
-  admob: RevenueDeviationMatrixCell
-  facebook: RevenueDeviationMatrixCell
-  applovin: RevenueDeviationMatrixCell
-  vungle: RevenueDeviationMatrixCell
+  [key: string]: string | RevenueDeviationMatrixCell | undefined
 }
 
 export type RevenueDeviationMatrixCol = {
   name: string
-  key: MatrixPlatformKey
+  key: string
   total: RevenueDeviationMatrixCell
 }
 

@@ -49,6 +49,7 @@ import { loadingService } from '@/utils/ui'
 import { useCommon } from '@/hooks/core/useCommon'
 import { useWorktabStore } from '@/store/modules/worktab'
 import { fetchGetUserInfo } from '@/api/auth'
+import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
 import { ApiStatus } from '@/utils/http/status'
 import { isHttpError } from '@/utils/http/error'
 import { RouteRegistry, MenuProcessor, IframeRouteManager, RoutePermissionValidator } from '../core'
@@ -58,6 +59,7 @@ let routeRegistry: RouteRegistry | null = null
 
 // 菜单处理器实例
 const menuProcessor = new MenuProcessor()
+const CRITICAL_HOME_ROUTE = '/cockpit'
 
 // 跟踪是否需要关闭 loading
 let pendingLoading = false
@@ -284,7 +286,8 @@ function handleLoginStatus(
   }
 
   // 未登录且访问需要权限的页面，跳转到登录页并携带 redirect 参数
-  userStore.logOut()
+  // 守卫场景下避免触发 store 内部再次 router.push/replace，统一由 next() 控制跳转
+  userStore.resetUserState?.()
   next({
     name: 'Login',
     query: { redirect: to.fullPath }
@@ -339,6 +342,11 @@ async function handleDynamicRoutes(
     await fetchUserInfo()
     profiler.end('fetchUserInfo')
 
+    // 1.1 公用顶栏筛选项（session 命中则不请求；失败不阻断路由）
+    profiler.start('cockpitMetaFilter')
+    await useCockpitMetaFilterStore().ensureLoaded()
+    profiler.end('cockpitMetaFilter')
+
     // 2. 获取菜单数据
     profiler.start('getMenuList')
     const menuList = await menuProcessor.getMenuList()
@@ -350,6 +358,7 @@ async function handleDynamicRoutes(
     }
 
     // 4. 注册动态路由
+    profiler.start('registerRoutes')
     profiler.start('registerRoutes')
     routeRegistry?.register(menuList)
     profiler.end('registerRoutes')
@@ -369,13 +378,16 @@ async function handleDynamicRoutes(
 
     // 8. 验证目标路径权限
     const { homePath } = useCommon()
+    const targetPath =
+      to.path === '/' && homePath.value && homePath.value !== '/' ? homePath.value : to.path
     profiler.start('validatePathPermission')
     const { path: validatedPath, hasPermission } = RoutePermissionValidator.validatePath(
-      to.path,
+      targetPath,
       menuList,
       homePath.value || '/'
     )
     profiler.end('validatePathPermission')
+    routeRegistry?.preloadRouteComponents(menuList, [CRITICAL_HOME_ROUTE, validatedPath])
 
     // 初始化成功，重置进行中标记
     routeInitInProgress = false
@@ -396,7 +408,7 @@ async function handleDynamicRoutes(
     } else {
       // 有权限，正常导航
       next({
-        path: to.path,
+        path: targetPath,
         query: to.query,
         hash: to.hash,
         replace: true
@@ -441,6 +453,7 @@ async function fetchUserInfo(): Promise<void> {
   const userStore = useUserStore()
   const hasCachedUserInfo = userStore.info?.id != null || userStore.info?.userId != null
   if (hasCachedUserInfo) {
+    userStore.setUserInfo(userStore.info as Api.Auth.UserInfo)
     userStore.checkAndClearWorktabs()
     return
   }
@@ -454,6 +467,7 @@ async function fetchUserInfo(): Promise<void> {
  */
 export function resetRouterState(delay: number): void {
   setTimeout(() => {
+    useCockpitMetaFilterStore().reset()
     routeRegistry?.unregister()
     IframeRouteManager.getInstance().clear()
 

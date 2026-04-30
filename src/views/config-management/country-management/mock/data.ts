@@ -1,6 +1,7 @@
 import type { CountryItem } from '../types'
 
-export const mockCountryList: CountryItem[] = [
+/** 种子数据不含 `flagIconUrl`，由 `cloneCountryList` 补默认空串 */
+export const mockCountryList: Omit<CountryItem, 'flagIconUrl'>[] = [
   // 亚太
   {
     code: 'JP',
@@ -278,7 +279,11 @@ export const mockCountryList: CountryItem[] = [
 ]
 
 export function cloneCountryList(): CountryItem[] {
-  return JSON.parse(JSON.stringify(mockCountryList))
+  const list = JSON.parse(JSON.stringify(mockCountryList)) as Partial<CountryItem>[]
+  return list.map((row) => ({
+    ...(row as CountryItem),
+    flagIconUrl: typeof row.flagIconUrl === 'string' ? row.flagIconUrl : ''
+  }))
 }
 
 export const timezoneOptions: string[] = [

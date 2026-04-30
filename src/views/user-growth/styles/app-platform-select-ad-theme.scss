@@ -1,0 +1,82 @@
+@mixin apply-app-platform-select-ad-theme(
+  $scope-selector,
+  $select-class,
+  $popper-class,
+  $width,
+  $min-width,
+  $max-width
+) {
+  #{$scope-selector} :deep(.app-platform-search-select.#{$select-class}) {
+    width: $width;
+    min-width: $min-width;
+    max-width: $max-width;
+    padding: 0 11px;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: none;
+  }
+
+  #{$scope-selector} :deep(.app-platform-search-select.#{$select-class}:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 12px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent);
+  }
+
+  #{$scope-selector} :deep(.app-platform-search-select.#{$select-class}.is-open) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 10%,
+      transparent
+    );
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 20%, transparent);
+  }
+
+  #{$scope-selector}
+    :deep(
+      .app-platform-search-select.#{$select-class} .app-platform-search-select__text.is-placeholder
+    ) {
+    opacity: 0.85;
+  }
+
+  #{$scope-selector}
+    :deep(.app-platform-search-select.#{$select-class} .app-platform-search-select__suffix) {
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+  }
+
+  :global(html.dark .#{$popper-class} .app-platform-search-select__panel) {
+    color: var(--el-text-color-primary);
+  }
+
+  :global(html.dark .#{$popper-class} .app-platform-search-select__header) {
+    color: color-mix(in srgb, var(--el-text-color-regular) 78%, #fff);
+  }
+
+  :global(html.dark .#{$popper-class} .app-platform-search-select__row:hover),
+  :global(html.dark .#{$popper-class} .app-platform-search-select__row.is-active) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 14%,
+      transparent
+    );
+  }
+
+  :global(html:not(.dark) .#{$popper-class} .app-platform-search-select__panel) {
+    color: var(--el-text-color-primary);
+    background: color-mix(in srgb, #fff 96%, var(--theme-color, var(--art-primary, #3b82f6)) 4%);
+  }
+
+  :global(html:not(.dark) .#{$popper-class} .app-platform-search-select__header) {
+    color: color-mix(in srgb, var(--el-text-color-secondary) 85%, #111827);
+  }
+
+  :global(html:not(.dark) .#{$popper-class} .app-platform-search-select__row:hover),
+  :global(html:not(.dark) .#{$popper-class} .app-platform-search-select__row.is-active) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 10%,
+      transparent
+    );
+  }
+}

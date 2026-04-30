@@ -1,0 +1,71 @@
+{
+  "_comment": "周报-对比模式-卡片数据。",
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/report/weekly/compare-overview",
+    "method": "POST",
+    "priority": "P0"
+  },
+  "interaction": {
+    "triggers": [
+      { "moment": "进入周报对比模式", "detail": "应用变化时刷新卡片" },
+      {
+        "moment": "对比模式右上角切换日期/开关",
+        "detail": "独立于顶部筛选栏，变更 compareEnabled 与对比日期后刷新卡片"
+      }
+    ]
+  },
+  "sampleRequest": {
+    "startDate": "2026-04-06",
+    "endDate": "2026-04-12",
+    "appId": "",
+    "appIds": [],
+    "platformList": [],
+    "sourceList": [],
+    "countryCodeList": [],
+    "account": "",
+    "compareAppIds": ["overall", "health", "ai"],
+    "compareEnabled": true,
+    "compareStartDate": "2026-03-30",
+    "compareEndDate": "2026-04-05"
+  },
+  "sampleResponse": {
+    "apps": [
+      {
+        "id": "overall",
+        "name": "整体",
+        "color": "#00D4A1",
+        "revenue": "$1,064,100",
+        "revenueChange": 8.4,
+        "metrics": [
+          { "label": "DAU", "value": "78.3万", "change": "+4.2%", "changeType": "positive" }
+        ]
+      },
+      {
+        "id": "health",
+        "name": "健康",
+        "color": "#FF6B9D",
+        "revenue": "$288,400",
+        "revenueChange": 11.2,
+        "metrics": [
+          { "label": "DAU", "value": "29.2万", "change": "+7.8%", "changeType": "positive" }
+        ]
+      },
+      {
+        "id": "ai",
+        "name": "AI应用",
+        "color": "#8B5CF6",
+        "revenue": "$203,700",
+        "revenueChange": 6.7,
+        "metrics": [
+          { "label": "DAU", "value": "14.4万", "change": "+3.0%", "changeType": "positive" }
+        ]
+      }
+    ]
+  },
+  "apiSuggestion": {
+    "notes": [
+      "对比模式右上角日期与开关为独立控制，勿复用顶部筛选栏日期状态。",
+      "compareEnabled=false 时，卡片涨跌字段建议返回 0 或占位文案（与前端开关关闭态一致）。"
+    ]
+  }
+}

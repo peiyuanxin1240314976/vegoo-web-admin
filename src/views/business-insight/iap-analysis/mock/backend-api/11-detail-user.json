@@ -44,7 +44,7 @@
       "ratio": { "type": "string", "required": true, "description": "占比展示（如 10%）。" },
       "arpu": { "type": "string", "required": true, "description": "ARPU 展示。" },
       "conversion": { "type": "string", "required": true, "description": "转化率展示。" },
-      "retention": { "type": "string", "required": true, "description": "续费率展示。" },
+      "retention": { "type": "string", "required": true, "description": "续订率展示。" },
       "churn": { "type": "string", "required": true, "description": "退款率/流失率展示。" }
     },
     "IapCountryChartData": {

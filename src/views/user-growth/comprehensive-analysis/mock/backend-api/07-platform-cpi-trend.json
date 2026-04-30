@@ -1,22 +1,66 @@
 {
   "_comment": "综合分析 - 广告平台 CPI 趋势折线图。对应 types.ts: PlatformCpiTrend。",
+  "interaction": {
+    "route": "/user-growth/comprehensive-analysis",
+    "surface": "底部左「广告平台 CPI 趋势」折线图",
+    "trigger": "fetchComprehensiveAnalysisData 内并发 POST；前端可将 target 渲染为参考线或 dashed 系列。"
+  },
   "fieldDescription": {
     "request": {
-      "date_start": { "type": "string", "required": true },
-      "date_end": { "type": "string", "required": true },
-      "s_app_id": { "type": "string", "required": true },
+      "date_start": {
+        "type": "string",
+        "required": true,
+        "description": "统计区间开始 YYYY-MM-DD（含）。"
+      },
+      "date_end": {
+        "type": "string",
+        "required": true,
+        "description": "统计区间结束 YYYY-MM-DD（含）。"
+      },
+      "s_app_id": { "type": "string", "required": true, "description": "应用 ID；'' 全部。" },
       "source": {
         "type": "string",
         "required": true,
-        "description": "'' 全部平台；非空则仅返回对应平台的 series。"
+        "description": "'' 返回多平台 series；非空仅保留名称匹配该平台的折线（及可选目标线）。"
       },
-      "s_country_code": { "type": "string", "required": true }
+      "s_country_code": { "type": "string", "required": true, "description": "国家代码；'' 全部。" }
     },
     "response": {
       "data": {
         "type": "PlatformCpiTrend",
         "required": true,
-        "description": "dates（x 轴日期）/ target（目标参考线值）/ series（每个平台折线：name/color/data/dashed?）。"
+        "description": "dates 与每条 series.data 等长；target 为横向参考值。"
+      }
+    },
+    "PlatformCpiTrend": {
+      "dates": {
+        "type": "string[]",
+        "required": true,
+        "description": "横轴标签（如 MM-DD 或 YYYY-MM-DD，与产品约定一致）。"
+      },
+      "target": {
+        "type": "number",
+        "required": true,
+        "description": "目标 CPI，用于参考线。"
+      },
+      "series": {
+        "type": "TrendSeries[]",
+        "required": true,
+        "description": "各平台折线；dashed 可选表示参考线类序列。"
+      }
+    },
+    "TrendSeries": {
+      "name": { "type": "string", "required": true, "description": "图例名。" },
+      "color": { "type": "string", "required": true, "description": "线条颜色。" },
+      "data": {
+        "type": "number[]",
+        "required": true,
+        "description": "与 dates 等长的 CPI 序列（USD）。"
+      },
+      "dashed": {
+        "type": "boolean",
+        "required": false,
+        "description": "为 true 时虚线（如目标线）；默认实线。"
       }
     }
   },
@@ -62,5 +106,10 @@
     "priority": "P1",
     "requestBody": "date_start, date_end, s_app_id, source, s_country_code",
     "responseBody": "PlatformCpiTrend"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "Mock TS 基线可能不含「目标线」series，由前端用 target 画线；契约示例含 dashed 供后端直出时参考。"
+    ]
   }
 }

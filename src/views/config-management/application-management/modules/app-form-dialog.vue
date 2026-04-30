@@ -26,14 +26,23 @@
             <div class="form-label">平台 <span class="required">*</span></div>
             <el-form-item prop="platform">
               <el-select v-model="form.platform" class="dark-select full-width">
-                <el-option value="Android">
-                  <span class="platform-opt platform-opt--android">
-                    <span class="platform-dot" />Android
-                  </span>
-                </el-option>
-                <el-option value="iOS">
-                  <span class="platform-opt platform-opt--ios">
-                    <span class="platform-dot" />iOS
+                <el-option
+                  v-for="opt in platformOptions"
+                  :key="opt.value"
+                  :value="opt.value"
+                  :label="opt.label"
+                >
+                  <span
+                    :class="[
+                      'platform-opt',
+                      opt.value === 'Android'
+                        ? 'platform-opt--android'
+                        : opt.value === 'iOS'
+                          ? 'platform-opt--ios'
+                          : 'platform-opt--web'
+                    ]"
+                  >
+                    <span class="platform-dot" />{{ opt.label }}
                   </span>
                 </el-option>
               </el-select>
@@ -49,10 +58,10 @@
                 class="dark-select full-width"
               >
                 <el-option
-                  v-for="opt in APPLICATION_CATEGORY_VALUES"
-                  :key="opt"
-                  :label="opt"
-                  :value="opt"
+                  v-for="opt in categoryOptions"
+                  :key="opt.value"
+                  :label="opt.label"
+                  :value="opt.value"
                 />
               </el-select>
             </el-form-item>
@@ -79,15 +88,15 @@
               @change="handleIconChange"
             />
           </div>
-          <!-- ID -->
+          <!-- ID（必填，由用户填写；新增与编辑均与后端约定一致） -->
           <div class="form-item">
             <div class="form-label">ID <span class="required">*</span></div>
             <el-form-item prop="id">
               <el-input
                 v-model="form.id"
-                placeholder="如：Weather5A"
+                placeholder="请输入应用 ID（仅字母与数字）"
                 class="dark-input"
-                :disabled="isEdit"
+                clearable
               />
             </el-form-item>
           </div>
@@ -154,7 +163,12 @@
           <div class="form-item">
             <div class="form-label">报表时区</div>
             <el-select v-model="form.timezone" class="dark-select full-width">
-              <el-option v-for="tz in timezoneOptions" :key="tz" :label="tz" :value="tz" />
+              <el-option
+                v-for="opt in timezoneOptions"
+                :key="opt.value"
+                :label="opt.label"
+                :value="opt.value"
+              />
             </el-select>
           </div>
           <!-- 优先级 -->
@@ -241,7 +255,7 @@
         <div class="footer-btns">
           <span class="required-hint">标有 * 为必填项</span>
           <ElButton round class="btn-cancel" @click="handleClose">取消</ElButton>
-          <ElButton round class="btn-submit" @click="handleSubmit">
+          <ElButton round class="btn-submit" :loading="submitLoading" @click="handleSubmit">
             {{ isEdit ? '保存修改' : '确认创建' }}
           </ElButton>
         </div>
@@ -252,17 +266,24 @@
 
 <script setup lang="ts">
   import { ref, reactive, computed, watch } from 'vue'
+  import { useRoute } from 'vue-router'
   import { Upload } from '@element-plus/icons-vue'
+  import { ElMessage } from 'element-plus'
   import type { FormInstance, FormRules } from 'element-plus'
-  import { APPLICATION_CATEGORY_VALUES } from '../mock/data'
+  import { fetchUploadBizIcon } from '@/api/biz-icon-upload'
+  import { ApplicationEndpoint, isApplicationEndpointMock } from '../config/data-source'
+  import { mockUploadApplicationIcon } from '../mock/application-api-mock'
   import { deriveIconColorFromId } from '../types'
-  import type { ApplicationFormModel, ApplicationFormPayload } from '../types'
+  import type { ApplicationFormModel, ApplicationFormPayload, OptionItem } from '../types'
 
   defineOptions({ name: 'AppFormDialog' })
 
   const props = defineProps<{
     visible: boolean
     editData?: ApplicationFormModel | null
+    categoryOptions: OptionItem[]
+    timezoneOptions: OptionItem[]
+    platformOptions: Array<{ label: string; value: string }>
   }>()
 
   const emit = defineEmits<{
@@ -274,7 +295,10 @@
   const formRef = ref<FormInstance>()
   const iconInputRef = ref<HTMLInputElement>()
   const iconPreview = ref<string>('')
+  const iconFile = ref<File | null>(null)
+  const submitLoading = ref(false)
 
+  const route = useRoute()
   const isEdit = computed(() => !!props.editData?.id)
   const dialogVisible = computed({
     get: () => props.visible,
@@ -317,8 +341,9 @@
     { immediate: true }
   )
 
-  // ─── 选项配置 ──────────────────────────────────────────
-  const timezoneOptions = ['PST', 'EST', 'CST', 'MST', 'UTC', 'GMT+8']
+  const categoryOptions = computed(() => props.categoryOptions)
+  const timezoneOptions = computed(() => props.timezoneOptions)
+  const platformOptions = computed(() => props.platformOptions)
 
   // ─── 表单校验 ──────────────────────────────────────────
   const rules: FormRules = {
@@ -326,10 +351,31 @@
     platform: [{ required: true, message: '请选择平台', trigger: 'change' }],
     category: [{ required: true, message: '请选择类别', trigger: 'change' }],
     id: [
-      { required: true, message: '请输入应用ID', trigger: 'blur' },
-      { pattern: /^[A-Za-z0-9]+$/, message: 'ID只能包含字母和数字', trigger: 'blur' }
+      {
+        validator: (_rule, value, callback) => {
+          const s = String(value ?? '').trim()
+          if (!s) {
+            callback(new Error('请输入应用 ID'))
+            return
+          }
+          if (!/^[A-Za-z0-9]+$/.test(s)) {
+            callback(new Error('ID 只能包含字母和数字'))
+            return
+          }
+          callback()
+        },
+        trigger: 'blur'
+      }
     ],
     bundleId: [{ required: true, message: '请输入Bundle ID', trigger: 'blur' }]
+  }
+
+  /** 公共 `biz/icon/upload` 的 query `iconKey`：与当前路由 `name` 一致（如 ApplicationManagement） */
+  function bizIconUploadKeyFromRoute() {
+    const n = route.name
+    if (typeof n === 'string' && n.trim()) return n.trim()
+    if (n != null) return String(n)
+    return 'ApplicationManagement'
   }
 
   // ─── 事件处理 ──────────────────────────────────────────
@@ -338,6 +384,7 @@
   const handleIconChange = (e: Event) => {
     const file = (e.target as HTMLInputElement).files?.[0]
     if (!file) return
+    iconFile.value = file
     const reader = new FileReader()
     reader.onload = (ev) => {
       iconPreview.value = ev.target?.result as string
@@ -345,22 +392,82 @@
     reader.readAsDataURL(file)
   }
 
+  const getErrorMessage = (error: unknown) => {
+    const fallback = isEdit.value ? '保存失败，请重试' : '创建失败，请重试'
+    if (!error) return fallback
+
+    if (error instanceof Error && error.message?.trim()) {
+      return error.message.trim()
+    }
+
+    if (typeof error === 'object') {
+      const errObj = error as {
+        message?: unknown
+        msg?: unknown
+        data?: { message?: unknown; msg?: unknown } | null
+      }
+      const messageCandidates = [errObj.message, errObj.msg, errObj.data?.message, errObj.data?.msg]
+      for (const item of messageCandidates) {
+        if (typeof item === 'string' && item.trim()) {
+          return item.trim()
+        }
+      }
+    }
+
+    return fallback
+  }
+
   const handleSubmit = async () => {
-    if (!formRef.value) return
-    await formRef.value.validate((valid) => {
-      if (!valid) return
-      const iconColor =
-        props.editData?.iconColor && !iconPreview.value
-          ? props.editData.iconColor
-          : deriveIconColorFromId(form.id)
-      emit('success', { ...form, iconColor } as ApplicationFormPayload)
-    })
+    if (!formRef.value || submitLoading.value) return
+    const valid = await formRef.value.validate().catch(() => false)
+    if (!valid) return
+
+    submitLoading.value = true
+    const idTrimmed = typeof form.id === 'string' ? form.id.trim() : form.id
+    const payload: ApplicationFormPayload = {
+      ...form,
+      id: idTrimmed || undefined
+    }
+
+    if (iconFile.value) {
+      try {
+        if (isApplicationEndpointMock(ApplicationEndpoint.UploadIcon)) {
+          const r = await mockUploadApplicationIcon(iconFile.value)
+          payload.iconFileKey = r.fileKey
+          payload.iconUrl = r.iconUrl
+        } else {
+          const d = await fetchUploadBizIcon(iconFile.value, bizIconUploadKeyFromRoute())
+          payload.iconFileKey = d.iconKey
+          payload.iconUrl = d.downloadUrl
+        }
+      } catch {
+        ElMessage.error('图标上传失败，请重试')
+        submitLoading.value = false
+        return
+      }
+    }
+
+    const idForColor = (idTrimmed ?? props.editData?.id ?? '').trim() || 'app'
+    if (isEdit.value && props.editData?.iconColor && !iconFile.value) {
+      payload.iconColor = props.editData.iconColor
+    } else {
+      payload.iconColor = deriveIconColorFromId(idForColor)
+    }
+
+    try {
+      emit('success', payload)
+    } catch (error) {
+      ElMessage.error(getErrorMessage(error))
+    } finally {
+      submitLoading.value = false
+    }
   }
 
   const handleClose = () => {
     emit('update:visible', false)
     formRef.value?.resetFields()
     iconPreview.value = ''
+    iconFile.value = null
   }
 </script>
 
@@ -780,6 +887,10 @@
     &--ios {
       color: #60a5fa;
     }
+
+    &--web {
+      color: #a78bfa;
+    }
   }
 
   .platform-dot {
@@ -793,6 +904,10 @@
 
     .platform-opt--ios & {
       background: #60a5fa;
+    }
+
+    .platform-opt--web & {
+      background: #a78bfa;
     }
   }
 </style>

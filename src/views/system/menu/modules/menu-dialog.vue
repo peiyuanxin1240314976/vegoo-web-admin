@@ -174,11 +174,11 @@
         {
           label: createLabelTooltip(
             '路由地址',
-            '一级菜单：以 / 开头的绝对路径（如 /dashboard）\n二级及以下：相对路径（如 console、user）'
+            '一级菜单：以 / 开头的绝对路径（如 /cockpit）\n二级及以下：相对路径（如 user）'
           ),
           key: 'path',
           type: 'input',
-          props: { placeholder: '如：/dashboard 或 console' }
+          props: { placeholder: '如：/cockpit 或 user' }
         },
         { label: '权限标识', key: 'label', type: 'input', props: { placeholder: '如：User' } },
         {

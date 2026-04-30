@@ -168,7 +168,7 @@
       metrics: () => ({ ecpm: '$8.20', ecpmTrend: '↑+3%', fillRate: '94%', arpu: '$22.8' }),
       compositionData: () => [
         { label: '广告收入', value: '$780K', percent: 76, color: '#3984F1' },
-        { label: '内购收入', value: '$250K', percent: 24, color: '#f59e0b' }
+        { label: '付费收入', value: '$250K', percent: 24, color: '#f59e0b' }
       ],
       appTableData: () => [],
       regionLabel: '美国',
@@ -208,7 +208,7 @@
     },
     {
       prop: 'dIapRevenue',
-      label: '内购收入',
+      label: '付费收入',
       minWidth: 86,
       align: 'left',
       formatter: (row: AppPerformanceRow) => fmtMoneyK(row.dIapRevenue)

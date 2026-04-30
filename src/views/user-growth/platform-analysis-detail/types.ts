@@ -1,13 +1,8 @@
-// ─── KPI 卡片（复用） ──────────────────────────────────────────
+// ─── KPI 卡片：与综合分析页同构（钻取详情与父页字段一致）──────────────
 
-export interface KpiCard {
-  id: string
-  title: string
-  subTitle: string
-  primaryValue: string
-  trendText: string
-  trendUp: boolean
-}
+import type { KpiCard } from '../comprehensive-analysis/types'
+
+export type { KpiCard }
 
 // ─── 平台/系统 统计卡片 ────────────────────────────────────────
 

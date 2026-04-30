@@ -1,0 +1,127 @@
+{
+  "_comment": "驾驶舱（今日 Tab）- 四卡片汇总。用于 alerts 下方新增一行 4 个卡片展示。",
+  "fieldDescription": {
+    "request": {
+      "date": {
+        "type": "string",
+        "required": true,
+        "description": "查询日期，格式 YYYY-MM-DD（今日 Tab 传当日）。"
+      }
+    },
+    "response": {
+      "data": {
+        "type": "CockpitTodaySummaryCardsData",
+        "required": true,
+        "description": "四卡片数据主体。"
+      }
+    },
+    "CockpitTodaySummaryCardsData": {
+      "cards": {
+        "type": "CockpitTodaySummaryCard[]",
+        "required": true,
+        "description": "四张卡片数组，固定 4 项（广告收入汇总/广告支出汇总/买量用户汇总/ROI）。无数据返回 []。"
+      }
+    },
+    "CockpitTodaySummaryCard": {
+      "key": {
+        "type": "string",
+        "required": true,
+        "enum": ["adRevenueSummary", "adSpendSummary", "paidUsersSummary", "roiSummary"],
+        "description": "卡片唯一标识。"
+      },
+      "title": {
+        "type": "string",
+        "required": true,
+        "description": "卡片标题文案。"
+      },
+      "items": {
+        "type": "CockpitTodaySummaryMetricItem[]",
+        "required": true,
+        "description": "卡片内行列表。无数据返回 []。"
+      }
+    },
+    "CockpitTodaySummaryMetricItem": {
+      "label": {
+        "type": "string",
+        "required": true,
+        "description": "行名称（如 Google/Facebook/广告收入/买量用户等）。"
+      },
+      "valueText": {
+        "type": "string",
+        "required": true,
+        "description": "主值展示文案（可预格式化：$25207 / 129 / 53% 等）。"
+      },
+      "changeText": {
+        "type": "string",
+        "required": false,
+        "description": "变化值展示文案（可预格式化：$1770 / 7 / 28.0 等）。无变化可不返回或返回空字符串。"
+      },
+      "trend": {
+        "type": "string",
+        "required": false,
+        "enum": ["up", "down"],
+        "description": "变化方向，用于前端展示绿色上升/红色下降箭头。仅当 changeText 存在时才有意义。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "date": "2026-04-15"
+  },
+  "sampleResponse": {
+    "data": {
+      "cards": [
+        {
+          "key": "adRevenueSummary",
+          "title": "广告收入汇总",
+          "items": [
+            { "label": "广告收入", "valueText": "$25207", "changeText": "$1770", "trend": "down" },
+            { "label": "广告支出", "valueText": "$23379", "changeText": "$41799", "trend": "down" },
+            { "label": "买量用户", "valueText": "204920", "changeText": "7", "trend": "down" },
+            { "label": "广告账户", "valueText": "129", "changeText": "7", "trend": "down" },
+            { "label": "广告系列", "valueText": "916", "changeText": "86", "trend": "down" }
+          ]
+        },
+        {
+          "key": "adSpendSummary",
+          "title": "广告支出汇总",
+          "items": [
+            { "label": "Google", "valueText": "$13342", "changeText": "$1216", "trend": "down" },
+            { "label": "Facebook", "valueText": "$7185", "changeText": "$293", "trend": "up" },
+            { "label": "Mintegral", "valueText": "$1413", "changeText": "$368", "trend": "down" }
+          ]
+        },
+        {
+          "key": "paidUsersSummary",
+          "title": "买量用户汇总",
+          "items": [
+            { "label": "Google", "valueText": "89726", "changeText": "22020", "trend": "down" },
+            { "label": "Facebook", "valueText": "54706", "changeText": "1686", "trend": "down" },
+            { "label": "Mintegral", "valueText": "46133", "changeText": "12032", "trend": "down" }
+          ]
+        },
+        {
+          "key": "roiSummary",
+          "title": "ROI",
+          "items": [
+            { "label": "Google", "valueText": "53%" },
+            { "label": "Facebook", "valueText": "82%" },
+            { "label": "Mintegral", "valueText": "95%" }
+          ]
+        }
+      ]
+    }
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/cockpit/today-summary-cards",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "date (YYYY-MM-DD)",
+    "responseBody": "CockpitTodaySummaryCardsData"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "建议后端直接返回 valueText/changeText（预格式化），避免前端处理货币符号、小数位与千分位差异。",
+      "ROI 卡片通常不返回 changeText/trend；若需要可按同结构扩展。"
+    ]
+  }
+}

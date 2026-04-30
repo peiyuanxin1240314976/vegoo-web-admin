@@ -1,0 +1,129 @@
+{
+  "_comment": "整体回收 Tab1 - 顶部 KPI 卡片。对应 types.ts: Pick<OverallTabData,'kpis'>。",
+  "fieldDescription": {
+    "request": {
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "统计起始日 YYYY-MM-DD（含）。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": true,
+        "description": "统计结束日 YYYY-MM-DD（含）。"
+      },
+      "appId": {
+        "type": "string",
+        "required": true,
+        "description": "应用；与 cockpit meta 一致；全部 `''`。"
+      },
+      "source": {
+        "type": "string",
+        "required": true,
+        "description": "广告平台枚举 string；全部 `''`。"
+      },
+      "countryCode": {
+        "type": "string",
+        "required": true,
+        "description": "国家 ISO 3166-1 alpha-2 小写；全部 `''`。"
+      }
+    },
+    "response": {
+      "data": {
+        "type": "{ kpis }",
+        "required": true,
+        "description": "仅 KPI 数组。"
+      },
+      "OverallKpiCard": {
+        "id": { "type": "string", "required": true, "description": "卡片键。" },
+        "title": { "type": "string", "required": true, "description": "标题。" },
+        "primaryValue": {
+          "type": "string",
+          "required": true,
+          "description": "主指标展示（可预格式化）。"
+        },
+        "subLabel": { "type": "string", "required": false },
+        "subValue": { "type": "string", "required": false },
+        "trendText": { "type": "string", "required": false },
+        "trendUp": { "type": "boolean", "required": false }
+      }
+    }
+  },
+  "sampleRequest": {
+    "startDate": "2026-02-20",
+    "endDate": "2026-03-21",
+    "appId": "",
+    "source": "",
+    "countryCode": ""
+  },
+  "sampleResponse": {
+    "data": {
+      "kpis": [
+        {
+          "id": "totalInstall",
+          "title": "今日总安装",
+          "primaryValue": "12,485",
+          "subLabel": "昨日",
+          "subValue": "12,097",
+          "trendText": "+3.2% YoY日",
+          "trendUp": true
+        },
+        {
+          "id": "organicRatio",
+          "title": "自然量占比",
+          "primaryValue": "30.8%",
+          "trendText": "+2.1pp",
+          "trendUp": true
+        },
+        {
+          "id": "effectiveCpi",
+          "title": "整体有效CPI",
+          "primaryValue": "$1.67",
+          "subLabel": "目标CPI",
+          "subValue": "$1.80",
+          "trendText": "+5.2% 自然量提高",
+          "trendUp": true
+        },
+        {
+          "id": "ltv7",
+          "title": "LTV7（整体）",
+          "primaryValue": "$1.24",
+          "trendText": "-8.4%",
+          "trendUp": false
+        },
+        {
+          "id": "ltv30",
+          "title": "LTV30（整体）",
+          "primaryValue": "$3.85",
+          "trendText": "+12%",
+          "trendUp": true
+        },
+        {
+          "id": "roiDay30",
+          "title": "整体ROI Day30",
+          "primaryValue": "230.5%",
+          "trendText": "+1.8pp",
+          "trendUp": true
+        }
+      ]
+    }
+  },
+  "api": {
+    "url": "POST /api/user-growth/overall-recovery/overall-tab/kpis",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "startDate, endDate, appId, source, countryCode",
+    "responseBody": "{ kpis: OverallKpiCard[] }"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "Tab1 首屏 / 顶栏检索",
+        "detail": "父页 `index.vue` 点击「检索」或切换至 Tab1 时，`tab-overall.vue` 与其它 Tab1 子接口并行请求；入参来自 `buildOverallRecoveryCommonBody(appliedFilters)`。",
+        "prerequisite": "已登录；cockpit meta 已由守卫预载（顶栏下拉）。"
+      }
+    ],
+    "defaultSelection": "应用/广告平台/国家选「全部」时对应字段传 `''`。",
+    "dedupe": "与 Tab1 其它拆分接口同一筛选批次可并行；建议与兄弟请求共享取消/序号防竞态。"
+  }
+}

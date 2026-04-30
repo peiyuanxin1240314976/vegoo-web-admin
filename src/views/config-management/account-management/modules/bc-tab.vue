@@ -4,84 +4,82 @@
     <div class="filter-bar">
       <div class="filter-group">
         <span class="filter-label">广告平台：</span>
-        <div class="toggle-tabs">
-          <button
-            :class="['toggle-tab', { 'toggle-tab--active': sourceFilter === '' }]"
-            @click="sourceFilter = ''"
-            >全部</button
-          >
-          <button
-            v-for="p in bcPlatforms"
-            :key="p.value"
-            :class="[
-              'toggle-tab toggle-tab--platform',
-              { 'toggle-tab--active': sourceFilter === p.value }
-            ]"
-            :style="
-              sourceFilter === p.value
-                ? { color: p.color, borderColor: p.color, background: p.bg }
-                : {}
-            "
-            @click="sourceFilter = p.value"
-            >{{ p.shortLabel }}</button
-          >
-        </div>
+        <ElSelect
+          v-model="sourceFilter"
+          class="filter-select"
+          placeholder="全部"
+          clearable
+          filterable
+          :loading="sourceFilterLoading"
+        >
+          <ElOption
+            v-for="o in sourceOptions"
+            :key="o.value || 'all'"
+            :label="o.label"
+            :value="o.value"
+          />
+        </ElSelect>
       </div>
       <div class="filter-group">
         <span class="filter-label">状态：</span>
-        <div class="toggle-tabs">
-          <button
+        <ElSelect
+          v-model="statusFilter"
+          class="filter-select filter-select--narrow"
+          placeholder="全部"
+          clearable
+        >
+          <ElOption
             v-for="s in statusOptions"
-            :key="s.value"
-            :class="['toggle-tab', { 'toggle-tab--active': statusFilter === s.value }]"
-            @click="statusFilter = s.value"
-            >{{ s.label }}</button
-          >
-        </div>
+            :key="s.value || 'all'"
+            :label="s.label"
+            :value="s.value"
+          />
+        </ElSelect>
       </div>
       <div class="filter-group">
         <span class="filter-label">开户主体：</span>
-        <div class="toggle-tabs">
-          <button
-            v-for="o in ownerTypeOptions"
-            :key="o.value"
-            :class="['toggle-tab', { 'toggle-tab--active': ownerTypeFilter === o.value }]"
-            @click="ownerTypeFilter = o.value"
-            >{{ o.label }}</button
-          >
-        </div>
+        <ElInput
+          v-model="ownerTypeFilter"
+          class="filter-select filter-select--narrow"
+          placeholder="请输入"
+          clearable
+        />
       </div>
       <div class="filter-group">
         <span class="filter-label">封户记录：</span>
-        <div class="toggle-tabs">
-          <button
+        <ElSelect
+          v-model="banRecordFilter"
+          class="filter-select filter-select--narrow"
+          placeholder="全部"
+          clearable
+        >
+          <ElOption
             v-for="b in banRecordOptions"
-            :key="b.value"
-            :class="['toggle-tab', { 'toggle-tab--active': banRecordFilter === b.value }]"
-            @click="banRecordFilter = b.value"
-            >{{ b.label }}</button
-          >
-        </div>
+            :key="b.value || 'all'"
+            :label="b.label"
+            :value="b.value"
+          />
+        </ElSelect>
       </div>
     </div>
 
     <!-- 统计卡片 -->
     <div class="stat-cards">
-      <div class="stat-card">
+      <div class="stat-card stat-card--total">
         <div class="stat-label">BC总数</div>
-        <div class="stat-value stat-value--white">{{ stats.total }}</div>
+        <div class="stat-value stat-value--total">{{ stats.total }}</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card stat-card--healthy">
         <div class="stat-label">健康/可用</div>
-        <div class="stat-value stat-value--green">{{ stats.healthy }} 个</div>
+        <div class="stat-value stat-value--healthy">{{ stats.healthy }} 个</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card stat-card--flagged">
         <div class="stat-label">有封户记录</div>
-        <div class="stat-value stat-value--amber">{{ stats.banned }} 个</div>
+        <div class="stat-value stat-value--flagged">{{ stats.banned }} 个</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card stat-card--open">
         <div class="stat-label">本月开户数</div>
-        <div class="stat-value stat-value--blue">{{ stats.monthOpen }} 个</div>
+        <div class="stat-value stat-value--open">{{ stats.monthOpen }} 个</div>
       </div>
     </div>
 
@@ -90,11 +88,12 @@
       <el-table
         :data="pagedList"
         class="bc-table"
-        table-layout="auto"
+        max-height="630px"
+        table-layout="fixed"
         :row-class-name="getRowClass"
         @row-click="handleRowClick"
       >
-        <el-table-column prop="id" label="BM ID" min-width="90">
+        <el-table-column prop="id" label="BM ID" min-width="90" align="left">
           <template #default="{ row }">
             <span
               class="bm-id"
@@ -106,26 +105,38 @@
             >
           </template>
         </el-table-column>
-        <el-table-column prop="bmName" label="BM名称" min-width="130" show-overflow-tooltip>
+        <el-table-column
+          prop="bmName"
+          label="BM名称"
+          min-width="130"
+          align="left"
+          show-overflow-tooltip
+        >
           <template #default="{ row }">
             <span class="bm-name" :class="{ 'bm-name--inactive': row.status === '不再使用' }">{{
               row.bmName
             }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="广告平台" min-width="120">
+        <el-table-column label="广告平台" min-width="120" align="left">
           <template #default="{ row }">
             <span class="platform-chip" :style="getPlatformStyle(row.source)">{{
               row.source
             }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="group" label="归属组" min-width="100" show-overflow-tooltip>
+        <el-table-column
+          prop="group"
+          label="归属组"
+          min-width="100"
+          align="left"
+          show-overflow-tooltip
+        >
           <template #default="{ row }">
             <span class="group-text">{{ row.group }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="状态" min-width="100">
+        <el-table-column label="状态" min-width="100" align="left">
           <template #default="{ row }">
             <span :class="['status-badge', getStatusClass(row.status)]">
               <span class="status-icon">{{ getStatusIcon(row.status) }}</span>
@@ -133,19 +144,19 @@
             </span>
           </template>
         </el-table-column>
-        <el-table-column label="开户主体" min-width="100" align="center">
+        <el-table-column label="开户主体" min-width="100" align="left">
           <template #default="{ row }">
             <span :class="['owner-badge', `owner-badge--${ownerClass(row.ownerType)}`]">{{
               row.ownerType
             }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="manager" label="管理员" min-width="80" align="center">
+        <el-table-column prop="manager" label="管理员" min-width="80" align="left">
           <template #default="{ row }">
             <span class="manager-text">{{ row.manager }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="封户记录" min-width="90" align="center">
+        <el-table-column label="封户记录" min-width="90" align="left">
           <template #default="{ row }">
             <span
               :class="['ban-badge', row.banRecord === '有' ? 'ban-badge--yes' : 'ban-badge--no']"
@@ -189,8 +200,17 @@
 
 <script setup lang="ts">
   import { onMounted, ref, computed, watch } from 'vue'
-  import { fetchBcTable } from '@/api/config-management/account-management'
+  import { useRoute } from 'vue-router'
+  import { storeToRefs } from 'pinia'
+  import { fetchBcOverviewStats, fetchBcTable } from '@/api/config-management/account-management'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
+  import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
   import { AccountApiSource } from '../config/data-source'
+  import {
+    BcManagementEndpoint,
+    isBcManagementEndpointMock
+  } from '@/views/account-management/bc-management/config/data-source'
+  import { mockFetchBcTable } from '@/views/account-management/bc-management/mock/bc-management-api-mock'
   import { PLATFORM_CONFIGS } from '../types'
   import type { BcItem } from '../types'
 
@@ -207,8 +227,23 @@
     delete: [row: BcItem]
   }>()
 
-  // 只展示有 BC 的平台
+  // 广告平台筛选：直接使用 cockpit-meta-filter 实时数据
   const bcPlatforms = PLATFORM_CONFIGS.filter((p) => ['Meta Ads', 'TikTok Ads'].includes(p.value))
+  const cockpitMetaFilterStore = useCockpitMetaFilterStore()
+  const { data: cockpitMeta } = storeToRefs(cockpitMetaFilterStore)
+  const sourceFilterLoading = ref(false)
+
+  const sourceOptions = computed(() => {
+    const metaSources = (cockpitMeta.value?.sourceOptions ?? []) as CockpitMetaOptionItem[]
+    const mapped = metaSources
+      .filter((opt) => opt.value !== 'all')
+      .map((opt) => ({ label: opt.label, value: opt.value }))
+    if (mapped.length > 0) return [{ label: '全部', value: '' }, ...mapped]
+    return [
+      { label: '全部', value: '' },
+      ...bcPlatforms.map((p) => ({ label: p.label, value: p.value }))
+    ]
+  })
 
   const statusOptions = [
     { label: '全部', value: '' },
@@ -217,12 +252,6 @@
     { label: '不再使用', value: '不再使用' },
     { label: '封禁', value: '封禁' },
     { label: '其他', value: '其他' }
-  ]
-  const ownerTypeOptions = [
-    { label: '全部', value: '' },
-    { label: '企业户', value: '企业户' },
-    { label: '个人户', value: '个人户' },
-    { label: '小额广告户', value: '小额广告户' }
   ]
   const banRecordOptions = [
     { label: '全部', value: '' },
@@ -395,19 +424,69 @@
   ]
 
   const bcList = ref<BcItem[]>([])
+  const route = useRoute()
+  const isAccountBcPage = computed(() => route.path.includes('/account-management/bc-management'))
+  const remoteStats = ref<{
+    total: number
+    healthy: number
+    banned: number
+    monthOpen: number
+  } | null>(null)
 
   const loadList = async () => {
-    if (!AccountApiSource.bcTable) {
+    const query = {
+      current: 1,
+      size: 1000,
+      keyword: '',
+      source: '',
+      status: '',
+      ownerType: '',
+      banRecord: ''
+    }
+
+    const maybeLoadRemoteStats = async () => {
+      if (!isAccountBcPage.value) return
+      if (isBcManagementEndpointMock(BcManagementEndpoint.OverviewStats)) {
+        remoteStats.value = null
+        return
+      }
       try {
-        const response = await fetchBcTable({
-          current: 1,
-          size: 1000,
-          keyword: '',
-          source: '',
-          status: '',
-          ownerType: '',
-          banRecord: ''
-        })
+        remoteStats.value = await fetchBcOverviewStats(query)
+      } catch {
+        remoteStats.value = null
+      }
+    }
+
+    // 独立 BC 管理页：按页面级开关决定是否 mock/远程
+    if (isAccountBcPage.value) {
+      if (isBcManagementEndpointMock(BcManagementEndpoint.Table)) {
+        const mockRes = await mockFetchBcTable(query)
+        bcList.value = mockRes.records
+        void maybeLoadRemoteStats()
+        autoSelectFirst()
+        return
+      }
+      try {
+        const response = await fetchBcTable(query)
+        const rows =
+          (response as { records?: BcItem[] })?.records ??
+          (response as { list?: BcItem[] })?.list ??
+          []
+        if (Array.isArray(rows)) {
+          bcList.value = rows
+          void maybeLoadRemoteStats()
+          autoSelectFirst()
+          return
+        }
+      } catch {
+        // remote unavailable, fallback to mock
+      }
+    }
+
+    // 配置管理 Tab：按 AccountApiSource 决定是否远程
+    if (!isAccountBcPage.value && !AccountApiSource.bcTable) {
+      try {
+        const response = await fetchBcTable(query)
         const rows =
           (response as { records?: BcItem[] })?.records ??
           (response as { list?: BcItem[] })?.list ??
@@ -421,7 +500,10 @@
         // remote unavailable, fallback to mock
       }
     }
+
+    // fallback: 内置 mock list
     bcList.value = mockBcList.map((i) => ({ ...i }))
+    void maybeLoadRemoteStats()
     autoSelectFirst()
   }
 
@@ -433,7 +515,13 @@
     }
   }
 
-  onMounted(() => {
+  onMounted(async () => {
+    sourceFilterLoading.value = true
+    try {
+      await cockpitMetaFilterStore.ensureLoaded()
+    } finally {
+      sourceFilterLoading.value = false
+    }
     void loadList()
   })
 
@@ -457,7 +545,11 @@
         return false
       if (sourceFilter.value && item.source !== sourceFilter.value) return false
       if (statusFilter.value && item.status !== statusFilter.value) return false
-      if (ownerTypeFilter.value && item.ownerType !== ownerTypeFilter.value) return false
+      if (
+        ownerTypeFilter.value &&
+        !item.ownerType.toLowerCase().includes(ownerTypeFilter.value.toLowerCase())
+      )
+        return false
       if (banRecordFilter.value && item.banRecord !== banRecordFilter.value) return false
       return true
     })
@@ -469,12 +561,15 @@
     return filteredList.value.slice(start, start + pageSize.value)
   })
 
-  const stats = computed(() => ({
-    total: bcList.value.length,
-    healthy: bcList.value.filter((i) => i.status === '健康' || i.status === '可用').length,
-    banned: bcList.value.filter((i) => i.banRecord === '有').length,
-    monthOpen: bcList.value.reduce((s, i) => s + i.monthOpenCount, 0)
-  }))
+  const stats = computed(() => {
+    if (remoteStats.value) return remoteStats.value
+    return {
+      total: bcList.value.length,
+      healthy: bcList.value.filter((i) => i.status === '健康' || i.status === '可用').length,
+      banned: bcList.value.filter((i) => i.banRecord === '有').length,
+      monthOpen: bcList.value.reduce((s, i) => s + i.monthOpenCount, 0)
+    }
+  })
 
   watch(
     () => [
@@ -517,10 +612,11 @@
   }
 
   function getRowClass({ row }: { row: BcItem }) {
-    if (row.id === (props.selectedId ?? innerSelectedId.value)) return 'row--selected'
-    if (row.status === '封禁') return 'row--banned'
-    if (row.status === '不再使用') return 'row--inactive'
-    return ''
+    const cls: string[] = []
+    if (row.id === (props.selectedId ?? innerSelectedId.value)) cls.push('row-selected')
+    if (row.status === '封禁') cls.push('row-banned')
+    if (row.status === '不再使用') cls.push('row-inactive')
+    return cls.join(' ')
   }
 
   const handleRowClick = (row: BcItem) => {
@@ -531,183 +627,435 @@
 
 <style lang="scss" scoped>
   .bc-tab {
+    --bc-border: color-mix(in srgb, var(--el-color-primary) 14%, transparent);
+    --bc-border-strong: color-mix(in srgb, var(--el-color-primary) 24%, transparent);
+    --bc-surface: color-mix(in srgb, var(--default-box-color) 94%, transparent);
+    --bc-surface-soft: color-mix(in srgb, var(--default-box-color) 84%, transparent);
+    --bc-row-hover: color-mix(in srgb, var(--el-color-primary) 8%, transparent);
+    --bc-header-bg: color-mix(in srgb, var(--default-box-color) 78%, black 4%);
+    --accent-dim: color-mix(in srgb, var(--el-color-primary) 12%, transparent);
+    --text-primary: var(--text-primary);
+    --text-secondary: var(--text-secondary);
+    --text-muted: var(--text-tertiary);
+    --green: var(--art-success);
+    --green-bg: color-mix(in srgb, var(--art-success) 14%, transparent);
+    --amber: var(--art-warning);
+    --amber-bg: color-mix(in srgb, var(--art-warning) 14%, transparent);
+    --red: var(--art-danger);
+    --red-bg: color-mix(in srgb, var(--art-danger) 12%, transparent);
+    --purple: color-mix(in srgb, var(--theme-color) 42%, var(--el-color-primary) 58%);
+    --purple-bg: color-mix(in srgb, var(--theme-color) 14%, transparent);
+
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 0;
   }
 
-  // ─── 筛选栏 ─────────────────────────────────────────
+  // ─── 筛选栏 ────────────────────────────────────────────
   .filter-bar {
+    position: relative;
     display: flex;
     flex-wrap: wrap;
-    gap: 10px 20px;
+    gap: 12px 16px;
     align-items: center;
-    padding: 12px 16px;
-    background: #131c2e;
-    border: 1px solid rgb(255 255 255 / 7%);
-    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 16px;
+    overflow: hidden;
+    background:
+      radial-gradient(
+        ellipse 90% 70% at 12% 0%,
+        color-mix(in srgb, var(--el-color-primary) 12%, transparent) 0%,
+        transparent 58%
+      ),
+      linear-gradient(
+        165deg,
+        color-mix(in srgb, var(--default-box-color) 96%, transparent) 0%,
+        color-mix(in srgb, var(--default-box-color) 88%, transparent) 100%
+      );
+    isolation: isolate;
+    border: 1px solid var(--bc-border);
+    border-radius: 16px;
+    box-shadow:
+      0 12px 32px rgb(0 0 0 / 8%),
+      inset 0 1px 0 color-mix(in srgb, white 7%, transparent);
+  }
+
+  .filter-bar::after {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 2px;
+    pointer-events: none;
+    content: '';
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      color-mix(in srgb, var(--el-color-primary) 40%, transparent) 42%,
+      color-mix(in srgb, var(--theme-color) 32%, transparent) 58%,
+      transparent 100%
+    );
+    opacity: 0.85;
   }
 
   .filter-group {
     display: flex;
-    gap: 6px;
+    gap: 10px;
     align-items: center;
   }
 
   .filter-label {
     flex-shrink: 0;
-    font-size: 12px;
-    color: #94a3b8;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    white-space: nowrap;
   }
 
-  .toggle-tabs {
-    display: flex;
-    gap: 4px;
+  .filter-select {
+    width: 168px;
+
+    &--narrow {
+      width: 140px;
+    }
+
+    :deep(.el-select__wrapper),
+    :deep(.el-input__wrapper) {
+      min-height: 34px;
+      color: var(--text-primary);
+      background: color-mix(in srgb, var(--default-box-color) 72%, transparent) !important;
+      border: 1px solid var(--bc-border) !important;
+      border-radius: 9999px;
+      box-shadow: none !important;
+      transition:
+        border-color var(--duration-fast) var(--ease-out),
+        background-color var(--duration-fast) var(--ease-out),
+        box-shadow var(--duration-fast) var(--ease-out);
+    }
+
+    :deep(.el-select__wrapper:hover),
+    :deep(.el-input__wrapper:hover) {
+      background: color-mix(in srgb, var(--el-color-primary) 9%, transparent) !important;
+      border-color: color-mix(in srgb, var(--el-color-primary) 42%, transparent) !important;
+    }
+
+    :deep(.el-select__wrapper.is-focused),
+    :deep(.el-input__wrapper.is-focus) {
+      border-color: color-mix(in srgb, var(--el-color-primary) 55%, transparent) !important;
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--el-color-primary) 18%, transparent) !important;
+    }
+
+    :deep(.el-select__placeholder),
+    :deep(.el-select__selected-item),
+    :deep(.el-input__inner) {
+      font-size: 13px;
+      color: var(--text-primary);
+    }
+
+    :deep(.el-select__caret) {
+      color: var(--text-secondary);
+    }
   }
 
-  .toggle-tab {
-    padding: 4px 10px;
-    font-size: 12px;
-    color: #94a3b8;
-    cursor: pointer;
-    background: transparent;
-    border: 1px solid rgb(255 255 255 / 7%);
-    border-radius: 5px;
-    transition: all 0.15s;
-
-    &:hover {
-      color: #e2e8f0;
-      border-color: rgb(255 255 255 / 15%);
-    }
-
-    &--active {
-      color: #3b82f6;
-      background: rgb(59 130 246 / 12%);
-      border-color: rgb(59 130 246 / 30%);
-    }
-
-    &--platform {
-      min-width: 32px;
-      padding: 3px 7px;
-      font-size: 11px;
-      font-weight: 600;
-      text-align: center;
-    }
+  :deep(.el-select-dropdown__item.is-selected) {
+    font-weight: 600;
+    color: var(--el-color-primary);
   }
 
-  // ─── 统计卡片 ────────────────────────────────────────
+  :deep(.el-select-dropdown__item:hover) {
+    background: color-mix(in srgb, var(--el-color-primary) 10%, transparent);
+  }
+
+  // ─── 统计卡片 ───────────────────────────────────────────
   .stat-cards {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 12px;
+    margin-bottom: 16px;
   }
 
   .stat-card {
-    padding: 16px 20px;
-    background: #131c2e;
-    border: 1px solid rgb(255 255 255 / 7%);
-    border-radius: 10px;
+    position: relative;
+    padding: 16px 18px;
+    overflow: hidden;
+    isolation: isolate;
+    border: 1px solid var(--bc-border);
+    border-radius: 14px;
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--el-color-primary) 5%, transparent),
+      inset 0 1px 0 color-mix(in srgb, white 6%, transparent);
+    transition:
+      border-color var(--duration-normal) var(--ease-out),
+      box-shadow var(--duration-normal) var(--ease-out),
+      transform var(--duration-normal) var(--ease-out);
+
+    &::before {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 3px;
+      height: 100%;
+      content: '';
+    }
+
+    &::after {
+      position: absolute;
+      top: 0;
+      right: 0;
+      left: 0;
+      height: 1px;
+      pointer-events: none;
+      content: '';
+      opacity: 0.65;
+    }
+
+    &:hover {
+      border-color: var(--bc-border-strong);
+      box-shadow:
+        0 10px 24px rgb(0 0 0 / 8%),
+        0 0 0 1px color-mix(in srgb, var(--el-color-primary) 8%, transparent),
+        inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
+      transform: translateY(-1px);
+    }
+
+    &--total {
+      background:
+        radial-gradient(
+          ellipse 110% 85% at 92% 8%,
+          color-mix(in srgb, var(--el-color-primary) 20%, transparent) 0%,
+          transparent 58%
+        ),
+        linear-gradient(
+          155deg,
+          var(--bc-surface) 0%,
+          color-mix(in srgb, var(--default-bg-color) 35%, transparent) 100%
+        );
+
+      &::before {
+        background: var(--el-color-primary);
+      }
+
+      &::after {
+        background: linear-gradient(
+          90deg,
+          transparent,
+          color-mix(in srgb, var(--el-color-primary) 35%, transparent),
+          transparent
+        );
+      }
+    }
+
+    &--healthy {
+      background:
+        radial-gradient(
+          ellipse 100% 80% at 88% 0%,
+          color-mix(in srgb, var(--art-success) 16%, transparent) 0%,
+          transparent 55%
+        ),
+        linear-gradient(165deg, var(--bc-surface-soft) 0%, var(--bc-surface) 100%);
+
+      &::before {
+        background: var(--green);
+      }
+
+      &::after {
+        background: linear-gradient(
+          90deg,
+          transparent,
+          color-mix(in srgb, var(--art-success) 30%, transparent),
+          transparent
+        );
+      }
+    }
+
+    &--flagged {
+      background:
+        radial-gradient(
+          ellipse 95% 78% at 85% 15%,
+          color-mix(in srgb, var(--art-warning) 14%, transparent) 0%,
+          transparent 58%
+        ),
+        linear-gradient(175deg, var(--bc-surface-soft) 0%, var(--bc-surface) 100%);
+
+      &::before {
+        background: var(--amber);
+      }
+
+      &::after {
+        background: linear-gradient(
+          90deg,
+          transparent,
+          color-mix(in srgb, var(--art-warning) 32%, transparent),
+          transparent
+        );
+      }
+    }
+
+    &--open {
+      background:
+        radial-gradient(
+          ellipse 100% 80% at 10% 12%,
+          color-mix(in srgb, var(--theme-color) 14%, transparent) 0%,
+          transparent 56%
+        ),
+        linear-gradient(198deg, var(--bc-surface) 0%, var(--bc-surface-soft) 100%);
+
+      &::before {
+        background: var(--purple);
+      }
+
+      &::after {
+        background: linear-gradient(
+          90deg,
+          transparent,
+          color-mix(in srgb, var(--theme-color) 28%, transparent),
+          transparent
+        );
+      }
+    }
   }
 
   .stat-label {
+    position: relative;
+    z-index: 1;
     margin-bottom: 8px;
     font-size: 12px;
-    color: #94a3b8;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.02em;
   }
 
   .stat-value {
+    position: relative;
+    z-index: 1;
     font-size: 26px;
-    font-weight: 700;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
     line-height: 1;
-    &--white {
-      color: #e2e8f0;
+    letter-spacing: -0.02em;
+
+    &--total {
+      color: var(--el-color-primary);
+      text-shadow: 0 0 24px color-mix(in srgb, var(--el-color-primary) 22%, transparent);
     }
-    &--green {
-      color: #22c55e;
+
+    &--healthy {
+      color: var(--green);
+      text-shadow: 0 0 20px color-mix(in srgb, var(--art-success) 18%, transparent);
     }
-    &--amber {
-      color: #f59e0b;
+
+    &--flagged {
+      color: var(--amber);
+      text-shadow: 0 0 18px color-mix(in srgb, var(--art-warning) 14%, transparent);
     }
-    &--blue {
-      color: #3b82f6;
+
+    &--open {
+      color: var(--purple);
+      text-shadow: 0 0 20px color-mix(in srgb, var(--theme-color) 16%, transparent);
     }
   }
 
-  // ─── 表格 ────────────────────────────────────────────
+  // ─── 表格 ──────────────────────────────────────────────
   .table-wrapper {
-    padding: 16px;
-    background: #131c2e;
-    border: 1px solid rgb(255 255 255 / 7%);
-    border-radius: 10px;
+    overflow: hidden;
+    background: var(--bc-surface);
+    border: 1px solid var(--bc-border);
+    border-radius: 14px;
+    box-shadow:
+      0 8px 24px rgb(0 0 0 / 6%),
+      inset 0 1px 0 color-mix(in srgb, white 5%, transparent);
   }
 
   .bc-table {
-    --el-table-bg-color: transparent;
-    --el-table-tr-bg-color: transparent;
-    --el-table-header-bg-color: transparent;
-    --el-table-row-hover-bg-color: rgb(255 255 255 / 3%);
-    --el-table-border-color: rgb(255 255 255 / 6%);
-    --el-table-text-color: #e2e8f0;
-    --el-table-header-text-color: #64748b;
-
+    width: 100%;
     cursor: pointer;
 
+    --el-table-bg-color: transparent;
+    --el-table-header-bg-color: var(--bc-header-bg);
+    --el-table-row-hover-bg-color: var(--bc-row-hover);
+    --el-table-border-color: var(--bc-border);
+    --el-table-text-color: var(--text-primary);
+    --el-table-header-text-color: var(--text-secondary);
+    --el-table-border: 1px solid var(--bc-border);
+
+    background: transparent !important;
+
     :deep(th.el-table__cell) {
+      padding: 12px 10px;
       font-size: 12px;
-      background: transparent;
+      font-weight: 600;
+      background: var(--bc-header-bg) !important;
+      border-bottom: 1px solid var(--bc-border) !important;
     }
+
     :deep(td.el-table__cell) {
+      padding: 10px;
       font-size: 13px;
+      border-bottom: 1px solid var(--bc-border) !important;
     }
+
+    :deep(tr) {
+      background: transparent !important;
+    }
+
     :deep(.el-table__inner-wrapper::before) {
       display: none;
     }
-    :deep(.row--selected td.el-table__cell) {
-      background: rgb(59 130 246 / 8%) !important;
+
+    :deep(tr.row-banned:not(.row-selected) td.el-table__cell) {
+      background: color-mix(in srgb, var(--art-warning) 8%, transparent) !important;
     }
-    :deep(.row--banned td.el-table__cell) {
-      background: rgb(245 158 11 / 5%) !important;
+
+    :deep(tr.row-inactive:not(.row-selected) td.el-table__cell) {
+      opacity: 0.55;
     }
-    :deep(.row--inactive td.el-table__cell) {
-      opacity: 0.5;
+
+    :deep(tr.row-selected td.el-table__cell) {
+      background: color-mix(in srgb, var(--el-color-primary) 11%, transparent) !important;
+      border-bottom-color: color-mix(in srgb, var(--el-color-primary) 18%, transparent) !important;
     }
   }
 
   .bm-id {
-    font-family: 'SF Mono', monospace;
+    font-family: 'SF Mono', 'Fira Code', monospace;
     font-size: 12px;
-    color: #e2e8f0;
+    color: var(--text-primary);
+
     &--banned {
-      color: #f59e0b;
+      color: var(--amber);
     }
+
     &--inactive {
-      color: #64748b;
+      color: var(--text-muted);
     }
   }
 
   .bm-name {
     font-weight: 500;
+    color: var(--text-primary);
+
     &--inactive {
-      color: #64748b;
+      color: var(--text-muted);
     }
   }
 
   .platform-chip {
-    display: inline-block;
-    padding: 2px 8px;
-    font-size: 11px;
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    font-size: 12px;
     font-weight: 500;
-    border-radius: 4px;
+    border-radius: 5px;
   }
 
   .group-text {
     font-size: 12px;
-    color: #94a3b8;
+    color: var(--text-secondary);
   }
 
   .manager-text {
     font-size: 13px;
-    color: #e2e8f0;
+    color: var(--text-primary);
   }
 
   .status-badge {
@@ -718,19 +1066,23 @@
     font-weight: 500;
 
     &.status--healthy {
-      color: #22c55e;
+      color: var(--green);
     }
+
     &.status--available {
-      color: #3b82f6;
+      color: var(--el-color-primary);
     }
+
     &.status--banned {
-      color: #f59e0b;
+      color: var(--amber);
     }
+
     &.status--inactive {
-      color: #64748b;
+      color: var(--text-muted);
     }
+
     &.status--other {
-      color: #94a3b8;
+      color: var(--text-secondary);
     }
   }
 
@@ -742,21 +1094,21 @@
     display: inline-block;
     padding: 2px 7px;
     font-size: 11px;
-    border-radius: 4px;
+    border-radius: 6px;
 
     &--corp {
-      color: #60a5fa;
-      background: rgb(96 165 250 / 12%);
+      color: var(--el-color-primary);
+      background: var(--accent-dim);
     }
 
     &--personal {
-      color: #a78bfa;
-      background: rgb(167 139 250 / 12%);
+      color: var(--purple);
+      background: var(--purple-bg);
     }
 
     &--small {
-      color: #34d399;
-      background: rgb(52 211 153 / 12%);
+      color: var(--green);
+      background: var(--green-bg);
     }
   }
 
@@ -765,101 +1117,162 @@
     padding: 2px 10px;
     font-size: 12px;
     font-weight: 600;
-    border-radius: 4px;
+    border-radius: 6px;
 
     &--no {
-      color: #64748b;
-      background: rgb(100 116 139 / 15%);
+      color: var(--text-muted);
+      background: color-mix(in srgb, var(--text-tertiary) 12%, transparent);
     }
 
     &--yes {
-      color: #f59e0b;
-      background: rgb(245 158 11 / 15%);
+      color: var(--amber);
+      background: var(--amber-bg);
     }
   }
 
   .action-btns {
     display: flex;
-    gap: 4px;
+    gap: 6px;
+    align-items: center;
     justify-content: center;
   }
 
   .action-btn {
-    padding: 2px 0;
+    padding: 4px 9px;
     font-size: 12px;
+    font-weight: 500;
     cursor: pointer;
     background: none;
     border: none;
-    transition: opacity 0.15s;
-
-    &::before {
-      color: #475569;
-      content: '[';
-    }
-
-    &::after {
-      color: #475569;
-      content: ']';
-    }
+    border-radius: 6px;
+    transition:
+      color var(--duration-fast) var(--ease-out),
+      background-color var(--duration-fast) var(--ease-out),
+      transform var(--duration-fast) var(--ease-out);
 
     &--view {
-      color: #3b82f6;
+      color: var(--text-secondary);
+
       &:hover {
-        opacity: 0.75;
+        color: var(--el-color-primary);
+        background: var(--accent-dim);
+        transform: translateY(-0.5px);
       }
     }
+
     &--edit {
-      color: #22c55e;
+      color: var(--el-color-primary);
+
       &:hover {
-        opacity: 0.75;
+        background: var(--accent-dim);
+        transform: translateY(-0.5px);
       }
     }
+
     &--del {
-      color: #f87171;
+      color: var(--red);
+
       &:hover {
-        opacity: 0.75;
+        background: var(--red-bg);
+        transform: translateY(-0.5px);
       }
     }
   }
 
-  // ─── 分页 ────────────────────────────────────────────
+  // ─── 分页 ──────────────────────────────────────────────
   .pagination-bar {
     display: flex;
-    gap: 12px;
+    flex-wrap: wrap;
+    gap: 10px 12px;
     align-items: center;
     justify-content: flex-end;
-    padding-top: 14px;
-    margin-top: 4px;
-    border-top: 1px solid rgb(255 255 255 / 7%);
+    padding: 12px 16px;
+    background: color-mix(in srgb, var(--default-box-color) 88%, transparent);
+    border-top: 1px solid var(--bc-border);
   }
 
   .pagination-total {
+    margin-right: auto;
     font-size: 13px;
-    color: #94a3b8;
+    color: var(--text-muted);
   }
 
   .bc-pagination {
     :deep(.el-pager li) {
-      color: #94a3b8;
+      min-width: 28px;
+      height: 28px;
+      font-size: 13px;
+      line-height: 28px;
+      color: var(--text-secondary);
       background: transparent;
+      border-radius: 6px;
+      transition:
+        color var(--duration-fast) var(--ease-out),
+        background-color var(--duration-fast) var(--ease-out);
+
+      &:hover {
+        color: var(--el-color-primary);
+      }
 
       &.is-active {
-        color: #3b82f6;
-        background: rgb(59 130 246 / 15%);
-        border-radius: 4px;
-      }
-      &:hover:not(.is-active) {
-        color: #e2e8f0;
+        font-weight: 700;
+        color: var(--el-color-white);
+        background: linear-gradient(
+          135deg,
+          color-mix(in srgb, var(--el-color-primary) 94%, black 6%),
+          color-mix(in srgb, var(--el-color-primary) 82%, black 18%)
+        );
+        box-shadow: 0 4px 12px color-mix(in srgb, var(--el-color-primary) 28%, transparent);
       }
     }
 
     :deep(.btn-prev),
     :deep(.btn-next) {
-      color: #94a3b8;
-      background: transparent;
+      color: var(--text-secondary) !important;
+      background: color-mix(in srgb, var(--default-box-color) 65%, transparent) !important;
+      border: 1px solid var(--bc-border) !important;
+      border-radius: 6px;
+      transition:
+        color var(--duration-fast) var(--ease-out),
+        border-color var(--duration-fast) var(--ease-out),
+        background-color var(--duration-fast) var(--ease-out);
+
       &:hover {
-        color: #e2e8f0;
+        color: var(--el-color-primary) !important;
+        border-color: color-mix(in srgb, var(--el-color-primary) 45%, transparent) !important;
       }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .stat-card:hover {
+      transform: none;
+    }
+
+    .action-btn:hover {
+      transform: none;
+    }
+  }
+
+  @media (width <= 1200px) {
+    .stat-cards {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (width <= 560px) {
+    .stat-cards {
+      grid-template-columns: 1fr;
+    }
+
+    .pagination-bar {
+      justify-content: center;
+    }
+
+    .pagination-total {
+      flex: 1 1 100%;
+      margin-right: 0;
+      text-align: center;
     }
   }
 </style>

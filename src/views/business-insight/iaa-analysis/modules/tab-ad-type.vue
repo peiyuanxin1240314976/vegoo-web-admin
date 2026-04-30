@@ -200,6 +200,7 @@
   import type { IaaFilterState, IaaAdTypeTabData } from '../types'
   import { fetchIaaAdTypeTabData, fetchIaaOverviewUserBreakdown } from '@/api/business-insight'
   import { Warning, Top, Bottom, Sunny } from '@element-plus/icons-vue'
+  import { useIaaPageLoading } from '../composables/useIaaPageLoading'
 
   defineOptions({ name: 'IaaTabAdType' })
 
@@ -207,6 +208,16 @@
 
   const tabData = ref<IaaAdTypeTabData | null>(null)
   const loading = ref(false)
+  const loadingUserBreakdown = ref(false)
+  const pageLoading = useIaaPageLoading()
+
+  watch(loading, (v) => {
+    pageLoading?.setTabLoading('adType', v)
+  })
+
+  onMounted(() => {
+    pageLoading?.setTabLoading('adType', loading.value)
+  })
 
   const kpi = computed(() => tabData.value?.kpi ?? null)
   const platformInsight = computed(() => tabData.value?.platformInsight ?? '')
@@ -540,6 +551,7 @@
   async function loadTabData() {
     if (!props.filter?.s_app_id) {
       loading.value = false
+      loadingUserBreakdown.value = false
       tabData.value = null
       return
     }
@@ -549,18 +561,25 @@
       tabData.value = data ?? null
 
       // 用户拆分分析改走新接口（其余模块仍沿用原整页接口）
-      const userBreakdown = await fetchIaaOverviewUserBreakdown({
-        platform: emptyIfAll(props.filter.platform),
-        s_app_id: props.filter.s_app_id,
-        s_app_version: '',
-        s_country_code: emptyIfAll(props.filter.s_country_code),
-        t_date: props.filter.t_date ?? ''
-      })
-      if (tabData.value) {
-        tabData.value = {
-          ...tabData.value,
-          userBreakdown
+      loadingUserBreakdown.value = true
+      try {
+        const userBreakdown = await fetchIaaOverviewUserBreakdown({
+          platform: emptyIfAll(props.filter.platform),
+          s_app_id: props.filter.s_app_id,
+          s_app_version: '',
+          s_country_code: emptyIfAll(props.filter.s_country_code),
+          t_date: props.filter.t_date ?? ''
+        })
+        if (tabData.value) {
+          tabData.value = {
+            ...tabData.value,
+            userBreakdown
+          }
         }
+      } catch {
+        // ignore
+      } finally {
+        loadingUserBreakdown.value = false
       }
     } catch {
       tabData.value = null
@@ -613,6 +632,10 @@
     background: var(--default-box-color);
     border: 1px solid var(--default-border);
     border-radius: 8px;
+
+    &:not(.iaa-kpi--sk) {
+      @include iaa-panel-hover;
+    }
 
     &[data-accent='teal'] .iaa-kpi__value {
       color: var(--art-primary);

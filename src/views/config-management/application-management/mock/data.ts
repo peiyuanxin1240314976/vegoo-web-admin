@@ -19,6 +19,7 @@ export const APPLICATION_CATEGORY_VALUES = APPLICATION_CATEGORY_OPTIONS.map((o) 
 const APPLICATION_MOCK_SEED: ApplicationAppItem[] = [
   {
     id: 'Weather5A',
+    appId: '10001',
     appName: 'Weather5',
     iconColor: '#2dd4bf',
     platform: 'Android',
@@ -43,6 +44,7 @@ const APPLICATION_MOCK_SEED: ApplicationAppItem[] = [
   },
   {
     id: 'Weather5I',
+    appId: '10002',
     appName: 'Weather5',
     iconColor: '#2dd4bf',
     platform: 'iOS',
@@ -67,6 +69,7 @@ const APPLICATION_MOCK_SEED: ApplicationAppItem[] = [
   },
   {
     id: 'Weather6A',
+    appId: '10003',
     appName: 'Weather6',
     iconColor: '#60a5fa',
     platform: 'Android',
@@ -91,6 +94,7 @@ const APPLICATION_MOCK_SEED: ApplicationAppItem[] = [
   },
   {
     id: 'Weather8A',
+    appId: '10004',
     appName: 'Weather8',
     iconColor: '#a78bfa',
     platform: 'Android',
@@ -115,6 +119,7 @@ const APPLICATION_MOCK_SEED: ApplicationAppItem[] = [
   },
   {
     id: 'HealthBP2A',
+    appId: '10005',
     appName: 'BloodPressure2',
     iconColor: '#f97316',
     platform: 'Android',
@@ -139,6 +144,7 @@ const APPLICATION_MOCK_SEED: ApplicationAppItem[] = [
   },
   {
     id: 'HealthBS2A',
+    appId: '10006',
     appName: 'BloodSugar2',
     iconColor: '#f97316',
     platform: 'Android',
@@ -163,6 +169,7 @@ const APPLICATION_MOCK_SEED: ApplicationAppItem[] = [
   },
   {
     id: 'HealthHT2A',
+    appId: '10007',
     appName: 'HealthTracker2',
     iconColor: '#2dd4bf',
     platform: 'Android',
@@ -187,6 +194,7 @@ const APPLICATION_MOCK_SEED: ApplicationAppItem[] = [
   },
   {
     id: 'HealthHRA',
+    appId: '10008',
     appName: 'HeartRate',
     iconColor: '#ec4899',
     platform: 'Android',

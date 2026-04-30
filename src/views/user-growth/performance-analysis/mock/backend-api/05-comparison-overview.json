@@ -1,48 +1,98 @@
 {
-  "_comment": "人员绩效对比 - 顶部 KPI 汇总。对应 PerformanceComparison.vue 顶部四张卡片。",
+  "_comment": "人员绩效对比页 - 顶部四张 KPI 卡片（广告支出合计、首日 ROI 均值、预估利润合计、未达标人员）。",
   "fieldDescription": {
     "request": {
-      "startDate": { "type": "string", "required": true, "description": "开始日期，YYYY-MM-DD。" },
-      "endDate": { "type": "string", "required": true, "description": "结束日期，YYYY-MM-DD。" },
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "开始日期，YYYY-MM-DD（含）。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": true,
+        "description": "结束日期，YYYY-MM-DD（含）。"
+      },
       "staffIds": {
         "type": "string[]",
         "required": true,
-        "description": "参与对比的人员 ID 列表。"
+        "description": "当前参与对比的人员 ID 列表，顺序与页面标签顺序一致。"
       }
     },
     "response": {
-      "totalAd": { "type": "number", "required": true, "description": "广告支出合计。" },
+      "totalAd": { "type": "number", "required": true, "description": "广告支出合计（USD）。" },
+      "totalAdWeekOverWeekText": {
+        "type": "string",
+        "required": false,
+        "description": "广告支出环比展示文案（如 +8%）；无则前端可隐藏。"
+      },
       "avgRoi": {
         "type": "number",
         "required": true,
-        "description": "首日 ROI 均值（百分比数值）。"
+        "description": "首日 ROI 均值（百分比数值，如 89 表示 89%）。"
       },
-      "totalProfit": { "type": "number", "required": true, "description": "预估利润合计。" },
-      "failCount": { "type": "number", "required": true, "description": "未达标人数。" },
+      "roiPassLabel": {
+        "type": "string",
+        "required": false,
+        "description": "ROI 达标结论短文案（如 达标）；与 avgRoi、达标线逻辑由后端统一。"
+      },
+      "totalProfit": {
+        "type": "number",
+        "required": true,
+        "description": "预估利润合计（USD，可负）。"
+      },
+      "totalProfitWeekOverWeekText": {
+        "type": "string",
+        "required": false,
+        "description": "预估利润环比文案（如 +12%）。"
+      },
+      "failCount": {
+        "type": "number",
+        "required": true,
+        "description": "未达标人数（口径：仅 statusClass 为 fail，与当前页 Vue 一致；若产品含「接近达标」须后端约定并改字段说明）。"
+      },
       "failName": {
         "type": "string",
         "required": false,
-        "description": "未达标人员姓名（多个用顿号分隔）。"
+        "description": "未达标人员姓名，多个用顿号「、」连接；无人则为空串。"
       }
     }
   },
   "sampleRequest": {
-    "startDate": "2026-03-20",
-    "endDate": "2026-03-26",
+    "startDate": "2026-03-28",
+    "endDate": "2026-04-04",
     "staffIds": ["zhang3", "li4", "wang5", "zhao6"]
   },
   "sampleResponse": {
     "totalAd": 167667,
-    "avgRoi": 89,
+    "totalAdWeekOverWeekText": "+8%",
+    "avgRoi": 89.5,
+    "roiPassLabel": "达标",
     "totalProfit": 33600,
+    "totalProfitWeekOverWeekText": "+12%",
     "failCount": 1,
     "failName": "王五"
   },
   "api": {
-    "url": "POST /api/user-growth/performance-analysis/comparison-overview",
+    "url": "POST /api/v1/datacenter/analysis/user-growth/performance-analysis/comparison-overview",
     "method": "POST",
     "priority": "P0",
     "requestBody": "startDate, endDate, staffIds",
-    "responseBody": "totalAd, avgRoi, totalProfit, failCount, failName"
+    "responseBody": "totalAd, totalAdWeekOverWeekText?, avgRoi, roiPassLabel?, totalProfit, totalProfitWeekOverWeekText?, failCount, failName?"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "若 failCount 需含 near，须与产品、列表页「未达标人员」卡片口径统一后更新本契约 description。"
+    ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "对比页首屏 / 已选人员或日期变更",
+        "detail": "staffIds 来自已选标签；日期来自顶栏日期范围选择器。",
+        "prerequisite": "staffIds 非空（至少 1 人）；日期合法。"
+      }
+    ],
+    "defaultSelection": "无。",
+    "dedupe": "与 comparison-charts、rankings 等可并行请求。"
   }
 }

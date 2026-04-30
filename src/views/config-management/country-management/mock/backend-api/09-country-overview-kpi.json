@@ -1,0 +1,82 @@
+{
+  "_comment": "国家管理 - 顶栏 KPI 汇总。与列表同筛选维度，统计符合条件的全量国家（非当前页）。",
+  "fieldDescription": {
+    "request": {
+      "keyword": {
+        "type": "string",
+        "required": false,
+        "description": "关键词筛选，匹配 code/nameCn/nameEn/aliases；空字符串表示不按关键词过滤。"
+      },
+      "region": {
+        "type": "string",
+        "required": false,
+        "description": "地区筛选；空字符串表示全部。"
+      },
+      "currency": {
+        "type": "string",
+        "required": false,
+        "description": "货币筛选；空字符串表示全部。"
+      }
+    },
+    "response": {
+      "total": {
+        "type": "number",
+        "required": true,
+        "description": "符合筛选条件的国家总数（与列表 `total` 口径一致）。"
+      },
+      "currencies": {
+        "type": "number",
+        "required": true,
+        "description": "符合筛选结果中，非空货币字段去重后的币种数量。"
+      },
+      "mainMarkets": {
+        "type": "number",
+        "required": true,
+        "description": "符合筛选结果中 `isMainMarket=true` 的国家数量。"
+      },
+      "noCurrency": {
+        "type": "number",
+        "required": true,
+        "description": "符合筛选结果中 `currency` 为空的国家数量。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "keyword": "",
+    "region": "",
+    "currency": ""
+  },
+  "sampleResponse": {
+    "code": 200,
+    "data": {
+      "total": 15,
+      "currencies": 8,
+      "mainMarkets": 5,
+      "noCurrency": 1
+    }
+  },
+  "api": {
+    "url": "POST /api/config-management/country/overview/kpi",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "keyword?, region?, currency?",
+    "responseBody": "{ total, currencies, mainMarkets, noCurrency }"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "不得要求前端从当前页 `records.length` 推算 KPI；分页不应影响 KPI 统计口径。",
+      "与 `01-country-table` 使用同一筛选集合，建议后端复用同一过滤逻辑。",
+      "空结果返回 0 值结构，保持响应 shape 稳定。"
+    ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面初始化 / 筛选变更",
+        "detail": "`index.vue` 调用 `fetchCountryOverviewKpi`；与列表并行加载。"
+      }
+    ],
+    "defaultSelection": "与当前筛选条件一致。",
+    "dedupe": "同一筛选条件可复用最近一次结果。"
+  }
+}

@@ -1,283 +1,371 @@
 <script setup lang="ts">
-  import { ref, computed } from 'vue'
+  import { computed, onMounted, reactive, ref, watch } from 'vue'
   import { ElMessage, ElMessageBox } from 'element-plus'
-  import { Search, Upload } from '@element-plus/icons-vue'
+  import { Search, Upload, View } from '@element-plus/icons-vue'
+  import {
+    createAdAccount,
+    deleteAdAccount,
+    disableAdAccount,
+    enableAdAccount,
+    exportAdAccountList,
+    fetchAdAccountOverviewStats,
+    fetchAdAccountTable,
+    updateAdAccount
+  } from '@/api/config-management/ad-account-management'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
+  import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
   import AccountDetailDialog from './AccountDetailDialog.vue'
   import AddAccountDialog from './AddAccountDialog.vue'
-  import type { AdAccount } from './types'
+  import type {
+    AdAccount,
+    AdAccountForm,
+    AdAccountOverviewStats,
+    AdAccountOverviewStatsQuery,
+    AdAccountTableQuery,
+    AdAccountUpdatePayload
+  } from './types'
 
-  // ─── Mock data ─────────────────────────────────────────────────────────────────
-  const mockData: AdAccount[] = [
-    {
-      id: 1,
-      status: 'enabled',
-      appName: 'Weather5',
-      platform: 'Android',
-      adPlatform: 'Google',
-      managerAccount: '560-369-9741',
-      adAccounts: ['385-510-4056', '250-161-1888', '542-141-4898', '292-126-4627'],
-      credential: 'AdCost',
-      token: '32ba778abac3978d34a0a46db475d7147f1997b8'
-    },
-    {
-      id: 2,
-      status: 'enabled',
-      appName: 'Weather5',
-      platform: 'Android',
-      adPlatform: 'TikTok',
-      managerAccount: '744708116631368720',
-      adAccounts: [],
-      credential: 'TikTok1',
-      token: '32ba778a••••••'
-    },
-    {
-      id: 3,
-      status: 'enabled',
-      appName: 'Weather5',
-      platform: 'Android',
-      adPlatform: 'Mintegral',
-      managerAccount: 'vegoo',
-      adAccounts: [],
-      credential: 'MintegralAdCost1',
-      token: null
-    },
-    {
-      id: 4,
-      status: 'enabled',
-      appName: 'Weather5',
-      platform: 'Android',
-      adPlatform: 'NewsBreak',
-      managerAccount: '192001862051147366',
-      adAccounts: [],
-      credential: 'NewsBreakCost1',
-      token: null
-    },
-    {
-      id: 5,
-      status: 'disabled',
-      appName: 'Weather5',
-      platform: 'Android',
-      adPlatform: 'NewsBreak',
-      managerAccount: '196006482456592752',
-      adAccounts: [],
-      credential: 'NewsBreakCost2',
-      token: null
-    },
-    {
-      id: 6,
-      status: 'enabled',
-      appName: 'Weather6',
-      platform: 'Android',
-      adPlatform: 'Google',
-      managerAccount: '560-369-9741',
-      adAccounts: ['566-130-6966', '247-501-9691', '810-968-5835'],
-      credential: 'AdCost',
-      token: null
-    },
-    {
-      id: 7,
-      status: 'enabled',
-      appName: 'Weather8',
-      platform: 'Android',
-      adPlatform: 'Google',
-      managerAccount: '560-369-9741',
-      adAccounts: ['810-968-5835', '463-423-2598'],
-      credential: 'AdCost',
-      token: null
-    }
-  ]
+  const cockpitMetaStore = useCockpitMetaFilterStore()
 
-  // ─── State ────────────────────────────────────────────────────────────────────
-  const searchText = ref('')
-  const filterApp = ref('')
-  const filterPlatform = ref('')
-  const filterAdPlatform = ref('')
-  const filterStatus = ref('')
+  const metaAppOptions = computed(() => cockpitMetaStore.data?.appOptions ?? [])
+  const metaPlatformOptions = computed(() => cockpitMetaStore.data?.platformOptions ?? [])
+  const metaSourceOptions = computed(() => cockpitMetaStore.data?.sourceOptions ?? [])
+
+  function optionLabel(options: CockpitMetaOptionItem[], value: string): string {
+    if (!value) return ''
+    return options.find((o) => o.value === value)?.label ?? value
+  }
+
+  const filters = reactive<{
+    keyword: string
+    appId: string
+    platform: string
+    source: string
+    status: '' | 'enabled' | 'disabled'
+  }>({
+    keyword: '',
+    appId: '',
+    platform: '',
+    source: '',
+    status: ''
+  })
+
   const currentPage = ref(1)
   const pageSize = ref(10)
+  const total = ref(0)
+  const tableData = ref<AdAccount[]>([])
+  const stats = ref<AdAccountOverviewStats>({
+    total: 0,
+    enabled: 0,
+    disabled: 0,
+    platformCount: 0
+  })
+
+  const tableLoading = ref(false)
+  const statsLoading = ref(false)
+  const createSubmitting = ref(false)
+  const updateSubmitting = ref(false)
+
   const detailDialogVisible = ref(false)
   const addDialogVisible = ref(false)
   const selectedAccount = ref<AdAccount | null>(null)
 
-  // ─── Computed ─────────────────────────────────────────────────────────────────
-  const stats = computed(() => ({
-    total: mockData.length,
-    enabled: mockData.filter((d) => d.status === 'enabled').length,
-    disabled: mockData.filter((d) => d.status === 'disabled').length,
-    platforms: [...new Set(mockData.map((d) => d.adPlatform))].length
-  }))
-
-  const filteredData = computed(() => {
-    return mockData.filter((item) => {
-      const matchSearch =
-        !searchText.value ||
-        item.appName.toLowerCase().includes(searchText.value.toLowerCase()) ||
-        item.managerAccount.includes(searchText.value)
-      const matchApp = !filterApp.value || item.appName === filterApp.value
-      const matchPlatform = !filterPlatform.value || item.platform === filterPlatform.value
-      const matchAdPlatform = !filterAdPlatform.value || item.adPlatform === filterAdPlatform.value
-      const matchStatus = !filterStatus.value || item.status === filterStatus.value
-      return matchSearch && matchApp && matchPlatform && matchAdPlatform && matchStatus
-    })
-  })
-
-  const pagedData = computed(() => {
-    const start = (currentPage.value - 1) * pageSize.value
-    return filteredData.value.slice(start, start + pageSize.value)
-  })
-
-  // ─── Platform icons/colors ────────────────────────────────────────────────────
-  const platformConfig: Record<string, { color: string; letter: string; bg: string }> = {
-    Google: { color: '#4285F4', letter: 'G', bg: 'rgba(66,133,244,0.15)' },
-    TikTok: { color: '#ffffff', letter: '♪', bg: 'rgba(255,255,255,0.1)' },
-    Mintegral: { color: '#00C896', letter: 'M', bg: 'rgba(0,200,150,0.15)' },
-    NewsBreak: { color: '#FF4B4B', letter: 'NB', bg: 'rgba(255,75,75,0.15)' }
+  const sourceBadgeStyle: Record<string, { color: string; letter: string; bg: string }> = {
+    '1': { color: '#4285F4', letter: 'G', bg: 'rgba(66,133,244,0.15)' },
+    '10': { color: '#111111', letter: 'TT', bg: 'rgba(255,255,255,0.85)' },
+    '9': { color: '#00C896', letter: 'M', bg: 'rgba(0,200,150,0.15)' },
+    '20': { color: '#FF4B4B', letter: 'NB', bg: 'rgba(255,75,75,0.15)' }
   }
 
-  // ─── Methods ──────────────────────────────────────────────────────────────────
-  const handleEdit = (row: AdAccount) => {
-    selectedAccount.value = { ...row }
+  function getSourceBadge(row: AdAccount) {
+    const label = optionLabel(metaSourceOptions.value, row.source)
+    const preset = sourceBadgeStyle[row.source]
+    if (preset) return { ...preset, name: label }
+    const letter = label ? label.slice(0, 2).toUpperCase() : row.source
+    return {
+      color: '#94a3b8',
+      letter,
+      bg: 'rgba(148,163,184,0.12)',
+      name: label
+    }
+  }
+
+  const tableQuery = computed<AdAccountTableQuery>(() => ({
+    current: currentPage.value,
+    size: pageSize.value,
+    keyword: filters.keyword.trim(),
+    appId: filters.appId,
+    platform: filters.platform,
+    source: filters.source,
+    status: filters.status
+  }))
+
+  const statsQuery = computed<AdAccountOverviewStatsQuery>(() => ({
+    keyword: filters.keyword.trim(),
+    appId: filters.appId,
+    platform: filters.platform,
+    source: filters.source,
+    status: filters.status
+  }))
+
+  function getErrorMessage(error: unknown, fallback: string) {
+    return error instanceof Error && error.message ? error.message : fallback
+  }
+
+  async function loadTable() {
+    tableLoading.value = true
+    try {
+      const response = await fetchAdAccountTable(tableQuery.value)
+      tableData.value = response.records
+      total.value = response.total
+    } catch (error) {
+      ElMessage.error(getErrorMessage(error, '加载广告账户列表失败'))
+    } finally {
+      tableLoading.value = false
+    }
+  }
+
+  async function loadStats() {
+    statsLoading.value = true
+    try {
+      stats.value = await fetchAdAccountOverviewStats(statsQuery.value)
+    } catch (error) {
+      ElMessage.error(getErrorMessage(error, '加载概览统计失败'))
+    } finally {
+      statsLoading.value = false
+    }
+  }
+
+  async function reloadAll() {
+    await Promise.all([loadTable(), loadStats()])
+  }
+
+  watch(
+    () => [filters.keyword, filters.appId, filters.platform, filters.source, filters.status],
+    () => {
+      if (currentPage.value !== 1) {
+        currentPage.value = 1
+      } else {
+        void loadTable()
+      }
+      void loadStats()
+    }
+  )
+
+  watch([currentPage, pageSize], () => {
+    void loadTable()
+  })
+
+  onMounted(async () => {
+    await cockpitMetaStore.ensureLoaded()
+    void reloadAll()
+  })
+
+  function handleEdit(row: AdAccount) {
+    selectedAccount.value = {
+      ...row,
+      adAccounts: [...row.adAccounts]
+    }
     detailDialogVisible.value = true
   }
 
-  const handleToggleStatus = async (row: AdAccount) => {
-    const action = row.status === 'enabled' ? '禁用' : '启用'
-    await ElMessageBox.confirm(`确认${action}该账户？`, '提示', { type: 'warning' })
-    const item = mockData.find((d) => d.id === row.id)
-    if (item) item.status = item.status === 'enabled' ? 'disabled' : 'enabled'
-    ElMessage.success(`${action}成功`)
+  async function handleToggleStatus(row: AdAccount) {
+    const confirmMessage =
+      row.status === 'enabled' ? '确定要禁用该账户吗？' : '确定要启用该账户吗？'
+    try {
+      await ElMessageBox.confirm(confirmMessage, '确认', {
+        type: 'warning'
+      })
+    } catch {
+      return
+    }
+
+    try {
+      if (row.status === 'enabled') {
+        await disableAdAccount(row.id)
+        ElMessage.success('已禁用账户')
+      } else {
+        await enableAdAccount(row.id)
+        ElMessage.success('已启用账户')
+      }
+      await reloadAll()
+    } catch (error) {
+      const fallback = row.status === 'enabled' ? '禁用账户失败' : '启用账户失败'
+      ElMessage.error(getErrorMessage(error, fallback))
+    }
   }
 
-  const handleDelete = async () => {
-    await ElMessageBox.confirm('确认删除该账户？此操作不可撤销。', '警告', { type: 'error' })
-    ElMessage.success('删除成功')
+  async function handleDelete(row: AdAccount) {
+    try {
+      await ElMessageBox.confirm('此操作将永久删除该账户，是否继续？', '警告', { type: 'error' })
+    } catch {
+      return
+    }
+
+    try {
+      await deleteAdAccount(row.id)
+      ElMessage.success('已删除账户')
+      if (selectedAccount.value?.id === row.id) {
+        detailDialogVisible.value = false
+        selectedAccount.value = null
+      }
+      await reloadAll()
+    } catch (error) {
+      ElMessage.error(getErrorMessage(error, '删除账户失败'))
+    }
   }
 
-  const handleExport = () => {
-    ElMessage.success('正在导出数据...')
+  async function handleExport() {
+    try {
+      await exportAdAccountList(tableQuery.value)
+      ElMessage.success('已开始导出')
+    } catch (error) {
+      ElMessage.error(getErrorMessage(error, '导出失败'))
+    }
   }
 
-  const resetFilter = () => {
-    searchText.value = ''
-    filterApp.value = ''
-    filterPlatform.value = ''
-    filterAdPlatform.value = ''
-    filterStatus.value = ''
+  function resetFilter() {
+    filters.keyword = ''
+    filters.appId = ''
+    filters.platform = ''
+    filters.source = ''
+    filters.status = ''
   }
 
-  const handleSaveAccount = () => {
-    ElMessage.success('账户保存成功')
-    addDialogVisible.value = false
+  async function handleSaveAccount(form: AdAccountForm) {
+    createSubmitting.value = true
+    try {
+      await createAdAccount(form)
+      ElMessage.success('创建成功')
+      addDialogVisible.value = false
+      await reloadAll()
+    } catch (error) {
+      ElMessage.error(getErrorMessage(error, '创建账户失败'))
+    } finally {
+      createSubmitting.value = false
+    }
   }
 
-  const handleUpdateAccount = () => {
-    ElMessage.success('账户更新成功')
-    detailDialogVisible.value = false
+  async function handleUpdateAccount(payload: AdAccountUpdatePayload) {
+    if (!selectedAccount.value) return
+    updateSubmitting.value = true
+    try {
+      const updated = await updateAdAccount(selectedAccount.value.id, payload)
+      selectedAccount.value = updated
+      ElMessage.success('更新成功')
+      detailDialogVisible.value = false
+      await reloadAll()
+    } catch (error) {
+      ElMessage.error(getErrorMessage(error, '更新账户失败'))
+    } finally {
+      updateSubmitting.value = false
+    }
   }
 
-  const formatAdAccounts = (accounts: string[]) => {
-    if (!accounts.length) return 'NULL'
+  function formatAdAccounts(accounts: string[]) {
+    if (!accounts.length) return '无'
     if (accounts.length <= 2) return accounts.join(', ')
     return accounts.slice(0, 2).join(', ')
+  }
+
+  function maskToken(token: string | null) {
+    if (!token) return '-'
+    if (token.length <= 8) return `${token.slice(0, 2)}***`
+    return `${token.slice(0, 8)}********`
   }
 </script>
 
 <template>
   <div class="ad-account-page">
-    <!-- ── 页头 ── -->
     <div class="page-header">
       <div>
         <h1 class="page-title">广告账户管理</h1>
-        <p class="page-subtitle">管理各应用在不同广告平台的账户配置与认证信息</p>
+        <p class="page-subtitle">管理各应用的账户凭证与广告平台映射关系。</p>
       </div>
-      <el-button class="btn-add" @click="addDialogVisible = true">
-        <span class="btn-add-icon">+</span> 新增账户
-      </el-button>
+      <el-button type="primary" round @click="addDialogVisible = true">新建账户</el-button>
     </div>
 
-    <!-- ── 统计卡片 ── -->
-    <div class="stats-grid">
+    <div class="stats-grid" v-loading="statsLoading">
       <div class="stat-card">
         <div class="stat-label">账户总数</div>
-        <div class="stat-value stat-default">
-          {{ stats.total }} <span class="stat-sub">全部配置</span>
-        </div>
+        <div class="stat-value">{{ stats.total }}</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">已启用</div>
-        <div class="stat-value stat-green">
-          {{ stats.enabled }} <span class="stat-sub">正常运行</span>
-        </div>
+        <div class="stat-value stat-green">{{ stats.enabled }}</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">已禁用</div>
-        <div class="stat-value stat-red">
-          {{ stats.disabled }} <span class="stat-sub">暂停使用</span>
-        </div>
+        <div class="stat-label">已停用</div>
+        <div class="stat-value stat-red">{{ stats.disabled }}</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">广告平台</div>
-        <div class="stat-value stat-blue">
-          {{ stats.platforms }} <span class="stat-sub">Google / TikTok / Mintegral 等</span>
-        </div>
+        <div class="stat-label">广告平台数</div>
+        <div class="stat-value stat-blue">{{ stats.platformCount }}</div>
       </div>
     </div>
 
-    <!-- ── 筛选栏 ── -->
     <div class="filter-bar">
       <el-input
-        v-model="searchText"
-        placeholder="搜索应用名、账户ID..."
-        :prefix-icon="Search"
+        v-model="filters.keyword"
         class="filter-search"
         clearable
+        placeholder="搜索应用或经理账户"
+        :prefix-icon="Search"
       />
-      <el-select v-model="filterApp" placeholder="应用名称 全部" clearable class="filter-select">
-        <el-option label="全部" value="" />
-        <el-option label="Weather5" value="Weather5" />
-        <el-option label="Weather6" value="Weather6" />
-        <el-option label="Weather8" value="Weather8" />
-      </el-select>
-      <el-select v-model="filterPlatform" placeholder="平台 全部" clearable class="filter-select">
-        <el-option label="全部" value="" />
-        <el-option label="Android" value="Android" />
-        <el-option label="iOS" value="iOS" />
-      </el-select>
       <el-select
-        v-model="filterAdPlatform"
-        placeholder="广告平台 全部"
+        v-model="filters.appId"
         clearable
+        filterable
+        placeholder="应用"
         class="filter-select"
       >
         <el-option label="全部" value="" />
-        <el-option label="Google" value="Google" />
-        <el-option label="TikTok" value="TikTok" />
-        <el-option label="Mintegral" value="Mintegral" />
-        <el-option label="NewsBreak" value="NewsBreak" />
+        <el-option
+          v-for="opt in metaAppOptions"
+          :key="opt.value"
+          :label="opt.label"
+          :value="opt.value"
+        />
       </el-select>
-      <el-select v-model="filterStatus" placeholder="状态 全部" clearable class="filter-select">
+      <el-select v-model="filters.platform" clearable placeholder="终端平台" class="filter-select">
+        <el-option label="全部" value="" />
+        <el-option
+          v-for="opt in metaPlatformOptions"
+          :key="opt.value"
+          :label="opt.label"
+          :value="opt.value"
+        />
+      </el-select>
+      <el-select v-model="filters.source" clearable placeholder="广告平台" class="filter-select">
+        <el-option label="全部" value="" />
+        <el-option
+          v-for="opt in metaSourceOptions"
+          :key="opt.value"
+          :label="opt.label"
+          :value="opt.value"
+        />
+      </el-select>
+      <el-select v-model="filters.status" clearable placeholder="状态" class="filter-select">
         <el-option label="全部" value="" />
         <el-option label="已启用" value="enabled" />
-        <el-option label="已禁用" value="disabled" />
+        <el-option label="已停用" value="disabled" />
       </el-select>
       <div class="filter-actions">
-        <span class="btn-reset" @click="resetFilter">重置筛选</span>
-        <el-button class="btn-export" :icon="Upload" @click="handleExport">导出</el-button>
+        <el-button round @click="resetFilter">重置</el-button>
+        <el-button round :icon="Upload" @click="handleExport">导出</el-button>
       </div>
     </div>
 
-    <!-- ── 表格 ── -->
     <div class="table-wrap">
       <el-table
-        :data="pagedData"
+        v-loading="tableLoading"
+        :data="tableData"
         class="ad-table"
-        row-class-name="ad-table-row"
         :row-style="
           (row) => (row.row.status === 'disabled' ? { background: 'rgba(239,68,68,0.04)' } : {})
         "
       >
-        <!-- 状态 -->
-        <el-table-column label="状态" width="60" align="center">
+        <el-table-column label="状态" width="80" align="center">
           <template #default="{ row }">
             <span
               class="status-dot"
@@ -286,87 +374,77 @@
           </template>
         </el-table-column>
 
-        <!-- 应用名 -->
-        <el-table-column label="应用名" width="130">
+        <el-table-column label="应用" min-width="140">
           <template #default="{ row }">
             <div class="app-cell">
-              <div class="app-icon">🌤</div>
+              <div class="app-icon">{{ row.appName.slice(0, 1) }}</div>
               <span class="app-name">{{ row.appName }}</span>
             </div>
           </template>
         </el-table-column>
 
-        <!-- 平台 -->
-        <el-table-column label="平台" width="110">
+        <el-table-column label="终端平台" width="120">
           <template #default="{ row }">
-            <span class="platform-badge">
-              <svg class="android-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path
-                  d="M17.523 15.341A5 5 0 0 0 22 10.5a5 5 0 0 0-5-5 5 5 0 0 0-4.965 4.5H11.97A5 5 0 0 0 7 5.5a5 5 0 0 0-5 5 5 5 0 0 0 4.477 4.841V17.5H5v2h14v-2h-1.477v-2.159zM7 13.5a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm10 0a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"
-                />
-              </svg>
-              {{ row.platform }}
-            </span>
+            <span class="platform-badge">{{
+              optionLabel(metaPlatformOptions, row.platform) || row.platform
+            }}</span>
           </template>
         </el-table-column>
 
-        <!-- 广告平台 -->
-        <el-table-column label="广告平台" width="140">
+        <el-table-column label="广告平台" width="160">
           <template #default="{ row }">
             <div class="adplatform-cell">
               <span
                 class="adplatform-badge"
                 :style="{
-                  color: platformConfig[row.adPlatform]?.color,
-                  background: platformConfig[row.adPlatform]?.bg
+                  color: getSourceBadge(row).color,
+                  background: getSourceBadge(row).bg
                 }"
-                >{{ platformConfig[row.adPlatform]?.letter }}</span
               >
-              <span class="adplatform-name">{{ row.adPlatform }}</span>
+                {{ getSourceBadge(row).letter }}
+              </span>
+              <span class="adplatform-name">{{ getSourceBadge(row).name }}</span>
             </div>
           </template>
         </el-table-column>
 
-        <!-- 管理账户 -->
-        <el-table-column label="管理账户" width="190">
+        <el-table-column label="管理账户" min-width="180">
           <template #default="{ row }">
             <span class="mono-text">{{ row.managerAccount }}</span>
           </template>
         </el-table-column>
 
-        <!-- 广告账户 -->
-        <el-table-column label="广告账户" min-width="200">
+        <el-table-column label="广告子账户" min-width="220">
           <template #default="{ row }">
             <template v-if="row.adAccounts.length">
               <span class="mono-text">{{ formatAdAccounts(row.adAccounts) }}</span>
-              <el-tag v-if="row.adAccounts.length > 2" size="small" class="more-tag"
-                >+{{ row.adAccounts.length - 2 }}</el-tag
-              >
+              <el-tag v-if="row.adAccounts.length > 2" size="small" class="more-tag">
+                +{{ row.adAccounts.length - 2 }}
+              </el-tag>
             </template>
-            <span v-else class="null-text">{{ row.status === 'disabled' ? 'NULL2' : 'NULL' }}</span>
+            <span v-else class="null-text">无</span>
           </template>
         </el-table-column>
 
-        <!-- 凭据 -->
-        <el-table-column label="凭据" width="150">
+        <el-table-column label="凭证" min-width="140">
           <template #default="{ row }">
-            <span class="mono-text">{{ row.credential }}</span>
+            <span class="mono-text">{{ row.credential || '-' }}</span>
           </template>
         </el-table-column>
 
-        <!-- Token -->
-        <el-table-column label="Token" width="160">
+        <el-table-column label="令牌" width="180">
           <template #default="{ row }">
             <div class="token-cell" v-if="row.token">
-              <span class="token-mask">••••••••••••••</span>
-              <el-icon class="token-eye"><View /></el-icon>
+              <span class="token-mask">{{ maskToken(row.token) }}</span>
+              <el-icon class="token-eye">
+                <View />
+              </el-icon>
             </div>
-            <span v-else class="null-text">—</span>
+            <span v-else class="null-text">-</span>
           </template>
         </el-table-column>
 
-        <!-- 操作 -->
-        <el-table-column label="操作" width="160" fixed="right">
+        <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
             <div class="action-cell">
               <span class="action-btn action-edit" @click="handleEdit(row)">编辑</span>
@@ -375,50 +453,51 @@
                 class="action-btn"
                 :class="row.status === 'enabled' ? 'action-disable' : 'action-enable'"
                 @click="handleToggleStatus(row)"
-                >{{ row.status === 'enabled' ? '禁用' : '启用' }}</span
               >
+                {{ row.status === 'enabled' ? '禁用' : '启用' }}
+              </span>
               <span class="action-divider">|</span>
-              <span class="action-btn action-delete" @click="handleDelete">删除</span>
+              <span class="action-btn action-delete" @click="handleDelete(row)">删除</span>
             </div>
           </template>
         </el-table-column>
       </el-table>
     </div>
 
-    <!-- ── 分页 ── -->
     <div class="pagination-bar">
-      <span class="pagination-total">共 {{ filteredData.length }} 条记录</span>
+      <span class="pagination-total">共 {{ total }} 条</span>
       <el-pagination
         v-model:current-page="currentPage"
         v-model:page-size="pageSize"
         :page-sizes="[10, 20, 50]"
-        :total="filteredData.length"
+        :total="total"
         layout="prev, pager, next, sizes"
         class="ad-pagination"
       />
     </div>
 
-    <!-- ── 弹窗 ── -->
     <AccountDetailDialog
       v-model:visible="detailDialogVisible"
       :account="selectedAccount"
+      :submitting="updateSubmitting"
       @update="handleUpdateAccount"
     />
-    <AddAccountDialog v-model:visible="addDialogVisible" @save="handleSaveAccount" />
+    <AddAccountDialog
+      v-model:visible="addDialogVisible"
+      :submitting="createSubmitting"
+      @save="handleSaveAccount"
+    />
   </div>
 </template>
 
 <style scoped>
-  /* ── 基础 ── */
   .ad-account-page {
     min-height: 100vh;
     padding: 24px 32px;
-    font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-    color: #e2e8f0;
-    background: #0d1117;
+    color: #e5e7eb;
+    background: #0f172a;
   }
 
-  /* ── 页头 ── */
   .page-header {
     display: flex;
     align-items: flex-start;
@@ -430,84 +509,37 @@
     margin: 0 0 6px;
     font-size: 24px;
     font-weight: 700;
-    color: #f1f5f9;
-    letter-spacing: -0.5px;
+    color: #f8fafc;
   }
 
   .page-subtitle {
     margin: 0;
-    font-size: 13px;
-    color: #6b7280;
+    color: #94a3b8;
   }
 
-  .btn-add {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-    height: 38px !important;
-    padding: 0 18px !important;
-    font-size: 14px !important;
-    font-weight: 500 !important;
-    color: #fff !important;
-    background: #3b82f6 !important;
-    border: none !important;
-    border-radius: 8px !important;
-    transition: all 0.2s !important;
-  }
-
-  .btn-add:hover {
-    background: #2563eb !important;
-    box-shadow: 0 4px 16px rgb(59 130 246 / 40%) !important;
-    transform: translateY(-1px);
-  }
-
-  .btn-add-icon {
-    font-size: 18px;
-    line-height: 1;
-  }
-
-  /* ── 统计卡片 ── */
   .stats-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 16px;
     margin-bottom: 24px;
   }
 
   .stat-card {
-    padding: 20px 24px;
-    background: #161b27;
-    border: 1px solid #1e2535;
+    padding: 20px;
+    background: #111827;
+    border: 1px solid #1f2937;
     border-radius: 12px;
-    transition: border-color 0.2s;
-  }
-
-  .stat-card:hover {
-    border-color: #2d3a50;
   }
 
   .stat-label {
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     font-size: 13px;
-    color: #6b7280;
+    color: #94a3b8;
   }
 
   .stat-value {
-    display: flex;
-    gap: 10px;
-    align-items: baseline;
-    font-size: 32px;
+    font-size: 30px;
     font-weight: 700;
-  }
-
-  .stat-sub {
-    font-size: 13px;
-    font-weight: 400;
-    color: #6b7280;
-  }
-
-  .stat-default {
-    color: #f1f5f9;
   }
 
   .stat-green {
@@ -522,7 +554,6 @@
     color: #38bdf8;
   }
 
-  /* ── 筛选栏 ── */
   .filter-bar {
     display: flex;
     flex-wrap: wrap;
@@ -530,57 +561,29 @@
     align-items: center;
     padding: 16px 20px;
     margin-bottom: 16px;
-    background: #161b27;
-    border: 1px solid #1e2535;
+    background: #111827;
+    border: 1px solid #1f2937;
     border-radius: 12px;
   }
 
   .filter-search {
-    width: 220px !important;
+    width: 240px;
   }
 
   .filter-select {
-    width: 150px !important;
+    width: 160px;
   }
 
   .filter-actions {
     display: flex;
-    gap: 12px;
-    align-items: center;
+    gap: 8px;
     margin-left: auto;
   }
 
-  .btn-reset {
-    font-size: 13px;
-    color: #3b82f6;
-    white-space: nowrap;
-    cursor: pointer;
-    transition: color 0.2s;
-  }
-
-  .btn-reset:hover {
-    color: #60a5fa;
-  }
-
-  .btn-export {
-    height: 34px !important;
-    font-size: 13px !important;
-    color: #e2e8f0 !important;
-    background: #1e2535 !important;
-    border: 1px solid #2d3a50 !important;
-    border-radius: 8px !important;
-  }
-
-  .btn-export:hover {
-    background: #253045 !important;
-  }
-
-  /* ── 表格 ── */
   .table-wrap {
-    margin-bottom: 16px;
     overflow: hidden;
-    background: #161b27;
-    border: 1px solid #1e2535;
+    background: #111827;
+    border: 1px solid #1f2937;
     border-radius: 12px;
   }
 
@@ -588,37 +591,8 @@
     background: transparent !important;
   }
 
-  :deep(.ad-table .el-table__header-wrapper th) {
-    padding: 12px 0 !important;
-    font-size: 13px !important;
-    font-weight: 500 !important;
-    color: #6b7280 !important;
-    background: #0f1420 !important;
-    border-bottom: 1px solid #1e2535 !important;
-  }
-
-  :deep(.ad-table .el-table__body tr) {
-    background: transparent !important;
-  }
-
-  :deep(.ad-table .el-table__body tr:hover > td) {
-    background: rgb(59 130 246 / 5%) !important;
-  }
-
-  :deep(.ad-table .el-table__body td) {
-    padding: 14px 0 !important;
-    font-size: 13px !important;
-    color: #cbd5e1 !important;
-    background: transparent !important;
-    border-bottom: 1px solid #1a2030 !important;
-  }
-
-  :deep(.el-table--enable-row-hover .el-table__body tr:hover > td.el-table__cell) {
-    background: rgb(59 130 246 / 5%) !important;
-  }
-
-  :deep(.el-table__inner-wrapper::before) {
-    display: none;
+  :deep(.ad-table th) {
+    background: #0b1220 !important;
   }
 
   .status-dot {
@@ -630,12 +604,10 @@
 
   .status-dot--on {
     background: #10b981;
-    box-shadow: 0 0 6px rgb(16 185 129 / 50%);
   }
 
   .status-dot--off {
     background: #ef4444;
-    box-shadow: 0 0 6px rgb(239 68 68 / 50%);
   }
 
   .app-cell {
@@ -646,38 +618,25 @@
 
   .app-icon {
     display: flex;
-    flex-shrink: 0;
     align-items: center;
     justify-content: center;
     width: 28px;
     height: 28px;
-    font-size: 15px;
-    background: linear-gradient(135deg, #1e88e5, #42a5f5);
+    font-weight: 700;
+    background: linear-gradient(135deg, #2563eb, #38bdf8);
     border-radius: 6px;
   }
 
   .app-name {
     font-weight: 500;
-    color: #e2e8f0;
   }
 
   .platform-badge {
     display: inline-flex;
-    gap: 5px;
     align-items: center;
-    padding: 3px 10px;
-    font-size: 12px;
-    color: #94a3b8;
+    padding: 4px 10px;
     background: rgb(255 255 255 / 6%);
-    border: 1px solid rgb(255 255 255 / 10%);
-    border-radius: 6px;
-  }
-
-  .android-icon {
-    width: 13px;
-    height: 13px;
-    color: #a3e635;
-    fill: #a3e635;
+    border-radius: 999px;
   }
 
   .adplatform-cell {
@@ -687,41 +646,27 @@
   }
 
   .adplatform-badge {
-    display: flex;
-    flex-shrink: 0;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 26px;
-    height: 26px;
+    width: 28px;
+    height: 28px;
     font-size: 11px;
     font-weight: 700;
     border-radius: 6px;
   }
 
-  .adplatform-name {
-    font-size: 13px;
-    color: #cbd5e1;
-  }
-
-  .mono-text {
+  .mono-text,
+  .token-mask {
     font-family: 'JetBrains Mono', 'Courier New', monospace;
-    font-size: 12.5px;
-    color: #94a3b8;
   }
 
   .null-text {
-    font-size: 13px;
-    font-style: italic;
-    color: #4b5563;
+    color: #6b7280;
   }
 
   .more-tag {
     margin-left: 6px;
-    font-size: 11px !important;
-    color: #60a5fa !important;
-    background: rgb(59 130 246 / 15%) !important;
-    border: 1px solid rgb(59 130 246 / 30%) !important;
-    border-radius: 4px !important;
   }
 
   .token-cell {
@@ -730,160 +675,48 @@
     align-items: center;
   }
 
-  .token-mask {
-    font-size: 11px;
-    color: #4b5563;
-    letter-spacing: 2px;
-  }
-
   .token-eye {
-    font-size: 14px;
-    color: #6b7280;
-    cursor: pointer;
-    transition: color 0.2s;
-  }
-
-  .token-eye:hover {
     color: #94a3b8;
   }
 
   .action-cell {
     display: flex;
-    flex-wrap: nowrap;
     gap: 4px;
     align-items: center;
   }
 
   .action-btn {
-    font-size: 13px;
     cursor: pointer;
-    transition: color 0.15s;
   }
 
   .action-edit {
-    color: #3b82f6;
-  }
-
-  .action-edit:hover {
     color: #60a5fa;
-  }
-
-  .action-disable {
-    color: #f59e0b;
-  }
-
-  .action-disable:hover {
-    color: #fbbf24;
   }
 
   .action-enable {
     color: #10b981;
   }
 
-  .action-enable:hover {
-    color: #34d399;
+  .action-disable {
+    color: #f59e0b;
   }
 
   .action-delete {
     color: #ef4444;
   }
 
-  .action-delete:hover {
-    color: #f87171;
-  }
-
   .action-divider {
-    color: #2d3a50;
-    user-select: none;
+    color: #334155;
   }
 
-  /* ── 分页 ── */
   .pagination-bar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 4px 0;
+    padding: 16px 0 0;
   }
 
   .pagination-total {
-    font-size: 13px;
-    color: #6b7280;
-  }
-
-  :deep(.ad-pagination .el-pager li) {
-    min-width: 32px !important;
-    height: 32px !important;
-    margin: 0 2px !important;
-    font-size: 13px !important;
-    line-height: 30px !important;
-    color: #94a3b8 !important;
-    background: #161b27 !important;
-    border: 1px solid #1e2535 !important;
-    border-radius: 6px !important;
-    transition: all 0.2s !important;
-  }
-
-  :deep(.ad-pagination .el-pager li.is-active) {
-    color: #fff !important;
-    background: #3b82f6 !important;
-    border-color: #3b82f6 !important;
-  }
-
-  :deep(.ad-pagination .el-pager li:hover) {
-    color: #e2e8f0 !important;
-    background: #1e2535 !important;
-  }
-
-  :deep(.ad-pagination .btn-prev),
-  :deep(.ad-pagination .btn-next) {
-    width: 32px !important;
-    height: 32px !important;
-    color: #94a3b8 !important;
-    background: #161b27 !important;
-    border: 1px solid #1e2535 !important;
-    border-radius: 6px !important;
-  }
-
-  :deep(.ad-pagination .el-select .el-input__wrapper) {
-    background: #161b27 !important;
-    border: 1px solid #1e2535 !important;
-    box-shadow: none !important;
-  }
-
-  :deep(.ad-pagination .el-select .el-input__inner) {
-    font-size: 13px !important;
-    color: #94a3b8 !important;
-  }
-
-  /* ── Element Plus 全局覆盖（作用域） ── */
-  :deep(.el-input__wrapper) {
-    background: #1a2030 !important;
-    border: 1px solid #2d3a50 !important;
-    border-radius: 8px !important;
-    box-shadow: none !important;
-    transition: border-color 0.2s !important;
-  }
-
-  :deep(.el-input__wrapper:hover),
-  :deep(.el-input__wrapper.is-focus) {
-    border-color: #3b82f6 !important;
-  }
-
-  :deep(.el-input__inner) {
-    font-size: 13px !important;
-    color: #e2e8f0 !important;
-    background: transparent !important;
-  }
-
-  :deep(.el-input__inner::placeholder) {
-    color: #4b5563 !important;
-  }
-
-  :deep(.el-select .el-input__wrapper) {
-    cursor: pointer;
-  }
-
-  :deep(.el-select__placeholder) {
-    color: #6b7280 !important;
+    color: #94a3b8;
   }
 </style>

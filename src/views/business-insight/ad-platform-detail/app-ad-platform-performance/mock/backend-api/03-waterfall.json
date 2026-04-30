@@ -1,0 +1,73 @@
+{
+  "_comment": "应用内广告平台表现 — 瀑布流设置（多 Tab）。对应 index.vue waterfallItems + el-tabs。",
+  "interaction": {
+    "route": "/business-insight/ad-platform-detail/app-ad-platform-performance",
+    "surface": "瀑布流设置",
+    "triggers": ["查询刷新", "拖拽排序若接保存接口可另立契约"]
+  },
+  "fieldDescription": {
+    "request": {
+      "startDate": { "type": "string", "required": true, "description": "YYYY-MM-DD。" },
+      "endDate": { "type": "string", "required": true, "description": "YYYY-MM-DD。" },
+      "countryCode": { "type": "string", "required": true, "description": "国家；空为全部。" },
+      "appId": { "type": "string", "required": true, "description": "应用，来自路由。" },
+      "source": { "type": "string", "required": false, "description": "广告平台上下文。" }
+    },
+    "response": {
+      "waterfallByTab": {
+        "type": "Record<string, WaterfallNetworkItem[]>",
+        "required": true,
+        "description": "键：banner | interstitial | rewarded | other，与前端 Tab name 一致。"
+      }
+    },
+    "WaterfallNetworkItem": {
+      "name": { "type": "string", "required": true, "description": "网络展示名。" },
+      "icon": { "type": "string", "required": true, "description": "头像内短字符。" },
+      "color": { "type": "string", "required": true, "description": "色块背景 CSS 色。" },
+      "ecpm": { "type": "string", "required": true, "description": "eCPM 展示文案。" },
+      "enabled": { "type": "boolean", "required": true, "description": "开关状态。" }
+    }
+  },
+  "sampleRequest": {
+    "startDate": "2025-12-01",
+    "endDate": "2025-12-31",
+    "countryCode": "",
+    "appId": "Weather8",
+    "source": "Google"
+  },
+  "sampleResponse": {
+    "waterfallByTab": {
+      "banner": [
+        { "name": "AppLovin", "icon": "A", "color": "#e85d04", "ecpm": "3.80", "enabled": true },
+        { "name": "AppLovin", "icon": "A", "color": "#e85d04", "ecpm": "3.50", "enabled": true },
+        { "name": "Facebook", "icon": "F", "color": "#1877f2", "ecpm": "3.20", "enabled": false },
+        { "name": "Unity Ads", "icon": "U", "color": "#222c37", "ecpm": "2.90", "enabled": true }
+      ],
+      "interstitial": [
+        { "name": "AdMob", "icon": "G", "color": "#4285f4", "ecpm": "4.20", "enabled": true },
+        { "name": "IronSource", "icon": "I", "color": "#00b4d8", "ecpm": "3.80", "enabled": true },
+        { "name": "AppLovin", "icon": "A", "color": "#e85d04", "ecpm": "3.60", "enabled": true },
+        { "name": "Unity Ads", "icon": "U", "color": "#222c37", "ecpm": "3.10", "enabled": false }
+      ],
+      "rewarded": [
+        { "name": "AppLovin", "icon": "A", "color": "#e85d04", "ecpm": "7.50", "enabled": true },
+        { "name": "Unity Ads", "icon": "U", "color": "#222c37", "ecpm": "6.80", "enabled": true },
+        { "name": "IronSource", "icon": "I", "color": "#00b4d8", "ecpm": "6.20", "enabled": true }
+      ],
+      "other": [
+        { "name": "Google Ads", "icon": "G", "color": "#4285f4", "ecpm": "2.10", "enabled": true },
+        { "name": "Facebook", "icon": "F", "color": "#1877f2", "ecpm": "1.90", "enabled": false }
+      ]
+    }
+  },
+  "api": {
+    "url": "POST /api/business-insight/ad-platform-detail/app-ad-platform-performance/waterfall",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "startDate, endDate, countryCode, appId, source?",
+    "responseBody": "{ waterfallByTab }"
+  },
+  "apiSuggestion": {
+    "notes": ["拖拽重排持久化可拆 `PUT .../waterfall/order` 等单独契约。"]
+  }
+}

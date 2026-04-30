@@ -3,20 +3,24 @@
  */
 
 export interface RefundFilters {
-  app: string
+  /** 应用范围；单选：`[]` 不限，`[sAppId]` 某一应用（与 cockpit `settingApps` 一致） */
+  appIds: string[]
   dateRange: [string, string]
   compareType: string
   country: string
   platform: string
 }
 
+/** 与页内 `ora-kpi-card--*` 修饰符一致，对齐广告成效 KPI 主题色 */
+export type OrderRefundKpiThemeKey = 'refund' | 'rate' | 'orders' | 'avg' | 'loss'
+
 export interface KpiCard {
   label: string
   value: string
   change?: string
-  theme: string
-  valueClass?: string
-  changeClass?: string
+  themeKey: OrderRefundKpiThemeKey
+  /** 与广告成效一致：is-up 绿 / is-down 红 */
+  compareClass?: 'is-up' | 'is-down'
 }
 
 export interface TrendPoint {
@@ -26,7 +30,8 @@ export interface TrendPoint {
 }
 
 export interface CountryRate {
-  country: string
+  /** ISO 3166-1 alpha-2 小写，与契约一致 */
+  countryCode: string
   rate: number
   level: 'good' | 'warning' | 'danger' | 'critical'
   badge?: string
@@ -63,14 +68,15 @@ export interface DashboardPayload {
   alertMessage: string
 }
 
-/** POST /overview/dashboard 请求体 */
+/** POST /overview/dashboard 请求体（与 mock/backend-api/01-dashboard.json 一致，camelCase） */
 export interface OrderRefundDashboardParams {
-  /** 应用筛选，all 表示全部 */
-  app: string
+  /** 应用范围；UI「全部」映射为 `[]` */
+  appIds: string[]
   startDate: string
   endDate: string
   compareType: string
-  country: string
-  /** 支付平台（数据字典：payment_platform） */
-  payment_platform: string
+  /** ISO 3166-1 alpha-2 小写；UI「全部」映射为 `""` */
+  countryCode: string
+  /** 支付平台筛选项值；「全部」映射为 `""` */
+  paymentPlatform: string
 }

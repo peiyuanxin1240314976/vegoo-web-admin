@@ -1,23 +1,17 @@
 <template>
-  <div ref="rootRef" class="finance-screen-root art-full-height">
-    <div
-      class="finance-screen-wrap"
-      :style="{
-        width: `${designWidth}px`,
-        transform: `scale(${scale})`,
-        transformOrigin: '0 0'
-      }"
-    >
+  <div ref="rootRef" class="finance-screen-root">
+    <div class="finance-screen-wrap">
       <div class="aps-page-fx" aria-hidden="true"></div>
       <!-- 顶栏：日期 + 筛选 + 导出（常驻，不随数据骨架整页隐藏） -->
       <header class="finance-header aps-entry-1">
         <div class="aps-filter-toolbar">
           <div class="aps-filter-toolbar__row">
             <div class="header-left">
-              <ElDatePicker
+              <AppDatePicker
                 v-model="dateRange"
                 type="daterange"
                 range-separator="~"
+                :shortcuts="dateRangeShortcuts"
                 start-placeholder="开始日期"
                 end-placeholder="结束日期"
                 value-format="YYYY-MM-DD"
@@ -28,39 +22,21 @@
               />
             </div>
             <div class="header-filters">
-              <el-select
-                v-model="filters.app"
-                class="aps-filter-select"
-                popper-class="aps-filter-popper"
-                :teleported="true"
-                :fit-input-width="true"
-                :placeholder="filtersPlaceholders.app"
-              >
-                <el-option
-                  v-for="opt in appOptions"
-                  :key="opt.value"
-                  :label="opt.label"
-                  :value="opt.value"
-                />
-              </el-select>
+              <AppPlatformSearchSelect
+                v-model="combinedFilterValue"
+                mode="app"
+                placeholder="全部 Apps / 平台"
+                search-placeholder="搜索类别/应用名称/应用简称"
+                :setting-apps="combinedSettingApps"
+                :min-width="200"
+                :max-width="220"
+                :height="36"
+                input-class="aps-filter-select"
+                dropdown-class="aps-filter-popper"
+                @change="onCombinedFilterChange"
+              />
 
-              <el-select
-                v-model="filters.platform"
-                class="aps-filter-select"
-                popper-class="aps-filter-popper"
-                :teleported="true"
-                :fit-input-width="true"
-                :placeholder="filtersPlaceholders.platform"
-              >
-                <el-option
-                  v-for="opt in platformOptions"
-                  :key="opt.value"
-                  :label="opt.label"
-                  :value="opt.value"
-                />
-              </el-select>
-
-              <el-select
+              <!-- <el-select
                 v-model="filters.channelKey"
                 class="aps-filter-select"
                 popper-class="aps-filter-popper"
@@ -76,10 +52,10 @@
                   :label="opt.label"
                   :value="opt.value"
                 />
-              </el-select>
+              </el-select> -->
             </div>
-            <button type="button" class="btn-export" @click="runDashboardQuery">查询</button>
-            <button type="button" class="btn-export">导出报表</button>
+            <el-button type="primary" plain round @click="runDashboardQuery">查询</el-button>
+            <!-- <el-button type="primary" plain round @click="runDashboardQuery">导出报表</el-button> -->
           </div>
         </div>
       </header>
@@ -120,8 +96,14 @@
             </div>
           </div>
           <div class="kpi-card-roi">
-            <span class="roi-value">{{ formatKpiRoi(card.roi) }}</span>
-            <span class="roi-change" :class="card.roiChangeUp ? 'up' : 'down'">
+            <span class="roi-value"
+              ><span class="roi-label">ROI</span>{{ formatKpiRoi(card.roi) }}</span
+            >
+            <span
+              v-if="card.roiChange !== null && card.roiChange !== undefined"
+              class="roi-change"
+              :class="card.roiChangeUp ? 'up' : 'down'"
+            >
               {{ card.roiChangeUp ? '+' : '' }}{{ formatNum2(card.roiChange) }}%
             </span>
           </div>
@@ -145,7 +127,7 @@
             <div v-show="!roiTrendFetchPending" ref="roiTrendRef" class="chart-dom"></div>
           </div>
         </div>
-        <div class="panel panel-heatmap">
+        <!-- <div class="panel panel-heatmap">
           <div class="panel-title">用户质量热力图</div>
           <div class="heatmap-wrap panel-chart-host">
             <div
@@ -160,7 +142,7 @@
               class="chart-dom quality-heatmap-dom"
             ></div>
           </div>
-        </div>
+        </div> -->
 
         <ApaTop10Panel
           :pending="topCampaignsFetchPending"
@@ -198,10 +180,15 @@
 
 <script setup lang="ts" name="AdPlatformAnalysis">
   import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { useRouter } from 'vue-router'
   import { ElMessage } from 'element-plus'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import { useChart } from '@/hooks/core/useChart'
   import { graphic, type EChartsOption } from '@/plugins/echarts'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
+  import { toAppIdsRequestBody } from '@/utils/app-id-request'
   import type { ColumnOption } from '@/types'
   import ApaTop10Panel from './modules/top10-panel.vue'
   import ApaMetricsTablePanel from './modules/metrics-table-panel.vue'
@@ -211,7 +198,6 @@
     fetchAdPlatformAnalysisFiltersMeta,
     fetchAdPlatformAnalysisKpiCards,
     fetchAdPlatformAnalysisMetricsTable,
-    fetchAdPlatformAnalysisQualityHeatmap,
     fetchAdPlatformAnalysisRoiTrend
   } from '@/api/user-growth'
   import {
@@ -219,29 +205,18 @@
     type ChannelMetricRow,
     type ChannelRoiTrend,
     type ChannelStatus,
-    type TopCampaignRow,
-    type UserQualityHeatmapRow
+    type TopCampaignRow
   } from './mock'
 
   defineOptions({ name: 'FinanceScreen' })
   const router = useRouter()
+  const cockpitMetaStore = useCockpitMetaFilterStore()
 
   const KPI_SKELETON_CARD_COUNT = 5
 
-  // 对齐 Axure 原型画布尺寸（styles.css: body width 1700, base height 1237）
-  const designWidth = 1700
-  // const designHeight = 1237
   const pageSize = ref(10)
 
   const rootRef = ref<HTMLElement>()
-  const scale = ref(1)
-  const updateScale = () => {
-    const el = rootRef.value
-    if (!el) return
-    const w = el.clientWidth
-    if (w <= 0) return
-    scale.value = w / designWidth
-  }
 
   function getDefaultDateRange(): [string, string] {
     const now = getAppNow()
@@ -262,7 +237,6 @@
   const showKpiRowSkeleton = computed(() => kpiFetchPending.value)
 
   const roiTrendFetchPending = ref(false)
-  const qualityHeatmapFetchPending = ref(false)
   const topCampaignsFetchPending = ref(false)
   /** 首屏 true，避免在首次请求发出前闪空表 */
   const metricsTableFetchPending = ref(true)
@@ -305,7 +279,6 @@
   }
   const roiTrendData = ref<ChannelRoiTrend>({ dates: [], series: [] })
 
-  const userQualityHeatmap = ref<UserQualityHeatmapRow[]>([])
   const channelMetrics = ref<ChannelMetricRow[]>([])
   const metricsTotal = ref(0)
   const topCampaigns = ref<TopCampaignRow[]>([])
@@ -313,16 +286,17 @@
   type SelectOption<T extends string = string> = { label: string; value: T }
 
   const filters = ref({
-    app: 'all' as string,
+    app: 'all' as string | string[],
     platform: 'all' as string,
     channelKey: 'all' as string
   })
+  const combinedFilterValue = ref<string | string[]>([])
 
-  const filtersPlaceholders = {
-    app: '全部Apps',
-    platform: 'IOS & Android',
-    channel: '全部广告平台'
-  } as const
+  // const filtersPlaceholders = {
+  //   app: '全部Apps',
+  //   platform: 'IOS & Android',
+  //   channel: '全部广告平台'
+  // } as const
 
   const ALL_APP_OPTION: SelectOption = { label: '全部Apps', value: 'all' }
   const ALL_PLATFORM_OPTION: SelectOption = { label: 'IOS & Android', value: 'all' }
@@ -353,7 +327,12 @@
 
   function ensureFilterSelectionsInMeta() {
     const appVals = new Set([ALL_APP_OPTION, ...metaAppOptions.value].map((o) => o.value))
-    if (!appVals.has(filters.value.app)) filters.value.app = 'all'
+    const selectedAppIds = Array.isArray(filters.value.app)
+      ? filters.value.app
+      : filters.value.app === 'all'
+        ? []
+        : [filters.value.app]
+    if (selectedAppIds.some((id) => !appVals.has(id))) filters.value.app = 'all'
 
     const platVals = new Set(
       [ALL_PLATFORM_OPTION, ...metaPlatformOptions.value].map((o) => o.value)
@@ -362,10 +341,35 @@
 
     const srcVals = new Set([ALL_SOURCE_OPTION, ...metaSourceOptions.value].map((o) => o.value))
     if (!srcVals.has(filters.value.channelKey)) filters.value.channelKey = 'all'
+
+    syncCombinedFilterValue()
+  }
+
+  function syncCombinedFilterValue() {
+    if (Array.isArray(filters.value.app)) {
+      combinedFilterValue.value = filters.value.app
+      return
+    }
+    if (filters.value.app !== 'all' && filters.value.app) {
+      combinedFilterValue.value = [String(filters.value.app).trim()]
+      return
+    }
+    combinedFilterValue.value = []
+  }
+
+  function onCombinedFilterChange() {
+    const next = Array.isArray(combinedFilterValue.value)
+      ? combinedFilterValue.value.filter(Boolean)
+      : String(combinedFilterValue.value ?? '').trim()
+        ? [String(combinedFilterValue.value).trim()]
+        : []
+    filters.value.app = next.length ? next : 'all'
+    filters.value.platform = 'all'
   }
 
   async function loadFiltersMeta() {
     try {
+      await cockpitMetaStore.ensureLoaded()
       const data = await fetchAdPlatformAnalysisFiltersMeta()
       metaAppOptions.value = normalizeFiltersMetaOptions(data?.apps)
       metaPlatformOptions.value = normalizeFiltersMetaOptions(data?.platforms)
@@ -381,12 +385,34 @@
     }
   }
 
-  const appOptions = computed<SelectOption[]>(() => [ALL_APP_OPTION, ...metaAppOptions.value])
+  // const platformOptions = computed<SelectOption[]>(() => [
+  //   ALL_PLATFORM_OPTION,
+  //   ...metaPlatformOptions.value
+  // ])
+  const combinedSettingApps = computed(() => {
+    const settingApps = cockpitMetaStore.data?.settingApps ?? []
+    const appValueSet = new Set(metaAppOptions.value.map((item) => item.value))
+    const platformValueSet = new Set(metaPlatformOptions.value.map((item) => item.value))
 
-  const platformOptions = computed<SelectOption[]>(() => [
-    ALL_PLATFORM_OPTION,
-    ...metaPlatformOptions.value
-  ])
+    return settingApps.filter((item) => {
+      const appId = String(item.sAppId ?? '').trim()
+      if (appValueSet.size > 0 && !appValueSet.has(appId)) return false
+      if (platformValueSet.size === 0) return true
+      const platformName = String(item.platformName ?? '')
+        .trim()
+        .toLowerCase()
+      const platformCode = String(item.nPlatform ?? '')
+        .trim()
+        .toLowerCase()
+      return (
+        platformValueSet.has(platformCode) ||
+        (platformCode === '0' && platformValueSet.has('android')) ||
+        (platformCode === '1' && platformValueSet.has('ios')) ||
+        (platformCode === '2' && platformValueSet.has('web')) ||
+        [...platformValueSet].some((value) => platformName === value.toLowerCase())
+      )
+    })
+  })
 
   function normalizeChannelKey(name: string) {
     return name
@@ -395,10 +421,11 @@
       .replace(/[^\w]+/g, '')
   }
 
-  /** 与后端约定：全页模块共用同一请求体；筛选项映射到 appId / platform / source */
+  /** 与后端约定：全页模块共用同一请求体；筛选项映射到 appIds / platform / source */
   function buildAdPlatformAnalysisRequestParams(): Api.UserGrowth.AdPlatformAnalysisRequestParams {
     const f = filters.value
-    const appId = f.app === 'all' ? '' : String(f.app ?? '').trim()
+    const selectedAppId =
+      f.app === 'all' ? [] : Array.isArray(f.app) ? f.app : String(f.app ?? '').trim()
     const platform =
       f.platform === 'all'
         ? ''
@@ -411,7 +438,7 @@
     const [dateStart = '', dateEnd = ''] = dateRange.value ?? []
 
     return {
-      appId,
+      appIds: toAppIdsRequestBody(selectedAppId),
       currentPage: 0,
       dateEnd,
       dateStart,
@@ -461,53 +488,6 @@
     }
   }
 
-  function normalizeQualityHeatmapRow(
-    d: Api.UserGrowth.AdPlatformQualityHeatmapRowDto
-  ): UserQualityHeatmapRow {
-    const channel = String(d?.source ?? '').trim()
-    return {
-      channel: channel || '—',
-      d1Retention: Number(d?.d1Retention ?? 0),
-      d7Retention: Number(d?.d7Retention ?? 0),
-      d30Retention: Number(d?.d30Retention ?? 0),
-      payRate:
-        typeof d?.payRate === 'number' && Number.isFinite(d.payRate)
-          ? d.payRate
-          : Number.parseFloat(String(d?.payRate ?? '')) || 0,
-      arpu:
-        typeof d?.arpu === 'number' && Number.isFinite(d.arpu)
-          ? d.arpu
-          : Number.parseFloat(String(d?.arpu ?? '')) || 0
-    }
-  }
-
-  function normalizeQualityHeatmapList(
-    raw: Api.UserGrowth.AdPlatformQualityHeatmapRowDto[] | null | undefined
-  ): UserQualityHeatmapRow[] {
-    if (!Array.isArray(raw)) return []
-    return raw.map(normalizeQualityHeatmapRow).filter((r) => r.channel !== '—')
-  }
-
-  function cloneQualityHeatmapRows(src: UserQualityHeatmapRow[]): UserQualityHeatmapRow[] {
-    return src.map((r) => ({ ...r }))
-  }
-
-  async function loadQualityHeatmap() {
-    qualityHeatmapFetchPending.value = true
-    const prev = cloneQualityHeatmapRows(userQualityHeatmap.value)
-    try {
-      const list = await fetchAdPlatformAnalysisQualityHeatmap(
-        buildAdPlatformAnalysisRequestParams()
-      )
-      userQualityHeatmap.value = normalizeQualityHeatmapList(list)
-    } catch {
-      userQualityHeatmap.value = prev
-    } finally {
-      qualityHeatmapFetchPending.value = false
-      await tryMountQualityHeatmapChart()
-    }
-  }
-
   function mapCampaignTop10Dto(d: Api.UserGrowth.AdPlatformCampaignTop10RowDto): TopCampaignRow {
     const source = String(d?.source ?? '').trim()
     const cid = String(d?.campaignId ?? '').trim()
@@ -520,18 +500,9 @@
       sourceKey: normalizeChannelKey(source || 'x'),
       ...(appId ? { appId } : {}),
       ...(appName ? { appName } : {}),
-      cost:
-        typeof d?.cost === 'number' && Number.isFinite(d.cost)
-          ? d.cost
-          : Number.parseFloat(String(d?.cost ?? '')) || 0,
-      cpi:
-        typeof d?.cpi === 'number' && Number.isFinite(d.cpi)
-          ? d.cpi
-          : Number.parseFloat(String(d?.cpi ?? '')) || 0,
-      roi:
-        typeof d?.roi === 'number' && Number.isFinite(d.roi)
-          ? d.roi
-          : Number.parseFloat(String(d?.roi ?? '')) || 0
+      cost: parseFiniteNumberOrNull(d?.cost),
+      cpi: parseFiniteNumberOrNull(d?.cpi),
+      roi: parseFiniteNumberOrNull(d?.roi)
     }
   }
 
@@ -562,17 +533,8 @@
     const rawId = String(d.id ?? '').trim()
     const id = rawId || normalizeChannelKey(name) || `kpi-${name.slice(0, 8) || 'unknown'}`
 
-    const roiRaw = d.roi
-    const roi =
-      typeof roiRaw === 'number' && Number.isFinite(roiRaw)
-        ? roiRaw
-        : Number.parseFloat(String(roiRaw ?? '').replace(/,/g, '')) || 0
-
-    const roiChRaw = d.roiChange
-    const roiChange =
-      typeof roiChRaw === 'number' && Number.isFinite(roiChRaw)
-        ? roiChRaw
-        : Number.parseFloat(String(roiChRaw ?? '').replace(/,/g, '')) || 0
+    const roi = parseFiniteNumberOrNull(d?.roi)
+    const roiChange = parseFiniteNumberOrNull(d?.roiChange)
 
     const trend = Array.isArray(d.trendData)
       ? d.trendData.map((v) => Number(v)).filter((n) => Number.isFinite(n))
@@ -588,7 +550,7 @@
       cost: d.cost ?? '',
       revenue: d.revenue ?? '',
       cpi: d.cpi ?? '',
-      trendData: trend.length > 0 ? trend : [roi || 0]
+      trendData: trend.length > 0 ? trend : []
     }
   }
 
@@ -637,8 +599,11 @@
     )
   }
 
-  function formatKpiRoi(roi: number) {
-    return formatNum2(roi)
+  function formatKpiRoi(roi: number | null) {
+    if (roi === null || roi === undefined) return '—'
+    const text = formatNum2(roi * 100)
+    if (text === '—') return text
+    return `${text}%`
   }
 
   /** CSS 类名安全后缀（接口 id 可能与历史 mock 选择器不一致，仅影响品牌占位配色） */
@@ -648,10 +613,10 @@
     return s || 'card'
   }
 
-  const channelOptions = computed<SelectOption[]>(() => [
-    ALL_SOURCE_OPTION,
-    ...metaSourceOptions.value
-  ])
+  // const channelOptions = computed<SelectOption[]>(() => [
+  //   ALL_SOURCE_OPTION,
+  //   ...metaSourceOptions.value
+  // ])
 
   /**
    * 前端本地筛选：接口 sources 的 value 可能与 KPI 名称/id 不完全一致，做多路匹配
@@ -690,19 +655,13 @@
     return channelKpiCards.value.filter((c) => matchesAdPlatformSourceFilter(sel, c.name, c.id))
   })
 
-  const filteredUserQualityHeatmap = computed(() => {
-    const sel = selectedChannelKey.value
-    if (sel === 'all') return userQualityHeatmap.value
-    return userQualityHeatmap.value.filter((r) => matchesAdPlatformSourceFilter(sel, r.channel))
-  })
-
   const filteredTopCampaigns = computed(() => {
     const sel = selectedChannelKey.value
     if (sel === 'all') return topCampaigns.value
     return topCampaigns.value.filter((r) => matchesAdPlatformSourceFilter(sel, r.channel))
   })
 
-  function formatTopCurrency(n: number) {
+  function formatTopCurrency(n: unknown) {
     return formatUsd2(n)
   }
 
@@ -733,7 +692,9 @@
     let appId = String(row.appId ?? '').trim()
     let appName = String(row.appName ?? '').trim()
     if (!appId && filters.value.app !== 'all' && filters.value.app) {
-      appId = String(filters.value.app).trim()
+      appId = Array.isArray(filters.value.app)
+        ? String(filters.value.app[0] ?? '').trim()
+        : String(filters.value.app).trim()
     }
     if (!appName && appId) {
       appName = String(metaAppOptions.value.find((o) => o.value === appId)?.label ?? '').trim()
@@ -893,10 +854,13 @@
     }
   }
 
-  function parseMetricNum(v: unknown): number {
-    if (typeof v === 'number' && Number.isFinite(v)) return v
-    const n = Number.parseFloat(String(v ?? ''))
-    return Number.isFinite(n) ? n : 0
+  function parseFiniteNumberOrNull(v: unknown): number | null {
+    if (typeof v === 'number') return Number.isFinite(v) ? v : null
+    if (v === null || v === undefined) return null
+    const s = String(v).trim()
+    if (!s) return null
+    const n = Number.parseFloat(s.replace(/,/g, ''))
+    return Number.isFinite(n) ? n : null
   }
 
   function mapMetricsTableRowDto(d: Api.UserGrowth.AdPlatformMetricsTableRowDto): ChannelMetricRow {
@@ -914,18 +878,18 @@
       sourceCode: id || undefined,
       cost: String(d?.cost ?? ''),
       revenue: String(d?.revenue ?? ''),
-      roi: parseMetricNum(d?.roi),
+      roi: parseFiniteNumberOrNull(d?.roi),
       roiTrendUp: Boolean(d?.roiTrendUp),
-      roas: parseMetricNum(d?.roas),
-      cpi: parseMetricNum(d?.cpi),
+      roas: parseFiniteNumberOrNull(d?.roas),
+      cpi: parseFiniteNumberOrNull(d?.cpi),
       cpiTrendUp: Boolean(d?.cpiTrendUp),
       installs: String(d?.installs ?? ''),
-      userQualityD7: parseMetricNum(d?.userQualityD7),
+      userQualityD7: parseFiniteNumberOrNull(d?.userQualityD7),
       userQualityD7TrendUp: Boolean(d?.userQualityD7TrendUp),
-      userQualityPay: parseMetricNum(d?.userQualityPay),
+      userQualityPay: parseFiniteNumberOrNull(d?.userQualityPay),
       userQualityPayTrendUp: Boolean(d?.userQualityPayTrendUp),
-      ltv7: parseMetricNum(d?.ltv7),
-      ltv30: parseMetricNum(d?.ltv30),
+      ltv7: parseFiniteNumberOrNull(d?.ltv7),
+      ltv30: parseFiniteNumberOrNull(d?.ltv30),
       status
     }
   }
@@ -956,22 +920,22 @@
       { label: '花费', prop: 'cost', minWidth: 90, sortable: 'custom' },
       { label: '收入', prop: 'revenue', minWidth: 90, sortable: 'custom' },
       { label: 'ROI', prop: 'roi', minWidth: 90, useSlot: true, sortable: 'custom' },
-      {
-        label: 'ROAS',
-        prop: 'roas',
-        minWidth: 80,
-        sortable: 'custom',
-        formatter: (row: ChannelMetricRow) => formatNum2(row.roas)
-      },
+      // {
+      //   label: 'ROAS',
+      //   prop: 'roas',
+      //   minWidth: 80,
+      //   sortable: 'custom',
+      //   formatter: (row: ChannelMetricRow) => formatNum2(row.roas)
+      // },
       { label: 'CPI', prop: 'cpi', minWidth: 90, useSlot: true, sortable: 'custom' },
       { label: '安装量', prop: 'installs', minWidth: 80, sortable: 'custom' },
-      {
-        label: 'User Quality (D7)',
-        prop: 'userQualityD7',
-        minWidth: 140,
-        useSlot: true,
-        sortable: 'custom'
-      },
+      // {
+      //   label: 'User Quality (D7)',
+      //   prop: 'userQualityD7',
+      //   minWidth: 140,
+      //   useSlot: true,
+      //   sortable: 'custom'
+      // },
       {
         label: 'User Quality(Pay%)',
         prop: 'userQualityPay',
@@ -979,27 +943,27 @@
         useSlot: true,
         sortable: 'custom'
       },
-      {
-        label: 'LTV_7',
-        prop: 'ltv7',
-        minWidth: 90,
-        sortable: 'custom',
-        formatter: (row: ChannelMetricRow) => formatUsd2(row.ltv7)
-      },
-      {
-        label: 'LTV_30',
-        prop: 'ltv30',
-        minWidth: 90,
-        sortable: 'custom',
-        formatter: (row: ChannelMetricRow) => formatUsd2(row.ltv30)
-      },
-      {
-        label: '状态/Status',
-        prop: 'status',
-        minWidth: 110,
-        useSlot: true,
-        sortable: 'custom'
-      },
+      // {
+      //   label: 'LTV_7',
+      //   prop: 'ltv7',
+      //   minWidth: 90,
+      //   sortable: 'custom',
+      //   formatter: (row: ChannelMetricRow) => formatUsd2(row.ltv7)
+      // },
+      // {
+      //   label: 'LTV_30',
+      //   prop: 'ltv30',
+      //   minWidth: 90,
+      //   sortable: 'custom',
+      //   formatter: (row: ChannelMetricRow) => formatUsd2(row.ltv30)
+      // },
+      // {
+      //   label: '状态/Status',
+      //   prop: 'status',
+      //   minWidth: 110,
+      //   useSlot: true,
+      //   sortable: 'custom'
+      // },
       {
         label: '操作',
         prop: 'metricsDetailAction',
@@ -1034,47 +998,9 @@
     return map[s] ?? s
   }
 
-  /**
-   * 热力图分档配色（对齐原型 styles.css）
-   * - 绿: rgba(16,185,129,1)
-   * - 橄榄绿: rgba(105,159,18,1)
-   * - 橙: rgba(245,158,11,1)
-   * - 红: rgba(239,68,68,1)
-   */
-  type HeatmapMetric = 'd1' | 'd7' | 'd30' | 'pay' | 'arpu'
-  function heatmapCellClass(value: number, metric: HeatmapMetric) {
-    const rules: Record<HeatmapMetric, [number, number, number]> = {
-      // [绿阈值, 橄榄绿阈值, 橙阈值]，其余为红
-      d1: [60, 50, 40],
-      d7: [50, 35, 25],
-      d30: [25, 16, 10],
-      pay: [6, 4, 3],
-      arpu: [3.2, 2.6, 2.1]
-    }
-    const [tGreen, tOlive, tOrange] = rules[metric]
-    if (value >= tGreen) return 'lv-green'
-    if (value >= tOlive) return 'lv-olive'
-    if (value >= tOrange) return 'lv-orange'
-    return 'lv-red'
-  }
+  // 用户质量热力图模块已按需求注释掉（含接口、状态与图表渲染）
 
-  const qualityHeatmapRef = ref<HTMLElement>()
-  const chartQualityHeatmap = useChart()
-
-  function heatmapColorByLevel(level: string) {
-    switch (level) {
-      case 'lv-green':
-        return 'rgba(16, 185, 129, 1)'
-      case 'lv-olive':
-        return 'rgba(105, 159, 18, 1)'
-      case 'lv-orange':
-        return 'rgba(245, 158, 11, 1)'
-      default:
-        return 'rgba(239, 68, 68, 1)'
-    }
-  }
-
-  function buildQualityHeatmapOption(): EChartsOption {
+  /* function buildQualityHeatmapOption(): EChartsOption {
     const metrics: { key: HeatmapMetric; label: string; format: (v: number) => string }[] = [
       { key: 'd1', label: 'D1留存', format: (v) => `${formatNum2(v)}%` },
       { key: 'd7', label: 'D7留存', format: (v) => `${formatNum2(v)}%` },
@@ -1205,7 +1131,7 @@
         }
       ]
     }
-  }
+  } */
 
   const cardChartRefs = ref<Record<string, HTMLElement>>({})
   function setCardChartRef(id: string, el: unknown) {
@@ -1265,7 +1191,7 @@
       const chart = kpiMiniCharts.get(card.id)
       if (!el || !chart) return
       chart.chartRef!.value = el
-      const td = card.trendData?.length ? card.trendData : [0]
+      const td = card.trendData?.length ? card.trendData : null
       const opt = buildMiniTrendOption(td)
       if (chart.isChartInitialized()) {
         chart.updateChart(opt)
@@ -1275,8 +1201,16 @@
     })
   }
 
-  function buildMiniTrendOption(data: number[]): EChartsOption {
-    const seriesData = data.length > 0 ? data : [0]
+  function buildMiniTrendOption(data: number[] | null): EChartsOption {
+    if (!data || data.length === 0) {
+      return {
+        grid: { left: 2, right: 2, top: 2, bottom: 2 },
+        xAxis: { type: 'category', data: [], show: false },
+        yAxis: { type: 'value', show: false },
+        series: []
+      }
+    }
+    const seriesData = data
     const theme = getChartTheme()
     return {
       grid: { left: 2, right: 2, top: 2, bottom: 2 },
@@ -1370,7 +1304,7 @@
                 : typeof raw === 'number'
                   ? raw
                   : Number(raw)
-            const val = Number.isFinite(num) ? formatNum2(num) : '—'
+            const val = Number.isFinite(num) ? `${formatNum2(num * 100)}%` : '—'
             return `${item.marker ?? ''}${item.seriesName ?? ''}: ${val}`
           })
           return [header, ...lines].filter(Boolean).join('<br/>')
@@ -1393,7 +1327,7 @@
         axisLabel: {
           color: theme.axis,
           fontSize: 11,
-          formatter: (value: string | number) => formatNum2(value)
+          formatter: (value: string | number) => `${formatNum2(Number(value) * 100)}%`
         }
       },
       series: d.series.map((s, i) => ({
@@ -1415,8 +1349,6 @@
     }
   }
 
-  let resizeObserver: ResizeObserver | null = null
-
   async function tryMountRoiTrendChart() {
     await nextTick()
     if (!roiTrendRef.value) return
@@ -1434,35 +1366,16 @@
     }
   }
 
-  async function tryMountQualityHeatmapChart() {
-    await nextTick()
-    if (!qualityHeatmapRef.value) return
-    chartQualityHeatmap.chartRef!.value = qualityHeatmapRef.value
-    if (chartQualityHeatmap.isChartInitialized()) {
-      chartQualityHeatmap.updateChart(buildQualityHeatmapOption())
-    } else {
-      chartQualityHeatmap.initChart(buildQualityHeatmapOption())
-    }
-  }
-
   /** 拉取 KPI / 图表 / 表格等业务数据（首次进入与点击「查询」时调用；改筛选/日期不会自动请求） */
   function runDashboardQuery() {
     currentPage.value = 1
     void loadKpiCards()
     void loadRoiTrend()
-    void loadQualityHeatmap()
     void loadTopCampaigns()
     void loadMetricsTable()
   }
 
   onMounted(() => {
-    updateScale()
-    if (rootRef.value) {
-      resizeObserver = new ResizeObserver(() => updateScale())
-      resizeObserver.observe(rootRef.value)
-    }
-    window.addEventListener('resize', updateScale)
-
     void (async () => {
       await loadFiltersMeta()
       runDashboardQuery()
@@ -1470,19 +1383,14 @@
   })
 
   onUnmounted(() => {
-    if (resizeObserver && rootRef.value) {
-      resizeObserver.unobserve(rootRef.value)
-      resizeObserver = null
-    }
-    window.removeEventListener('resize', updateScale)
     kpiMiniCharts.forEach((c) => c.destroyChart?.())
     chartRoiTrend.destroyChart?.()
-    chartQualityHeatmap.destroyChart?.()
   })
 </script>
 
 <style lang="scss" scoped>
   @use '../ad-performance/styles/ap-card-fx.scss' as ap;
+  @use '../styles/app-platform-select-ad-theme.scss' as apSelect;
 
   /* ========== 设计变量（与原型/设计图一致，便于统一修改） ========== */
 
@@ -1552,6 +1460,7 @@
     /* ========== 根布局（合并，避免重复 selector） ========== */
     position: relative;
     box-sizing: border-box;
+    display: block;
     width: 100%;
     height: var(--art-full-height, calc(100vh - 120px));
     overflow: auto;
@@ -1692,11 +1601,11 @@
 
   /* ========== 根布局 ========== */
   .finance-screen-wrap {
-    position: absolute;
-    top: 0;
-    left: 0;
-    padding: 0;
+    position: relative;
+    width: 100%;
+    max-width: 1700px;
     padding: 0 10px;
+    margin: 0 auto;
     overflow: hidden;
     background: $color-bg;
     border-radius: 10px;
@@ -1868,40 +1777,54 @@
     color: $color-text-axure;
   }
 
-  /* 广告成效：绿色胶囊日期范围（与 filter-select 同系） */
+  /* 广告成效：胶囊日期范围 */
   .aps-filter-toolbar .header-left :deep(.aps-date-picker) {
-    --el-input-focus-border-color: #10b981;
-    --el-border-color-hover: rgb(16 185 129 / 75%);
-    --el-color-primary: #10b981;
+    --el-input-focus-border-color: var(--theme-color);
+    --el-border-color-hover: color-mix(in srgb, var(--theme-color) 75%, transparent);
+    --el-color-primary: var(--theme-color);
+    --el-border-color: var(--theme-color);
 
     width: 268px;
 
+    &.el-date-editor,
+    &.el-date-editor.el-input__wrapper {
+      background: color-mix(in srgb, var(--theme-color) 6%, transparent) !important;
+      border: 1px solid var(--theme-color) !important;
+      border-radius: var(--el-border-radius-base, 4px) !important;
+      box-shadow: none !important;
+    }
+
     .el-range-editor,
     .el-range-editor.el-input__wrapper {
-      min-height: 40px;
+      min-height: 36px;
       padding: 0 14px;
       color: $color-text-axure;
-      background: rgb(16 185 129 / 6%);
-      border: 1px solid rgb(16 185 129 / 28%);
-      border-radius: 9999px;
-      box-shadow: none;
+      background: color-mix(in srgb, var(--theme-color) 6%, transparent) !important;
+      border: 1px solid var(--theme-color) !important;
+      border-radius: var(--el-border-radius-base, 4px) !important;
+      box-shadow: none !important;
       transition:
         border-color 0.22s ease,
         box-shadow 0.22s ease,
         background 0.22s ease;
     }
 
+    &.el-date-editor:hover,
+    &.el-date-editor.el-input__wrapper:hover,
     .el-range-editor:hover,
     .el-range-editor.el-input__wrapper:hover {
-      border-color: rgb(16 185 129 / 60%);
-      box-shadow: 0 0 12px rgb(16 185 129 / 18%);
+      border-color: var(--theme-color) !important;
+      box-shadow: 0 0 12px color-mix(in srgb, var(--theme-color) 18%, transparent) !important;
     }
 
+    &.el-date-editor.is-active,
+    &.el-date-editor.el-input__wrapper.is-focus,
+    &.el-date-editor:focus-within,
     .el-range-editor.is-active,
     .el-range-editor.el-input__wrapper.is-focus {
-      background: rgb(16 185 129 / 10%);
-      border-color: #10b981;
-      box-shadow: 0 0 0 2px rgb(16 185 129 / 20%);
+      background: color-mix(in srgb, var(--theme-color) 10%, transparent) !important;
+      border-color: var(--theme-color) !important;
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-color) 20%, transparent) !important;
     }
 
     .el-range-input,
@@ -1911,7 +1834,7 @@
 
     .el-range__icon,
     .el-range__close-icon {
-      color: #10b981;
+      color: var(--theme-color);
     }
   }
 
@@ -1919,24 +1842,36 @@
     .aps-filter-toolbar
     .header-left
     :deep(.aps-date-picker) {
+    &.el-date-editor,
+    &.el-date-editor.el-input__wrapper {
+      color: var(--aps-text-primary);
+      background: color-mix(in srgb, var(--theme-color) 8%, transparent) !important;
+      border: 1px solid var(--theme-color) !important;
+    }
+
     .el-range-editor,
     .el-range-editor.el-input__wrapper {
       color: var(--aps-text-primary);
-      background: rgb(16 185 129 / 8%);
-      border: 1px solid rgb(16 185 129 / 30%);
+      background: color-mix(in srgb, var(--theme-color) 8%, transparent) !important;
+      border: 1px solid var(--theme-color) !important;
     }
 
+    &.el-date-editor:hover,
+    &.el-date-editor.el-input__wrapper:hover,
     .el-range-editor:hover,
     .el-range-editor.el-input__wrapper:hover {
-      border-color: rgb(5 150 105 / 45%);
-      box-shadow: 0 0 12px rgb(16 185 129 / 14%);
+      border-color: var(--theme-color) !important;
+      box-shadow: 0 0 12px color-mix(in srgb, var(--theme-color) 14%, transparent) !important;
     }
 
+    &.el-date-editor.is-active,
+    &.el-date-editor.el-input__wrapper.is-focus,
+    &.el-date-editor:focus-within,
     .el-range-editor.is-active,
     .el-range-editor.el-input__wrapper.is-focus {
-      background: rgb(16 185 129 / 12%);
-      border-color: #10b981;
-      box-shadow: 0 0 0 2px rgb(16 185 129 / 18%);
+      background: color-mix(in srgb, var(--theme-color) 12%, transparent) !important;
+      border-color: var(--theme-color) !important;
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-color) 18%, transparent) !important;
     }
 
     .el-range-input,
@@ -1958,7 +1893,9 @@
     }
 
     :deep(.aps-filter-select) {
-      width: 150px;
+      width: 220px;
+      min-width: 200px;
+      max-width: 220px;
     }
 
     :deep(.aps-filter-select .el-select__selected-item) {
@@ -1977,22 +1914,52 @@
     flex: 0 0 auto;
   }
 
-  /* 广告成效：绿色胶囊下拉 */
+  /* 广告成效：胶囊下拉 */
   .aps-filter-toolbar .header-filters :deep(.aps-filter-select) {
-    --el-input-focus-border-color: #10b981;
-    --el-border-color-hover: rgb(16 185 129 / 75%);
-    --el-color-primary: #10b981;
-    --el-border-color-focus: #10b981;
-    --el-component-size: 40px;
+    --el-input-focus-border-color: var(--theme-color);
+    --el-border-color-hover: color-mix(in srgb, var(--theme-color) 75%, transparent);
+    --el-color-primary: var(--theme-color);
+    --el-border-color-focus: var(--theme-color);
+    --el-component-size: 36px;
+  }
+
+  @include apSelect.apply-app-platform-select-ad-theme(
+    '.aps-filter-toolbar .header-filters',
+    'aps-filter-select',
+    'aps-filter-popper',
+    220px,
+    200px,
+    220px
+  );
+
+  .aps-filter-toolbar
+    .header-filters
+    :deep(.app-platform-search-select.aps-filter-select .app-platform-search-select__text) {
+    color: $color-text-axure;
+  }
+
+  .aps-filter-toolbar
+    .header-filters
+    :deep(
+      .app-platform-search-select.aps-filter-select .app-platform-search-select__text.is-placeholder
+    ) {
+    color: $color-text-axure;
+    opacity: 0.85;
+  }
+
+  .aps-filter-toolbar
+    .header-filters
+    :deep(.app-platform-search-select.aps-filter-select .app-platform-search-select__suffix) {
+    color: var(--theme-color);
   }
 
   .aps-filter-toolbar .header-filters :deep(.aps-filter-select .el-select__wrapper) {
-    min-height: 40px;
+    min-height: 36px;
     padding: 0 12px;
     color: $color-text-axure;
-    background: rgb(16 185 129 / 6%);
-    border: 1px solid rgb(16 185 129 / 28%);
-    border-radius: 9999px;
+    background: color-mix(in srgb, var(--theme-color) 6%, transparent);
+    border: 1px solid color-mix(in srgb, var(--theme-color) 28%, transparent);
+    border-radius: var(--el-border-radius-base, 4px);
     box-shadow: none;
     transition:
       border-color 0.22s ease,
@@ -2001,18 +1968,68 @@
   }
 
   .aps-filter-toolbar .header-filters :deep(.aps-filter-select .el-select__wrapper:hover) {
-    border-color: rgb(16 185 129 / 60%);
-    box-shadow: 0 0 12px rgb(16 185 129 / 18%);
+    border-color: color-mix(in srgb, var(--theme-color) 60%, transparent);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--theme-color) 18%, transparent);
   }
 
   .aps-filter-toolbar .header-filters :deep(.aps-filter-select .el-select__wrapper.is-focused) {
-    background: rgb(16 185 129 / 10%);
-    border-color: #10b981;
-    box-shadow: 0 0 0 2px rgb(16 185 129 / 20%);
+    background: color-mix(in srgb, var(--theme-color) 10%, transparent);
+    border-color: var(--theme-color);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-color) 20%, transparent);
   }
 
   .aps-filter-toolbar .header-filters :deep(.aps-filter-select .el-select__caret) {
-    color: #10b981;
+    color: var(--theme-color);
+  }
+
+  :global(html:not(.dark) .finance-screen-root)
+    .aps-filter-toolbar
+    .header-filters
+    :deep(.app-platform-search-select.aps-filter-select) {
+    color: var(--aps-text-primary);
+    background: color-mix(in srgb, var(--theme-color) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--theme-color) 30%, transparent);
+  }
+
+  :global(html:not(.dark) .finance-screen-root)
+    .aps-filter-toolbar
+    .header-filters
+    :deep(.app-platform-search-select.aps-filter-select:hover) {
+    border-color: color-mix(in srgb, var(--theme-color) 45%, transparent);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--theme-color) 14%, transparent);
+  }
+
+  :global(html:not(.dark) .finance-screen-root)
+    .aps-filter-toolbar
+    .header-filters
+    :deep(.app-platform-search-select.aps-filter-select.is-open) {
+    background: color-mix(in srgb, var(--theme-color) 12%, transparent);
+    border-color: var(--theme-color);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-color) 18%, transparent);
+  }
+
+  :global(html:not(.dark) .finance-screen-root)
+    .aps-filter-toolbar
+    .header-filters
+    :deep(.app-platform-search-select.aps-filter-select .app-platform-search-select__text) {
+    color: var(--aps-text-primary);
+  }
+
+  :global(html:not(.dark) .finance-screen-root)
+    .aps-filter-toolbar
+    .header-filters
+    :deep(
+      .app-platform-search-select.aps-filter-select .app-platform-search-select__text.is-placeholder
+    ) {
+    color: var(--aps-text-primary);
+    opacity: 0.78;
+  }
+
+  :global(html:not(.dark) .finance-screen-root)
+    .aps-filter-toolbar
+    .header-filters
+    :deep(.app-platform-search-select.aps-filter-select .app-platform-search-select__suffix) {
+    color: var(--theme-color);
   }
 
   :global(html:not(.dark) .finance-screen-root)
@@ -2020,86 +2037,71 @@
     .header-filters
     :deep(.aps-filter-select .el-select__wrapper) {
     color: var(--aps-text-primary);
-    background: rgb(16 185 129 / 8%);
-    border: 1px solid rgb(16 185 129 / 30%);
+    background: color-mix(in srgb, var(--theme-color) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--theme-color) 30%, transparent);
   }
 
   :global(html:not(.dark) .finance-screen-root)
     .aps-filter-toolbar
     .header-filters
     :deep(.aps-filter-select .el-select__wrapper:hover) {
-    border-color: rgb(5 150 105 / 45%);
-    box-shadow: 0 0 12px rgb(16 185 129 / 14%);
+    border-color: color-mix(in srgb, var(--theme-color) 45%, transparent);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--theme-color) 14%, transparent);
   }
 
   :global(html:not(.dark) .finance-screen-root)
     .aps-filter-toolbar
     .header-filters
     :deep(.aps-filter-select .el-select__wrapper.is-focused) {
-    background: rgb(16 185 129 / 12%);
-    border-color: #10b981;
-    box-shadow: 0 0 0 2px rgb(16 185 129 / 18%);
+    background: color-mix(in srgb, var(--theme-color) 12%, transparent);
+    border-color: var(--theme-color);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-color) 18%, transparent);
   }
 
   :global(html:not(.dark) .finance-screen-root)
     .aps-filter-toolbar
     .header-filters
     :deep(.aps-filter-select .el-select__caret) {
-    color: #059669;
+    color: var(--theme-color);
   }
 
-  /* 广告成效：导出为绿色描边主按钮 */
+  /* 广告成效：实心主按钮 */
   .aps-filter-toolbar .btn-export {
     flex: 0 0 auto;
     height: 40px;
     padding: 0 16px;
-    font-family:
-      'PingFang SC',
-      Inter,
-      system-ui,
-      -apple-system,
-      'Segoe UI',
-      Roboto,
-      Arial,
-      'Microsoft YaHei',
-      sans-serif;
     font-size: 14px;
     font-weight: 500;
-    color: #10b981;
+    color: #fff;
     cursor: pointer;
-    background: rgb(16 185 129 / 8%);
-    border: 1px solid rgb(16 185 129 / 40%);
+    background: var(--theme-color);
+    border: none;
     border-radius: 9999px;
-    box-shadow: 0 0 14px rgb(16 185 129 / 12%);
+    box-shadow: 0 0 14px color-mix(in srgb, var(--theme-color) 40%, transparent);
     transition:
       box-shadow 0.22s ease,
-      transform 0.18s ease,
-      background 0.22s ease,
-      border-color 0.22s ease,
-      color 0.22s ease;
+      background 0.22s ease;
 
     &:hover {
-      color: #34d399;
-      background: rgb(16 185 129 / 16%);
-      border-color: #10b981;
-      box-shadow: 0 0 22px rgb(16 185 129 / 28%);
-      transform: translateY(-1px);
+      background: color-mix(in srgb, var(--theme-color) 85%, #000);
+      box-shadow: 0 0 22px color-mix(in srgb, var(--theme-color) 55%, transparent);
     }
 
     &:active {
-      transform: translateY(0);
+      background: color-mix(in srgb, var(--theme-color) 75%, #000);
     }
   }
 
   :global(html:not(.dark) .finance-screen-root) .aps-filter-toolbar .btn-export {
-    color: #059669;
-    background: rgb(16 185 129 / 10%);
-    border-color: rgb(16 185 129 / 38%);
+    color: #fff;
+    background: var(--theme-color);
 
     &:hover {
-      color: #047857;
-      background: rgb(16 185 129 / 16%);
-      border-color: #10b981;
+      background: color-mix(in srgb, var(--theme-color) 80%, #000);
+    }
+
+    &:active {
+      background: color-mix(in srgb, var(--theme-color) 70%, #000);
     }
   }
 
@@ -2128,7 +2130,6 @@
       0 12px 48px rgb(0 0 0 / 48%),
       inset 0 1px 0 rgb(186 230 253 / 12%);
     transition:
-      transform 0.38s cubic-bezier(0, 0, 0.2, 1),
       box-shadow 0.42s cubic-bezier(0, 0, 0.2, 1),
       border-color 0.32s cubic-bezier(0, 0, 0.2, 1);
 
@@ -2136,7 +2137,6 @@
       box-shadow:
         0 24px 72px rgb(0 0 0 / 52%),
         0 0 72px rgb(59 130 246 / 22%);
-      transform: translateY(-6px);
     }
 
     &::before {
@@ -2248,10 +2248,20 @@
       margin-bottom: 10px;
 
       .roi-value {
+        display: inline-flex;
+        gap: 4px;
+        align-items: baseline;
         margin-right: 8px;
         font-size: $font-size-roi;
         font-weight: 700;
         color: $color-text-primary;
+      }
+
+      .roi-label {
+        font-size: 50%;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        opacity: 0.85;
       }
 
       .roi-change {
@@ -2323,8 +2333,50 @@
 
   .row-2 {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr;
     min-height: 320px;
+  }
+
+  /* ========== 响应式断点：不再整体缩放，改用栅格自适应 ========== */
+  @media (width <= 1680px) {
+    .row-1 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (width <= 1180px) {
+    .row-1 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .row-2 {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (width <= 820px) {
+    .row-1 {
+      grid-template-columns: 1fr;
+    }
+
+    .aps-filter-toolbar {
+      padding: 10px 12px;
+      border-radius: 14px;
+    }
+
+    .aps-filter-toolbar__row {
+      gap: 10px;
+    }
+
+    .aps-filter-toolbar .header-left :deep(.aps-date-picker) {
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .header-filters :deep(.aps-filter-select) {
+      width: 100%;
+      max-width: 220px;
+    }
   }
 
   .panel {
@@ -2342,7 +2394,6 @@
       0 0 0 1px rgb(96 165 250 / 10%),
       inset 0 1px 0 rgb(186 230 253 / 12%);
     transition:
-      transform 0.38s cubic-bezier(0, 0, 0.2, 1),
       box-shadow 0.42s cubic-bezier(0, 0, 0.2, 1),
       border-color 0.32s cubic-bezier(0, 0, 0.2, 1);
 
@@ -2352,7 +2403,6 @@
         0 24px 72px rgb(0 0 0 / 52%),
         0 0 72px rgb(59 130 246 / 18%),
         0 0 0 1px rgb(96 165 250 / 30%);
-      transform: translateY(-4px);
     }
 
     .panel-title {
@@ -2925,16 +2975,16 @@
   :global(html.dark .aps-filter-popper.el-popper) {
     overflow: hidden;
     background: rgb(24 24 27 / 98%) !important;
-    border: 1px solid rgb(16 185 129 / 32%) !important;
+    border: 1px solid color-mix(in srgb, var(--theme-color) 32%, transparent) !important;
     border-radius: 12px !important;
     box-shadow:
       0 18px 52px rgb(0 0 0 / 58%),
-      0 0 0 1px rgb(16 185 129 / 12%),
-      inset 0 1px 0 rgb(167 243 208 / 8%) !important;
+      0 0 0 1px color-mix(in srgb, var(--theme-color) 12%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--theme-color) 8%, transparent) !important;
   }
 
   :global(html:not(.dark) .aps-filter-popper.el-popper) {
-    border: 1px solid rgb(16 185 129 / 22%) !important;
+    border: 1px solid color-mix(in srgb, var(--theme-color) 22%, transparent) !important;
     border-radius: 12px !important;
     box-shadow: 0 14px 40px rgb(15 23 42 / 12%) !important;
   }

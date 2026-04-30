@@ -2,10 +2,15 @@
   "_comment": "转化管理（data Tab）- 导出（可选）。按筛选条件导出 data tab 的树表与关键指标。",
   "fieldDescription": {
     "request": {
-      "dateRange": {
-        "type": "[string,string]",
+      "startDate": {
+        "type": "string",
         "required": false,
-        "description": "日期范围（YYYY-MM-DD）。"
+        "description": "导出统计起始日期（含），YYYY-MM-DD。见 backend-fields「接口请求 · 日期范围」。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": false,
+        "description": "导出统计结束日期（含），YYYY-MM-DD。"
       },
       "platform": {
         "type": "string",
@@ -13,15 +18,10 @@
         "enum": ["", "android", "ios"],
         "description": "终端平台筛选。"
       },
-      "appPackage": {
+      "appId": {
         "type": "string",
         "required": false,
-        "description": "应用包名筛选（推荐字段）。"
-      },
-      "app": {
-        "type": "string",
-        "required": false,
-        "description": "历史兼容字段，语义同 appPackage。"
+        "description": "应用筛选（自有应用 ID）。空字符串表示全部。与 data-tab 三接口一致；见 backend-fields「接口请求 · 应用筛选（appId）」。"
       },
       "source": {
         "type": "string",
@@ -69,10 +69,10 @@
     }
   },
   "sampleRequest": {
-    "dateRange": ["2026-03-11", "2026-03-17"],
+    "startDate": "2026-03-11",
+    "endDate": "2026-03-17",
     "platform": "",
-    "appPackage": "",
-    "app": "",
+    "appId": "",
     "source": "",
     "adPlatform": "",
     "conversionType": "",
@@ -83,16 +83,28 @@
     "expireAt": "2026-03-17T12:00:00Z"
   },
   "api": {
-    "url": "POST /api/user-growth/conversion-management/data-export",
+    "url": "POST /api/v1/datacenter/analysis/user-growth/conversion-management/data-export",
     "method": "POST",
     "priority": "P2",
-    "requestBody": "dateRange?, platform, appPackage|app, source|adPlatform, conversionType, format? (xlsx|csv)",
+    "requestBody": "startDate?, endDate?, platform, appId, source|adPlatform, conversionType, format? (xlsx|csv)",
     "responseBody": "方案A: 文件流 | 方案B: downloadUrl, expireAt?"
   },
   "apiSuggestion": {
     "notes": [
+      "日期范围须与 data-tab 一致，使用 startDate/endDate。",
       "若导出生成耗时较长，建议异步任务导出并返回 taskId。",
       "导出树表时建议增加 level 字段列（group/account/conversion），便于数据透视分析。"
     ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作（待接）",
+        "detail": "当前页面 `handleExport` 等为占位；导出接真接口后：在 data Tab 提供导出按钮，使用与 `data-tab` 相同的筛选映射为请求体。",
+        "prerequisite": "需联调 fileStream 或 downloadUrl 方案与前端下载逻辑。"
+      }
+    ],
+    "defaultSelection": "与当前 data Tab 筛选一致：startDate/endDate 来自日期筛选，其余字段同 data-tab。",
+    "dedupe": "导出任务建议防重复提交（按钮 loading）。"
   }
 }

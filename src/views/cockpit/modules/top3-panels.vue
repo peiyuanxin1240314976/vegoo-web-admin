@@ -1,7 +1,14 @@
 <template>
   <div class="cockpit-top3-panels">
     <!-- Top3 收入应用 - 黄色 -->
-    <div class="cockpit-panel top3-module top3-module--revenue">
+    <div
+      :class="[
+        'top3-module',
+        'top3-module--revenue',
+        { 'top3-module--fills': dateRange === 'today' }
+      ]"
+    >
+      <div class="top3-border-spin" aria-hidden="true" />
       <div class="top3-module__header">
         <span class="top3-module__icon top3-module__icon--trophy">
           <i class="iconfont icon-jinjiangbei" />
@@ -25,23 +32,32 @@
       </div>
     </div>
 
-    <!-- Top3 差评产品 - 红色 -->
-    <div class="cockpit-panel top3-module top3-module--badreview">
+    <!-- Top3 差评数据（与收入/用户增长同排榜样式；昨日 Tab 同源 topBadReview / badApp） -->
+    <div
+      :class="[
+        'top3-module',
+        'top3-module--badreview',
+        { 'top3-module--fills': dateRange === 'today' }
+      ]"
+    >
+      <div class="top3-border-spin" aria-hidden="true" />
       <div class="top3-module__header">
         <span class="top3-module__icon top3-module__icon--dislike">
           <DislikeIcon />
         </span>
-        <span class="top3-module__title">Top3差评数</span>
+        <span class="top3-module__title">Top3差评数据</span>
         <!-- <a class="top3-module__more" href="javascript:;">查看更多</a> -->
       </div>
       <div class="top3-module__list">
         <template v-if="displayTopBadReview.length">
-          <div v-for="(item, i) in displayTopBadReview" :key="'bad-' + i" class="top3-row">
+          <div
+            v-for="(item, i) in displayTopBadReview"
+            :key="'bad-' + i"
+            class="top3-row top3-row--name-only"
+          >
+            <span class="top3-row__medal iconfont" :class="medalIconClasses[i]"></span>
             <div class="top3-row__app-icon" title="应用" />
             <span class="top3-row__name">{{ item.name }}</span>
-            <span class="top3-row__tag tag-red">
-              {{ item.note }}
-            </span>
           </div>
         </template>
         <div v-else class="top3-empty">暂无数据</div>
@@ -49,7 +65,14 @@
     </div>
 
     <!-- Top3 用户增长 - 绿色 -->
-    <div class="cockpit-panel top3-module top3-module--growth">
+    <div
+      :class="[
+        'top3-module',
+        'top3-module--growth',
+        { 'top3-module--fills': dateRange === 'today' }
+      ]"
+    >
+      <div class="top3-border-spin" aria-hidden="true" />
       <div class="top3-module__header">
         <span class="top3-module__icon top3-module__icon--trend">
           <TrendIcon />
@@ -79,7 +102,6 @@
   import { computed, defineComponent, h } from 'vue'
   import { Top } from '@element-plus/icons-vue'
   import type { CockpitTopRevenueItem, CockpitTopBadReviewItem, CockpitTopUserItem } from '../types'
-  import { MOCK_COCKPIT_OVERVIEW } from '../mock/data'
 
   defineOptions({ name: 'CockpitTop3Panels' })
 
@@ -130,76 +152,194 @@
       topRevenue?: CockpitTopRevenueItem[]
       topBadReview?: CockpitTopBadReviewItem[]
       topUser?: CockpitTopUserItem[]
+      dateRange?: string
     }>(),
-    { topRevenue: () => [], topBadReview: () => [], topUser: () => [] }
+    { topRevenue: () => [], topBadReview: () => [], topUser: () => [], dateRange: '' }
   )
 
-  type DisplayTopBadReviewItem = {
-    name: string
-    note: string
-  }
+  type DisplayTopBadReviewItem = { name: string }
 
   const displayTopRevenue = computed(() =>
-    Array.isArray(props.topRevenue) ? props.topRevenue : MOCK_COCKPIT_OVERVIEW.topRevenue
+    Array.isArray(props.topRevenue) ? props.topRevenue : []
   )
-  const displayTopBadReview = computed<DisplayTopBadReviewItem[]>(() => {
-    const raw = Array.isArray(props.topBadReview)
-      ? props.topBadReview
-      : ((MOCK_COCKPIT_OVERVIEW as { topBadReview?: CockpitTopBadReviewItem[] }).topBadReview ?? [])
 
+  const displayTopBadReview = computed<DisplayTopBadReviewItem[]>(() => {
+    const raw = Array.isArray(props.topBadReview) ? props.topBadReview : []
     return raw.map((i) => ({
-      name: i.sAppName ?? i.name ?? '—',
-      note: i.note ?? i.reasonTag ?? i.metric ?? '—'
+      name: i.sAppName ?? i.name ?? '—'
     }))
   })
-  const displayTopUser = computed(() =>
-    Array.isArray(props.topUser) ? props.topUser : MOCK_COCKPIT_OVERVIEW.topUser
-  )
+  const displayTopUser = computed(() => (Array.isArray(props.topUser) ? props.topUser : []))
 </script>
 
 <style scoped lang="scss">
+  /* 与广告成效 KPI 卡片一致：旋转渐变边框（Houdini @property） */
+  @property --top3-border-angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+  }
+
   .cockpit-top3-panels {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 14px;
   }
 
   .top3-module {
+    --top3-accent: #3b82f6;
+
     position: relative;
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
     overflow: hidden;
-    border: 1px solid var(--el-border-color-lighter);
-    border-radius: 12px;
+    background-color: rgb(8 8 12 / 98%);
+    background-image:
+      radial-gradient(
+        ellipse 120% 80% at 50% -18%,
+        var(--top3-glow) 0%,
+        var(--top3-glow-2) 30%,
+        transparent 58%
+      ),
+      linear-gradient(
+        172deg,
+        color-mix(in srgb, var(--top3-accent) 22%, rgb(8 8 12)) 0%,
+        color-mix(in srgb, var(--top3-accent) 38%, rgb(8 8 12)) 60%,
+        color-mix(in srgb, var(--top3-accent-2) 15%, rgb(8 8 12)) 100%
+      );
+    border: 1px solid color-mix(in srgb, var(--top3-accent) 55%, transparent);
+    border-radius: 18px;
+    box-shadow:
+      0 18px 46px rgb(0 0 0 / 52%),
+      0 0 0 1px color-mix(in srgb, var(--top3-accent) 18%, transparent),
+      inset 0 1px 0 rgb(255 255 255 / 16%),
+      inset 0 -12px 32px rgb(0 0 0 / 34%),
+      0 0 36px color-mix(in srgb, var(--top3-accent) 12%, transparent);
+    transition:
+      box-shadow 0.4s var(--ease-out),
+      border-color 0.28s var(--ease-default);
+
+    &.top3-module--fills {
+      flex: 1;
+    }
+
+    --top3-accent-2: #06b6d4;
+    --top3-glow: rgb(59 130 246 / 45%);
+    --top3-glow-2: rgb(6 182 212 / 25%);
+    --top3-spin-a: rgb(16 185 129 / 55%);
+    --top3-spin-b: rgb(59 130 246 / 48%);
+    --top3-spin-c: rgb(168 85 247 / 38%);
+
+    > *:not(.top3-border-spin) {
+      position: relative;
+      z-index: 1;
+    }
 
     &::before {
       position: absolute;
       top: 0;
-      right: 0;
-      left: 0;
-      height: 8px;
+      left: 50%;
+      z-index: 0;
+      width: 80%;
+      height: 3px;
+      pointer-events: none;
       content: '';
-      border-radius: 8px 8px 0 0;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        var(--top3-accent),
+        var(--top3-accent-2),
+        transparent
+      );
+      opacity: 0.86;
+      transform: translateX(-50%);
+    }
+
+    &::after {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      z-index: 0;
+      width: 60%;
+      height: 1px;
+      pointer-events: none;
+      content: '';
+      background: linear-gradient(90deg, transparent, var(--top3-accent), transparent);
+      opacity: 0.32;
+      transform: translateX(-50%);
+    }
+
+    &:hover {
+      border-color: color-mix(in srgb, var(--top3-accent) 85%, transparent);
+      box-shadow:
+        0 28px 72px rgb(0 0 0 / 55%),
+        0 0 0 1px color-mix(in srgb, var(--top3-accent) 40%, transparent),
+        inset 0 1px 0 rgb(255 255 255 / 20%),
+        0 0 64px color-mix(in srgb, var(--top3-accent) 28%, transparent),
+        0 0 110px color-mix(in srgb, var(--top3-accent) 16%, transparent),
+        0 0 150px color-mix(in srgb, var(--top3-accent-2) 10%, transparent);
+    }
+
+    &:active {
+      transition-duration: 0.12s;
+    }
+
+    &--revenue {
+      --top3-accent: #f97316;
+      --top3-accent-2: #fbbf24;
+      --top3-glow: rgb(249 115 22 / 45%);
+      --top3-glow-2: rgb(251 191 36 / 22%);
+      --top3-spin-a: rgb(249 115 22 / 62%);
+      --top3-spin-b: rgb(239 68 68 / 48%);
+      --top3-spin-c: rgb(251 191 36 / 42%);
+    }
+
+    &--badreview {
+      --top3-accent: #ef4444;
+      --top3-accent-2: #f97316;
+      --top3-glow: rgb(239 68 68 / 45%);
+      --top3-glow-2: rgb(249 115 22 / 22%);
+      --top3-spin-a: rgb(239 68 68 / 62%);
+      --top3-spin-b: rgb(249 115 22 / 48%);
+      --top3-spin-c: rgb(251 191 36 / 38%);
+    }
+
+    &--growth {
+      --top3-accent: #10b981;
+      --top3-accent-2: #22d3ee;
+      --top3-glow: rgb(16 185 129 / 45%);
+      --top3-glow-2: rgb(34 211 238 / 22%);
+      --top3-spin-a: rgb(16 185 129 / 62%);
+      --top3-spin-b: rgb(34 211 238 / 48%);
+      --top3-spin-c: rgb(59 130 246 / 38%);
     }
 
     &__header {
       display: flex;
       gap: 8px;
       align-items: center;
-      padding: 10px 12px;
-      border-bottom: 1px solid var(--el-border-color-lighter);
+      padding: 13px 15px 11px;
+      background: linear-gradient(180deg, rgb(255 255 255 / 4%), transparent);
+      border-bottom: 1px solid color-mix(in srgb, var(--top3-accent) 22%, transparent);
     }
 
     &__icon {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      color: inherit;
+      width: 24px;
+      height: 24px;
+      color: var(--top3-accent);
+      filter: drop-shadow(0 0 14px color-mix(in srgb, var(--top3-accent) 24%, transparent));
     }
 
     &__title {
       flex: 1;
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--el-text-color-primary);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      letter-spacing: 0.03em;
     }
 
     &__more {
@@ -213,68 +353,85 @@
     }
 
     &__list {
-      padding: 8px 12px 12px;
+      flex: 1;
+      padding: 10px 14px 14px;
     }
 
     .top3-empty {
       padding: 24px 12px;
       font-size: 13px;
-      color: var(--el-text-color-secondary);
+      color: var(--text-secondary);
       text-align: center;
-    }
-
-    &--revenue {
-      // &::before {
-      //   background: linear-gradient(180deg, #e6a23c 0%, rgb(230 162 60 / 35%) 100%);
-      // }
-      background: #fff;
-
-      .top3-module__header {
-        color: #e6a23c;
-      }
-
-      .top3-module__icon--trophy {
-        color: #e6a23c;
-      }
-    }
-
-    &--badreview {
-      // &::before {
-      //   background: linear-gradient(180deg, #f56c6c 0%, rgb(245 108 108 / 35%) 100%);
-      // }
-      background: #fff;
-
-      .top3-module__header {
-        color: #f56c6c;
-      }
-
-      .top3-module__icon--dislike {
-        color: #f56c6c;
-      }
-    }
-
-    &--growth {
-      // &::before {
-      //   background: linear-gradient(180deg, #67c23a 0%, rgb(103 194 58 / 35%) 100%);
-      // }
-      background: #fff;
-
-      .top3-module__header {
-        color: #67c23a;
-      }
-
-      .top3-module__icon--trend {
-        color: #67c23a;
-      }
     }
   }
 
-  /* 浅色模式：纯白底、深色字 */
+  /* 旋转渐变边框层（与 ad-performance-kpi-cards 一致） */
+  .top3-border-spin {
+    position: absolute;
+    inset: -1px;
+    z-index: 2;
+    padding: 1.5px;
+    pointer-events: none;
+    background: conic-gradient(
+      from var(--top3-border-angle, 0deg) at 50% 50%,
+      transparent 0deg,
+      var(--top3-spin-a) 45deg,
+      transparent 95deg,
+      transparent 145deg,
+      var(--top3-spin-b) 195deg,
+      transparent 250deg,
+      transparent 300deg,
+      var(--top3-spin-c) 340deg,
+      transparent 360deg
+    );
+    filter: blur(0.3px);
+    border-radius: inherit;
+    opacity: 0.92;
+    mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    animation: top3-border-spin 4s linear infinite;
+
+    --top3-border-angle: 0deg;
+  }
+
+  @keyframes top3-border-spin {
+    to {
+      --top3-border-angle: 360deg;
+    }
+  }
+
+  /* 浅色：同结构，轻量底与边框，避免驾驶舱浅色页过暗 */
   html:not(.dark) .top3-module {
-    background: #fff;
+    background-color: #fff;
+    background-image: none;
+    border: 1px solid var(--el-border-color-lighter);
+    box-shadow:
+      0 8px 24px rgb(15 23 42 / 8%),
+      inset 0 1px 0 rgb(255 255 255 / 90%);
+
+    &::before {
+      opacity: 0.7;
+    }
+
+    &::after {
+      opacity: 0.35;
+    }
+
+    &:hover {
+      border-color: color-mix(in srgb, var(--top3-accent) 45%, var(--el-border-color-lighter));
+      box-shadow:
+        0 14px 36px rgb(15 23 42 / 12%),
+        0 0 0 1px color-mix(in srgb, var(--top3-accent) 22%, transparent);
+    }
 
     .top3-module__title {
       color: #303133;
+    }
+
+    .top3-border-spin {
+      opacity: 0.45;
     }
 
     .top3-row__name {
@@ -286,13 +443,44 @@
     }
   }
 
+  html.dark .top3-module {
+    .top3-row__name {
+      color: #e5e7eb;
+    }
+
+    .top3-row__value {
+      color: #cbd5e1;
+    }
+
+    .top3-empty {
+      color: #94a3b8;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .top3-border-spin {
+      opacity: 0;
+      animation: none;
+    }
+
+    .top3-module {
+      transition: none;
+
+      &:hover,
+      &:active {
+        transform: none;
+      }
+    }
+  }
+
   .top3-row {
     display: flex;
     gap: 8px;
     align-items: center;
-    min-height: 36px;
-    padding: 6px 0;
+    min-height: 40px;
+    padding: 7px 0;
     font-size: 13px;
+    border-bottom: 1px solid rgb(255 255 255 / 4%);
 
     &__medal {
       display: inline-flex;
@@ -301,7 +489,7 @@
       justify-content: center;
       // width: 20px;
       // height: 20px;
-      font-size: 22px;
+      font-size: 23px;
       font-style: normal;
       // font-weight: 700;
       // color: #b8860b;
@@ -320,8 +508,14 @@
       font-size: 12px;
       font-weight: bold;
       color: #fff;
-      background: linear-gradient(135deg, #409eff 0%, #66b1ff 100%);
-      border-radius: 6px;
+      background:
+        linear-gradient(180deg, rgb(94 161 255 / 96%), rgb(60 115 255 / 92%)),
+        linear-gradient(180deg, rgb(255 255 255 / 10%), transparent);
+      border: 1px solid rgb(150 190 255 / 32%);
+      border-radius: 9px;
+      box-shadow:
+        inset 0 1px 0 rgb(255 255 255 / 24%),
+        0 10px 18px rgb(2 6 23 / 24%);
 
       &::after {
         content: 'A';
@@ -331,12 +525,20 @@
     &__name {
       flex: 0 1 auto;
       min-width: 0;
+      font-weight: 600;
       color: var(--el-text-color-primary);
+      letter-spacing: 0.01em;
+    }
+
+    &--name-only &__name {
+      flex: 1;
     }
 
     &__value {
       margin-left: auto;
+      font-weight: 600;
       color: var(--el-text-color-regular);
+      letter-spacing: 0.01em;
       white-space: nowrap;
     }
 
@@ -344,6 +546,8 @@
       display: inline-flex;
       gap: 2px;
       align-items: center;
+      font-size: 12px;
+      font-weight: 600;
       white-space: nowrap;
 
       &.up {
@@ -355,31 +559,8 @@
       }
     }
 
-    &__tag {
-      padding: 2px 8px;
-      font-size: 12px;
-      border-radius: 4px;
-
-      &.tag-red {
-        color: #f56c6c;
-        background: rgb(245 108 108 / 20%);
-      }
-
-      &.tag-orange {
-        color: #e6a23c;
-        background: rgb(230 162 60 / 20%);
-      }
-    }
-
-    &__metric {
-      margin-left: auto;
-      font-size: 12px;
-      white-space: nowrap;
-
-      &.metric-up,
-      &.metric-down {
-        color: var(--el-color-danger);
-      }
+    &:last-child {
+      border-bottom: none;
     }
   }
 </style>

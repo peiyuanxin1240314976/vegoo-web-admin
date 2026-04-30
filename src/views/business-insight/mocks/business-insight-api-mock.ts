@@ -763,11 +763,11 @@ export function mockFetchIaaAdUnitTabData(_params: IaaFilterState) {
     ],
     fillRateInsight: '12个单元充填率<80%，建议检查广告位配置',
     scatterData: [
-      { unitId: 'Splash_001', ecpm: 19.2, fillRate: 97.6, adType: '开屏' },
-      { unitId: 'HomeResume_001', ecpm: 4.7, fillRate: 95.8, adType: '插页式' },
-      { unitId: 'Native_001', ecpm: 1.82, fillRate: 93.7, adType: '原生' },
-      { unitId: 'Banner_001', ecpm: 0.52, fillRate: 76.4, adType: '横幅' },
-      { unitId: 'Native_002', ecpm: 1.62, fillRate: 85.2, adType: '原生' }
+      { unitId: 'Splash_001', ecpm: 19.2, adType: '开屏' },
+      { unitId: 'HomeResume_001', ecpm: 4.7, adType: '插页式' },
+      { unitId: 'Native_001', ecpm: 1.82, adType: '原生' },
+      { unitId: 'Banner_001', ecpm: 0.52, adType: '横幅' },
+      { unitId: 'Native_002', ecpm: 1.62, adType: '原生' }
     ],
     trend7d: {
       dates: ['Feb27', 'Feb28', 'Mar1', 'Mar2', 'Mar3', 'Mar4', 'Mar5'],
@@ -1262,7 +1262,7 @@ export function mockFetchIapOverviewKpi(_params: {
         sparkColor: '#c084fc'
       },
       {
-        label: '续费率',
+        label: '续订率',
         value: '42.8%',
         change: '5.1%',
         up: true,
@@ -1309,6 +1309,7 @@ export function mockFetchIapOverviewAppCards(params: IapOverviewDashParams) {
   const all: IapAppCard[] = [
     {
       name: 'PhoneTracker',
+      appId: 'phonetracker',
       platform: 'Android',
       orders: '8,950',
       revenue: '$560K',
@@ -1320,6 +1321,7 @@ export function mockFetchIapOverviewAppCards(params: IapOverviewDashParams) {
     },
     {
       name: 'YearCam',
+      appId: 'yearcam',
       platform: 'iOS',
       orders: '7,200',
       revenue: '$480K',
@@ -1331,6 +1333,7 @@ export function mockFetchIapOverviewAppCards(params: IapOverviewDashParams) {
     },
     {
       name: 'FaceMe',
+      appId: 'faceme',
       platform: 'iOS',
       orders: '6,500',
       revenue: '$390K',
@@ -1342,6 +1345,7 @@ export function mockFetchIapOverviewAppCards(params: IapOverviewDashParams) {
     },
     {
       name: 'Weather5',
+      appId: 'weather5',
       platform: 'Android',
       orders: '5,800',
       revenue: '$310K',
@@ -1353,6 +1357,7 @@ export function mockFetchIapOverviewAppCards(params: IapOverviewDashParams) {
     },
     {
       name: 'VideoDownloader',
+      appId: 'videodownloader',
       platform: 'Android',
       orders: '4,100',
       revenue: '$220K',
@@ -1574,7 +1579,7 @@ export function mockFetchIapDetailKpi(_params: {
         sparklineValues: [3.0, 3.2, 3.1, 3.3, 3.4, 3.35, 3.45, 3.5, 3.48, 3.6, 3.58, 3.62]
       },
       {
-        label: '续费率',
+        label: '续订率',
         value: '48.5%',
         change: '3.2%',
         up: true,

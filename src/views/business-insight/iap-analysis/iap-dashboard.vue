@@ -7,15 +7,11 @@
           <div class="iap-dashboard-subtitle">应用内购订单与收入分析</div>
         </div>
         <div class="iap-dashboard-header__actions">
-          <ElButton class="iap-dashboard-btn iap-dashboard-btn--export" round>
+          <!-- <ElButton type="info" plain round>
             <ElIcon><Download /></ElIcon>
             导出
-          </ElButton>
-          <ElButton
-            class="iap-dashboard-btn iap-dashboard-btn--refresh"
-            round
-            @click="loadDashboard"
-          >
+          </ElButton> -->
+          <ElButton type="primary" round @click="loadDashboard">
             <ElIcon><Refresh /></ElIcon>
             刷新
           </ElButton>
@@ -25,9 +21,10 @@
       <div class="iap-dashboard-filter">
         <div class="iap-dashboard-filter__item">
           <span class="iap-dashboard-f-label">时间范围</span>
-          <ElDatePicker
+          <AppDatePicker
             v-model="dateRange"
             type="daterange"
+            :shortcuts="dateRangeShortcuts"
             range-separator="-"
             start-placeholder="开始日期"
             end-placeholder="结束日期"
@@ -38,18 +35,19 @@
         </div>
         <div class="iap-dashboard-filter__item">
           <span class="iap-dashboard-f-label">应用</span>
-          <ElSelect
+          <AppPlatformSearchSelect
             v-model="filters.s_app_id"
             class="iap-dashboard-sel iap-dashboard-sel--w110"
-            popper-class="iap-select-popper"
+            input-class="iap-dashboard-sel__input"
+            mode="app"
+            placeholder="应用"
+            search-placeholder="应用"
+            :setting-apps="settingAppsForSelect"
+            :height="40"
+            :min-width="110"
+            :max-width="220"
           >
-            <ElOption
-              v-for="opt in filterOptions?.appOptions"
-              :key="opt.value"
-              :label="opt.label"
-              :value="opt.value"
-            />
-          </ElSelect>
+          </AppPlatformSearchSelect>
         </div>
         <div class="iap-dashboard-filter__item">
           <span class="iap-dashboard-f-label">国家</span>
@@ -82,185 +80,274 @@
           </ElSelect>
         </div>
 
-        <ElButton round class="iap-dashboard-btn iap-dashboard-btn--query" @click="loadDashboard">
-          查询
-        </ElButton>
+        <ElButton type="primary" plain round @click="loadDashboard"> 查询 </ElButton>
       </div>
     </header>
 
-    <div class="iap-dashboard-kpi-row iap-entry-3">
-      <div
-        v-for="(kpi, i) in kpiList"
-        :key="i"
-        class="iap-dashboard-kpi-card"
-        :style="{ borderColor: kpi.borderColor }"
-      >
-        <div class="iap-dashboard-kpi-header">
-          <span class="iap-dashboard-kpi-label">{{ kpi.label }}</span>
-          <div :ref="(el) => setKpiRef(i, el)" class="iap-dashboard-kpi-sparkline"></div>
-        </div>
-        <div class="iap-dashboard-kpi-value">{{ kpi.value }}</div>
-        <div class="iap-dashboard-kpi-change" :class="kpi.up ? 'is-up' : 'is-down'">
-          <ElIcon :size="11"><component :is="kpi.up ? Top : Bottom" /></ElIcon>
-          {{ kpi.change }} 环比
-          <ElIcon v-if="!kpi.up && kpi.warn" :size="11" class="iap-dashboard-warn-icon">
-            <Warning />
-          </ElIcon>
-        </div>
-      </div>
-    </div>
-
-    <div class="iap-dashboard-trend-row iap-entry-4">
-      <div class="iap-dashboard-trend-card iap-dashboard-trend-card--wide iap-neon-surface">
-        <div class="iap-dashboard-card-title">
-          <span class="iap-card-title-text">订单数 vs 收入趋势</span>
-          <div class="iap-dashboard-chart-legend">
-            <span class="iap-dashboard-leg-item"
-              ><i class="iap-dashboard-dot iap-dashboard-dot--teal"></i>订单数</span
-            >
-            <span class="iap-dashboard-leg-item"
-              ><i class="iap-dashboard-dot iap-dashboard-dot--line"></i>收入</span
-            >
-          </div>
-        </div>
-        <div ref="chart1Ref" class="iap-dashboard-chart-area"></div>
-      </div>
-      <div class="iap-dashboard-trend-card iap-neon-surface">
-        <div class="iap-dashboard-card-title">
-          <span class="iap-card-title-text">转化率趋势</span>
-        </div>
-        <div ref="chart2Ref" class="iap-dashboard-chart-area"></div>
-      </div>
-      <div class="iap-dashboard-trend-card iap-neon-surface">
-        <div class="iap-dashboard-card-title">
-          <span class="iap-card-title-text">ARPU趋势</span>
-        </div>
-        <div ref="chart3Ref" class="iap-dashboard-chart-area"></div>
-      </div>
-    </div>
-
-    <div class="iap-dashboard-section iap-neon-surface iap-entry-4">
-      <div class="iap-dashboard-section-header">
-        <span class="iap-dashboard-section-title iap-card-title-text">应用分析</span>
-        <span class="iap-dashboard-sort-hint">按收入排序 ▾</span>
-      </div>
-      <div class="iap-dashboard-app-cards">
-        <div
-          v-for="app in appList"
-          :key="app.name"
-          class="iap-dashboard-app-card iap-neon-surface"
-          @click="handleAppClick(app)"
-        >
-          <div class="iap-dashboard-app-card-top">
-            <div class="iap-dashboard-app-icon" :style="{ background: app.iconBg }">
-              <ElIcon :size="14" color="var(--text-primary)"
-                ><component :is="iconMap[app.icon] || Iphone"
-              /></ElIcon>
+    <ElSkeleton :loading="overviewLoading" animated :throttle="0">
+      <template #template>
+        <div class="iap-dashboard-kpi-row iap-entry-3">
+          <div v-for="i in 6" :key="'sk-kpi-' + i" class="iap-dashboard-kpi-card iap-dash-sk-card">
+            <div class="iap-dash-sk-kpi-head">
+              <ElSkeletonItem variant="text" class="iap-dash-sk-line iap-dash-sk-line--sm" />
+              <ElSkeletonItem variant="rect" class="iap-dash-sk-spark" />
             </div>
-            <span class="iap-dashboard-app-name">{{ app.name }}</span>
-            <span
-              class="iap-dashboard-app-platform"
-              :class="app.platform === 'iOS' ? 'is-ios' : 'is-android'"
-              >{{ app.platform }}</span
-            >
-          </div>
-          <div class="iap-dashboard-app-stats">
-            订单数 {{ app.orders }} / 收入 {{ app.revenue }} / ARPU {{ app.arpu }}
-          </div>
-          <div class="iap-dashboard-app-card-bottom">
-            <span class="iap-dashboard-app-change" :class="app.up ? 'is-up' : 'is-down'">
-              <ElIcon :size="10"><component :is="app.up ? Top : Bottom" /></ElIcon>
-              {{ app.change }}
-            </span>
-            <div :ref="(el) => setAppRef(app.name, el)" class="iap-dashboard-app-sparkline"></div>
+            <ElSkeletonItem variant="text" class="iap-dash-sk-line iap-dash-sk-line--lg" />
+            <ElSkeletonItem variant="text" class="iap-dash-sk-line iap-dash-sk-line--xs" />
           </div>
         </div>
-      </div>
-    </div>
 
-    <div class="iap-dashboard-bottom-row iap-entry-4">
-      <div class="iap-dashboard-bottom-card iap-dashboard-bottom-card--wide iap-neon-surface">
-        <div class="iap-dashboard-card-title">
-          <span class="iap-card-title-text">按国家/地区收入分布</span>
+        <div class="iap-dashboard-trend-row iap-entry-4">
+          <div class="iap-dashboard-trend-card iap-dashboard-trend-card--wide iap-dash-sk-panel">
+            <ElSkeletonItem variant="text" class="iap-dash-sk-line iap-dash-sk-line--title" />
+            <ElSkeletonItem variant="rect" class="iap-dash-sk-chart iap-dash-sk-chart--lg" />
+          </div>
+          <div class="iap-dashboard-trend-card iap-dash-sk-panel">
+            <ElSkeletonItem variant="text" class="iap-dash-sk-line iap-dash-sk-line--title" />
+            <ElSkeletonItem variant="rect" class="iap-dash-sk-chart" />
+          </div>
+          <div class="iap-dashboard-trend-card iap-dash-sk-panel">
+            <ElSkeletonItem variant="text" class="iap-dash-sk-line iap-dash-sk-line--title" />
+            <ElSkeletonItem variant="rect" class="iap-dash-sk-chart" />
+          </div>
         </div>
-        <table class="iap-dashboard-country-table">
-          <thead>
-            <tr>
-              <th>国家</th>
-              <th>订单数</th>
-              <th>收入(USD)</th>
-              <th>占比</th>
-              <th></th>
-              <th>ARPU</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="row in countryData" :key="row.s_country_code">
-              <td>
-                <span class="iap-dashboard-flag">{{ row.flag }}</span>
-                <span class="iap-dashboard-country-name">{{ row.country }}</span>
-              </td>
-              <td class="iap-dashboard-num">{{ row.orders.toLocaleString() }}</td>
-              <td class="iap-dashboard-num iap-dashboard-num--green">{{ row.revenue }}</td>
-              <td class="iap-dashboard-num">{{ row.ratio }}</td>
-              <td>
-                <div class="iap-dashboard-ratio-wrap">
-                  <div
-                    class="iap-dashboard-ratio-bar"
-                    :style="{
-                      width: row.barWidth ?? row.ratio,
-                      background: row.barColor ?? '#3b82f6'
-                    }"
-                  ></div>
-                </div>
-              </td>
-              <td class="iap-dashboard-num">{{ row.arpu }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="iap-dashboard-bottom-card iap-neon-surface">
-        <div class="iap-dashboard-card-title">
-          <span class="iap-card-title-text">产品类型分布</span>
+
+        <div class="iap-dashboard-section iap-dash-sk-section iap-entry-4">
+          <div class="iap-dashboard-section-header">
+            <ElSkeletonItem variant="text" class="iap-dash-sk-line iap-dash-sk-line--md" />
+            <ElSkeletonItem variant="text" class="iap-dash-sk-line iap-dash-sk-line--xs" />
+          </div>
+          <div class="iap-dashboard-app-cards">
+            <div v-for="i in 5" :key="'sk-app-' + i" class="iap-dashboard-app-card iap-dash-sk-app">
+              <div class="iap-dash-sk-app-top">
+                <ElSkeletonItem variant="circle" class="iap-dash-sk-ico" />
+                <ElSkeletonItem
+                  variant="text"
+                  class="iap-dash-sk-line iap-dash-sk-line--app-name"
+                />
+                <ElSkeletonItem variant="text" class="iap-dash-sk-line iap-dash-sk-line--tag" />
+              </div>
+              <ElSkeletonItem variant="text" class="iap-dash-sk-line iap-dash-sk-line--full" />
+              <div class="iap-dash-sk-app-bot">
+                <ElSkeletonItem variant="text" class="iap-dash-sk-line iap-dash-sk-line--xs" />
+                <ElSkeletonItem variant="rect" class="iap-dash-sk-app-spark" />
+              </div>
+            </div>
+          </div>
         </div>
-        <div ref="donutRef" class="iap-dashboard-donut-area"></div>
-        <div class="iap-dashboard-donut-legend">
+
+        <div class="iap-dashboard-bottom-row iap-entry-4">
+          <div class="iap-dashboard-bottom-card iap-dashboard-bottom-card--wide iap-dash-sk-panel">
+            <ElSkeletonItem variant="text" class="iap-dash-sk-line iap-dash-sk-line--title" />
+            <div class="iap-dash-sk-table">
+              <div v-for="r in 5" :key="'sk-row-' + r" class="iap-dash-sk-table-row">
+                <ElSkeletonItem variant="text" class="iap-dash-sk-line iap-dash-sk-line--country" />
+                <ElSkeletonItem variant="text" class="iap-dash-sk-line iap-dash-sk-line--num" />
+                <ElSkeletonItem variant="text" class="iap-dash-sk-line iap-dash-sk-line--num" />
+                <ElSkeletonItem variant="rect" class="iap-dash-sk-bar" />
+              </div>
+            </div>
+          </div>
+          <div class="iap-dashboard-bottom-card iap-dash-sk-panel">
+            <ElSkeletonItem variant="text" class="iap-dash-sk-line iap-dash-sk-line--title" />
+            <ElSkeletonItem variant="rect" class="iap-dash-sk-donut" />
+            <div class="iap-dash-sk-donut-legend">
+              <ElSkeletonItem variant="text" class="iap-dash-sk-line iap-dash-sk-line--sm" />
+              <ElSkeletonItem variant="text" class="iap-dash-sk-line iap-dash-sk-line--sm" />
+            </div>
+          </div>
+          <div class="iap-dashboard-bottom-card iap-dash-sk-panel">
+            <ElSkeletonItem variant="text" class="iap-dash-sk-line iap-dash-sk-line--title" />
+            <ElSkeletonItem variant="rect" class="iap-dash-sk-chart iap-dash-sk-chart--plat" />
+          </div>
+        </div>
+      </template>
+      <template #default>
+        <div class="iap-dashboard-kpi-row iap-entry-3">
           <div
-            v-for="item in productTypeDonut"
-            :key="item.name"
-            class="iap-dashboard-donut-leg-item"
+            v-for="(kpi, i) in kpiList"
+            :key="i"
+            class="iap-dashboard-kpi-card"
+            :style="{ borderColor: kpi.borderColor }"
           >
-            <i
-              class="iap-dashboard-donut-dot"
-              :style="{ background: donutColors[item.name] || '#0ea5e9' }"
-            ></i>
-            <span>{{ item.name }} {{ item.percent }}%</span>
-            <span v-if="item.amount" class="iap-dashboard-donut-val">{{ item.amount }}</span>
+            <div class="iap-dashboard-kpi-header">
+              <span class="iap-dashboard-kpi-label">{{ kpi.label }}</span>
+              <div :ref="(el) => setKpiRef(i, el)" class="iap-dashboard-kpi-sparkline"></div>
+            </div>
+            <div class="iap-dashboard-kpi-value">{{ kpi.value }}</div>
+            <div class="iap-dashboard-kpi-change" :class="kpi.up ? 'is-up' : 'is-down'">
+              <ElIcon :size="11"><component :is="kpi.up ? Top : Bottom" /></ElIcon>
+              {{ kpi.change }} 环比
+              <ElIcon v-if="!kpi.up && kpi.warn" :size="11" class="iap-dashboard-warn-icon">
+                <Warning />
+              </ElIcon>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="iap-dashboard-bottom-card iap-neon-surface">
-        <div class="iap-dashboard-card-title">
-          <span class="iap-card-title-text">平台对比</span>
-          <div class="iap-dashboard-chart-legend">
-            <span class="iap-dashboard-leg-item"
-              ><i class="iap-dashboard-dot iap-dashboard-dot--purple"></i>iOS</span
-            >
-            <span class="iap-dashboard-leg-item"
-              ><i class="iap-dashboard-dot iap-dashboard-dot--green"></i>Android</span
-            >
+
+        <div class="iap-dashboard-trend-row iap-entry-4">
+          <div class="iap-dashboard-trend-card iap-dashboard-trend-card--wide iap-neon-surface">
+            <div class="iap-dashboard-card-title">
+              <span class="iap-card-title-text">订单数 vs 收入趋势</span>
+              <div class="iap-dashboard-chart-legend">
+                <span class="iap-dashboard-leg-item"
+                  ><i class="iap-dashboard-dot iap-dashboard-dot--teal"></i>订单数</span
+                >
+                <span class="iap-dashboard-leg-item"
+                  ><i class="iap-dashboard-dot iap-dashboard-dot--line"></i>收入</span
+                >
+              </div>
+            </div>
+            <div ref="chart1Ref" class="iap-dashboard-chart-area"></div>
+          </div>
+          <div class="iap-dashboard-trend-card iap-neon-surface">
+            <div class="iap-dashboard-card-title">
+              <span class="iap-card-title-text">付费率趋势</span>
+            </div>
+            <div ref="chart2Ref" class="iap-dashboard-chart-area"></div>
+          </div>
+          <div class="iap-dashboard-trend-card iap-neon-surface">
+            <div class="iap-dashboard-card-title">
+              <span class="iap-card-title-text">ARPU趋势</span>
+            </div>
+            <div ref="chart3Ref" class="iap-dashboard-chart-area"></div>
           </div>
         </div>
-        <div ref="platformRef" class="iap-dashboard-platform-area"></div>
-      </div>
-    </div>
+
+        <div class="iap-dashboard-section iap-neon-surface iap-entry-4">
+          <div class="iap-dashboard-section-header">
+            <span class="iap-dashboard-section-title iap-card-title-text">应用分析</span>
+            <span class="iap-dashboard-sort-hint">按收入排序 ▾</span>
+          </div>
+          <div class="iap-dashboard-app-cards">
+            <div
+              v-for="app in appList"
+              :key="app.name"
+              class="iap-dashboard-app-card iap-neon-surface"
+              @click="handleAppClick(app)"
+            >
+              <div class="iap-dashboard-app-card-top">
+                <div class="iap-dashboard-app-icon" :style="{ background: app.iconBg }">
+                  <ElIcon :size="14" color="var(--text-primary)"
+                    ><component :is="iconMap[app.icon] || Iphone"
+                  /></ElIcon>
+                </div>
+                <span class="iap-dashboard-app-name">{{ app.name }}</span>
+                <span
+                  class="iap-dashboard-app-platform"
+                  :class="app.platform === 'iOS' ? 'is-ios' : 'is-android'"
+                  >{{ app.platform }}</span
+                >
+              </div>
+              <div class="iap-dashboard-app-stats">
+                订单数 {{ app.orders }} / 收入 {{ app.revenue }} / ARPU {{ app.arpu }}
+              </div>
+              <div class="iap-dashboard-app-card-bottom">
+                <span class="iap-dashboard-app-change" :class="app.up ? 'is-up' : 'is-down'">
+                  <ElIcon :size="10"><component :is="app.up ? Top : Bottom" /></ElIcon>
+                  {{ app.change }}
+                </span>
+                <div
+                  :ref="(el) => setAppRef(app.name, el)"
+                  class="iap-dashboard-app-sparkline"
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="iap-dashboard-bottom-row iap-entry-4">
+          <div class="iap-dashboard-bottom-card iap-dashboard-bottom-card--wide iap-neon-surface">
+            <div class="iap-dashboard-card-title">
+              <span class="iap-card-title-text">按国家/地区收入分布</span>
+            </div>
+            <div class="iap-dashboard-table-scroll">
+              <table class="iap-dashboard-country-table">
+                <thead>
+                  <tr>
+                    <th>国家</th>
+                    <th>订单数</th>
+                    <th>收入(USD)</th>
+                    <th>占比</th>
+                    <th></th>
+                    <th>ARPU</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="row in countryData" :key="row.s_country_code">
+                    <td>
+                      <span class="iap-dashboard-flag">{{ row.flag }}</span>
+                      <span class="iap-dashboard-country-name">{{ row.country }}</span>
+                    </td>
+                    <td class="iap-dashboard-num">{{ row.orders.toLocaleString() }}</td>
+                    <td class="iap-dashboard-num iap-dashboard-num--green">{{ row.revenue }}</td>
+                    <td class="iap-dashboard-num">{{ row.ratio }}</td>
+                    <td>
+                      <div class="iap-dashboard-ratio-wrap">
+                        <div
+                          class="iap-dashboard-ratio-bar"
+                          :style="{
+                            width: row.barWidth ?? row.ratio,
+                            background: row.barColor ?? '#3b82f6'
+                          }"
+                        ></div>
+                      </div>
+                    </td>
+                    <td class="iap-dashboard-num">{{ row.arpu }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="iap-dashboard-bottom-card iap-neon-surface">
+            <div class="iap-dashboard-card-title">
+              <span class="iap-card-title-text">产品类型分布</span>
+            </div>
+            <div ref="donutRef" class="iap-dashboard-donut-area"></div>
+            <div class="iap-dashboard-donut-legend">
+              <div
+                v-for="item in productTypeDonut"
+                :key="item.name"
+                class="iap-dashboard-donut-leg-item"
+              >
+                <i
+                  class="iap-dashboard-donut-dot"
+                  :style="{ background: donutColors[item.name] || '#0ea5e9' }"
+                ></i>
+                <span>{{ item.name }} {{ item.percent }}%</span>
+                <span v-if="item.amount" class="iap-dashboard-donut-val">{{ item.amount }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="iap-dashboard-bottom-card iap-neon-surface">
+            <div class="iap-dashboard-card-title">
+              <span class="iap-card-title-text">平台对比</span>
+              <div class="iap-dashboard-chart-legend">
+                <span class="iap-dashboard-leg-item"
+                  ><i class="iap-dashboard-dot iap-dashboard-dot--purple"></i>iOS</span
+                >
+                <span class="iap-dashboard-leg-item"
+                  ><i class="iap-dashboard-dot iap-dashboard-dot--green"></i>Android</span
+                >
+              </div>
+            </div>
+            <div ref="platformRef" class="iap-dashboard-platform-area"></div>
+          </div>
+        </div>
+      </template>
+    </ElSkeleton>
   </div>
 </template>
 
 <script setup lang="ts">
   import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { useRouter } from 'vue-router'
-  import { getAppTodayYYYYMMDD } from '@/utils/app-now'
+  import { storeToRefs } from 'pinia'
+  import { cloneAppDate, formatYYYYMMDD, getAppNow, getAppTodayYYYYMMDD } from '@/utils/app-now'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import {
     Download,
     Refresh,
@@ -272,7 +359,7 @@
     VideoCamera,
     Sunny
   } from '@element-plus/icons-vue'
-  import * as echarts from 'echarts'
+  import { echarts } from '@/plugins/echarts'
   import { loadIapDashboardOverviewModules } from './composables/useIapDashboardModules'
   import type {
     IapFilterState,
@@ -284,10 +371,13 @@
     IapOverviewTrend,
     IapPlatformCompare
   } from '@/views/business-insight/iap-analysis/types'
+  import type { CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
 
   defineOptions({ name: 'IapDashboard' })
 
   const router = useRouter()
+  const metaStore = useCockpitMetaFilterStore()
+  const { data: cockpitMeta } = storeToRefs(metaStore)
 
   const iconMap: Record<string, typeof Iphone> = {
     Iphone,
@@ -297,10 +387,17 @@
     Download
   }
 
+  const defaultRangeStart = (() => {
+    const day = cloneAppDate(getAppNow())
+    day.setHours(0, 0, 0, 0)
+    day.setDate(day.getDate() - 7)
+    return formatYYYYMMDD(day)
+  })()
+
   const defaultFilters: IapFilterState = {
-    startDate: getAppTodayYYYYMMDD(),
+    startDate: defaultRangeStart,
     endDate: getAppTodayYYYYMMDD(),
-    s_app_id: 'all',
+    s_app_id: [],
     s_country_code: 'all',
     platform: 'all'
   }
@@ -318,12 +415,30 @@
   })
 
   const filterOptions = ref<IapFilterOptions | null>(null)
+  /** 概览 KPI / 图表 / 应用卡 / 底栏统一骨架（查询、刷新、首屏） */
+  const overviewLoading = ref(true)
   const kpiList = ref<IapKpiCard[]>([])
   const trendData = ref<IapOverviewTrend | null>(null)
   const appList = ref<IapAppCard[]>([])
   const countryData = ref<(IapCountryRow & { barWidth?: string; barColor?: string })[]>([])
   const productTypeDonut = ref<IapProductTypeDonutItem[]>([])
   const platformCompare = ref<IapPlatformCompare | null>(null)
+  const settingAppsForSelect = computed<CockpitSettingAppItem[]>(() => {
+    const fromCockpit = cockpitMeta.value?.settingApps ?? []
+    if (fromCockpit.length) return fromCockpit
+
+    return (filterOptions.value?.appOptions ?? [])
+      .filter((opt) => opt.value && opt.value !== 'all')
+      .map((opt, index) => ({
+        sAppId: String(opt.value ?? ''),
+        nPlatform: '',
+        platformName: '',
+        sAppName: String(opt.label ?? ''),
+        sAppShortName: String(opt.label ?? ''),
+        nCategory: `fallback-${index}`,
+        categoryName: '应用'
+      }))
+  })
 
   const donutColors: Record<string, string> = { 内购: '#0ea5e9', 订阅: '#a78bfa' }
 
@@ -337,9 +452,9 @@
   const donutRef = ref<HTMLElement>()
   const platformRef = ref<HTMLElement>()
 
-  const charts: echarts.ECharts[] = []
+  const charts: Array<ReturnType<typeof echarts.init>> = []
 
-  const dashChartAnim: echarts.EChartsOption = {
+  const dashChartAnim: import('echarts').EChartsOption = {
     animation: true,
     animationDuration: 880,
     animationEasing: 'cubicOut',
@@ -348,7 +463,7 @@
     animationEasingUpdate: 'cubicOut'
   }
 
-  const dashSparklineAnim: echarts.EChartsOption = {
+  const dashSparklineAnim: import('echarts').EChartsOption = {
     animation: true,
     animationDuration: 480,
     animationEasing: 'cubicOut',
@@ -357,7 +472,7 @@
     animationEasingUpdate: 'cubicOut'
   }
 
-  function initChart(el: HTMLElement | undefined, opt: echarts.EChartsOption) {
+  function initChart(el: HTMLElement | undefined, opt: import('echarts').EChartsOption) {
     if (!el) return
     const c = echarts.init(el, 'dark')
     c.setOption({ ...dashChartAnim, ...opt })
@@ -388,7 +503,7 @@
     return 28
   }
 
-  const dashTooltipAxis: echarts.TooltipComponentOption = {
+  const dashTooltipAxis: import('echarts').TooltipComponentOption = {
     trigger: 'axis',
     confine: true,
     backgroundColor: 'rgba(24, 24, 27, 0.96)',
@@ -410,7 +525,7 @@
     }
   }
 
-  const dashTooltipItem: echarts.TooltipComponentOption = {
+  const dashTooltipItem: import('echarts').TooltipComponentOption = {
     trigger: 'item',
     confine: true,
     backgroundColor: 'rgba(24, 24, 27, 0.96)',
@@ -705,7 +820,7 @@
   }
 
   function handleAppClick(app: IapAppCard) {
-    router.push({ name: 'IapAnalysisDetail', query: { app: app.name } })
+    router.push({ name: 'IapAnalysisDetail', query: { app: app.name, appId: app.appId } })
   }
 
   function resizeCharts() {
@@ -721,44 +836,51 @@
   })
 
   async function loadDashboard() {
-    const p = params()
-    const { meta, kpi, trend, appCards, country, donut, platform } =
-      await loadIapDashboardOverviewModules(p)
-    filterOptions.value = meta
-    kpiList.value = kpi.kpis
-    trendData.value = trend
-    appList.value = appCards.list
-    const maxRatio = Math.max(
-      ...country.list.map((r) => parseFloat(String(r.ratio).replace('%', ''))),
-      1
-    )
-    countryData.value = country.list.map((r) => {
-      const pct = parseFloat(String(r.ratio).replace('%', ''))
-      const safeWidth = isNaN(pct) ? 0 : Math.round((pct / maxRatio) * 100)
-      return {
-        ...r,
-        barWidth: `${safeWidth}%`,
-        barColor: '#3b82f6'
-      }
-    })
-    productTypeDonut.value = donut.list
-    platformCompare.value = platform
-    nextTick(() => {
-      charts.forEach((c) => c.dispose())
-      charts.length = 0
-      initKpiSparklines()
-      initAppSparklines()
-      initChart1()
-      initChart2()
-      initChart3()
-      initDonut()
-      initPlatform()
-    })
+    overviewLoading.value = true
+    try {
+      const p = params()
+      const { meta, kpi, trend, appCards, country, donut, platform } =
+        await loadIapDashboardOverviewModules(p)
+      filterOptions.value = meta
+      kpiList.value = kpi.kpis
+      trendData.value = trend
+      appList.value = appCards.list
+      const maxRatio = Math.max(
+        ...country.list.map((r) => parseFloat(String(r.ratio).replace('%', ''))),
+        1
+      )
+      countryData.value = country.list.map((r) => {
+        const pct = parseFloat(String(r.ratio).replace('%', ''))
+        const safeWidth = isNaN(pct) ? 0 : Math.round((pct / maxRatio) * 100)
+        return {
+          ...r,
+          barWidth: `${safeWidth}%`,
+          barColor: '#3b82f6'
+        }
+      })
+      productTypeDonut.value = donut.list
+      platformCompare.value = platform
+      nextTick(() => {
+        charts.forEach((c) => c.dispose())
+        charts.length = 0
+        initKpiSparklines()
+        initAppSparklines()
+        initChart1()
+        initChart2()
+        initChart3()
+        initDonut()
+        initPlatform()
+      })
+    } finally {
+      overviewLoading.value = false
+    }
   }
 
   onMounted(() => {
-    loadDashboard().then(() => {
-      window.addEventListener('resize', resizeCharts)
+    metaStore.ensureLoaded().finally(() => {
+      loadDashboard().then(() => {
+        window.addEventListener('resize', resizeCharts)
+      })
     })
   })
 
@@ -779,7 +901,7 @@
     width: 100%;
     min-height: 100%;
     padding: 20px 24px 28px;
-    overflow: auto;
+    overflow: hidden;
     font-size: 13px;
     color: var(--art-gray-900);
     background: transparent;
@@ -863,31 +985,36 @@
     }
 
     &--query {
-      --el-button-bg-color: color-mix(in srgb, var(--el-color-primary) 8%, transparent);
-      --el-button-text-color: var(--el-color-primary);
-      --el-button-border-color: color-mix(in srgb, var(--el-color-primary) 40%, transparent);
-      --el-button-hover-text-color: color-mix(
+      --el-button-bg-color: color-mix(
         in srgb,
-        var(--el-color-primary) 80%,
-        var(--text-primary)
+        var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+        transparent
       );
-      --el-button-hover-border-color: var(--el-color-primary);
-      --el-button-hover-bg-color: color-mix(in srgb, var(--el-color-primary) 16%, transparent);
-      --el-button-active-text-color: color-mix(
+      --el-button-text-color: var(--theme-color, var(--art-primary, #3b82f6));
+      --el-button-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+      --el-button-hover-text-color: var(--theme-color, var(--art-primary, #3b82f6));
+      --el-button-hover-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+      --el-button-hover-bg-color: color-mix(
         in srgb,
-        var(--el-color-primary) 80%,
-        var(--text-primary)
+        var(--theme-color, var(--art-primary, #3b82f6)) 10%,
+        transparent
       );
-      --el-button-active-border-color: var(--el-color-primary);
-      --el-button-active-bg-color: color-mix(in srgb, var(--el-color-primary) 22%, transparent);
+      --el-button-active-text-color: var(--theme-color, var(--art-primary, #3b82f6));
+      --el-button-active-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+      --el-button-active-bg-color: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 12%,
+        transparent
+      );
 
-      box-shadow: 0 0 14px color-mix(in srgb, var(--el-color-primary) 12%, transparent);
+      box-shadow: none;
       transition:
         box-shadow 0.22s var(--ease-default),
         transform 0.18s var(--ease-default);
 
       &:hover {
-        box-shadow: 0 0 22px color-mix(in srgb, var(--el-color-primary) 28%, transparent);
+        box-shadow: 0 0 0 1px
+          color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
         transform: translateY(-1px);
       }
     }
@@ -917,16 +1044,21 @@
   }
 
   :deep(.iap-dashboard-sel) {
-    --el-input-focus-border-color: var(--el-color-primary);
-    --el-border-color-hover: color-mix(in srgb, var(--el-color-primary) 75%, transparent);
-    --el-border-color-focus: var(--el-color-primary);
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
     --el-component-size: 40px;
 
+    .el-select__wrapper,
     .el-input__wrapper {
       padding: 0 14px;
-      background: color-mix(in srgb, var(--el-color-primary) 6%, transparent) !important;
-      border: 1px solid color-mix(in srgb, var(--el-color-primary) 28%, transparent) !important;
-      border-radius: 9999px;
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+        transparent
+      ) !important;
+      border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+      border-radius: var(--el-border-radius-base, 4px);
       box-shadow: none !important;
       transition:
         border-color 0.22s var(--ease-default),
@@ -934,29 +1066,113 @@
         background-color 0.22s var(--ease-default);
     }
 
-    .el-input__inner {
+    .el-input__inner,
+    .el-select__selected-item {
       font-size: 14px;
-      color: var(--art-gray-900) !important;
+      color: var(--text-primary) !important;
     }
 
     .el-input__prefix-inner {
       margin-right: 4px;
     }
 
-    .el-select__caret {
-      color: var(--el-color-primary);
+    .el-select__placeholder {
+      color: var(--el-text-color-placeholder);
+    }
+
+    .el-select__caret,
+    .el-select__suffix,
+    .el-select__icon {
+      color: var(--theme-color, var(--art-primary, #3b82f6));
     }
   }
 
-  :deep(.iap-dashboard-sel .el-input__wrapper.is-focus) {
-    background: color-mix(in srgb, var(--el-color-primary) 10%, transparent) !important;
-    border-color: var(--el-color-primary) !important;
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--el-color-primary) 20%, transparent) !important;
+  :deep(.iap-dashboard-sel__input) {
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 40px;
+
+    .el-select__wrapper {
+      padding: 0 14px;
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+        transparent
+      ) !important;
+      border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+      border-radius: var(--el-border-radius-base, 4px);
+      box-shadow: none !important;
+      transition:
+        border-color 0.22s var(--ease-default),
+        box-shadow 0.22s var(--ease-default),
+        background-color 0.22s var(--ease-default);
+    }
+
+    .el-select__selected-item,
+    .el-select__placeholder,
+    .el-select__caret,
+    .el-select__suffix,
+    .el-select__icon {
+      color: var(--theme-color, var(--art-primary, #3b82f6));
+    }
   }
 
+  :deep(.iap-dashboard-sel.el-date-editor.el-date-editor--daterange) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    border-radius: var(--el-border-radius-base, 4px) !important;
+    box-shadow: none !important;
+    transition:
+      border-color 0.22s var(--ease-default),
+      box-shadow 0.22s var(--ease-default),
+      background-color 0.22s var(--ease-default);
+  }
+
+  :deep(.iap-dashboard-sel.el-date-editor.el-date-editor--daterange:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
+  }
+
+  :deep(.iap-dashboard-sel.el-date-editor.el-date-editor--daterange.is-active),
+  :deep(.iap-dashboard-sel.el-date-editor.el-date-editor--daterange:focus-within) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
+  }
+
+  :deep(.iap-dashboard-sel.el-date-editor.el-date-editor--daterange .el-range-input),
+  :deep(.iap-dashboard-sel.el-date-editor.el-date-editor--daterange .el-range-separator),
+  :deep(.iap-dashboard-sel.el-date-editor.el-date-editor--daterange .el-range__icon),
+  :deep(.iap-dashboard-sel.el-date-editor.el-date-editor--daterange .el-range__close-icon) {
+    color: #fff;
+  }
+
+  :deep(.iap-dashboard-sel .el-select__wrapper.is-focused),
+  :deep(.iap-dashboard-sel__input .el-select__wrapper.is-focused),
+  :deep(.iap-dashboard-sel .el-input__wrapper.is-focus),
+  :deep(.iap-dashboard-sel.el-date-editor--daterange:focus-within .el-input__wrapper) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
+  }
+
+  :deep(.iap-dashboard-sel .el-select__wrapper:hover),
+  :deep(.iap-dashboard-sel__input .el-select__wrapper:hover),
   :deep(.iap-dashboard-sel .el-input__wrapper:hover) {
-    border-color: color-mix(in srgb, var(--el-color-primary) 60%, transparent) !important;
-    box-shadow: 0 0 12px color-mix(in srgb, var(--el-color-primary) 18%, transparent) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
   }
 
   :deep(.iap-dashboard-sel--w220) {
@@ -1246,16 +1462,30 @@
     }
   }
 
+  .iap-dashboard-table-scroll {
+    flex: 1;
+    min-height: 0;
+    max-height: 200px;
+    overflow: auto;
+    overscroll-behavior: contain;
+    border-radius: 10px;
+  }
+
   .iap-dashboard-country-table {
     width: 100%;
     font-size: 12px;
     border-collapse: collapse;
 
     th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
       padding: 4px 6px 8px;
       font-weight: 500;
       color: var(--art-gray-600);
       text-align: left;
+      background: color-mix(in srgb, var(--default-box-color) 88%, transparent);
+      backdrop-filter: blur(10px);
       border-bottom: 1px solid var(--default-border);
     }
 
@@ -1339,6 +1569,196 @@
   .iap-dashboard-platform-area {
     flex: 1;
     min-height: 170px;
+  }
+
+  /* 概览骨架屏：布局与真实卡片区一致，霓虹底与 KPI 卡一致 */
+  .iap-dash-sk-card {
+    @extend %iap-neon-surface;
+
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 112px;
+    padding: 12px 14px 10px;
+    border-top: 2px solid color-mix(in srgb, var(--art-primary) 24%, transparent);
+  }
+
+  .iap-dash-sk-kpi-head {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .iap-dash-sk-spark {
+    width: 100%;
+    height: 36px;
+  }
+
+  .iap-dash-sk-panel {
+    @extend %iap-neon-surface;
+
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 220px;
+    padding: 12px 14px;
+  }
+
+  .iap-dashboard-bottom-row .iap-dash-sk-panel {
+    min-height: 260px;
+  }
+
+  .iap-dash-sk-section {
+    @extend %iap-neon-surface;
+
+    padding: 12px 14px;
+    margin-bottom: 16px;
+  }
+
+  .iap-dash-sk-app {
+    @extend %iap-neon-surface;
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 96px;
+    padding: 14px;
+  }
+
+  .iap-dash-sk-app-top {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .iap-dash-sk-app-bot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .iap-dash-sk-ico {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+  }
+
+  .iap-dash-sk-app-spark {
+    flex-shrink: 0;
+    width: 70px;
+    height: 28px;
+  }
+
+  .iap-dash-sk-chart {
+    flex: 1;
+    width: 100%;
+    min-height: 160px;
+  }
+
+  .iap-dash-sk-chart--lg {
+    min-height: 168px;
+  }
+
+  .iap-dash-sk-chart--plat {
+    min-height: 170px;
+  }
+
+  .iap-dash-sk-line {
+    height: 12px;
+    border-radius: 6px;
+  }
+
+  .iap-dash-sk-line--xs {
+    width: 52%;
+  }
+
+  .iap-dash-sk-line--sm {
+    width: 45%;
+  }
+
+  .iap-dash-sk-line--md {
+    width: 32%;
+  }
+
+  .iap-dash-sk-line--lg {
+    width: 58%;
+    height: 22px;
+  }
+
+  .iap-dash-sk-line--title {
+    width: 42%;
+    height: 14px;
+  }
+
+  .iap-dash-sk-line--full {
+    width: 92%;
+  }
+
+  .iap-dash-sk-line--app-name {
+    flex: 1;
+    width: auto;
+    min-width: 40%;
+  }
+
+  .iap-dash-sk-line--tag {
+    flex-shrink: 0;
+    width: 40px;
+  }
+
+  .iap-dash-sk-line--country {
+    flex: 1;
+    width: auto;
+    min-width: 36%;
+  }
+
+  .iap-dash-sk-line--num {
+    flex-shrink: 0;
+    width: 52px;
+  }
+
+  .iap-dash-sk-table {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0;
+  }
+
+  .iap-dash-sk-table-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .iap-dash-sk-bar {
+    flex-shrink: 0;
+    width: 60px;
+    height: 5px;
+  }
+
+  .iap-dash-sk-donut {
+    width: 100%;
+    max-width: 220px;
+    min-height: 160px;
+    margin-inline: auto;
+  }
+
+  .iap-dash-sk-donut-legend {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .iap-dash-sk-card,
+    .iap-dash-sk-panel,
+    .iap-dash-sk-section,
+    .iap-dash-sk-app {
+      :deep(.el-skeleton.is-animated .el-skeleton__item) {
+        animation: none;
+      }
+    }
   }
 </style>
 

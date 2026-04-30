@@ -1,0 +1,72 @@
+{
+  "_comment": "开户管理 - 顶部统计卡片（开户记录总数/待分配凭据/已激活/开户失败）。与 open-account-tab.vue 的 stats 口径一致，但不依赖列表分页。",
+  "fieldDescription": {
+    "request": {
+      "keyword": { "type": "string", "required": false, "default": "", "description": "关键词。" },
+      "source": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "广告平台筛选。"
+      },
+      "status": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "enum": ["", "待分配", "已激活", "开户失败"],
+        "description": "状态筛选（为空表示不限）。"
+      },
+      "agency": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "代理商筛选。"
+      },
+      "appIds": {
+        "type": "string[]",
+        "required": false,
+        "default": [],
+        "description": "应用筛选 ID 列表（当前页面仅支持单选，最多传 1 个）。"
+      }
+    },
+    "response": {
+      "total": { "type": "number", "required": true, "description": "开户记录总数。" },
+      "pending": {
+        "type": "number",
+        "required": true,
+        "description": "待分配凭据条数（status=待分配）。"
+      },
+      "active": {
+        "type": "number",
+        "required": true,
+        "description": "已激活条数（status=已激活）。"
+      },
+      "failed": {
+        "type": "number",
+        "required": true,
+        "description": "开户失败条数（status=开户失败）。"
+      }
+    }
+  },
+  "sampleRequest": { "keyword": "", "source": "", "status": "", "agency": "", "appIds": [] },
+  "sampleResponse": {
+    "code": 200,
+    "message": "success",
+    "data": { "total": 128, "pending": 22, "active": 96, "failed": 10 }
+  },
+  "api": {
+    "url": "POST /api/account-management/open-account/overview-stats",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "{ keyword?, source?, status?, agency?, appIds? }",
+    "responseBody": "{ total, pending, active, failed }"
+  },
+  "interaction": {
+    "triggers": [
+      { "moment": "Tab 首屏渲染", "detail": "开户管理 Tab 挂载时拉取统计卡片。" },
+      { "moment": "筛选变化", "detail": "筛选栏变化后刷新统计卡片（与列表同维度）。" }
+    ],
+    "defaultSelection": "默认请求体为空字符串代表不限制筛选。",
+    "dedupe": "可与列表请求并行。"
+  }
+}

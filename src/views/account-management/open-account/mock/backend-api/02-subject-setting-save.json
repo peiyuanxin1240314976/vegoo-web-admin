@@ -1,0 +1,161 @@
+{
+  "_comment": "开户主体配置-主体保存（新建/编辑共用）。对应 types.ts: SubjectSettingItem。",
+  "interaction": {
+    "entry": "抽屉点击保存触发；mode=create 新建，mode=edit 编辑。",
+    "uiBinding": ["modules/subject-setting-drawer.vue -> submit", "index.vue -> handleSubmit()"],
+    "validation": "subjectId、subjectName 必填；业务侧可增加唯一性校验。"
+  },
+  "fieldDescription": {
+    "request": {
+      "subjectId": {
+        "type": "string",
+        "required": true,
+        "description": "主体唯一标识。编辑模式对应既有 subjectId；新建模式需保证唯一。"
+      },
+      "subjectName": {
+        "type": "string",
+        "required": true,
+        "description": "主体名称。"
+      },
+      "businessLicense": {
+        "type": "string",
+        "required": true,
+        "description": "营业执照地址或业务侧可追溯文件标识；空字符串表示未上传。"
+      },
+      "facebookEnabled": {
+        "type": "boolean",
+        "required": true,
+        "description": "Facebook 是否可用。"
+      },
+      "facebookRemark": {
+        "type": "string",
+        "required": true,
+        "description": "Facebook 备注。"
+      },
+      "tiktokEnabled": {
+        "type": "boolean",
+        "required": true,
+        "description": "TikTok 是否可用。"
+      },
+      "tiktokRemark": {
+        "type": "string",
+        "required": true,
+        "description": "TikTok 备注。"
+      }
+    },
+    "response": {
+      "record": {
+        "type": "SubjectSettingItem",
+        "required": true,
+        "description": "保存后的主体完整记录。"
+      },
+      "action": {
+        "type": "string",
+        "required": true,
+        "enum": ["created", "updated"],
+        "description": "保存动作类型：created 新建，updated 编辑。"
+      }
+    },
+    "SubjectSettingItem": {
+      "subjectId": {
+        "type": "string",
+        "required": true,
+        "description": "主体唯一标识。"
+      },
+      "subjectName": {
+        "type": "string",
+        "required": true,
+        "description": "主体名称。"
+      },
+      "businessLicense": {
+        "type": "string",
+        "required": true,
+        "description": "营业执照地址或文件标识；空字符串表示未上传。"
+      },
+      "facebookEnabled": {
+        "type": "boolean",
+        "required": true,
+        "description": "Facebook 是否可用。"
+      },
+      "facebookRemark": {
+        "type": "string",
+        "required": true,
+        "description": "Facebook 备注。"
+      },
+      "tiktokEnabled": {
+        "type": "boolean",
+        "required": true,
+        "description": "TikTok 是否可用。"
+      },
+      "tiktokRemark": {
+        "type": "string",
+        "required": true,
+        "description": "TikTok 备注。"
+      },
+      "inputTime": {
+        "type": "string",
+        "required": true,
+        "description": "录入时间，格式 YYYY-MM-DD HH:mm:ss。"
+      },
+      "creatorId": {
+        "type": "number | null",
+        "required": true,
+        "description": "创建人 ID。"
+      },
+      "createTime": {
+        "type": "string",
+        "required": true,
+        "description": "创建时间，格式 YYYY-MM-DD HH:mm:ss。"
+      },
+      "updaterId": {
+        "type": "number | null",
+        "required": true,
+        "description": "更新人 ID。"
+      },
+      "updateTime": {
+        "type": "string",
+        "required": true,
+        "description": "更新时间，格式 YYYY-MM-DD HH:mm:ss。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "subjectId": "SUBJ-JP-005",
+    "subjectName": "Vegoo Tokyo GK",
+    "businessLicense": "oss://licenses/vegoo-jp-005.pdf",
+    "facebookEnabled": true,
+    "facebookRemark": "日本主体可用于 Meta 新账户申请。",
+    "tiktokEnabled": false,
+    "tiktokRemark": "暂不支持 TikTok，待补齐代理资质。"
+  },
+  "sampleResponse": {
+    "record": {
+      "subjectId": "SUBJ-JP-005",
+      "subjectName": "Vegoo Tokyo GK",
+      "businessLicense": "oss://licenses/vegoo-jp-005.pdf",
+      "facebookEnabled": true,
+      "facebookRemark": "日本主体可用于 Meta 新账户申请。",
+      "tiktokEnabled": false,
+      "tiktokRemark": "暂不支持 TikTok，待补齐代理资质。",
+      "inputTime": "2026-04-17 16:20:05",
+      "creatorId": 9999,
+      "createTime": "2026-04-17 16:20:05",
+      "updaterId": 9999,
+      "updateTime": "2026-04-17 16:20:05"
+    },
+    "action": "created"
+  },
+  "api": {
+    "url": "POST /api/account-management/open-account/subject-settings/save",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "subjectId, subjectName, businessLicense, facebookEnabled, facebookRemark, tiktokEnabled, tiktokRemark",
+    "responseBody": "record: SubjectSettingItem, action: created|updated"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "保存后建议返回完整 record，减少前端二次查询依赖。",
+      "当 subjectId 已存在时返回 updated，否则返回 created。"
+    ]
+  }
+}

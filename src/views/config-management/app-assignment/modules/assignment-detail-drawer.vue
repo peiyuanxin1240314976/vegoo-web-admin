@@ -1,13 +1,6 @@
 <template>
-  <!-- 遮罩 -->
-  <transition name="fade">
-    <div v-if="visible" class="drawer-overlay" @click="handleClose" />
-  </transition>
-
-  <!-- 抽屉 -->
-  <transition name="drawer-slide">
-    <div v-if="visible" class="assignment-detail-drawer">
-      <!-- ── 头部 ─────────────────────────────────────────── -->
+  <template v-if="isSide">
+    <div v-show="visible" class="assignment-detail-drawer assignment-detail-drawer--side">
       <div class="drawer-header">
         <div class="header-main">
           <div class="app-icon" :style="{ background: assignment?.iconColor || '#2dd4bf' }">
@@ -15,8 +8,9 @@
           </div>
           <div class="header-info">
             <div class="header-name-row">
-              <span class="app-name">{{ assignment?.appName }}</span>
+              <span class="app-name">{{ assignment?.appName || '详情' }}</span>
               <span
+                v-if="assignment?.platform"
                 :class="[
                   'platform-badge',
                   assignment?.platform === 'Android'
@@ -26,20 +20,22 @@
               >
                 {{ assignment?.platform === 'Android' ? '安卓' : 'iOS' }}
               </span>
-              <span class="ad-platform-badge">{{ assignment?.adPlatform }}</span>
+              <span v-if="assignment?.adPlatform" class="ad-platform-badge">{{
+                assignment?.adPlatform
+              }}</span>
             </div>
             <div class="optimizer-row">
               <span class="optimizer-label">优化师：</span>
-              <span class="optimizer-name">{{ assignment?.optimizer }}</span>
-              <span class="optimizer-tag">当前负责人</span>
+              <span class="optimizer-name">{{ assignment?.optimizer ?? '—' }}</span>
+              <span v-if="assignment?.optimizer" class="optimizer-tag">当前负责人</span>
             </div>
           </div>
         </div>
         <div class="header-actions">
-          <ElButton size="small" round class="edit-btn" @click="handleEdit">
+          <ElButton size="small" round class="edit-btn" :disabled="!assignment" @click="handleEdit">
             <ElIcon><EditPen /></ElIcon>编辑
           </ElButton>
-          <button class="close-btn" @click="handleClose">
+          <button class="close-btn" @click="handleClose" aria-label="关闭详情">
             <svg viewBox="0 0 16 16" fill="none" width="13" height="13">
               <path
                 d="M2 2l12 12M14 2L2 14"
@@ -52,118 +48,291 @@
         </div>
       </div>
 
-      <!-- ── 正文 ─────────────────────────────────────────── -->
       <div class="drawer-body">
-        <!-- 绩效配置 -->
-        <section class="drawer-section">
-          <div class="section-title">绩效配置</div>
-          <div class="version-bar">
-            <span class="version-label">
-              {{ activeVersion?.version }} {{ activeVersion?.status }}
-            </span>
-            <span v-if="activeVersion?.isActive" class="active-mark">★ 当前激活</span>
-            <button class="switch-version-btn" @click="handleSwitchVersion">
-              切换版本 <el-icon><ArrowDown /></el-icon>
-            </button>
-          </div>
-          <div class="config-grid">
-            <div class="config-item">
-              <span class="config-key">评估方式</span>
-              <span class="config-val">{{ activeVersion?.evalMethod ?? '—' }}</span>
-            </div>
-            <div class="config-item">
-              <span class="config-key">评估天数</span>
-              <span class="config-val">{{
-                activeVersion ? `${activeVersion.evalDays}天` : '—'
-              }}</span>
-            </div>
-            <div class="config-item">
-              <span class="config-key">达标要求</span>
-              <span class="config-val config-val--accent">{{
-                activeVersion?.targetRate ?? '—'
-              }}</span>
-            </div>
-            <div class="config-item">
-              <span class="config-key">最低要求</span>
-              <span class="config-val">{{ activeVersion?.minRate ?? '—' }}</span>
-            </div>
-            <div class="config-item">
-              <span class="config-key">难度系数</span>
-              <span class="config-val">{{ activeVersion?.difficulty ?? '—' }}</span>
-            </div>
-            <div class="config-item">
-              <span class="config-key">最低利润</span>
-              <span class="config-val">{{ activeVersion?.minProfit ?? '—' }}</span>
-            </div>
-            <div class="config-item config-item--full">
-              <span class="config-key">附加条件</span>
-              <span class="config-val">{{ activeVersion?.extraCondition ?? '—' }}</span>
-            </div>
-          </div>
-          <button class="detail-link">查看绩效配置详情 →</button>
-        </section>
-
-        <!-- 分配信息 -->
-        <section class="drawer-section">
-          <div class="section-title">分配信息</div>
-          <div class="info-grid">
-            <div class="info-item">
-              <span class="info-key">分配时间</span>
-              <span class="info-val">{{ assignment?.assignTime ?? '—' }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-key">分配操作人</span>
-              <span class="info-val">{{ assignment?.operator ?? '—' }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-key">生效时间</span>
-              <span class="info-val">{{ assignment?.effectiveTime ?? '—' }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-key">状态</span>
-              <span :class="['status-badge', statusClass(assignment?.status)]">
-                {{ assignment?.status }}
+        <div v-if="!assignment" class="drawer-empty">
+          <div class="drawer-empty__title">请选择一条分配</div>
+          <div class="drawer-empty__desc">点击左侧表格任意一行，在右侧查看详情。</div>
+        </div>
+        <template v-else>
+          <!-- 绩效配置 -->
+          <section class="drawer-section">
+            <div class="section-title">绩效配置</div>
+            <div class="version-bar">
+              <span class="version-label">
+                {{ activeVersion?.version }} {{ activeVersion?.status }}
               </span>
+              <span v-if="activeVersion?.isActive" class="active-mark">★ 当前激活</span>
+              <button class="switch-version-btn" @click="handleSwitchVersion">
+                切换版本 <el-icon><ArrowDown /></el-icon>
+              </button>
             </div>
-          </div>
-          <div v-if="assignment?.note" class="note-row">
-            <span class="info-key">备注</span>
-            <span class="note-val">{{ assignment.note }}</span>
-          </div>
-        </section>
+            <div class="config-grid">
+              <div class="config-item">
+                <span class="config-key">评估方式</span>
+                <span class="config-val">{{ activeVersion?.evalMethod ?? '—' }}</span>
+              </div>
+              <div class="config-item">
+                <span class="config-key">评估天数</span>
+                <span class="config-val">{{
+                  activeVersion ? `${activeVersion.evalDays}天` : '—'
+                }}</span>
+              </div>
+              <div class="config-item">
+                <span class="config-key">达标要求</span>
+                <span class="config-val config-val--accent">{{
+                  activeVersion?.targetRate ?? '—'
+                }}</span>
+              </div>
+              <div class="config-item">
+                <span class="config-key">最低要求</span>
+                <span class="config-val">{{ activeVersion?.minRate ?? '—' }}</span>
+              </div>
+              <div class="config-item">
+                <span class="config-key">难度系数</span>
+                <span class="config-val">{{ activeVersion?.difficulty ?? '—' }}</span>
+              </div>
+              <div class="config-item">
+                <span class="config-key">最低利润</span>
+                <span class="config-val">{{ activeVersion?.minProfit ?? '—' }}</span>
+              </div>
+              <div class="config-item config-item--full">
+                <span class="config-key">附加条件</span>
+                <span class="config-val">{{ activeVersion?.extraCondition ?? '—' }}</span>
+              </div>
+            </div>
+            <button class="detail-link">查看绩效配置详情 →</button>
+          </section>
 
-        <!-- 变更记录（最近3条） -->
-        <section class="drawer-section drawer-section--last">
-          <div class="section-title">变更记录</div>
-          <div class="change-timeline">
-            <div
-              v-for="(log, index) in recentLogs"
-              :key="log.id"
-              :class="[
-                'timeline-item',
-                index === recentLogs.length - 1 ? 'timeline-item--last' : ''
-              ]"
-            >
-              <div class="timeline-dot">
-                <span :class="['dot', typeColorClass(log.type)]" />
-                <span v-if="index < recentLogs.length - 1" class="dot-line" />
+          <!-- 分配信息 -->
+          <section class="drawer-section">
+            <div class="section-title">分配信息</div>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-key">分配时间</span>
+                <span class="info-val">{{ assignment?.assignTime ?? '—' }}</span>
               </div>
-              <div class="timeline-content">
-                <div class="timeline-header">
-                  <span class="timeline-time">{{ log.time }}</span>
-                  <span class="timeline-operator">{{ log.operator }}</span>
-                  <span :class="['timeline-type', typeColorClass(log.type)]">{{ log.type }}</span>
-                </div>
-                <div class="timeline-body">{{ log.content }}</div>
+              <div class="info-item">
+                <span class="info-key">分配操作人</span>
+                <span class="info-val">{{ assignment?.operator ?? '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-key">生效时间</span>
+                <span class="info-val">{{ assignment?.effectiveTime ?? '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-key">状态</span>
+                <span :class="['status-badge', statusClass(assignment?.status)]">
+                  {{ assignment?.status }}
+                </span>
               </div>
             </div>
-            <div v-if="!recentLogs.length" class="timeline-empty">暂无变更记录</div>
-          </div>
-          <button class="view-all-btn" @click="handleViewAllLogs">查看全部记录</button>
-        </section>
+            <div v-if="assignment?.note" class="note-row">
+              <span class="info-key">备注</span>
+              <span class="note-val">{{ assignment.note }}</span>
+            </div>
+          </section>
+
+          <!-- 变更记录（最近3条） -->
+          <section class="drawer-section drawer-section--last">
+            <div class="section-title">变更记录</div>
+            <div class="change-timeline">
+              <div
+                v-for="(log, index) in recentLogs"
+                :key="log.id"
+                :class="[
+                  'timeline-item',
+                  index === recentLogs.length - 1 ? 'timeline-item--last' : ''
+                ]"
+              >
+                <div class="timeline-dot">
+                  <span :class="['dot', typeColorClass(log.type)]" />
+                  <span v-if="index < recentLogs.length - 1" class="dot-line" />
+                </div>
+                <div class="timeline-content">
+                  <div class="timeline-header">
+                    <span class="timeline-time">{{ log.time }}</span>
+                    <span class="timeline-operator">{{ log.operator }}</span>
+                    <span :class="['timeline-type', typeColorClass(log.type)]">{{ log.type }}</span>
+                  </div>
+                  <div class="timeline-body">{{ log.content }}</div>
+                </div>
+              </div>
+              <div v-if="!recentLogs.length" class="timeline-empty">暂无变更记录</div>
+            </div>
+            <button class="view-all-btn" @click="handleViewAllLogs">查看全部记录</button>
+          </section>
+        </template>
       </div>
     </div>
-  </transition>
+  </template>
+
+  <template v-else>
+    <!-- 遮罩 -->
+    <transition name="fade">
+      <div v-if="visible" class="drawer-overlay" @click="handleClose" />
+    </transition>
+
+    <!-- 抽屉 -->
+    <transition name="drawer-slide">
+      <div v-if="visible" class="assignment-detail-drawer">
+        <!-- ── 头部 ─────────────────────────────────────────── -->
+        <div class="drawer-header">
+          <div class="header-main">
+            <div class="app-icon" :style="{ background: assignment?.iconColor || '#2dd4bf' }">
+              {{ assignment?.appName?.charAt(0) || 'A' }}
+            </div>
+            <div class="header-info">
+              <div class="header-name-row">
+                <span class="app-name">{{ assignment?.appName }}</span>
+                <span
+                  :class="[
+                    'platform-badge',
+                    assignment?.platform === 'Android'
+                      ? 'platform-badge--android'
+                      : 'platform-badge--ios'
+                  ]"
+                >
+                  {{ assignment?.platform === 'Android' ? '安卓' : 'iOS' }}
+                </span>
+                <span class="ad-platform-badge">{{ assignment?.adPlatform }}</span>
+              </div>
+              <div class="optimizer-row">
+                <span class="optimizer-label">优化师：</span>
+                <span class="optimizer-name">{{ assignment?.optimizer }}</span>
+                <span class="optimizer-tag">当前负责人</span>
+              </div>
+            </div>
+          </div>
+          <div class="header-actions">
+            <ElButton size="small" round class="edit-btn" @click="handleEdit">
+              <ElIcon><EditPen /></ElIcon>编辑
+            </ElButton>
+            <button class="close-btn" @click="handleClose">
+              <svg viewBox="0 0 16 16" fill="none" width="13" height="13">
+                <path
+                  d="M2 2l12 12M14 2L2 14"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- ── 正文 ─────────────────────────────────────────── -->
+        <div class="drawer-body">
+          <!-- 绩效配置 -->
+          <section class="drawer-section">
+            <div class="section-title">绩效配置</div>
+            <div class="version-bar">
+              <span class="version-label">
+                {{ activeVersion?.version }} {{ activeVersion?.status }}
+              </span>
+              <span v-if="activeVersion?.isActive" class="active-mark">★ 当前激活</span>
+              <button class="switch-version-btn" @click="handleSwitchVersion">
+                切换版本 <el-icon><ArrowDown /></el-icon>
+              </button>
+            </div>
+            <div class="config-grid">
+              <div class="config-item">
+                <span class="config-key">评估方式</span>
+                <span class="config-val">{{ activeVersion?.evalMethod ?? '—' }}</span>
+              </div>
+              <div class="config-item">
+                <span class="config-key">评估天数</span>
+                <span class="config-val">{{
+                  activeVersion ? `${activeVersion.evalDays}天` : '—'
+                }}</span>
+              </div>
+              <div class="config-item">
+                <span class="config-key">达标要求</span>
+                <span class="config-val config-val--accent">{{
+                  activeVersion?.targetRate ?? '—'
+                }}</span>
+              </div>
+              <div class="config-item">
+                <span class="config-key">最低要求</span>
+                <span class="config-val">{{ activeVersion?.minRate ?? '—' }}</span>
+              </div>
+              <div class="config-item">
+                <span class="config-key">难度系数</span>
+                <span class="config-val">{{ activeVersion?.difficulty ?? '—' }}</span>
+              </div>
+              <div class="config-item">
+                <span class="config-key">最低利润</span>
+                <span class="config-val">{{ activeVersion?.minProfit ?? '—' }}</span>
+              </div>
+              <div class="config-item config-item--full">
+                <span class="config-key">附加条件</span>
+                <span class="config-val">{{ activeVersion?.extraCondition ?? '—' }}</span>
+              </div>
+            </div>
+            <button class="detail-link">查看绩效配置详情 →</button>
+          </section>
+
+          <!-- 分配信息 -->
+          <section class="drawer-section">
+            <div class="section-title">分配信息</div>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-key">分配时间</span>
+                <span class="info-val">{{ assignment?.assignTime ?? '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-key">分配操作人</span>
+                <span class="info-val">{{ assignment?.operator ?? '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-key">生效时间</span>
+                <span class="info-val">{{ assignment?.effectiveTime ?? '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-key">状态</span>
+                <span :class="['status-badge', statusClass(assignment?.status)]">
+                  {{ assignment?.status }}
+                </span>
+              </div>
+            </div>
+            <div v-if="assignment?.note" class="note-row">
+              <span class="info-key">备注</span>
+              <span class="note-val">{{ assignment.note }}</span>
+            </div>
+          </section>
+
+          <!-- 变更记录（最近3条） -->
+          <section class="drawer-section drawer-section--last">
+            <div class="section-title">变更记录</div>
+            <div class="change-timeline">
+              <div
+                v-for="(log, index) in recentLogs"
+                :key="log.id"
+                :class="[
+                  'timeline-item',
+                  index === recentLogs.length - 1 ? 'timeline-item--last' : ''
+                ]"
+              >
+                <div class="timeline-dot">
+                  <span :class="['dot', typeColorClass(log.type)]" />
+                  <span v-if="index < recentLogs.length - 1" class="dot-line" />
+                </div>
+                <div class="timeline-content">
+                  <div class="timeline-header">
+                    <span class="timeline-time">{{ log.time }}</span>
+                    <span class="timeline-operator">{{ log.operator }}</span>
+                    <span :class="['timeline-type', typeColorClass(log.type)]">{{ log.type }}</span>
+                  </div>
+                  <div class="timeline-body">{{ log.content }}</div>
+                </div>
+              </div>
+              <div v-if="!recentLogs.length" class="timeline-empty">暂无变更记录</div>
+            </div>
+            <button class="view-all-btn" @click="handleViewAllLogs">查看全部记录</button>
+          </section>
+        </div>
+      </div>
+    </transition>
+  </template>
 </template>
 
 <script setup lang="ts">
@@ -176,6 +345,7 @@
   const props = defineProps<{
     visible: boolean
     assignment: AppAssignmentItem | null
+    mode?: 'overlay' | 'side'
   }>()
 
   const emit = defineEmits<{
@@ -183,6 +353,8 @@
     edit: [data: AppAssignmentItem]
     viewLogs: [data: AppAssignmentItem]
   }>()
+
+  const isSide = computed(() => props.mode === 'side')
 
   const activeVersion = computed(
     () =>
@@ -222,18 +394,19 @@
   // ─── CSS 变量 ───────────────────────────────────────────
   .assignment-detail-drawer,
   .drawer-overlay {
-    --bg-drawer: #0f1829;
-    --bg-section: rgb(255 255 255 / 2.5%);
-    --border: rgb(255 255 255 / 7%);
-    --text-primary: #e2e8f0;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
-    --accent: #2dd4bf;
-    --accent-dim: rgb(45 212 191 / 10%);
-    --android-green: #22c55e;
-    --ios-blue: #60a5fa;
-    --amber: #f59e0b;
-    --red: #ef4444;
+    --drawer-accent: var(--theme-color, var(--art-primary, #3b82f6));
+    --bg-drawer: color-mix(in srgb, var(--default-box-color, #0f172a) 92%, rgb(2 6 23) 8%);
+    --bg-section: color-mix(in srgb, var(--drawer-accent) 6%, transparent);
+    --border: color-mix(in srgb, var(--drawer-accent) 20%, transparent);
+    --text-primary: var(--el-text-color-primary, #e2e8f0);
+    --text-secondary: var(--el-text-color-regular, #94a3b8);
+    --text-muted: var(--el-text-color-secondary, #64748b);
+    --accent: var(--drawer-accent);
+    --accent-dim: color-mix(in srgb, var(--drawer-accent) 16%, transparent);
+    --android-green: var(--art-success, #22c55e);
+    --ios-blue: var(--el-color-info, #60a5fa);
+    --amber: var(--art-warning, #f59e0b);
+    --red: var(--art-danger, #ef4444);
     --purple: #a78bfa;
   }
 
@@ -262,6 +435,42 @@
     box-shadow: -12px 0 48px rgb(0 0 0 / 50%);
   }
 
+  .assignment-detail-drawer--side {
+    position: relative;
+    top: auto;
+    right: auto;
+    bottom: auto;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    border-radius: 14px;
+    box-shadow:
+      0 18px 48px rgb(0 0 0 / 16%),
+      0 0 0 1px rgb(255 255 255 / 6%),
+      inset 0 1px 0 rgb(255 255 255 / 6%);
+  }
+
+  .drawer-empty {
+    display: grid;
+    gap: 6px;
+    place-content: center;
+    height: 100%;
+    padding: 18px;
+    color: var(--text-secondary);
+    text-align: center;
+  }
+
+  .drawer-empty__title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .drawer-empty__desc {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
   // ─── 头部 ──────────────────────────────────────────────
   .drawer-header {
     display: flex;
@@ -269,7 +478,7 @@
     align-items: flex-start;
     justify-content: space-between;
     padding: 18px 18px 16px;
-    background: #131c2e;
+    background: color-mix(in srgb, var(--bg-drawer) 90%, white 2%);
     border-bottom: 1px solid var(--border);
   }
 
@@ -322,12 +531,12 @@
 
     &--android {
       color: var(--android-green);
-      background: rgb(34 197 94 / 12%);
+      background: color-mix(in srgb, var(--android-green) 14%, transparent);
     }
 
     &--ios {
       color: var(--ios-blue);
-      background: rgb(96 165 250 / 12%);
+      background: color-mix(in srgb, var(--ios-blue) 14%, transparent);
     }
   }
 
@@ -335,8 +544,8 @@
     padding: 2px 7px;
     font-size: 11px;
     font-weight: 500;
-    color: #94a3b8;
-    background: rgb(255 255 255 / 6%);
+    color: var(--text-secondary);
+    background: color-mix(in srgb, var(--drawer-accent) 10%, transparent);
     border-radius: 4px;
   }
 
@@ -361,9 +570,9 @@
     padding: 1px 6px;
     font-size: 11px;
     font-weight: 500;
-    color: #f59e0b;
-    background: rgb(245 158 11 / 12%);
-    border: 1px solid rgb(245 158 11 / 25%);
+    color: var(--amber);
+    background: color-mix(in srgb, var(--amber) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--amber) 28%, transparent);
     border-radius: 4px;
   }
 
@@ -381,11 +590,11 @@
     font-size: 12px !important;
     color: var(--accent) !important;
     background: var(--accent-dim) !important;
-    border: 1px solid rgb(45 212 191 / 25%) !important;
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent) !important;
     border-radius: 6px !important;
 
     &:hover {
-      background: rgb(45 212 191 / 16%) !important;
+      background: color-mix(in srgb, var(--accent) 22%, transparent) !important;
     }
   }
 
@@ -461,7 +670,7 @@
     font-weight: 600;
     color: var(--accent);
     background: var(--accent-dim);
-    border: 1px solid rgb(45 212 191 / 25%);
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
     border-radius: 4px;
   }
 
@@ -472,16 +681,16 @@
     padding: 2px 8px;
     margin-left: auto;
     font-size: 12px;
-    color: #94a3b8;
+    color: var(--text-secondary);
     cursor: pointer;
-    background: rgb(255 255 255 / 4%);
-    border: 1px solid rgb(255 255 255 / 8%);
+    background: color-mix(in srgb, var(--drawer-accent) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--drawer-accent) 20%, transparent);
     border-radius: 5px;
     transition: all 0.15s;
 
     &:hover {
       color: var(--accent);
-      border-color: rgb(45 212 191 / 25%);
+      border-color: color-mix(in srgb, var(--accent) 34%, transparent);
     }
   }
 
@@ -565,18 +774,18 @@
     border-radius: 4px;
 
     &--active {
-      color: #22c55e;
-      background: rgb(34 197 94 / 12%);
+      color: var(--android-green);
+      background: color-mix(in srgb, var(--android-green) 14%, transparent);
     }
 
     &--draft {
       color: var(--amber);
-      background: rgb(245 158 11 / 12%);
+      background: color-mix(in srgb, var(--amber) 14%, transparent);
     }
 
     &--archived {
       color: var(--text-muted);
-      background: rgb(255 255 255 / 5%);
+      background: color-mix(in srgb, var(--drawer-accent) 10%, transparent);
     }
   }
 
@@ -585,8 +794,8 @@
     flex-direction: column;
     gap: 3px;
     padding: 8px 10px;
-    background: rgb(255 255 255 / 2%);
-    border: 1px solid rgb(255 255 255 / 6%);
+    background: color-mix(in srgb, var(--drawer-accent) 6%, transparent);
+    border: 1px solid color-mix(in srgb, var(--drawer-accent) 16%, transparent);
     border-radius: 6px;
   }
 
@@ -629,7 +838,7 @@
     border-radius: 50%;
 
     &.color--teal {
-      background: #2dd4bf;
+      background: var(--accent);
     }
 
     &.color--purple {
@@ -637,15 +846,15 @@
     }
 
     &.color--amber {
-      background: #f59e0b;
+      background: var(--amber);
     }
 
     &.color--blue {
-      background: #60a5fa;
+      background: var(--ios-blue);
     }
 
     &.color--red {
-      background: #ef4444;
+      background: var(--red);
     }
   }
 
@@ -653,7 +862,7 @@
     flex: 1;
     width: 1px;
     margin: 4px 0;
-    background: rgb(255 255 255 / 7%);
+    background: color-mix(in srgb, var(--drawer-accent) 20%, transparent);
   }
 
   .timeline-content {
@@ -687,8 +896,8 @@
     border-radius: 3px;
 
     &.color--teal {
-      color: #2dd4bf;
-      background: rgb(45 212 191 / 10%);
+      color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 12%, transparent);
     }
 
     &.color--purple {
@@ -697,18 +906,18 @@
     }
 
     &.color--amber {
-      color: #f59e0b;
-      background: rgb(245 158 11 / 10%);
+      color: var(--amber);
+      background: color-mix(in srgb, var(--amber) 12%, transparent);
     }
 
     &.color--blue {
-      color: #60a5fa;
-      background: rgb(96 165 250 / 10%);
+      color: var(--ios-blue);
+      background: color-mix(in srgb, var(--ios-blue) 12%, transparent);
     }
 
     &.color--red {
-      color: #ef4444;
-      background: rgb(239 68 68 / 10%);
+      color: var(--red);
+      background: color-mix(in srgb, var(--red) 12%, transparent);
     }
   }
 

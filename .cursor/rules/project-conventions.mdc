@@ -57,7 +57,7 @@ alwaysApply: true
 
 ## 国旗与 flag-icons
 
-- 国家 **ISO 3166-1 alpha-2** 代码（数据字典字段如 `s_country_code`）由接口返回即可；**不要**在接口或 Mock 中返回国旗 emoji、国旗图片 URL 等纯展示字段。
+- 国家 **ISO 3166-1 alpha-2** 代码：**契约与联调 JSON** 统一 **`countryCode`**（无下划线）。由接口返回即可；**不要**在接口或 Mock 中返回国旗 emoji、国旗图片 URL 等纯展示字段。
 - 前端使用项目依赖 **flag-icons**：在需要展示国旗的页面/组件或**页面入口** `index.vue` 中 `import 'flag-icons/css/flag-icons.min.css'`（入口引入可保证样式与 `url(../flags/...)` 经构建正确解析），用 `<span :class="'fi fi-' + 小写码"></span>` 或与 `class="fi fi-xx"` 等价写法。若代码非法或为空，则不渲染国旗。
 - 历史别名（如 `UK`）可在前端映射为 `gb` 等标准码后再套 `fi-*` 类名。
 
@@ -65,8 +65,10 @@ alwaysApply: true
 
 后续开发中（新开发或重构）涉及 **接口入参/出参类型**、**请求参数**、**表格列 prop**、**筛选表单 v-model**、**Mock 契约（mock/backend-api）** 时，字段名必须统一：
 
-- **终端平台**：使用 `platform` 字段名
-- **广告平台**：使用 `source` 字段名
+- **`mock/backend-api` 与 HTTP 业务 JSON**：**全部键名 camelCase，禁止下划线**（见 `backend-fields.mdc`「接口契约与 HTTP JSON 命名」）。
+- **HTTP POST 请求体（筛选/维度）**：凡页面或接口**实际提供**的筛选，键名须与 **「接口请求 · 统一筛选维度键名」**一致（如 **`appId`**、**`platform`**、**`source`**、**`countryCode`**、**`account`**）；「全部」为 **`\"\"`**。**未**在 UI 出现的维度不要写进契约或 POST body（见 `backend-fields.mdc` 该节「与页面一致」）。
+- **应用筛选**：勿单独用 `app`、`appPackage` 作为应用筛选主字段。细则见 `backend-fields.mdc`「接口请求 · 应用筛选（appId）」。
+- **筛选入参中的枚举/维度**：请求体中类型为 **`string`**（如 `\"1\"`），「不限」用 **`\"\"`**；勿传 JSON number。细则见 `backend-fields.mdc`「接口请求 · 筛选「全部」」与「接口请求 · 筛选字段类型（枚举 string）」。
 
 ### 常见 Lint 与格式注意点（避免重复报错）
 
@@ -142,6 +144,7 @@ alwaysApply: true
 
 - **先 Mock 再开发组件**：开发大模块时，先在该模块下建立/完善 **Mock 数据**（如 `views/<模块>/<页面>/mock/data.ts` 或 `mock.ts`），并同步定义好 **类型**（`types.ts` 或类型与 mock 同文件）。待大模块的数据结构与字段约定清晰后，再进行页面入口与 `modules/` 内子组件的开发；组件内优先用 mock 做展示与联调，接口就绪后再切换为真实请求。
 - **契约 + 真实请求 + 小模块 config 开关**：使用 Mock 开发时，须按 **`mock/backend-api` 契约**在 `src/api` 写好 **`fetch*`**，并在 **该小模块** `config/` 内维护开关；契约格式与协作见 **`api-contract-and-mock-conventions.mdc`**，实现细则见 **`module-api-mock-config.mdc`**。
+- **导出 / 下载文件**：新增或对接「导出」类接口的 **`mock/backend-api` 契约与 `fetch*`** 时，**一律**按 **HTTP 二进制文件流**（`blob` / `requestBlob`、响应头 `Content-Type` + `Content-Disposition`）约定与实现，**禁止**把该导出 endpoint 的主响应写成「仅 JSON + Base64」等替代形态；完整条款见 **`api-contract-and-mock-conventions.mdc`**「导出 / 下载类接口（HTTP 文件流 · 硬性）」（异步任务类导出另立契约，不与即时流式导出混用）。
 
 ### Mock 与数据源开关（与 module-api-mock-config 一致）
 
@@ -210,6 +213,16 @@ alwaysApply: true
 
 - 写样式时**优先使用上表中的 CSS 变量**，避免硬编码 HEX；若需在 JS/图表配置中引用，可使用 `getComputedStyle(document.documentElement).getPropertyValue('--art-primary')` 等。
 - 浅色模式由 `:root` 与现有 gray/primary 变量控制，与深色角色语义一致，具体色值见 `tailwind.css`。
+
+### 页面/模块与主题色关联（按钮、筛选与表单控件）
+
+后续**新增或重构**的页面入口、业务模块布局时，**主操作区与筛选区**必须与**全局主题色**联动，避免「单页一套孤立配色」导致换肤、深浅模式或**设置里更换的系统主题色**与按钮、输入框、下拉脱节。
+
+- **两套「主色」分工（须区分）**：**`--art-primary`** 为 `tailwind.css` 中的设计基准色；**`--el-color-primary`** 由运行时 **`setElementThemeColor`**（设置 → 系统主题色）写入 `document.documentElement`，随用户选择变化。**凡应跟随设置里主题色的控件与强调**（`ElButton`、筛选行、输入聚焦、与同页工具条/面板的描边与高光），**优先使用 `var(--el-color-primary)`** 及 **`color-mix(in srgb, var(--el-color-primary) …%, transparent)`**，勿仅用 `--art-primary` 画死主按钮/筛选项（否则换色后仍像「另一套蓝」）。
+- **主按钮**：优先 **`<ElButton type="primary">`**，让 Element Plus 使用 **`--el-color-primary`**；若仅加层次，可再叠 **字重、阴影、hover 位移/brightness**，**不要**用 `--art-primary` 渐变覆盖整块背景。
+- **次要按钮 / 默认按钮**：在按钮根上设置 Element 提供的 **`--el-button-bg-color` / `--el-button-border-color` / `--el-button-hover-*` / `--el-button-active-*`**（见 **`ad-account`** 等页），取值一律基于 **`var(--el-color-primary)`** 与语义文字色，与主色同源。
+- **筛选行与表单控件**（`ElInput`、`ElSelect`、`ElDatePicker`、`ElCascader`、日期范围等）：边框、悬停、聚焦的混合色用 **`var(--el-color-primary)`**；**placeholder** 用 **`var(--text-tertiary)`**，输入字色用 **`var(--text-primary)`**（或 `--text-secondary` 视层级而定）；**勿**写仅本页使用的固定强调色 HEX。
+- **模块级「面板边框/霓虹」**（与工具条同一视觉层级时）：**`--page-border`** 等建议用 **`color-mix(in srgb, var(--el-color-primary) …%, transparent)`**，与同页按钮一致；纯氛围装饰、大屏霓虹仍遵守 **`admin-ui-fx`**（token + `color-mix`，禁止业务硬编码 HEX 色盘）。
 
 ### 语义文字颜色 Token
 
@@ -301,7 +314,7 @@ z-index 统一使用变量，避免随意数值冲突：
 
 ## 其他
 
-- **模块接口契约整理**：当需要 **按路由/页面梳理 `mock/backend-api`、与 `fetch*` / `config/data-source` 对齐、输出契约清单** 时，Agent 应遵循项目技能 **`.cursor/skills/module-api-contract-audit/SKILL.md`**，并配合规则 **`module-api-contract-audit.mdc`**、**`api-contract-and-mock-conventions.mdc`**、**`module-api-mock-config.mdc`**。契约须满足该 Skill「章节 0」：**`sampleResponse` 完整可联调**；URL 按 **路由+模块+功能**（kebab-case）组织；**接口一律 POST + JSON 请求体**（与 `request.post` 一致）。**大模块多页面** 时另有 Skill「章节 9～10」：**契约 JSON 与开关聚合到模块根目录**（子页不单独建契约目录/config）、**`data-source` 须注释且多页面用多 enum / 多 `is*Mock` 方法**、**每 JSON 根级 `interaction`**、**README 场景→接口表**。
+- **模块接口契约整理**：当需要 **按路由/页面梳理 `mock/backend-api`、与 `fetch*` / `config/data-source` 对齐、输出契约清单** 时，Agent 应遵循项目技能 **`.cursor/skills/module-api-contract-audit/SKILL.md`**，并配合规则 **`backend-fields.mdc`**、**`module-api-contract-audit.mdc`**、**`api-contract-and-mock-conventions.mdc`**、**`module-api-mock-config.mdc`**。契约须满足该 Skill「章节 0」：**`sampleResponse` 完整可联调**（含 **`api-contract-and-mock-conventions.mdc`**：**表格类主数组 ≥3 条**、**表列/树节点上闭合 `enum` 在示例中写全**）；**§0.4 / §0.5**：字段与 **`backend-fields`** 对齐、入参日期 **`startDate`/`endDate`**、同模块 **`sampleResponse` 形态尽量统一**；**§0.6（硬性）**：与 **`GET .../analysis/cockpit/meta-filter-options`**（无参）同构的顶栏公用下拉 **不** 再建模块内 `*meta-filter-options*.json`；页面 **直接读** **`useCockpitMetaFilterStore().data`**（或 **`useCockpitMetaFilterOptions().cockpitMeta`**），仅在 **`mock/backend-api/README.md`** 标注并引用 **`paid-analysis/mock/backend-api/README.md` 附录 A**（详见 **`api-contract-and-mock-conventions.mdc`**）。URL 按 **路由+模块+功能**（kebab-case）组织；**接口一律 POST + JSON 请求体**（与 `request.post` 一致；**例外**：该公用 meta 为 **GET 无参**，见 **`api-contract-and-mock-conventions.mdc`**）。**大模块多页面** 时另有 Skill「章节 9～10」：**契约 JSON 与开关聚合到模块根目录**（子页不单独建契约目录/config）、**`data-source` 须注释且多页面用多 enum / 多 `is*Mock` 方法**、**每 JSON 根级 `interaction`**、**README 场景→接口表**。
 - **应用当前时间**：业务里表示「今天/此刻」或基于今天算日期时，**禁止**裸 `new Date()`，统一使用 `@/utils/app-now` 的 `getAppNow` / `cloneAppDate` / `offsetAppNowMs` 等；细则与例外见 **`app-now-date.mdc`**。
 - **环境变量**: 以 `VITE_` 开头，在 `src/env.d.ts` 或代码中通过 `import.meta.env` 使用；勿提交敏感信息。
 - **生产构建**: `pnpm build` 会先执行 `vue-tsc --noEmit`，再 Vite 构建；生产会 drop console/debugger。

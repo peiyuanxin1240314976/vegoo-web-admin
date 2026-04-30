@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 广告成效页 Mock 数据（按设计稿还原，后续对接真实接口可整体替换）
  */
 import type { AdPerformanceCampaignDetail, AdPerformanceMock } from '../types'
@@ -179,7 +179,7 @@ export const MOCK_AD_PERFORMANCE: AdPerformanceMock = {
   filter: {
     startDate: '2026-03-05',
     endDate: '2026-03-05',
-    app: '',
+    appId: '',
     adPlatform: '',
     account: '',
     country: ''
@@ -764,6 +764,110 @@ function buildCampaignDetail(campaignId: string): AdPerformanceCampaignDetail {
         range: 'last7d',
         roiTarget: 80,
         cpiTarget: 2.5,
+        datasets: {
+          last7d: {
+            spendRoiTrend: [
+              { date: '2/22', spend: 1650, roi1: 81 },
+              { date: '2/23', spend: 1720, roi1: 84 },
+              { date: '2/24', spend: 1580, roi1: 78 },
+              { date: '2/25', spend: 1890, roi1: 88 },
+              { date: '2/26', spend: 1760, roi1: 82 },
+              { date: '2/27', spend: 1830, roi1: 87 },
+              { date: '2/28', spend: 1780, roi1: 85 }
+            ],
+            cpiTrend: [
+              { date: '2/22', cpi: 2.45 },
+              { date: '2/23', cpi: 2.38 },
+              { date: '2/24', cpi: 2.52 },
+              { date: '2/25', cpi: 2.31 },
+              { date: '2/26', cpi: 2.38 },
+              { date: '2/27', cpi: 2.35 },
+              { date: '2/28', cpi: 2.38 }
+            ],
+            dailyRows: [
+              {
+                date: '2026-02-28',
+                spend: 1780,
+                cpi: 2.38,
+                ctr: 3.1,
+                cvr: 31.2,
+                roi1: 85,
+                wowPercent: 2.3,
+                statusText: '正常'
+              },
+              {
+                date: '2026-02-27',
+                spend: 1820,
+                cpi: 2.35,
+                ctr: 3.3,
+                cvr: 32.1,
+                roi1: 87,
+                wowPercent: 1.8,
+                statusText: '正常'
+              },
+              {
+                date: '2026-02-26',
+                spend: 1760,
+                cpi: 2.38,
+                ctr: 2.9,
+                cvr: 29.8,
+                roi1: 83,
+                wowPercent: -2.1,
+                statusText: '正常'
+              },
+              {
+                date: '2026-02-25',
+                spend: 1890,
+                cpi: 2.31,
+                ctr: 3.5,
+                cvr: 33.4,
+                roi1: 88,
+                wowPercent: 6.8,
+                statusText: '正常'
+              },
+              {
+                date: '2026-02-24',
+                spend: 1580,
+                cpi: 2.52,
+                ctr: 2.4,
+                cvr: 24.1,
+                roi1: 78,
+                wowPercent: -8.1,
+                statusText: '异常'
+              },
+              {
+                date: '2026-02-23',
+                spend: 1720,
+                cpi: 2.38,
+                ctr: 3.0,
+                cvr: 30.5,
+                roi1: 84,
+                wowPercent: 2.1,
+                statusText: '正常'
+              },
+              {
+                date: '2026-02-22',
+                spend: 1650,
+                cpi: 2.45,
+                ctr: 2.8,
+                cvr: 28.9,
+                roi1: 81,
+                wowPercent: 0.0,
+                statusText: '正常'
+              }
+            ]
+          },
+          last14d: {
+            spendRoiTrend: [],
+            cpiTrend: [],
+            dailyRows: []
+          },
+          month: {
+            spendRoiTrend: [],
+            cpiTrend: [],
+            dailyRows: []
+          }
+        },
         spendRoiTrend: [
           { date: '2/22', spend: 1650, roi1: 81 },
           { date: '2/23', spend: 1720, roi1: 84 },

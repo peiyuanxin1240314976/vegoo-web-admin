@@ -59,6 +59,70 @@ export class RouteRegistry {
   }
 
   /**
+   * 预加载菜单对应的页面组件，降低首次进入页面的白屏感知
+   */
+  preloadRouteComponents(menuList: AppRouteRecord[], targetPaths: string[] = []): void {
+    const loaders = new Set<() => Promise<any>>()
+    const normalizedTargets = new Set(
+      targetPaths.filter(Boolean).map((path) => path.replace(/\/+$/, '') || '/')
+    )
+
+    const resolveRoutePath = (parentPath: string, routePath: string): string => {
+      if (!routePath) {
+        return parentPath || '/'
+      }
+      if (routePath.startsWith('/')) {
+        return routePath
+      }
+      const base = parentPath === '/' ? '' : parentPath
+      return `${base}/${routePath}`.replace(/\/+/g, '/')
+    }
+
+    const collectLoaders = (
+      routes: AppRouteRecord[],
+      parentPath = '',
+      inheritPreload = false
+    ): boolean => {
+      let hasCriticalRoute = false
+
+      routes.forEach((route) => {
+        const fullPath = resolveRoutePath(parentPath, route.path || '')
+        const childHasCriticalRoute = route.children?.length
+          ? collectLoaders(route.children, fullPath, inheritPreload || route.meta?.preload === true)
+          : false
+        const shouldPreloadSelf =
+          inheritPreload ||
+          route.meta?.preload === true ||
+          normalizedTargets.has(fullPath.replace(/\/+$/, '') || '/')
+
+        if (
+          (shouldPreloadSelf || childHasCriticalRoute) &&
+          route.component &&
+          !route.meta?.isIframe
+        ) {
+          loaders.add(this.componentLoader.load(route.component as string))
+        }
+
+        if (shouldPreloadSelf || childHasCriticalRoute) {
+          hasCriticalRoute = true
+        }
+      })
+
+      return hasCriticalRoute
+    }
+
+    collectLoaders(menuList)
+
+    if (!loaders.size) {
+      return
+    }
+
+    void Promise.allSettled(Array.from(loaders, (loader) => loader())).catch((error) => {
+      console.warn('[RouteRegistry] 预加载路由组件失败', error)
+    })
+  }
+
+  /**
    * 移除所有动态路由
    */
   unregister(): void {

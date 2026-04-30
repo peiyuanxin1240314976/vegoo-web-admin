@@ -15,29 +15,124 @@
         "enum": ["appstore", "googleplay"],
         "description": "数据源筛选。"
       },
-      "status": { "type": "string", "required": false, "description": "状态筛选。" }
+      "status": {
+        "type": "string",
+        "required": false,
+        "enum": ["completed", "processing", "partial", "failed"],
+        "description": "状态筛选。"
+      }
     },
     "response": {
-      "total": { "type": "number", "required": true, "description": "总数。" },
-      "records": { "type": "ImportTask[]", "required": true, "description": "任务列表。" }
+      "total": { "type": "number", "required": true, "description": "符合筛选条件的总条数。" },
+      "records": { "type": "ImportTask[]", "required": true, "description": "任务列表。" },
+      "current": { "type": "number", "required": true, "description": "当前页码。" },
+      "size": { "type": "number", "required": true, "description": "每页条数。" }
+    },
+    "ImportTask": {
+      "id": { "type": "string", "required": true, "description": "内部记录 ID。" },
+      "taskId": { "type": "string", "required": true, "description": "任务 ID（页面展示主键）。" },
+      "dataSource": {
+        "type": "string",
+        "required": true,
+        "enum": ["appstore", "googleplay"],
+        "description": "数据源。"
+      },
+      "uploadTime": {
+        "type": "string",
+        "required": true,
+        "description": "上传时间 YYYY-MM-DD HH:mm。"
+      },
+      "totalRecords": { "type": "number", "required": true, "description": "总记录数。" },
+      "newImports": { "type": "number", "required": true, "description": "新增导入记录数。" },
+      "duplicateSkipped": {
+        "type": "number|null",
+        "required": true,
+        "description": "重复跳过数；处理中阶段可为 null。"
+      },
+      "failedCount": {
+        "type": "number|null",
+        "required": true,
+        "description": "失败数；处理中阶段可为 null。"
+      },
+      "status": {
+        "type": "string",
+        "required": true,
+        "enum": ["completed", "processing", "partial", "failed"],
+        "description": "任务状态。"
+      },
+      "remark": { "type": "string", "required": false, "description": "备注。" }
     }
   },
   "sampleRequest": { "page": 1, "pageSize": 10, "dataSource": "", "status": "" },
   "sampleResponse": {
-    "data": { "total": 1, "records": [{ "taskId": "IMP-027", "status": "completed" }] }
+    "data": {
+      "total": 12,
+      "current": 1,
+      "size": 10,
+      "records": [
+        {
+          "id": "026",
+          "taskId": "IMP-026",
+          "dataSource": "appstore",
+          "uploadTime": "2026-02-28 14:32",
+          "totalRecords": 5234,
+          "newImports": 4342,
+          "duplicateSkipped": 892,
+          "failedCount": 0,
+          "status": "completed",
+          "remark": ""
+        },
+        {
+          "id": "022",
+          "taskId": "IMP-022",
+          "dataSource": "appstore",
+          "uploadTime": "2026-02-25 08:05",
+          "totalRecords": 6780,
+          "newImports": 4210,
+          "duplicateSkipped": null,
+          "failedCount": null,
+          "status": "processing",
+          "remark": "夜间批次"
+        },
+        {
+          "id": "020",
+          "taskId": "IMP-020",
+          "dataSource": "googleplay",
+          "uploadTime": "2026-02-23 15:45",
+          "totalRecords": 2890,
+          "newImports": 2450,
+          "duplicateSkipped": 410,
+          "failedCount": 30,
+          "status": "partial",
+          "remark": "存在失败记录"
+        },
+        {
+          "id": "016",
+          "taskId": "IMP-016",
+          "dataSource": "appstore",
+          "uploadTime": "2026-02-19 14:20",
+          "totalRecords": 3300,
+          "newImports": 0,
+          "duplicateSkipped": null,
+          "failedCount": 3300,
+          "status": "failed",
+          "remark": "文件格式异常"
+        }
+      ]
+    }
   },
   "api": {
     "url": "POST /api/config-management/order-import/table",
     "method": "POST",
     "priority": "P0",
     "requestBody": "分页+筛选参数",
-    "responseBody": "{ total, records }"
+    "responseBody": "{ total, records, current, size }"
   },
   "interaction": {
     "triggers": [
       {
         "moment": "页面首屏初始化",
-        "detail": "`/config-management/order-import` `index.vue` 拉取任务表与 KPI；`OrderImportApiSource.importTable`。",
+        "detail": "`/config-management/order-import` `index.vue` 拉取任务表与 KPI；`OrderImportListApiSource.importTable`。",
         "prerequisite": "登录态。"
       },
       {

@@ -2,7 +2,7 @@ import { computed, onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import {
   fetchMyPerformanceAppDimensionTable,
-  fetchMyPerformanceKpiAchievement,
+  fetchMyPerformanceAppDimensionTableByDateRange,
   fetchMyPerformanceMetaPeriodOptions,
   fetchMyPerformanceMetaPersonOptions,
   fetchMyPerformanceOverviewKpi,
@@ -10,15 +10,60 @@ import {
   fetchMyPerformanceRoiTrend,
   fetchMyPerformanceSpendProgress
 } from '@/api/user-growth/my-performance'
+import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
 import type {
   MyPerformanceMetaPersonResponse,
   MyPerformanceMetaPeriodResponse,
   MyPerformancePageData,
+  MyPerformancePeriodOption,
   MyPerformancePeriodType,
   MyPerformanceQueryBody
 } from '../types'
 
-/** 兼容远程未返回 selectedPersonId、列表字段异常等情况，保证能拼出 queryBody */
+const MY_PERFORMANCE_NOW_OFFSET_DAYS = -2
+
+function getMyPerformanceNow(): Date {
+  const now = cloneAppDate(getAppNow())
+  now.setDate(now.getDate() + MY_PERFORMANCE_NOW_OFFSET_DAYS)
+  return now
+}
+
+function pickAppNowMonthPeriodValue(monthOptions: MyPerformancePeriodOption[]): string {
+  const now = getMyPerformanceNow()
+  const y = now.getFullYear()
+  const m = String(now.getMonth() + 1).padStart(2, '0')
+  const target = `${y}-${m}`
+  if (monthOptions.some((o) => o.value === target)) return target
+  const anySameMonth = monthOptions.find((o) => o.value.endsWith(`-${m}`))
+  if (anySameMonth) return anySameMonth.value
+  return target
+}
+
+function pickAppNowQuarterPeriodValue(quarterOptions: MyPerformancePeriodOption[]): string {
+  const now = getMyPerformanceNow()
+  const targetYear = now.getFullYear()
+  const targetQuarter = Math.floor(now.getMonth() / 3) + 1
+  const parseQuarter = (value: string) => {
+    const match = String(value).match(/(\d{4})\s*-?\s*[Qq]([1-4])/)
+    if (!match) return null
+    return { year: Number(match[1]), quarter: Number(match[2]) }
+  }
+
+  const exact = quarterOptions.find((o) => {
+    const parsed = parseQuarter(o.value)
+    return parsed?.year === targetYear && parsed.quarter === targetQuarter
+  })
+  if (exact) return exact.value
+
+  const sameQuarter = quarterOptions.find((o) => {
+    const parsed = parseQuarter(o.value)
+    return parsed?.quarter === targetQuarter
+  })
+  if (sameQuarter) return sameQuarter.value
+
+  return quarterOptions[0]?.value ?? ''
+}
+
 function normalizeMetaPersonPayload(
   raw: MyPerformanceMetaPersonResponse | null | undefined
 ): Pick<MyPerformancePageData, 'personOptions' | 'selectedPersonId'> {
@@ -30,7 +75,6 @@ function normalizeMetaPersonPayload(
   return { personOptions: list, selectedPersonId: selected }
 }
 
-/** 兼容远程返回缺字段、`data` 为空等情况，避免 periodOptions / selectedPeriod 为 undefined */
 function normalizeMetaPeriodPayload(
   raw: MyPerformanceMetaPeriodResponse | null | undefined
 ): Pick<MyPerformancePageData, 'periodOptions' | 'periodType' | 'selectedPeriodValue'> {
@@ -40,23 +84,67 @@ function normalizeMetaPeriodPayload(
     month: Array.isArray(po?.month) ? po.month : []
   }
   const sp = raw?.selectedPeriod
+
   if (
     sp &&
     (sp.periodType === 'quarter' || sp.periodType === 'month') &&
     typeof sp.periodValue === 'string' &&
     sp.periodValue.length > 0
   ) {
-    return { periodOptions, periodType: sp.periodType, selectedPeriodValue: sp.periodValue }
+    if (sp.periodType === 'month') {
+      return {
+        periodOptions,
+        periodType: 'month',
+        selectedPeriodValue: pickAppNowMonthPeriodValue(periodOptions.month)
+      }
+    }
+    return {
+      periodOptions,
+      periodType: 'quarter',
+      selectedPeriodValue: pickAppNowQuarterPeriodValue(periodOptions.quarter) || sp.periodValue
+    }
   }
-  const m0 = periodOptions.month[0]?.value
-  if (m0) {
-    return { periodOptions, periodType: 'month', selectedPeriodValue: m0 }
+
+  const monthValue = periodOptions.month[0]?.value
+  if (monthValue) {
+    return {
+      periodOptions,
+      periodType: 'month',
+      selectedPeriodValue: pickAppNowMonthPeriodValue(periodOptions.month)
+    }
   }
-  const q0 = periodOptions.quarter[0]?.value
-  if (q0) {
-    return { periodOptions, periodType: 'quarter', selectedPeriodValue: q0 }
+
+  const quarterValue = periodOptions.quarter[0]?.value
+  if (quarterValue) {
+    return {
+      periodOptions,
+      periodType: 'quarter',
+      selectedPeriodValue: pickAppNowQuarterPeriodValue(periodOptions.quarter)
+    }
   }
-  return { periodOptions, periodType: 'month', selectedPeriodValue: '' }
+
+  return {
+    periodOptions,
+    periodType: 'month',
+    selectedPeriodValue: pickAppNowMonthPeriodValue(periodOptions.month)
+  }
+}
+
+function createEmptyTable() {
+  return {
+    title: '',
+    list: [],
+    summary: {
+      adSpend: null,
+      calculatedSpend: null,
+      roi: null,
+      commissionSpend: null,
+      estimatedProfit: null,
+      cpa: null,
+      score: null
+    },
+    excelTables: undefined
+  }
 }
 
 function emptyPageData(): MyPerformancePageData {
@@ -68,50 +156,126 @@ function emptyPageData(): MyPerformancePageData {
     selectedPeriodValue: '',
     topKpis: [],
     kpiAchievement: {
-      score: 0,
+      score: null,
       label: '',
       breakdown: []
     },
     roiTrend: { title: '', points: [] },
     spendProgress: {
       title: '',
-      data: { spend: 0, target: 0, rate: 0 }
+      list: []
     },
     performanceHistory: { title: '', list: [] },
-    appTable: {
-      title: '',
-      list: [],
-      summary: {
-        adSpend: 0,
-        calculatedSpend: 0,
-        roi: 0,
-        commissionSpend: 0,
-        estimatedProfit: 0,
-        cpa: 0,
-        score: 0
-      }
-    }
+    appDimensionTable: createEmptyTable(),
+    appDateRangeTable: createEmptyTable()
   }
 }
 
 const DETAIL_LABELS: Record<string, string> = {
   overviewKpi: '顶部 KPI',
-  kpiAchievement: 'KPI 达成',
   roiTrend: 'ROI 趋势',
-  spendProgress: '消耗进度',
+  spendProgress: '花费达成',
   performanceHistory: '绩效历史',
-  appDimensionTable: '应用维度表'
+  appPeriodTable: '按应用绩效评估',
+  appDateRangeTable: '近7天绩效评估'
 }
 
 export function useMyPerformancePage() {
   const data = ref<MyPerformancePageData>(emptyPageData())
-  const loading = ref(false)
-  const detailLoading = ref(false)
+  const metaLoading = ref(false)
+  const loadingMap = ref<Record<string, boolean>>({})
+  const requestSeq = ref(0)
+
+  function buildGlobalDateRangeFromPeriod(
+    periodType: MyPerformancePeriodType,
+    periodValue: string
+  ): { startDate: string; endDate: string } {
+    const now = getMyPerformanceNow()
+
+    const todayYmd = formatYYYYMMDD(now)
+
+    const clampEndToToday = (end: Date) => {
+      const endYmd = formatYYYYMMDD(end)
+      return endYmd > todayYmd ? todayYmd : endYmd
+    }
+
+    const fallbackCurrentMonth = () => {
+      const y = now.getFullYear()
+      const m = now.getMonth() // 0-based
+      const start = cloneAppDate(now)
+      start.setFullYear(y, m, 1)
+      start.setHours(0, 0, 0, 0)
+      return { startDate: formatYYYYMMDD(start), endDate: todayYmd }
+    }
+
+    const fallbackCurrentQuarter = () => {
+      const y = now.getFullYear()
+      const q = Math.floor(now.getMonth() / 3) + 1
+      const startMonth = (q - 1) * 3
+      const start = cloneAppDate(now)
+      start.setFullYear(y, startMonth, 1)
+      start.setHours(0, 0, 0, 0)
+      return { startDate: formatYYYYMMDD(start), endDate: todayYmd }
+    }
+
+    if (periodType === 'month') {
+      const m = String(periodValue).match(/^(\d{4})-(\d{2})$/)
+      if (!m) return fallbackCurrentMonth()
+      const year = Number(m[1])
+      const monthIndex = Number(m[2]) - 1
+      if (!Number.isFinite(year) || !Number.isFinite(monthIndex)) return fallbackCurrentMonth()
+
+      const start = cloneAppDate(now)
+      start.setFullYear(year, monthIndex, 1)
+      start.setHours(0, 0, 0, 0)
+
+      const end = cloneAppDate(now)
+      // 该月最后一天：把日期设为下个月第 0 天
+      end.setFullYear(year, monthIndex + 1, 0)
+      end.setHours(0, 0, 0, 0)
+
+      const endDate =
+        year === now.getFullYear() && monthIndex === now.getMonth()
+          ? todayYmd
+          : clampEndToToday(end)
+
+      return { startDate: formatYYYYMMDD(start), endDate }
+    }
+
+    // quarter
+    const q = String(periodValue).match(/^(\d{4})\s*-?\s*[Qq]([1-4])$/)
+    if (!q) return fallbackCurrentQuarter()
+    const year = Number(q[1])
+    const quarter = Number(q[2])
+    if (!Number.isFinite(year) || !Number.isFinite(quarter)) return fallbackCurrentQuarter()
+
+    const startMonth = (quarter - 1) * 3
+    const start = cloneAppDate(now)
+    start.setFullYear(year, startMonth, 1)
+    start.setHours(0, 0, 0, 0)
+
+    const end = cloneAppDate(now)
+    // 季度末月的最后一天
+    end.setFullYear(year, startMonth + 3, 0)
+    end.setHours(0, 0, 0, 0)
+
+    const isCurrentQuarter =
+      year === now.getFullYear() && Math.floor(now.getMonth() / 3) + 1 === quarter
+
+    return {
+      startDate: formatYYYYMMDD(start),
+      endDate: isCurrentQuarter ? todayYmd : clampEndToToday(end)
+    }
+  }
+
+  const globalDateRange = computed(() =>
+    buildGlobalDateRangeFromPeriod(data.value.periodType, data.value.selectedPeriodValue)
+  )
 
   const selectedPerson = computed(() => {
     const list = data.value.personOptions
-    const cur = list.find((p) => p.id === data.value.selectedPersonId) ?? list[0]
-    if (cur) return cur
+    const current = list.find((p) => p.id === data.value.selectedPersonId) ?? list[0]
+    if (current) return current
     return {
       id: '',
       name: '',
@@ -124,24 +288,23 @@ export function useMyPerformancePage() {
   function queryBody(): MyPerformanceQueryBody | null {
     const { selectedPersonId, periodType, selectedPeriodValue } = data.value
     if (!selectedPersonId || !selectedPeriodValue) return null
+    const { startDate, endDate } = globalDateRange.value
     return {
       personId: selectedPersonId,
       periodType,
-      periodValue: selectedPeriodValue
+      periodValue: selectedPeriodValue,
+      startDate,
+      endDate
     }
   }
 
-  /**
-   * 先拉人员再拉统计口径：多数后端口径随人员变化，并行时不带 personId 会导致口径失败/为空，
-   * 进而 selectedPeriodValue 为空，loadDetail 不会发任何详情请求。
-   */
   async function loadMeta(personIdOverride?: string) {
     let personOk = false
     try {
       const personRaw = await fetchMyPerformanceMetaPersonOptions()
-      const n = normalizeMetaPersonPayload(personRaw)
-      data.value.personOptions = n.personOptions
-      data.value.selectedPersonId = n.selectedPersonId
+      const normalized = normalizeMetaPersonPayload(personRaw)
+      data.value.personOptions = normalized.personOptions
+      data.value.selectedPersonId = normalized.selectedPersonId
       personOk = true
     } catch {
       ElMessage.error('加载人员选项失败')
@@ -154,10 +317,10 @@ export function useMyPerformancePage() {
       const periodRaw = await fetchMyPerformanceMetaPeriodOptions(
         personIdForPeriod ? { personId: personIdForPeriod } : undefined
       )
-      const n = normalizeMetaPeriodPayload(periodRaw)
-      data.value.periodOptions = n.periodOptions
-      data.value.periodType = n.periodType
-      data.value.selectedPeriodValue = n.selectedPeriodValue
+      const normalized = normalizeMetaPeriodPayload(periodRaw)
+      data.value.periodOptions = normalized.periodOptions
+      data.value.periodType = normalized.periodType
+      data.value.selectedPeriodValue = normalized.selectedPeriodValue
       periodOk = true
     } catch {
       ElMessage.error('加载统计口径选项失败')
@@ -170,86 +333,109 @@ export function useMyPerformancePage() {
     const body = queryBody()
     if (!body) {
       if (data.value.selectedPersonId && !data.value.selectedPeriodValue) {
-        ElMessage.warning('统计口径下暂无可用月份或季度，无法加载绩效详情')
+        ElMessage.warning('当前统计口径暂无可用月份或季度，无法加载绩效详情')
       }
       return
     }
 
-    detailLoading.value = true
-    try {
-      const tasks: Array<{ key: string; run: () => Promise<void> }> = [
-        {
-          key: 'overviewKpi',
-          run: async () => {
-            const r = await fetchMyPerformanceOverviewKpi(body)
-            data.value.topKpis = r.topKpis
-          }
-        },
-        {
-          key: 'kpiAchievement',
-          run: async () => {
-            const r = await fetchMyPerformanceKpiAchievement(body)
-            data.value.kpiAchievement = r.kpiAchievement
-          }
-        },
-        {
-          key: 'roiTrend',
-          run: async () => {
-            const r = await fetchMyPerformanceRoiTrend(body)
-            data.value.roiTrend = { title: r.title, points: r.points }
-          }
-        },
-        {
-          key: 'performanceHistory',
-          run: async () => {
-            const r = await fetchMyPerformancePerformanceHistory(body)
-            data.value.performanceHistory = { title: r.title, list: r.list }
-          }
-        },
-        {
-          key: 'appDimensionTable',
-          run: async () => {
-            const r = await fetchMyPerformanceAppDimensionTable(body)
-            data.value.appTable = { title: r.title, list: r.list, summary: r.summary }
+    const seq = ++requestSeq.value
+
+    const setLoading = (key: string, value: boolean) => {
+      loadingMap.value = { ...loadingMap.value, [key]: value }
+    }
+
+    const runTask = async (key: string, run: () => Promise<void>) => {
+      setLoading(key, true)
+      try {
+        await run()
+      } finally {
+        setLoading(key, false)
+      }
+    }
+
+    const tasks: Array<{ key: string; run: () => Promise<void> }> = [
+      {
+        key: 'overviewKpi',
+        run: async () => {
+          const response = await fetchMyPerformanceOverviewKpi(body)
+          if (seq !== requestSeq.value) return
+          data.value.topKpis = response.topKpis
+        }
+      },
+      {
+        key: 'roiTrend',
+        run: async () => {
+          const response = await fetchMyPerformanceRoiTrend(body)
+          if (seq !== requestSeq.value) return
+          data.value.roiTrend = { title: response.title, points: response.points }
+        }
+      },
+      {
+        key: 'performanceHistory',
+        run: async () => {
+          const response = await fetchMyPerformancePerformanceHistory(body)
+          if (seq !== requestSeq.value) return
+          data.value.performanceHistory = { title: response.title, list: response.list }
+        }
+      },
+      {
+        key: 'appPeriodTable',
+        run: async () => {
+          const response = await fetchMyPerformanceAppDimensionTable(body)
+          if (seq !== requestSeq.value) return
+          data.value.appDimensionTable = {
+            title: response.title,
+            list: response.list,
+            summary: response.summary
           }
         }
-      ]
-
-      if (data.value.periodType === 'month') {
-        tasks.push({
-          key: 'spendProgress',
-          run: async () => {
-            const r = await fetchMyPerformanceSpendProgress(body)
-            data.value.spendProgress = { title: r.title, data: r.data }
+      },
+      {
+        key: 'appDateRangeTable',
+        run: async () => {
+          const response = await fetchMyPerformanceAppDimensionTableByDateRange(body)
+          if (seq !== requestSeq.value) return
+          data.value.appDateRangeTable = {
+            title: response.title,
+            list: response.list,
+            summary: response.summary,
+            excelTables: response.excelTables
           }
-        })
-      } else {
-        data.value.spendProgress = {
-          title: '',
-          data: { spend: 0, target: 0, rate: 0 }
         }
       }
+    ]
 
-      const results = await Promise.allSettled(tasks.map((t) => t.run()))
-      results.forEach((res, i) => {
-        if (res.status === 'rejected') {
-          const key = tasks[i]!.key
-          const label = DETAIL_LABELS[key] ?? key
-          ElMessage.error(`加载${label}失败`)
+    if (data.value.periodType === 'month') {
+      tasks.push({
+        key: 'spendProgress',
+        run: async () => {
+          const response = await fetchMyPerformanceSpendProgress(body)
+          data.value.spendProgress = { title: response.title, list: response.list }
         }
       })
-    } finally {
-      detailLoading.value = false
+    } else {
+      data.value.spendProgress = {
+        title: '',
+        list: []
+      }
     }
+
+    const results = await Promise.allSettled(tasks.map((task) => runTask(task.key, task.run)))
+    results.forEach((result, index) => {
+      if (result.status === 'rejected') {
+        const key = tasks[index]!.key
+        ElMessage.error(`加载${DETAIL_LABELS[key] ?? key}失败`)
+      }
+    })
   }
 
   async function bootstrap() {
-    loading.value = true
+    metaLoading.value = true
     try {
       await loadMeta()
       await loadDetail()
     } finally {
-      loading.value = false
+      metaLoading.value = false
     }
   }
 
@@ -261,10 +447,10 @@ export function useMyPerformancePage() {
     data.value.selectedPersonId = personId
     try {
       const periodRes = await fetchMyPerformanceMetaPeriodOptions({ personId })
-      const n = normalizeMetaPeriodPayload(periodRes)
-      data.value.periodOptions = n.periodOptions
-      data.value.periodType = n.periodType
-      data.value.selectedPeriodValue = n.selectedPeriodValue
+      const normalized = normalizeMetaPeriodPayload(periodRes)
+      data.value.periodOptions = normalized.periodOptions
+      data.value.periodType = normalized.periodType
+      data.value.selectedPeriodValue = normalized.selectedPeriodValue
     } catch {
       ElMessage.error('加载统计口径选项失败')
     }
@@ -273,9 +459,11 @@ export function useMyPerformancePage() {
 
   async function onPeriodTypeChange(periodType: MyPerformancePeriodType) {
     data.value.periodType = periodType
-    const options =
-      periodType === 'quarter' ? data.value.periodOptions.quarter : data.value.periodOptions.month
-    const nextValue = options[0]?.value ?? data.value.selectedPeriodValue
+    const nextValue =
+      periodType === 'quarter'
+        ? pickAppNowQuarterPeriodValue(data.value.periodOptions.quarter) ||
+          data.value.selectedPeriodValue
+        : pickAppNowMonthPeriodValue(data.value.periodOptions.month)
     data.value.selectedPeriodValue = nextValue
     await loadDetail()
   }
@@ -287,9 +475,10 @@ export function useMyPerformancePage() {
 
   return {
     data,
-    loading,
-    detailLoading,
+    metaLoading,
+    loadingMap,
     selectedPerson,
+    globalDateRange,
     onPersonChange,
     onPeriodTypeChange,
     onPeriodValueChange

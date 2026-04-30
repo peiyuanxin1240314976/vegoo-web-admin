@@ -113,13 +113,12 @@
               class="ad-performance-distribution__list-row"
             >
               <span
-                class="ad-performance-distribution__app-icon"
+                class="ad-performance-distribution__app-logo"
                 aria-hidden="true"
-                :style="{
-                  background: `${row.color}22`,
-                  boxShadow: `0 0 0 1px ${row.color}44 inset`
-                }"
-              ></span>
+                :style="getAppLogoStyle(row.name)"
+              >
+                {{ getAppInitial(row.name) }}
+              </span>
               <div class="ad-performance-distribution__app-content">
                 <div class="ad-performance-distribution__app-top">
                   <div class="ad-performance-distribution__app-name" :title="row.name">
@@ -238,6 +237,31 @@
   function getRowColor(index: number) {
     const colors = ['#10B981', '#3B82F6', '#F97316', '#8B5CF6', '#EC4899', '#14B8A6']
     return colors[index] ?? colors[index % colors.length]
+  }
+
+  function getAppInitial(name?: string) {
+    const text = String(name ?? '').trim()
+    if (!text) return 'A'
+    const match = text.match(/[A-Za-z0-9]/)
+    return (match?.[0] ?? text[0] ?? 'A').toUpperCase()
+  }
+
+  function getAppLogoStyle(name?: string) {
+    const palettes = [
+      { bg: 'linear-gradient(180deg, #4d8dff 0%, #2f6fe4 100%)', border: 'rgb(143 188 255 / 38%)' },
+      { bg: 'linear-gradient(180deg, #5b8cff 0%, #3565d6 100%)', border: 'rgb(157 190 255 / 38%)' },
+      { bg: 'linear-gradient(180deg, #77839a 0%, #5f6b82 100%)', border: 'rgb(203 213 225 / 24%)' },
+      { bg: 'linear-gradient(180deg, #8792a8 0%, #6c778d 100%)', border: 'rgb(203 213 225 / 24%)' }
+    ]
+
+    const text = String(name ?? '').trim()
+    const hash = Array.from(text).reduce((total, char) => total + char.charCodeAt(0), 0)
+    const palette = palettes[hash % palettes.length]
+
+    return {
+      '--app-logo-bg': palette.bg,
+      '--app-logo-border': palette.border
+    }
   }
 
   const DONUT_COLORS = ['#3B82F6', '#10B981', '#F97316', '#8B5CF6', '#EC4899', '#14B8A6', '#F59E0B']
@@ -563,7 +587,7 @@
 
   .ad-performance-distribution__list-row {
     display: grid;
-    grid-template-columns: 18px minmax(0, 1fr);
+    grid-template-columns: 28px minmax(0, 1fr);
     column-gap: 10px;
     align-items: stretch;
     min-width: 0;
@@ -602,13 +626,25 @@
     min-width: 0;
   }
 
-  .ad-performance-distribution__app-icon {
+  .ad-performance-distribution__app-logo {
+    display: inline-flex;
     flex: 0 0 auto;
+    align-items: center;
     align-self: flex-start;
-    width: 18px;
-    height: 18px;
-    background: color-mix(in srgb, var(--default-border) 70%, transparent);
-    border-radius: 6px;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    overflow: hidden;
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1;
+    color: #fff;
+    background: var(--app-logo-bg);
+    border: 1px solid var(--app-logo-border);
+    border-radius: 9px;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 12%),
+      0 4px 10px rgb(15 23 42 / 18%);
   }
 
   .ad-performance-distribution__app-name-text {

@@ -6,6 +6,9 @@ export interface AgencyAnalysisFilterOption {
   value: string
 }
 
+/** 顶部 tabs（可用代投来源，后端不返回“汇总”） */
+export type AgencyAnalysisAvailableSourceItem = AgencyAnalysisFilterOption
+
 export interface AgencyAnalysisFilterOptionsPayload {
   appOptions: AgencyAnalysisFilterOption[]
   agencyOptions: AgencyAnalysisFilterOption[]
@@ -179,4 +182,65 @@ export interface AgencyAnalysisScreenshotPayload {
   countryTop8: CountryDistributionItem[]
   /** 当前展开的代投方 id，无则「当前代投方」模式下账户/ROI 等无明细 */
   focusedAgencyId: string | null
+}
+
+/** 子 Tab（非汇总）- KPI 行：近 7 天 / 单日 */
+export interface AgencySubTabKpiMetricItem {
+  key:
+    | 'spend'
+    | 'roi1'
+    | 'cpa'
+    | 'installs'
+    | 'appCount'
+    | 'accountCount'
+    | 'campaignCount'
+    | 'adsetCount'
+    | 'countryCount'
+    | 'days'
+  label: string
+  value: string
+}
+
+export interface AgencySubTabKpiPayload {
+  /** 展示期：例如「近7天」「2026-03-10」等 */
+  periodLabel: string
+  metrics: AgencySubTabKpiMetricItem[]
+}
+
+/** 子 Tab（非汇总）- 近期汇总表 */
+export interface AgencySubTabRecentSummaryRow {
+  app: string
+  platform: string
+  source: string
+  accountId: string
+  accountName: string
+  spend: string
+  budget: string
+  cpa: string
+  cpi: string
+  installs: string
+  /** 首日 ROI 趋势（展示用百分比文本，长度由后端决定） */
+  roiTrend: string[]
+}
+
+export interface AgencySubTabRecentSummaryPayload {
+  rows: AgencySubTabRecentSummaryRow[]
+}
+
+/** 子 Tab（非汇总）- 账户汇总表 */
+export interface AgencySubTabAccountSummaryRow {
+  app: string
+  platform: string
+  source: string
+  accountId: string
+  accountName: string
+  spend: string
+  roi1: string
+  cpa: string
+  cpi: string
+  installs: string
+}
+
+export interface AgencySubTabAccountSummaryPayload {
+  rows: AgencySubTabAccountSummaryRow[]
 }

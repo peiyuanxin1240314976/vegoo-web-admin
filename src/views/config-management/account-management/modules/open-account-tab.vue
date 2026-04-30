@@ -1,243 +1,57 @@
 <template>
   <div class="open-account-tab">
-    <!-- 筛选栏 -->
-    <div class="filter-bar">
-      <!-- 左侧筛选 -->
-      <div class="filter-left">
-        <!-- 广告平台 -->
-        <div class="filter-group">
-          <span class="filter-label">广告平台：</span>
-          <div class="platform-tabs">
-            <button
-              :class="['platform-tab', { 'platform-tab--active': sourceFilter === '' }]"
-              @click="sourceFilter = ''"
-              >全部</button
-            >
-            <button
-              v-for="p in PLATFORM_CONFIGS"
-              :key="p.value"
-              :class="['platform-tab', { 'platform-tab--active': sourceFilter === p.value }]"
-              :style="
-                sourceFilter === p.value
-                  ? { color: p.color, borderColor: p.color, background: p.bg }
-                  : {}
-              "
-              @click="sourceFilter = p.value"
-              >{{ p.shortLabel }}</button
-            >
-          </div>
-        </div>
-        <!-- 开户状态 -->
-        <div class="filter-group">
-          <span class="filter-label">开户状态：</span>
-          <div class="status-tabs">
-            <button
-              v-for="s in statusOptions"
-              :key="s.value"
-              :class="[
-                'status-tab',
-                `status-tab--${s.type}`,
-                { 'status-tab--active': statusFilter === s.value }
-              ]"
-              @click="statusFilter = s.value"
-            >
-              {{ s.label }}
-              <span v-if="s.count !== undefined" class="status-tab-count">{{ s.count }}</span>
-            </button>
-          </div>
-        </div>
-        <!-- 代理商 -->
-        <div class="filter-group">
-          <span class="filter-label">代理商：</span>
-          <el-select v-model="agencyFilter" placeholder="全部" class="filter-select" clearable>
-            <el-option label="全部" value="" />
-            <el-option v-for="a in agencyOptions" :key="a" :label="a" :value="a" />
-          </el-select>
-        </div>
-        <!-- 应用 -->
-        <div class="filter-group">
-          <span class="filter-label">应用：</span>
-          <el-select v-model="appFilter" placeholder="全部" class="filter-select" clearable>
-            <el-option label="全部" value="" />
-            <el-option v-for="a in appOptions" :key="a" :label="a" :value="a" />
-          </el-select>
-        </div>
-      </div>
-      <!-- 右侧飞书推送 -->
-      <div class="feishu-bar">
-        <span class="feishu-label">飞书推送：</span>
-        <span class="feishu-status">
-          <span :class="['feishu-dot', { 'feishu-dot--on': feishuEnabled }]" />
-          {{ feishuEnabled ? '已开启' : '未开启' }}
-        </span>
-        <button class="feishu-setting-btn" @click="handleOpenFeishuSetting">
-          推送设置
-          <svg viewBox="0 0 16 16" fill="none" width="13" height="13">
-            <circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.4" />
-            <path
-              d="M8 2v2M8 12v2M2 8h2M12 8h2M3.5 3.5l1.5 1.5M11 11l1.5 1.5M3.5 12.5L5 11M11 5l1.5-1.5"
-              stroke="currentColor"
-              stroke-width="1.3"
-              stroke-linecap="round"
-            />
-          </svg>
-        </button>
-      </div>
-    </div>
+    <OpenAccountFiltersBar
+      v-model:source-filter="sourceFilter"
+      v-model:app-filter="appFilter"
+      v-model:status-filter="statusFilter"
+      v-model:agency-filter="agencyFilter"
+      :source-select-options="sourceSelectOptions"
+      :app-select-options="appSelectOptions"
+      :filter-meta-loading="filterMetaLoading"
+      :status-options="statusOptions"
+      :agency-options="agencyOptions"
+      :feishu-enabled="feishuEnabled"
+      @open-feishu="handleOpenFeishuSetting"
+    />
 
-    <!-- 统计卡片 -->
-    <div class="stat-cards">
-      <div class="stat-card">
-        <div class="stat-label">开户记录总数</div>
-        <div class="stat-value stat-value--total">{{ stats.total }}</div>
-      </div>
-      <div class="stat-card stat-card--warn">
-        <div class="stat-label-row">
-          <span class="stat-label">待分配凭据</span>
-          <span class="stat-tag-warn">需处理</span>
-        </div>
-        <div class="stat-value stat-value--warn">{{ stats.pending }}</div>
-      </div>
-      <div class="stat-card stat-card--ok">
-        <div class="stat-label">已激活</div>
-        <div class="stat-value stat-value--ok">{{ stats.active }}</div>
-      </div>
-      <div class="stat-card stat-card--fail">
-        <div class="stat-label">开户失败</div>
-        <div class="stat-value stat-value--fail">{{ stats.failed }}</div>
-      </div>
-    </div>
+    <OpenAccountStatCards :stats="stats" />
 
-    <!-- 数据表格 -->
-    <div class="table-wrapper">
-      <el-table
-        :data="pagedList"
-        class="open-account-table"
-        table-layout="auto"
-        :row-class-name="getRowClass"
-        @row-click="handleRowClick"
-      >
-        <el-table-column prop="id" label="申请ID" min-width="90">
-          <template #default="{ row }">
-            <span
-              class="apply-id"
-              :style="{ color: row.id === (selectedId ?? innerSelectedId) ? '#22d3ee' : '#3b82f6' }"
-            >
-              {{ row.id }}
-            </span>
-          </template>
-        </el-table-column>
-        <el-table-column label="广告平台" min-width="140">
-          <template #default="{ row }">
-            <div class="platform-cell">
-              <span
-                class="platform-icon-wrap"
-                :style="{
-                  color: getPlatformColor(row.source),
-                  background: getPlatformBg(row.source)
-                }"
-              >
-                {{ getPlatformShort(row.source) }}
-              </span>
-              <span class="platform-name">{{ row.source }}</span>
-            </div>
-          </template>
-        </el-table-column>
-        <el-table-column prop="app" label="应用" min-width="120" show-overflow-tooltip />
-        <el-table-column label="平台" min-width="70" align="center">
-          <template #default="{ row }">
-            <span
-              :class="[
-                'platform-badge',
-                row.platform === 'iOS' ? 'platform-badge--ios' : 'platform-badge--android'
-              ]"
-            >
-              {{ row.platform }}
-            </span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="accountType" label="开户类型" min-width="90" align="center" />
-        <el-table-column label="归属代理商" min-width="110" show-overflow-tooltip>
-          <template #default="{ row }">
-            <span
-              :class="[
-                'agency-name',
-                isHighlightAgency(row.agency) ? 'agency-name--highlight' : ''
-              ]"
-            >
-              {{ row.agency }}
-            </span>
-          </template>
-        </el-table-column>
-        <el-table-column label="开户金额" min-width="90" align="right">
-          <template #default="{ row }">
-            <span class="amount">${{ row.amount.toLocaleString() }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="applicant" label="申请人" min-width="70" align="center" />
-        <el-table-column label="登记时间" min-width="90" align="center">
-          <template #default="{ row }">
-            <span class="reg-time">{{ row.registerTime.slice(5, 10) }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column label="状态" min-width="100" align="center">
-          <template #default="{ row }">
-            <span :class="['status-badge', getStatusClass(row.status)]">
-              <span class="status-icon">{{ getStatusIcon(row.status) }}</span>
-              {{ row.status }}
-            </span>
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" min-width="160" fixed="right" align="center">
-          <template #default="{ row }">
-            <div class="action-btns">
-              <button class="action-link" @click.stop="handleRowClick(row)">[查看]</button>
-              <button
-                v-if="row.status === '待分配'"
-                class="action-link action-link--assign"
-                @click.stop="emit('assign', row)"
-                >[分配凭据]</button
-              >
-              <button class="action-link action-link--del" @click.stop="emit('delete', row)"
-                >[删除]</button
-              >
-            </div>
-          </template>
-        </el-table-column>
-      </el-table>
-
-      <!-- 分页 -->
-      <div class="pagination-bar">
-        <span class="pagination-total">共 {{ total }} 条</span>
-        <el-pagination
-          v-model:current-page="currentPage"
-          :page-size="pageSize"
-          :total="total"
-          layout="prev, pager, next"
-          class="oa-pagination"
-        />
-        <span class="pagination-jumper">
-          跳转至
-          <el-input v-model="jumpPage" class="jumper-input" @keyup.enter="handleJump" />
-          页
-        </span>
-      </div>
-    </div>
+    <OpenAccountRecordTable
+      :paged-list="pagedList"
+      :selected-row-id="props.selectedId ?? innerSelectedId"
+      :total="total"
+      :current-page="currentPage"
+      :page-size="pageSize"
+      :jump-page="jumpPage"
+      @row-click="handleRowClick"
+      @assign="emit('assign', $event)"
+      @delete="emit('delete', $event)"
+      @update:current-page="currentPage = $event"
+      @update:jump-page="jumpPage = $event"
+      @jump="handleJump"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
   import { onMounted, ref, computed, watch } from 'vue'
   import { ElMessage } from 'element-plus'
+  import { storeToRefs } from 'pinia'
   import {
     fetchOpenAccountFeishuConfig,
+    fetchOpenAccountOverviewStats,
     fetchOpenAccountTable,
     saveOpenAccountFeishuConfig
   } from '@/api/config-management/account-management'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
+  import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
   import { AccountApiSource } from '../config/data-source'
-  import { cloneOpenAccountMockList, agencyOptions, appOptions } from '../mock/data'
+  import { cloneOpenAccountMockList, agencyOptions, appOptions as mockAppNames } from '../mock/data'
   import { PLATFORM_CONFIGS } from '../types'
   import type { OpenAccountItem } from '../types'
+  import OpenAccountFiltersBar from './open-account/open-account-filters-bar.vue'
+  import OpenAccountStatCards from './open-account/open-account-stat-cards.vue'
+  import OpenAccountRecordTable from './open-account/open-account-record-table.vue'
 
   defineOptions({ name: 'OpenAccountTab' })
 
@@ -249,10 +63,13 @@
     delete: [row: OpenAccountItem]
   }>()
 
+  const cockpitMetaFilterStore = useCockpitMetaFilterStore()
+  const { data: cockpitMeta } = storeToRefs(cockpitMetaFilterStore)
+
   const sourceFilter = ref('')
+  const appFilter = ref('')
   const statusFilter = ref('')
   const agencyFilter = ref('')
-  const appFilter = ref('')
   const currentPage = ref(1)
   const pageSize = ref(20)
   const jumpPage = ref('')
@@ -260,6 +77,49 @@
 
   const list = ref<OpenAccountItem[]>([])
   const feishuEnabled = ref(true)
+  const filterMetaLoading = ref(false)
+
+  const rawAppOptions = computed(
+    () => cockpitMeta.value?.appOptions ?? ([] as CockpitMetaOptionItem[])
+  )
+  const rawSourceOptions = computed(
+    () => cockpitMeta.value?.sourceOptions ?? ([] as CockpitMetaOptionItem[])
+  )
+
+  const appSelectOptions = computed<CockpitMetaOptionItem[]>(() => {
+    const raw = rawAppOptions.value.filter((o) => o.value !== 'all')
+    if (raw.length === 0) {
+      return [{ label: '全部', value: '' }, ...mockAppNames.map((a) => ({ label: a, value: a }))]
+    }
+    return [{ label: '全部', value: '' }, ...raw]
+  })
+
+  const sourceSelectOptions = computed<CockpitMetaOptionItem[]>(() => {
+    const raw = rawSourceOptions.value.filter((o) => o.value !== 'all')
+    if (raw.length === 0) {
+      return [
+        { label: '全部', value: '' },
+        ...PLATFORM_CONFIGS.map((p) => ({ label: p.label, value: p.value }))
+      ]
+    }
+    return [{ label: '全部', value: '' }, ...raw]
+  })
+
+  function rowMatchesSourceFilter(row: OpenAccountItem, filterValue: string) {
+    if (!filterValue) return true
+    const opts = cockpitMeta.value?.sourceOptions ?? []
+    const byMeta = opts.find((o) => o.value === filterValue)
+    if (byMeta) return row.source === byMeta.label
+    return row.source === filterValue
+  }
+
+  function rowMatchesAppFilter(row: OpenAccountItem, filterValue: string) {
+    if (!filterValue) return true
+    const opts = cockpitMeta.value?.appOptions ?? []
+    const byMeta = opts.find((o) => o.value === filterValue)
+    if (byMeta) return row.app === byMeta.label || row.app === byMeta.value
+    return row.app === filterValue
+  }
 
   const loadOpenAccountList = async () => {
     if (!AccountApiSource.openAccountTable) {
@@ -297,8 +157,41 @@
     }
   }
 
-  onMounted(() => {
+  const remoteStats = ref<{
+    total: number
+    pending: number
+    active: number
+    failed: number
+  } | null>(null)
+
+  const loadOverviewStats = async () => {
+    if (AccountApiSource.openAccountOverviewStats) {
+      remoteStats.value = null
+      return
+    }
+    try {
+      const appIds = appFilter.value ? [appFilter.value] : []
+      remoteStats.value = await fetchOpenAccountOverviewStats({
+        keyword: props.searchKeyword,
+        source: sourceFilter.value,
+        status: statusFilter.value,
+        agency: agencyFilter.value,
+        appIds
+      })
+    } catch {
+      remoteStats.value = null
+    }
+  }
+
+  onMounted(async () => {
+    filterMetaLoading.value = true
+    try {
+      await cockpitMetaFilterStore.ensureLoaded()
+    } finally {
+      filterMetaLoading.value = false
+    }
     loadOpenAccountList()
+    loadOverviewStats()
     loadFeishuConfig()
   })
 
@@ -314,10 +207,10 @@
       const kw = props.searchKeyword.toLowerCase()
       if (kw && !item.id.toLowerCase().includes(kw) && !item.app.toLowerCase().includes(kw))
         return false
-      if (sourceFilter.value && item.source !== sourceFilter.value) return false
+      if (!rowMatchesSourceFilter(item, sourceFilter.value)) return false
       if (statusFilter.value && item.status !== statusFilter.value) return false
       if (agencyFilter.value && item.agency !== agencyFilter.value) return false
-      if (appFilter.value && item.app !== appFilter.value) return false
+      if (!rowMatchesAppFilter(item, appFilter.value)) return false
       return true
     })
   )
@@ -328,18 +221,21 @@
     return filteredList.value.slice(s, s + pageSize.value)
   })
 
-  const stats = computed(() => ({
-    total: list.value.length,
-    pending: list.value.filter((i) => i.status === '待分配').length,
-    active: list.value.filter((i) => i.status === '已激活').length,
-    failed: list.value.filter((i) => i.status === '开户失败').length
-  }))
+  const stats = computed(() => {
+    if (remoteStats.value) return remoteStats.value
+    return {
+      total: list.value.length,
+      pending: list.value.filter((i) => i.status === '待分配').length,
+      active: list.value.filter((i) => i.status === '已激活').length,
+      failed: list.value.filter((i) => i.status === '开户失败').length
+    }
+  })
 
   const statusOptions = computed(() => [
-    { label: '全部', value: '', type: 'default' },
-    { label: '待分配', value: '待分配', type: 'warn', count: stats.value.pending },
-    { label: '已激活', value: '已激活', type: 'ok', count: stats.value.active },
-    { label: '开户失败', value: '开户失败', type: 'fail', count: stats.value.failed }
+    { label: '全部', value: '', type: 'default' as const },
+    { label: '待分配', value: '待分配', type: 'warn' as const, count: stats.value.pending },
+    { label: '已激活', value: '已激活', type: 'ok' as const, count: stats.value.active },
+    { label: '开户失败', value: '开户失败', type: 'fail' as const, count: stats.value.failed }
   ])
 
   watch(
@@ -352,41 +248,11 @@
     ],
     () => {
       currentPage.value = 1
+      void loadOverviewStats()
     }
   )
 
-  function getPlatformColor(source: string) {
-    return PLATFORM_CONFIGS.find((p) => p.value === source)?.color ?? '#94a3b8'
-  }
-  function getPlatformBg(source: string) {
-    return PLATFORM_CONFIGS.find((p) => p.value === source)?.bg ?? 'rgb(148 163 184 / 12%)'
-  }
-  function getPlatformShort(source: string) {
-    return PLATFORM_CONFIGS.find((p) => p.value === source)?.shortLabel ?? source[0]
-  }
-
-  function getStatusClass(status: string) {
-    if (status === '已激活') return 'status-badge--ok'
-    if (status === '待分配') return 'status-badge--pending'
-    return 'status-badge--fail'
-  }
-
-  function getStatusIcon(status: string) {
-    if (status === '已激活') return '●'
-    if (status === '开户失败') return '✕'
-    return '✓'
-  }
-
-  function isHighlightAgency(agency: string) {
-    return ['星达传媒', '天联广告'].includes(agency)
-  }
-
-  function getRowClass({ row }: { row: OpenAccountItem }) {
-    const activeId = props.selectedId ?? innerSelectedId.value
-    return row.id === activeId ? 'row--selected' : ''
-  }
-
-  const handleRowClick = (row: OpenAccountItem) => {
+  function handleRowClick(row: OpenAccountItem) {
     innerSelectedId.value = row.id
     emit('select', row)
   }
@@ -417,529 +283,6 @@
   .open-account-tab {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-  }
-
-  // ─── 筛选栏 ─────────────────────────────────────────
-  .filter-bar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px 0;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 16px;
-    background: var(--bg-card, #131c2e);
-    border: 1px solid var(--border, rgb(255 255 255 / 7%));
-    border-radius: 10px;
-  }
-
-  .filter-left {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px 20px;
-    align-items: center;
-  }
-
-  .filter-group {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-  }
-
-  .filter-label {
-    flex-shrink: 0;
-    font-size: 13px;
-    color: #94a3b8;
-  }
-
-  .filter-select {
-    width: 120px;
-
-    :deep(.el-input__wrapper),
-    :deep(.el-select__wrapper) {
-      background: rgb(255 255 255 / 4%) !important;
-      border: 1px solid rgb(255 255 255 / 8%) !important;
-      border-radius: 6px;
-      box-shadow: none !important;
-      &:focus-within {
-        border-color: #3b82f6 !important;
-      }
-    }
-
-    :deep(.el-input__inner),
-    :deep(.el-select__placeholder) {
-      font-size: 12px;
-      color: #e2e8f0;
-    }
-  }
-
-  // ─── 平台 pill 筛选 ──────────────────────────────────
-  .platform-tabs {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-  }
-
-  .platform-tab {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 32px;
-    padding: 3px 8px;
-    font-size: 12px;
-    font-weight: 600;
-    color: #64748b;
-    cursor: pointer;
-    background: transparent;
-    border: 1px solid rgb(255 255 255 / 8%);
-    border-radius: 6px;
-    transition: all 0.15s;
-
-    &--active:not([style]) {
-      color: #e2e8f0;
-      background: rgb(255 255 255 / 8%);
-      border-color: rgb(255 255 255 / 18%);
-    }
-
-    &:not(.platform-tab--active):hover {
-      color: #94a3b8;
-      border-color: rgb(255 255 255 / 12%);
-    }
-  }
-
-  // ─── 状态筛选切换 ────────────────────────────────────
-  .status-tabs {
-    display: flex;
-    gap: 4px;
-  }
-
-  .status-tab {
-    display: inline-flex;
-    gap: 5px;
-    align-items: center;
-    padding: 4px 10px;
-    font-size: 12px;
-    color: #94a3b8;
-    cursor: pointer;
-    background: transparent;
-    border: 1px solid rgb(255 255 255 / 8%);
-    border-radius: 6px;
-    transition: all 0.18s;
-
-    &--active.status-tab--default {
-      color: #e2e8f0;
-      background: rgb(255 255 255 / 8%);
-      border-color: rgb(255 255 255 / 15%);
-    }
-
-    &--active.status-tab--warn {
-      color: #f59e0b;
-      background: rgb(245 158 11 / 12%);
-      border-color: rgb(245 158 11 / 35%);
-    }
-
-    &--active.status-tab--ok {
-      color: #22c55e;
-      background: rgb(34 197 94 / 12%);
-      border-color: rgb(34 197 94 / 35%);
-    }
-
-    &--active.status-tab--fail {
-      color: #f87171;
-      background: rgb(248 113 113 / 12%);
-      border-color: rgb(248 113 113 / 35%);
-    }
-
-    &:not(.status-tab--active):hover {
-      color: #e2e8f0;
-      border-color: rgb(255 255 255 / 14%);
-    }
-  }
-
-  .status-tab-count {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 18px;
-    height: 16px;
-    padding: 0 4px;
-    font-size: 10px;
-    font-weight: 700;
-    border-radius: 8px;
-
-    .status-tab--active.status-tab--warn & {
-      color: #f59e0b;
-      background: rgb(245 158 11 / 20%);
-    }
-
-    .status-tab--active.status-tab--ok & {
-      color: #22c55e;
-      background: rgb(34 197 94 / 20%);
-    }
-
-    .status-tab--active.status-tab--fail & {
-      color: #f87171;
-      background: rgb(248 113 113 / 20%);
-    }
-
-    .status-tab:not(.status-tab--active) & {
-      color: #94a3b8;
-      background: rgb(255 255 255 / 8%);
-    }
-  }
-
-  // ─── 飞书推送 ────────────────────────────────────────
-  .feishu-bar {
-    display: flex;
-    flex-shrink: 0;
-    gap: 8px;
-    align-items: center;
-  }
-
-  .feishu-label {
-    font-size: 13px;
-    color: #64748b;
-  }
-
-  .feishu-status {
-    display: flex;
-    gap: 5px;
-    align-items: center;
-    font-size: 13px;
-    color: #22c55e;
-  }
-
-  .feishu-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-
-    &--on {
-      background: #22c55e;
-      box-shadow: 0 0 6px #22c55e;
-    }
-  }
-
-  .feishu-setting-btn {
-    display: inline-flex;
-    gap: 4px;
-    align-items: center;
-    padding: 4px 10px;
-    font-size: 12px;
-    color: #64748b;
-    cursor: pointer;
-    background: transparent;
-    border: 1px solid rgb(255 255 255 / 8%);
-    border-radius: 6px;
-    transition: all 0.18s;
-
-    &:hover {
-      color: #94a3b8;
-      border-color: rgb(255 255 255 / 14%);
-    }
-  }
-
-  // ─── 统计卡片 ────────────────────────────────────────
-  .stat-cards {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-  }
-
-  .stat-card {
-    padding: 18px 20px;
-    background: var(--bg-card, #131c2e);
-    border: 1px solid var(--border, rgb(255 255 255 / 7%));
-    border-radius: 10px;
-
-    &--warn {
-      background: rgb(245 158 11 / 6%);
-      border-color: rgb(245 158 11 / 20%);
-    }
-
-    &--ok {
-      background: rgb(34 197 94 / 6%);
-      border-color: rgb(34 197 94 / 20%);
-    }
-
-    &--fail {
-      background: rgb(248 113 113 / 6%);
-      border-color: rgb(248 113 113 / 20%);
-    }
-  }
-
-  .stat-label {
-    margin-bottom: 8px;
-    font-size: 12px;
-    color: #94a3b8;
-  }
-
-  .stat-label-row {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    margin-bottom: 8px;
-  }
-
-  .stat-tag-warn {
-    padding: 1px 6px;
-    font-size: 11px;
-    color: #f59e0b;
-    background: rgb(245 158 11 / 15%);
-    border-radius: 4px;
-  }
-
-  .stat-value {
-    font-size: 30px;
-    font-weight: 700;
-    line-height: 1;
-
-    &--total {
-      color: #e2e8f0;
-    }
-    &--warn {
-      color: #f59e0b;
-    }
-    &--ok {
-      color: #22c55e;
-    }
-    &--fail {
-      color: #f87171;
-    }
-  }
-
-  // ─── 表格 ────────────────────────────────────────────
-  .table-wrapper {
-    padding: 16px;
-    background: var(--bg-card, #131c2e);
-    border: 1px solid var(--border, rgb(255 255 255 / 7%));
-    border-radius: 10px;
-  }
-
-  .open-account-table {
-    --el-table-bg-color: transparent;
-    --el-table-tr-bg-color: transparent;
-    --el-table-header-bg-color: transparent;
-    --el-table-row-hover-bg-color: rgb(255 255 255 / 3%);
-    --el-table-border-color: rgb(255 255 255 / 6%);
-    --el-table-text-color: #e2e8f0;
-    --el-table-header-text-color: #64748b;
-
-    cursor: pointer;
-
-    :deep(th.el-table__cell) {
-      font-size: 12px;
-      text-transform: uppercase;
-      background: transparent;
-    }
-
-    :deep(td.el-table__cell) {
-      font-size: 13px;
-    }
-
-    :deep(.el-table__inner-wrapper::before) {
-      display: none;
-    }
-
-    :deep(.row--selected td.el-table__cell) {
-      background: rgb(34 211 238 / 5%) !important;
-      border-left: none;
-    }
-
-    :deep(.row--selected td.el-table__cell:first-child) {
-      border-left: 3px solid #22d3ee !important;
-    }
-  }
-
-  .apply-id {
-    font-family: 'SF Mono', monospace;
-    font-size: 13px;
-    font-weight: 600;
-  }
-
-  .platform-cell {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
-
-  .platform-icon-wrap {
-    display: inline-flex;
-    flex-shrink: 0;
-    align-items: center;
-    justify-content: center;
-    width: 26px;
-    height: 26px;
-    font-size: 11px;
-    font-weight: 700;
-    border-radius: 6px;
-  }
-
-  .platform-name {
-    font-size: 13px;
-    color: #e2e8f0;
-  }
-
-  .platform-badge {
-    display: inline-block;
-    padding: 2px 7px;
-    font-size: 11px;
-    border-radius: 4px;
-
-    &--android {
-      color: #94a3b8;
-      background: rgb(148 163 184 / 12%);
-      border: 1px solid rgb(148 163 184 / 20%);
-    }
-
-    &--ios {
-      color: #a78bfa;
-      background: rgb(167 139 250 / 12%);
-      border: 1px solid rgb(167 139 250 / 20%);
-    }
-  }
-
-  .agency-name {
-    font-size: 13px;
-    color: #94a3b8;
-
-    &--highlight {
-      color: #22d3ee;
-    }
-  }
-
-  .amount {
-    font-weight: 500;
-    color: #e2e8f0;
-  }
-
-  .reg-time {
-    font-size: 12px;
-    color: #64748b;
-  }
-
-  .status-badge {
-    display: inline-flex;
-    gap: 5px;
-    align-items: center;
-    font-size: 12px;
-
-    &--ok {
-      color: #22c55e;
-    }
-    &--pending {
-      color: #f59e0b;
-    }
-    &--fail {
-      color: #f87171;
-    }
-  }
-
-  .status-icon {
-    font-size: 10px;
-  }
-
-  .action-btns {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    justify-content: center;
-  }
-
-  .action-link {
-    padding: 2px 4px;
-    font-size: 12px;
-    color: #3b82f6;
-    cursor: pointer;
-    background: none;
-    border: none;
-    transition: color 0.15s;
-    &:hover {
-      color: #60a5fa;
-    }
-    &--assign {
-      color: #22d3ee;
-      &:hover {
-        color: #67e8f9;
-      }
-    }
-    &--del {
-      color: #f87171;
-      &:hover {
-        color: #fca5a5;
-      }
-    }
-  }
-
-  // ─── 分页 ────────────────────────────────────────────
-  .pagination-bar {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    justify-content: flex-end;
-    padding-top: 16px;
-    margin-top: 4px;
-    border-top: 1px solid rgb(255 255 255 / 7%);
-  }
-
-  .pagination-total {
-    font-size: 13px;
-    color: #94a3b8;
-  }
-
-  .oa-pagination {
-    :deep(.el-pager li) {
-      color: #94a3b8;
-      background: transparent;
-
-      &.is-active {
-        color: #3b82f6;
-        background: rgb(59 130 246 / 15%);
-        border-radius: 4px;
-      }
-
-      &:hover:not(.is-active) {
-        color: #e2e8f0;
-      }
-    }
-
-    :deep(.btn-prev),
-    :deep(.btn-next) {
-      color: #94a3b8;
-      background: transparent;
-
-      &:hover {
-        color: #e2e8f0;
-      }
-
-      &:disabled {
-        opacity: 0.4;
-      }
-    }
-  }
-
-  .pagination-jumper {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-    font-size: 13px;
-    color: #94a3b8;
-  }
-
-  .jumper-input {
-    width: 52px;
-
-    :deep(.el-input__wrapper) {
-      background: rgb(255 255 255 / 4%) !important;
-      border: 1px solid rgb(255 255 255 / 7%) !important;
-      border-radius: 5px;
-      box-shadow: none !important;
-    }
-
-    :deep(.el-input__inner) {
-      font-size: 12px;
-      color: #e2e8f0;
-      text-align: center;
-    }
+    gap: var(--space-4);
   }
 </style>

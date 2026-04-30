@@ -71,7 +71,7 @@
         "sparkColor": "#22d3ee"
       },
       {
-        "label": "转化率",
+        "label": "付费率",
         "value": "3.24%",
         "change": "1.5%",
         "up": false,
@@ -79,7 +79,7 @@
         "sparkColor": "#c084fc"
       },
       {
-        "label": "续费率",
+        "label": "续订率",
         "value": "42.8%",
         "change": "5.1%",
         "up": true,

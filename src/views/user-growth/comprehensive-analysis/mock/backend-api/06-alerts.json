@@ -1,18 +1,45 @@
 {
   "_comment": "综合分析 - 投放预警列表。对应 types.ts: AlertItem[]。",
+  "interaction": {
+    "route": "/user-growth/comprehensive-analysis",
+    "surface": "第四列下方「投放预警」列表",
+    "trigger": "fetchComprehensiveAnalysisData 内并发 POST；source 非空时可过滤为该平台相关文案。"
+  },
   "fieldDescription": {
     "request": {
-      "date_start": { "type": "string", "required": true },
-      "date_end": { "type": "string", "required": true },
-      "s_app_id": { "type": "string", "required": true },
-      "source": { "type": "string", "required": true },
-      "s_country_code": { "type": "string", "required": true }
+      "date_start": {
+        "type": "string",
+        "required": true,
+        "description": "统计区间开始 YYYY-MM-DD（含）。"
+      },
+      "date_end": {
+        "type": "string",
+        "required": true,
+        "description": "统计区间结束 YYYY-MM-DD（含）。"
+      },
+      "s_app_id": { "type": "string", "required": true, "description": "应用 ID；'' 全部。" },
+      "source": { "type": "string", "required": true, "description": "广告平台；'' 全部。" },
+      "s_country_code": { "type": "string", "required": true, "description": "国家代码；'' 全部。" }
     },
     "response": {
       "data": {
         "type": "AlertItem[]",
         "required": true,
-        "description": "预警列表（id/level/text）；level: danger | warning | info。"
+        "description": "预警行；level 控制颜色与图标。"
+      }
+    },
+    "AlertItem": {
+      "id": { "type": "string", "required": true, "description": "行唯一标识。" },
+      "level": {
+        "type": "string",
+        "required": true,
+        "enum": ["danger", "warning", "info"],
+        "description": "严重度：danger 异常、warning 警示、info 提示。"
+      },
+      "text": {
+        "type": "string",
+        "required": true,
+        "description": "预警正文（可含平台×国家等维度）。"
       }
     }
   },
@@ -30,8 +57,16 @@
         "level": "danger",
         "text": "Google Ads × US: CPI $3.21 超标 28.4%，ROI D1 仅 22%"
       },
-      { "id": "a2", "level": "warning", "text": "Facebook × DE: 预算消耗 92%，建议关注次日转化" },
-      { "id": "a3", "level": "info", "text": "TikTok × JP: CPI 低于目标 15%，可适度放量" }
+      {
+        "id": "a2",
+        "level": "warning",
+        "text": "Facebook × DE: 预算消耗 92%，建议关注次日转化"
+      },
+      {
+        "id": "a3",
+        "level": "info",
+        "text": "TikTok × JP: CPI 低于目标 15%，可适度放量"
+      }
     ]
   },
   "api": {
@@ -40,5 +75,8 @@
     "priority": "P1",
     "requestBody": "date_start, date_end, s_app_id, source, s_country_code",
     "responseBody": "AlertItem[]"
+  },
+  "apiSuggestion": {
+    "notes": ["示例覆盖 level 三种枚举，便于联调样式分支。"]
   }
 }

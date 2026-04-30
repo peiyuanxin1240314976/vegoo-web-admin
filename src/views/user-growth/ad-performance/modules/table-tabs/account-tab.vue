@@ -26,7 +26,8 @@
         </template>
         <template v-else>
           <div class="ad-performance-account__campaign">
-            <span class="ad-performance-table__app-icon" aria-hidden="true"></span>
+            -
+            <!-- <span class="ad-performance-table__app-icon" aria-hidden="true"></span>
             <span class="ad-performance-account__campaign-name" :title="row.campaignName ?? ''">
               {{ row.campaignName }}
             </span>
@@ -39,9 +40,17 @@
             </span>
             <span class="ad-performance-table__country" :title="row.country ?? ''">
               {{ countryFlag(row.country) }}
-            </span>
+            </span> -->
           </div>
         </template>
+      </template>
+
+      <!-- 广告系列名称 -->
+      <template #cell:campaignName="{ row }">
+        <span v-if="isAccountRow(row)" class="ad-performance-table__muted">-</span>
+        <span v-else class="ad-performance-account__campaign-name" :title="row.campaignName ?? ''">
+          {{ row.campaignName || '-' }}
+        </span>
       </template>
 
       <!-- 平台 -->
@@ -181,7 +190,7 @@
   import { useTabColumnVisibility } from '../../composables/useTabColumnVisibility'
   import {
     channelShort,
-    countryFlag,
+    // countryFlag,
     formatMoney,
     roiClass,
     profitClass
@@ -204,6 +213,7 @@
   // --- 列可见性 ---
   const ALL_COLUMNS = [
     { key: 'accountName', label: '广告账户', required: true },
+    { key: 'campaignName', label: '广告系列名称', required: true },
     { key: 'platform', label: '平台' },
     { key: 'balance', label: '账户余额' },
     { key: 'spend', label: '广告支出', required: true },
@@ -232,6 +242,7 @@
   const visibleColumns = computed<ArtVirtualTableColumn[]>(() => {
     const cols: ArtVirtualTableColumn[] = []
     cols.push({ key: 'accountName', title: '广告账户', width: 240, flexGrow: 1 })
+    cols.push({ key: 'campaignName', title: '广告系列名称', width: 180, showOverflowTooltip: true })
     if (isVisible('platform')) cols.push({ key: 'platform', title: '平台', width: 90 })
     if (isVisible('balance')) cols.push({ key: 'balance', title: '账户余额', width: 110 })
     cols.push({ key: 'spend', title: '广告支出', width: 110 })

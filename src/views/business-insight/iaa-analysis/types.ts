@@ -8,7 +8,7 @@ export type IaaTabKey = 'adType' | 'adPlatform' | 'adPlacement' | 'adUnit' | 'co
 
 /** 全局筛选状态 */
 export interface IaaFilterState {
-  s_app_id: string
+  s_app_id: string | string[]
   platform: string
   s_country_code: string
   t_date: string
@@ -110,11 +110,10 @@ export interface IaaFillRateBucket {
   count: number
 }
 
-/** ECPM vs 充填率散点项 */
+/** 广告单元 ECPM 对比项 */
 export interface IaaEcpmFillPoint {
   unitId: string
   ecpm: number
-  fillRate: number
   adType: string
 }
 

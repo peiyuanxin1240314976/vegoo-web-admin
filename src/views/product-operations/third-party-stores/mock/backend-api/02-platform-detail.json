@@ -1,0 +1,74 @@
+{
+  "_comment": "商品运营 - 三方商店管理：平台详情（用于「查看详情」等后续弹窗/抽屉）。对应 types.ts: ThirdPartyStoresPlatformDetailResponse。",
+  "fieldDescription": {
+    "request": {
+      "platformId": {
+        "type": "string",
+        "required": true,
+        "description": "平台 id（来自 OverviewDashboard 的 platformCards[].id）。"
+      }
+    },
+    "response": {
+      "data": {
+        "type": "ThirdPartyStoresPlatformDetailResponse",
+        "required": true,
+        "description": "网关包裹时位于 data 内。"
+      }
+    },
+    "ThirdPartyStoresPlatformDetailResponse": {
+      "detail": {
+        "type": "ThirdPartyStoresPlatformDetail",
+        "required": true,
+        "description": "平台详情主体。"
+      }
+    },
+    "ThirdPartyStoresPlatformDetail": {
+      "id": { "type": "string", "required": true, "description": "平台 id。" },
+      "name": { "type": "string", "required": true, "description": "平台名称。" },
+      "status": {
+        "type": "string",
+        "required": true,
+        "enum": ["connected", "warning", "pending"],
+        "description": "接入状态：connected 已接入、warning 异常、pending 未配置。"
+      },
+      "appCount": { "type": "number", "required": true, "description": "平台覆盖应用数。" },
+      "lastSync": { "type": "string", "required": true, "description": "最近同步时间或异常描述。" },
+      "createdAt": { "type": "string", "required": true, "description": "创建时间（ISO 8601）。" },
+      "updatedAt": { "type": "string", "required": true, "description": "更新时间（ISO 8601）。" },
+      "remarks": { "type": "string", "required": true, "description": "备注/提示信息。" }
+    }
+  },
+  "sampleRequest": {
+    "platformId": "samsung"
+  },
+  "sampleResponse": {
+    "data": {
+      "detail": {
+        "id": "samsung",
+        "name": "Samsung Galaxy Store",
+        "status": "warning",
+        "appCount": 12,
+        "lastSync": "Sync Error - Auth expired",
+        "createdAt": "2026-03-01T00:00:00.000Z",
+        "updatedAt": "2026-04-01T00:00:00.000Z",
+        "remarks": "认证异常，请修复后重试"
+      }
+    }
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "点击平台卡片内「查看详情」触发；后续若实现详情抽屉，可在打开抽屉时请求。"
+      }
+    ],
+    "dedupe": "同一 platformId 重复打开详情时可做缓存或取消上一次请求。"
+  },
+  "api": {
+    "url": "POST /api/product-operations/third-party-stores/platform/detail",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "platformId（必填）",
+    "responseBody": "ThirdPartyStoresPlatformDetailResponse（或网关包裹于 data）"
+  }
+}

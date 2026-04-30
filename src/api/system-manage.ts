@@ -5,6 +5,7 @@ import {
   isSystemUserEndpointMock
 } from '@/views/config-management/user-management/config/data-source'
 import { mockFetchGetUserList } from '@/views/config-management/user-management/mock/system-user-api-mock'
+import type { SystemUserSearchParams } from '@/views/config-management/user-management/types'
 
 /**
  * 用户管理 - 分页列表
@@ -13,7 +14,23 @@ import { mockFetchGetUserList } from '@/views/config-management/user-management/
  */
 export function fetchGetUserList(params: Api.SystemManage.UserSearchParams) {
   if (isSystemUserEndpointMock(SystemUserEndpoint.UserList)) {
-    return mockFetchGetUserList(params)
+    const mockParams: SystemUserSearchParams = {
+      current: params.current ?? 1,
+      size: params.size ?? 10,
+      userName: params.userName,
+      status: params.status,
+      role:
+        params.role != null &&
+        String(params.role).trim() !== '' &&
+        /^\d+$/.test(String(params.role))
+          ? Number(params.role)
+          : '',
+      userGender: params.userGender,
+      userPhone: params.userPhone,
+      userEmail: params.userEmail,
+      id: params.id
+    }
+    return mockFetchGetUserList(mockParams)
   }
   return request.get<Api.SystemManage.UserList>({
     url: '/api/user/list',

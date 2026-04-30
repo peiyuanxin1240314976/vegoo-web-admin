@@ -80,20 +80,10 @@
         "enum": ["last7d", "last14d", "month"],
         "description": "日期维度范围（抽屉内部 tab）。"
       },
-      "spendRoiTrend": {
-        "type": "AdPerformanceDetailTrendPoint[]",
+      "datasets": {
+        "type": "Record<AdPerformanceDetailDateRange, AdPerformanceDetailDateRangeData>",
         "required": true,
-        "description": "消耗/首日ROI 双轴趋势。"
-      },
-      "cpiTrend": {
-        "type": "AdPerformanceDetailTrendPoint[]",
-        "required": true,
-        "description": "CPI 趋势。"
-      },
-      "dailyRows": {
-        "type": "AdPerformanceDetailDailyRow[]",
-        "required": true,
-        "description": "每日明细表格。"
+        "description": "一次性返回三套数据（last7d/last14d/month），前端切换范围直接切换 datasets 对应项。"
       },
       "roiTarget": { "type": "number", "required": true, "description": "ROI 目标线（百分比）。" },
       "cpiTarget": { "type": "number", "required": true, "description": "CPI 目标线（数值）。" }
@@ -180,36 +170,42 @@
         "range": "last7d",
         "roiTarget": 80,
         "cpiTarget": 2.5,
-        "spendRoiTrend": [
-          { "date": "2/22", "spend": 1650, "roi1": 81 },
-          { "date": "2/23", "spend": 1720, "roi1": 84 },
-          { "date": "2/24", "spend": 1580, "roi1": 78 },
-          { "date": "2/25", "spend": 1890, "roi1": 88 },
-          { "date": "2/26", "spend": 1760, "roi1": 82 },
-          { "date": "2/27", "spend": 1830, "roi1": 87 },
-          { "date": "2/28", "spend": 1780, "roi1": 85 }
-        ],
-        "cpiTrend": [
-          { "date": "2/22", "cpi": 2.45 },
-          { "date": "2/23", "cpi": 2.38 },
-          { "date": "2/24", "cpi": 2.52 },
-          { "date": "2/25", "cpi": 2.31 },
-          { "date": "2/26", "cpi": 2.38 },
-          { "date": "2/27", "cpi": 2.35 },
-          { "date": "2/28", "cpi": 2.38 }
-        ],
-        "dailyRows": [
-          {
-            "date": "2026-02-28",
-            "spend": 1780,
-            "cpi": 2.38,
-            "ctr": 3.1,
-            "cvr": 31.2,
-            "roi1": 85,
-            "wowPercent": 2.3,
-            "statusText": "稳定"
-          }
-        ]
+        "datasets": {
+          "last7d": {
+            "spendRoiTrend": [
+              { "date": "2/22", "spend": 1650, "roi1": 81 },
+              { "date": "2/23", "spend": 1720, "roi1": 84 },
+              { "date": "2/24", "spend": 1580, "roi1": 78 },
+              { "date": "2/25", "spend": 1890, "roi1": 88 },
+              { "date": "2/26", "spend": 1760, "roi1": 82 },
+              { "date": "2/27", "spend": 1830, "roi1": 87 },
+              { "date": "2/28", "spend": 1780, "roi1": 85 }
+            ],
+            "cpiTrend": [
+              { "date": "2/22", "cpi": 2.45 },
+              { "date": "2/23", "cpi": 2.38 },
+              { "date": "2/24", "cpi": 2.52 },
+              { "date": "2/25", "cpi": 2.31 },
+              { "date": "2/26", "cpi": 2.38 },
+              { "date": "2/27", "cpi": 2.35 },
+              { "date": "2/28", "cpi": 2.38 }
+            ],
+            "dailyRows": [
+              {
+                "date": "2026-02-28",
+                "spend": 1780,
+                "cpi": 2.38,
+                "ctr": 3.1,
+                "cvr": 31.2,
+                "roi1": 85,
+                "wowPercent": 2.3,
+                "statusText": "稳定"
+              }
+            ]
+          },
+          "last14d": { "spendRoiTrend": [], "cpiTrend": [], "dailyRows": [] },
+          "month": { "spendRoiTrend": [], "cpiTrend": [], "dailyRows": [] }
+        }
       },
       "country": {
         "marketSummaryText": "投放市场：8个国家",

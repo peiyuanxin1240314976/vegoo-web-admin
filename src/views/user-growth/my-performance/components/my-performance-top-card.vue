@@ -13,7 +13,7 @@
           </div>
           <div class="divider" aria-hidden="true"></div>
           <div class="right top-card__sk-kpis">
-            <div v-for="i in 5" :key="i" class="top-card__sk-kpi">
+            <div v-for="i in skeletonKpiCount" :key="i" class="top-card__sk-kpi">
               <ElSkeletonItem variant="text" class="top-card__sk-line top-card__sk-line--kpi-t" />
               <ElSkeletonItem variant="text" class="top-card__sk-line top-card__sk-line--kpi-v" />
             </div>
@@ -38,7 +38,7 @@
 
           <div class="right">
             <div
-              v-for="(k, idx) in kpis"
+              v-for="(k, idx) in visibleKpis"
               :key="idx"
               class="kpi"
               :class="[
@@ -77,12 +77,13 @@
 </template>
 
 <script setup lang="ts">
+  import { computed } from 'vue'
   import { StarFilled } from '@element-plus/icons-vue'
   import type { MyPerformancePersonOption, MyPerformanceTopKpiItem } from '../types'
 
   defineOptions({ name: 'MyPerformanceTopCard' })
 
-  withDefaults(
+  const props = withDefaults(
     defineProps<{
       loading?: boolean
       person: MyPerformancePersonOption
@@ -91,6 +92,19 @@
     }>(),
     { loading: false, responsibleLabel: '负责' }
   )
+
+  const visibleKpis = computed(() =>
+    props.kpis.filter(
+      (k) =>
+        !String(k.label ?? '')
+          .trim()
+          .includes('综合评分') &&
+        !String(k.label ?? '')
+          .trim()
+          .includes('预估利润')
+    )
+  )
+  const skeletonKpiCount = computed(() => Math.max(visibleKpis.value.length, 4))
 
   function parseScore(value: string) {
     const m = value.match(/(\d+(?:\.\d+)?)/)
@@ -247,12 +261,7 @@
   .top-card__sk-kpis {
     display: grid;
     flex: 1 1 0;
-    grid-template-columns:
-      minmax(0, 1fr)
-      minmax(0, 1fr)
-      minmax(0, 0.82fr)
-      minmax(0, 1.2fr)
-      minmax(0, 1.05fr);
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
     gap: 10px;
     align-items: stretch;
     min-width: 0;
@@ -290,13 +299,13 @@
     }
 
     .top-card__sk-kpis {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     }
   }
 
   @media (width <= 768px) {
     .top-card__sk-kpis {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
     }
   }
 
@@ -327,9 +336,7 @@
       0 0 24px rgb(16 185 129 / 35%),
       0 0 48px rgb(16 185 129 / 15%),
       0 0 80px rgb(34 211 238 / 8%);
-    transition:
-      transform 0.45s var(--ease-out),
-      box-shadow 0.45s var(--ease-out);
+    transition: box-shadow 0.45s var(--ease-out);
 
     &::after {
       position: absolute;
@@ -365,7 +372,6 @@
       0 0 32px rgb(16 185 129 / 45%),
       0 0 56px rgb(16 185 129 / 22%),
       0 0 96px rgb(34 211 238 / 12%);
-    transform: scale(1.07);
   }
 
   .name {
@@ -374,7 +380,6 @@
     color: var(--text-primary);
     text-shadow: 0 0 20px rgb(244 244 245 / 8%);
     transition:
-      transform 0.35s var(--ease-out),
       text-shadow 0.35s var(--ease-out),
       color 0.35s;
   }
@@ -383,21 +388,17 @@
     text-shadow:
       0 0 28px rgb(244 244 245 / 14%),
       0 0 48px rgb(34 211 238 / 8%);
-    transform: translateX(4px);
   }
 
   .role {
     margin-top: 3px;
     font-size: 13px;
     color: var(--text-secondary);
-    transition:
-      transform 0.35s var(--ease-out),
-      color 0.35s var(--ease-out);
+    transition: color 0.35s var(--ease-out);
   }
 
   .top-card:hover .role {
     color: rgb(228 228 231 / 92%);
-    transform: translateX(3px);
   }
 
   .apps {
@@ -441,14 +442,7 @@
   .right {
     display: grid;
     flex: 1 1 0;
-
-    /* 预估利润、综合评分需要更宽列；ROI 较窄 */
-    grid-template-columns:
-      minmax(0, 1fr)
-      minmax(0, 1fr)
-      minmax(0, 0.82fr)
-      minmax(0, 1.2fr)
-      minmax(0, 1.05fr);
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
     gap: 10px;
     align-items: stretch;
     min-width: 0;
@@ -578,7 +572,6 @@
       inset 0 1px 0 rgb(244 244 245 / 6%),
       0 4px 16px rgb(0 0 0 / 18%);
     transition:
-      transform 0.3s var(--ease-out),
       border-color 0.3s var(--ease-default),
       box-shadow 0.3s var(--ease-default);
 
@@ -587,7 +580,6 @@
       box-shadow:
         0 8px 24px rgb(0 0 0 / 25%),
         inset 0 1px 0 rgb(244 244 245 / 5%);
-      transform: translateY(-2px) rotateX(1deg);
     }
   }
 
@@ -866,14 +858,14 @@
     }
 
     .right {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
       gap: 10px;
     }
   }
 
   @media (width <= 768px) {
     .right {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
     }
   }
 

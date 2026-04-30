@@ -6,7 +6,7 @@
         <MapDetailHeader :country-code="countryCode" :country-name="countryName">
           <template #right>
             <div class="detail-filters">
-              <ElDatePicker
+              <AppDatePicker
                 v-model="filterDateRange"
                 type="daterange"
                 range-separator="~"
@@ -77,6 +77,7 @@
 
 <script setup lang="ts">
   import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { useRoute } from 'vue-router'
   import { formatYYYYMMDD, getAppNow, cloneAppDate } from '@/utils/app-now'
   import {
@@ -143,10 +144,22 @@
 
   const countryCodeParam = computed(() => String(route.params.country || '').toUpperCase())
   const countryCode = computed(() => countryCodeParam.value || '—')
-  const countryName = computed(() => {
-    const c = String(route.params.country || '')
-    return countryNameMap[c] || c || '—'
-  })
+
+  /** 路由里多为小写 ISO（与地图 data-country-code 一致），须规范化后再查名 */
+  function getCountryNameZhFromIso(iso: string): string {
+    const raw = String(iso || '').trim()
+    if (!raw) return '—'
+    const upper = raw.toUpperCase()
+    if (!/^[A-Z]{2}$/.test(upper)) return raw
+    try {
+      const dn = new Intl.DisplayNames(['zh-CN'], { type: 'region' })
+      return dn.of(upper) ?? upper
+    } catch {
+      return upper
+    }
+  }
+
+  const countryName = computed(() => getCountryNameZhFromIso(String(route.params.country || '')))
 
   function buildCountryDateParams(): { countryCode: string; startDate: string; endDate: string } {
     const code = countryCodeParam.value
@@ -156,17 +169,6 @@
       startDate: startDate || '',
       endDate: endDate || ''
     }
-  }
-
-  const countryNameMap: Record<string, string> = {
-    US: '美国',
-    CN: '中国',
-    JP: '日本',
-    GB: '英国',
-    DE: '德国',
-    IN: '印度',
-    BR: '巴西',
-    FR: '法国'
   }
 
   // 第一排：5 个统计卡片（来自接口 /api/v1/datacenter/analysis/countryInfo/overall）
@@ -249,7 +251,7 @@
             color: '#3984F1'
           },
           {
-            label: '内购收入',
+            label: '付费收入',
             value: `$${(iapRev / 1000).toFixed(0)}K`,
             percent: iapPct,
             color: '#f59e0b'
@@ -374,7 +376,7 @@
   })
   const revenueCompositionData = ref<RevenueCompositionItem[]>([
     { label: '广告收入', value: '—', percent: 0, color: '#3984F1' },
-    { label: '内购收入', value: '—', percent: 0, color: '#f59e0b' }
+    { label: '付费收入', value: '—', percent: 0, color: '#f59e0b' }
   ])
   const appPerformanceData = ref<AppPerformanceRow[]>([])
   const appPerformanceLoading = ref(true)
@@ -551,6 +553,15 @@
     @include ap-card-mesh;
     @include ap-panel-hover;
 
+    &:hover,
+    &:active {
+      transform: none !important;
+    }
+
+    &:active {
+      transition-duration: var(--duration-fast);
+    }
+
     :deep(.map-detail-header) {
       position: relative;
       z-index: 1;
@@ -707,6 +718,15 @@
     @include ap-neon-bg;
     @include ap-card-mesh;
     @include ap-panel-hover;
+
+    &:hover,
+    &:active {
+      transform: none !important;
+    }
+
+    &:active {
+      transition-duration: var(--duration-fast);
+    }
   }
 
   html.dark .el-card.map-detail-spend-panel .el-card__header,

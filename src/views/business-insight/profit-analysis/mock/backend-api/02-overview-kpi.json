@@ -1,5 +1,5 @@
 {
-  "_comment": "利润分析 - 顶部 5 个 KPI 卡片。对应 types.ts: ProfitKpiCard[]。",
+  "_comment": "利润分析 - 顶部 10 个 KPI 卡片。对应 types.ts: ProfitKpiCard[]。",
   "fieldDescription": {
     "request": {
       "dateRange": {
@@ -22,7 +22,7 @@
       "kpis": {
         "type": "ProfitKpiCard[]",
         "required": true,
-        "description": "5 个 KPI 卡片。"
+        "description": "10 个 KPI 卡片。"
       }
     },
     "ProfitKpiCard": {
@@ -95,6 +95,46 @@
         "sub": "付费$27,440/总$125,680",
         "border": "linear-gradient(135deg,#0d9488,#2dd4bf)",
         "bg": "rgba(13,148,136,0.10)"
+      },
+      {
+        "label": "首日ROI",
+        "value": "128.6%",
+        "valueColor": "#e879f9",
+        "sub": "首日回收率表现（示例）",
+        "border": "linear-gradient(135deg,#a21caf,#e879f9)",
+        "bg": "rgba(162,28,175,0.10)"
+      },
+      {
+        "label": "平均DAU",
+        "value": "52,340",
+        "valueColor": "#facc15",
+        "sub": "统计周期内日活均值（示例）",
+        "border": "linear-gradient(135deg,#ca8a04,#facc15)",
+        "bg": "rgba(202,138,4,0.10)"
+      },
+      {
+        "label": "新用户",
+        "value": "18,760",
+        "valueColor": "#60a5fa",
+        "sub": "统计周期新增用户数（示例）",
+        "border": "linear-gradient(135deg,#2563eb,#60a5fa)",
+        "bg": "rgba(37,99,235,0.10)"
+      },
+      {
+        "label": "买量用户",
+        "value": "11,920",
+        "valueColor": "#fb7185",
+        "sub": "广告投放获取用户数（示例）",
+        "border": "linear-gradient(135deg,#e11d48,#fb7185)",
+        "bg": "rgba(225,29,72,0.10)"
+      },
+      {
+        "label": "自然量",
+        "value": "6,840",
+        "valueColor": "#34d399",
+        "sub": "自然增长用户数（示例）",
+        "border": "linear-gradient(135deg,#059669,#34d399)",
+        "bg": "rgba(5,150,105,0.10)"
       }
     ]
   },

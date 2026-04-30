@@ -41,6 +41,9 @@ export interface AppAssignmentItem {
   appId: string
   iconColor: string
   platform: AssignmentPlatform
+  /** 广告平台枚举 string，与 cockpit `sourceOptions.value`、请求体/筛选 `source` 一致 */
+  source: string
+  /** 广告平台展示名（表格/详情） */
   adPlatform: string
   optimizer: string
   configVersionId: string
@@ -58,7 +61,8 @@ export interface AppAssignmentItem {
 export interface AssignmentFormModel {
   appId: string
   platform: AssignmentPlatform
-  adPlatform: string
+  /** 广告平台，与 `source` 筛选及 cockpit `sourceOptions.value` 一致 */
+  source: string
   optimizer: string
   note: string
   configVersionId: string
@@ -70,7 +74,7 @@ export interface AssignmentTableQuery {
   keyword?: string
   /** 终端平台：`Android` | `iOS`，空串表示全部 */
   platform?: string
-  /** 广告平台名称或「全部」，与 `AppAssignmentItem.adPlatform` 展示值一致 */
+  /** 广告平台筛选，与 `AppAssignmentItem.source`、cockpit `sourceOptions.value` 一致；空串表示全部 */
   source?: string
   optimizer?: string
   /** `活跃` | `草稿配置` | `已归档`，空串表示全部 */
@@ -99,7 +103,7 @@ export interface AppAssignmentOverviewResponse {
 
 /** 筛选区下拉（契约 meta-filter-options） */
 export interface AppAssignmentMetaFilterResponse {
-  adPlatformOptions: { label: string; value: string }[]
+  /** 优化师选项；广告平台下拉见公用 `useCockpitMetaFilterStore().data.sourceOptions` */
   optimizerOptions: { label: string; value: string }[]
 }
 
@@ -127,9 +131,4 @@ export interface AssignmentAssignableSelectOption {
 /** 某应用下可选绩效版本（契约 meta-performance-versions） */
 export interface AppAssignmentMetaVersionsResponse {
   versions: PerformanceVersion[]
-}
-
-/** 导出异步凭证（契约 export；与 perf-config 导出形态对齐，真实联调可为文件流另议） */
-export interface AppAssignmentExportResponse {
-  fileToken: string
 }

@@ -21,7 +21,9 @@ import {
   mapBusinessMapToMapCountries,
   mapCountriesToLegend,
   fetchIncomeStructure,
-  mapIncomeStructureToFlow
+  mapIncomeStructureToFlow,
+  fetchCockpitTodaySummaryCards,
+  fetchCockpitYesterdaySummaryPanel
 } from '../api/cockpit'
 import type {
   CockpitOverview,
@@ -83,6 +85,8 @@ export function useCockpitData(initialDateRange: CockpitDateRange = 'today') {
   const loading = ref(true)
   const moduleLoading = ref({
     kpiAlert: true,
+    todayCards: true,
+    yesterdayPanel: true,
     spendPace: true,
     map: true,
     top3: true,
@@ -108,6 +112,8 @@ export function useCockpitData(initialDateRange: CockpitDateRange = 'today') {
     loading.value = true
     moduleLoading.value = {
       kpiAlert: true,
+      todayCards: true,
+      yesterdayPanel: true,
       spendPace: true,
       map: true,
       top3: true,
@@ -119,9 +125,10 @@ export function useCockpitData(initialDateRange: CockpitDateRange = 'today') {
     // 统一 date：优先显式传 date，其次根据 range 计算；并回写到 state，保证两处筛选同步
     const nextDate = params?.date ?? dateRangeToDate(range)
     date.value = nextDate
-    const tasks: Promise<unknown>[] = []
+    /** 首屏优先：仅 overall + overview，避免 7 路请求同时打满主线程与连接 */
+    const wave1: Promise<unknown>[] = []
 
-    tasks.push(
+    wave1.push(
       fetchCockpitOverview({ dateRange: range, date: nextDate })
         .then((restOverview) => {
           if (seq !== requestSeq) return
@@ -144,7 +151,7 @@ export function useCockpitData(initialDateRange: CockpitDateRange = 'today') {
         })
     )
 
-    tasks.push(
+    wave1.push(
       fetchCockpitOverall({ date: nextDate })
         .then((overallRes) => {
           if (seq !== requestSeq) return
@@ -171,6 +178,52 @@ export function useCockpitData(initialDateRange: CockpitDateRange = 'today') {
           if (seq === requestSeq) moduleLoading.value.kpiAlert = false
         })
     )
+
+    await Promise.allSettled(wave1)
+    if (seq !== requestSeq) return
+
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => resolve())
+    })
+    if (seq !== requestSeq) return
+
+    const tasks: Promise<unknown>[] = []
+
+    // 今日专属四卡片：仅今日加载；非今日直接清空，避免残留
+    if (range === 'today') {
+      tasks.push(
+        fetchCockpitTodaySummaryCards({ date: nextDate })
+          .then((cards) => {
+            if (seq !== requestSeq) return
+            mergeOverview({ todaySummaryCards: Array.isArray(cards) ? cards : [] })
+          })
+          .catch(() => null)
+          .finally(() => {
+            if (seq === requestSeq) moduleLoading.value.todayCards = false
+          })
+      )
+    } else {
+      mergeOverview({ todaySummaryCards: [] })
+      moduleLoading.value.todayCards = false
+    }
+
+    // 昨日专属汇总面板：仅昨日加载；非昨日清空
+    if (range === 'yesterday') {
+      tasks.push(
+        fetchCockpitYesterdaySummaryPanel({ date: nextDate })
+          .then((sections) => {
+            if (seq !== requestSeq) return
+            mergeOverview({ yesterdaySummarySections: Array.isArray(sections) ? sections : [] })
+          })
+          .catch(() => null)
+          .finally(() => {
+            if (seq === requestSeq) moduleLoading.value.yesterdayPanel = false
+          })
+      )
+    } else {
+      mergeOverview({ yesterdaySummarySections: [] })
+      moduleLoading.value.yesterdayPanel = false
+    }
 
     tasks.push(
       fetchConsumptionRhythmMonitoring({ date: nextDate })

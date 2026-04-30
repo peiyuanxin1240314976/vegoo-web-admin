@@ -1,5 +1,5 @@
 {
-  "_comment": "我的绩效 - 消耗进度。对应 types.ts: MyPerformanceSpendProgress。",
+  "_comment": "我的绩效 - 消耗进度。对应 types.ts: MyPerformanceSpendProgressResponse / MyPerformanceSpendProgressItem。",
   "fieldDescription": {
     "request": {
       "personId": { "type": "string", "required": true, "description": "人员 ID。" },
@@ -9,32 +9,67 @@
         "enum": ["quarter", "month"],
         "description": "统计口径类型。"
       },
-      "periodValue": { "type": "string", "required": true, "description": "口径值。" }
+      "periodValue": { "type": "string", "required": true, "description": "口径值。" },
+      "startDate": { "type": "string", "required": true, "description": "开始日期，YYYY-MM-DD。" },
+      "endDate": { "type": "string", "required": true, "description": "结束日期，YYYY-MM-DD。" }
     },
     "response": {
       "title": { "type": "string", "required": true, "description": "面板标题。" },
-      "data": {
-        "type": "MyPerformanceSpendProgress",
+      "list": {
+        "type": "MyPerformanceSpendProgressItem[]",
         "required": true,
-        "description": "进度数据。"
+        "description": "各维度消耗行；首行常见为总消耗（value 可为 “当前 / 目标” 预格式化文案）。"
       }
     },
-    "MyPerformanceSpendProgress": {
-      "spend": { "type": "number", "required": true, "description": "已消耗金额，单位 $。" },
-      "target": { "type": "number", "required": true, "description": "目标金额，单位 $。" },
-      "rate": { "type": "number", "required": true, "description": "达成率，单位 %，范围 0-100。" }
+    "MyPerformanceSpendProgressItem": {
+      "label": { "type": "string", "required": true, "description": "行标题，如 总消耗、应用名。" },
+      "value": {
+        "type": "string",
+        "required": true,
+        "description": "展示文案（后端预格式化），如 \"$31,521.26 / $37,825.51\" 或单金额。"
+      },
+      "rate": {
+        "type": "number",
+        "required": true,
+        "description": "进度条占比 0-100（与业务达成率一致）。"
+      },
+      "type": {
+        "type": "string",
+        "required": false,
+        "enum": ["success", "warning", "danger", "primary", "default"],
+        "description": "进度条语义色；缺省按 success。"
+      }
     }
   },
-  "sampleRequest": { "personId": "u_001", "periodType": "month", "periodValue": "2026-03" },
+  "sampleRequest": {
+    "personId": "u_001",
+    "periodType": "month",
+    "periodValue": "2026-03",
+    "startDate": "2026-03-01",
+    "endDate": "2026-03-30"
+  },
   "sampleResponse": {
-    "title": "月度花费达成",
-    "data": { "spend": 12200, "target": 13000, "rate": 94 }
+    "title": "月度消耗进度",
+    "list": [
+      {
+        "label": "总消耗",
+        "value": "$31,521.26 / $37,825.51",
+        "rate": 83,
+        "type": "success"
+      },
+      {
+        "label": "Weather8",
+        "value": "$16,091.42",
+        "rate": 90,
+        "type": "success"
+      }
+    ]
   },
   "api": {
     "url": "POST /api/user-growth/my-performance/spend-progress",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "personId, periodType, periodValue",
-    "responseBody": "title, data"
+    "requestBody": "personId, periodType, periodValue, startDate, endDate",
+    "responseBody": "title, list；网关常见包裹为 data.spendProgress"
   }
 }

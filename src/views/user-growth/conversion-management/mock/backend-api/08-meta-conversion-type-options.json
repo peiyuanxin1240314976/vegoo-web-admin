@@ -1,0 +1,60 @@
+{
+  "_comment": "转化管理（name Tab + data Tab 筛选项）— 页面独有「平台转化类型」下拉选项（与表格色条 platformConversionType / 请求 conversionType 一致）。非公用 comprehensive-analysis 能力。",
+  "fieldDescription": {
+    "request": {},
+    "response": {
+      "conversionTypeOptions": {
+        "type": "Option[]",
+        "required": true,
+        "description": "转化类型筛选项；首项可为「全部」value 空字符串。"
+      }
+    },
+    "Option": {
+      "label": {
+        "type": "string",
+        "required": true,
+        "description": "展示文案（可中文或 i18n key）。"
+      },
+      "value": {
+        "type": "string",
+        "required": true,
+        "description": "提交给 mappings-list / mappings-stats / data-tab 的 conversionType；空字符串表示全部；与六类枚举一致时为 PHONE_CALL_LEAD 等大写值。"
+      }
+    }
+  },
+  "sampleRequest": {},
+  "sampleResponse": {
+    "conversionTypeOptions": [
+      { "label": "全部", "value": "" },
+      { "label": "PHONE_CALL_LEAD", "value": "PHONE_CALL_LEAD" },
+      { "label": "DOWNLOAD", "value": "DOWNLOAD" },
+      { "label": "PURCHASE", "value": "PURCHASE" },
+      { "label": "ADD_TO_CART", "value": "ADD_TO_CART" },
+      { "label": "PAGE_VIEW", "value": "PAGE_VIEW" },
+      { "label": "BEGIN_CHECKOUT", "value": "BEGIN_CHECKOUT" }
+    ]
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/user-growth/conversion-management/meta-conversion-type-options",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "无或 {}",
+    "responseBody": "conversionTypeOptions: { label, value }[]"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "与 `13-meta-conversion-display-type-options`（paid/activation/behavior/revenue）不同：本接口为广告平台转化类型 PHONE_CALL_LEAD 等。",
+      "筛选提交时 value 均为 string；「全部」为 \"\"，勿传 all。"
+    ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "进入转化管理 name/data Tab",
+        "detail": "与公用 meta（应用、广告平台）并行或先后请求一次缓存。",
+        "prerequisite": "登录态"
+      }
+    ],
+    "defaultSelection": "conversionType 默认 \"\"；UI 映射见 `conversion-filters.vue` / `conversion-data-filters.vue`。"
+  }
+}

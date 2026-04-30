@@ -1,0 +1,76 @@
+{
+  "_comment": "代投分析 - 顶部 tabs 可用来源（仅非汇总）。前端固定拼接「汇总」为第一项。",
+  "fieldDescription": {
+    "request": {
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "查询开始日期，格式 YYYY-MM-DD。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": true,
+        "description": "查询结束日期，格式 YYYY-MM-DD。"
+      },
+      "appId": {
+        "type": "string",
+        "required": false,
+        "description": "应用筛选；全部传空字符串。"
+      },
+      "source": {
+        "type": "string",
+        "required": false,
+        "description": "广告平台筛选；全部传 all。"
+      }
+    },
+    "response": {
+      "items": {
+        "type": "AvailableSourceOption[]",
+        "required": true,
+        "description": "可用非汇总代投来源列表（不包含汇总项）。"
+      }
+    },
+    "AvailableSourceOption": {
+      "label": {
+        "type": "string",
+        "required": true,
+        "description": "tab 展示名称。"
+      },
+      "value": {
+        "type": "string",
+        "required": true,
+        "description": "tab 键值，推荐以 agency_ 前缀返回，例如 agency_gatherone。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "startDate": "2026-04-18",
+    "endDate": "2026-04-24",
+    "appId": "",
+    "source": "all"
+  },
+  "sampleResponse": [
+    {
+      "label": "GatherOne",
+      "value": "agency_gatherone"
+    },
+    {
+      "label": "快鸟",
+      "value": "agency_kuainiao"
+    },
+    {
+      "label": "出海者",
+      "value": "agency_chuhai"
+    }
+  ],
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/business-insight/agency-analysis/meta/available-sources",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "startDate, endDate, appId?, source?",
+    "responseBody": "AvailableSourceOption[]"
+  },
+  "apiSuggestion": {
+    "notes": ["后端只返回非汇总 tabs；前端固定在首位拼接“汇总”。", "返回顺序即 tab 展示顺序。"]
+  }
+}

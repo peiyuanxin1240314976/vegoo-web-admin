@@ -4,8 +4,7 @@
  */
 import type {
   ProfitKpiCard,
-  ProfitAppRow,
-  ProfitAppTotal,
+  ProfitAppProfitTreeNode,
   ProfitCountryRow,
   ProfitMapDataItem,
   ProfitMapScatterItem,
@@ -66,77 +65,135 @@ export const MOCK_KPI_CARDS: ProfitKpiCard[] = [
   }
 ]
 
-export const MOCK_APP_ROWS: ProfitAppRow[] = [
-  {
-    app: 'Weather5',
-    adRev: '$45,200',
-    paidRev: '$12,100',
-    total: '$57,300',
-    adSpend: '$38,500',
-    profit: '+$18,800',
-    profitColor: '#4ade80',
-    rate: '32.8%',
-    rateColor: '#4ade80',
-    trend: 'up'
-  },
-  {
-    app: 'PhoneTracker',
-    adRev: '$28,600',
-    paidRev: '$8,200',
-    total: '$36,800',
-    adSpend: '$22,400',
-    profit: '+$14,400',
-    profitColor: '#4ade80',
-    rate: '39.1%',
-    rateColor: '#4ade80',
-    trend: 'up'
-  },
-  {
-    app: 'BloodSugar2',
-    adRev: '$15,300',
-    paidRev: '$4,800',
-    total: '$20,100',
-    adSpend: '$18,200',
-    profit: '+$1,900',
-    profitColor: '#facc15',
-    rate: '9.5%',
-    rateColor: '#facc15',
-    trend: 'flat'
-  },
-  {
-    app: 'HealthTracker',
-    adRev: '$9,100',
-    paidRev: '$2,340',
-    total: '$11,440',
-    adSpend: '$10,140',
-    profit: '-$700',
-    profitColor: '#f87171',
-    rate: '-6.1%',
-    rateColor: '#f87171',
-    trend: 'down'
-  },
-  {
-    app: 'FaceMe',
-    adRev: '$0',
-    paidRev: '$0',
-    total: '$0',
-    adSpend: '$0',
-    profit: '$0',
-    profitColor: '#94a3b8',
-    rate: 'N/A',
-    rateColor: '#94a3b8',
-    trend: 'none'
+function makeTrend(len = 7, base = 2000, variance = 520) {
+  const points: { date: string; profit: number }[] = []
+  let v = base
+  for (let i = 0; i < len; i++) {
+    v += (Math.random() - 0.48) * variance
+    points.push({ date: `D${String(i + 1).padStart(2, '0')}`, profit: Math.round(v) })
   }
-]
-
-export const MOCK_APP_TOTAL: ProfitAppTotal = {
-  adRev: '$98,200',
-  paidRev: '$27,440',
-  total: '$125,640',
-  adSpend: '$89,240',
-  profit: '+$36,400',
-  rate: '40.8%'
+  return points
 }
+
+function makeUsd(n: number) {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0
+  }).format(n)
+}
+
+function makePct(n: number) {
+  return `${n.toFixed(2)}%`
+}
+
+function makeInt(n: number) {
+  return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(Math.round(n))
+}
+
+function buildCountryChildren(count = 320): ProfitAppProfitTreeNode[] {
+  const appsSeed = [
+    'Weather5',
+    'PhoneTracker',
+    'BloodSugar2',
+    'HealthTracker2',
+    'CPUMonitor',
+    'VideoDownloader'
+  ]
+  const countriesSeed = [
+    { code: 'us', name: '美国' },
+    { code: 'kr', name: '韩国' },
+    { code: 'de', name: '德国' },
+    { code: 'za', name: '南非' },
+    { code: 'jp', name: '日本' },
+    { code: 'gb', name: '英国' },
+    { code: 'au', name: '澳大利亚' },
+    { code: 'ca', name: '加拿大' },
+    { code: 'fr', name: '法国' },
+    { code: 'br', name: '巴西' }
+  ]
+  const rows: ProfitAppProfitTreeNode[] = []
+  for (let i = 0; i < count; i++) {
+    const seed = countriesSeed[i % countriesSeed.length]!
+    const appName = appsSeed[i % appsSeed.length]!
+    const idx = i + 1
+    const adRevNum = 2000 + (count - i) * 37 + (i % 9) * 120
+    const paidRevNum = 200 + (i % 11) * 38
+    const adSpendNum = 1300 + (i % 13) * 52 + (idx % 7) * 90
+    const totalNum = adRevNum + paidRevNum
+    const profitNum = totalNum - adSpendNum
+    const roi1d = adSpendNum > 0 ? (profitNum / adSpendNum) * 100 : 0
+    const good = profitNum >= 0
+    const avgDau = Math.max(120, Math.round(900 + (count - i) * 2.6 + (i % 17) * 13))
+    const newUsers = Math.max(20, Math.round(80 + (count - i) * 0.65 + (i % 19) * 3))
+    const paidUsers = Math.max(0, Math.round(newUsers * (0.28 + (i % 7) * 0.03)))
+    const organicUsers = Math.max(0, newUsers - paidUsers)
+    rows.push({
+      id: `country-${seed.code}-${idx}`,
+      name: seed.name,
+      appName,
+      countryCode: seed.code,
+      adRev: makeUsd(adRevNum),
+      paidRev: makeUsd(paidRevNum),
+      adSpend: makeUsd(adSpendNum),
+      profit: `${good ? '+' : '-'}${makeUsd(Math.abs(profitNum))}`,
+      profitColor: good ? '#4ade80' : '#f87171',
+      roi1d: makePct(roi1d),
+      avgDau: makeInt(avgDau),
+      newUsers: makeInt(newUsers),
+      paidUsers: makeInt(paidUsers),
+      organicUsers: makeInt(organicUsers),
+      profitTrend: makeTrend(10, Math.max(200, profitNum / 4), 260)
+    })
+  }
+  return rows
+}
+
+export const MOCK_APP_PROFIT_ROOT: ProfitAppProfitTreeNode = (() => {
+  const children = buildCountryChildren(320)
+  const sum = (k: keyof Pick<ProfitAppProfitTreeNode, 'adRev' | 'paidRev' | 'adSpend'>) => {
+    const n = (s: string) => Number(String(s).replace(/[^\d.-]/g, '')) || 0
+    return children.reduce((acc, r) => acc + n(r[k]), 0)
+  }
+  const total = sum('adRev') + sum('paidRev')
+  const adSpend = sum('adSpend')
+  const profit = total - adSpend
+  const good = profit >= 0
+  const avgDau = children.reduce(
+    (acc, r) => acc + (Number(r.avgDau.replace(/[^\d.-]/g, '')) || 0),
+    0
+  )
+  const newUsers = children.reduce(
+    (acc, r) => acc + (Number(r.newUsers.replace(/[^\d.-]/g, '')) || 0),
+    0
+  )
+  const paidUsers = children.reduce(
+    (acc, r) => acc + (Number(r.paidUsers.replace(/[^\d.-]/g, '')) || 0),
+    0
+  )
+  const organicUsers = children.reduce(
+    (acc, r) => acc + (Number(r.organicUsers.replace(/[^\d.-]/g, '')) || 0),
+    0
+  )
+  const roi1d = adSpend > 0 ? (profit / adSpend) * 100 : 0
+  return {
+    id: 'root',
+    name: '全部应用、全部国家',
+    appName: '全部应用',
+    adRev: makeUsd(sum('adRev')),
+    paidRev: makeUsd(sum('paidRev')),
+    adSpend: makeUsd(adSpend),
+    profit: `${good ? '+' : '-'}${makeUsd(Math.abs(profit))}`,
+    profitColor: good ? '#4ade80' : '#f87171',
+    roi1d: makePct(roi1d),
+    avgDau: makeInt(avgDau / children.length),
+    newUsers: makeInt(newUsers),
+    paidUsers: makeInt(paidUsers),
+    organicUsers: makeInt(organicUsers),
+    profitTrend: makeTrend(10, profit / 10, 520),
+    children
+  }
+})()
 
 export const MOCK_COUNTRY_ROWS: ProfitCountryRow[] = [
   {

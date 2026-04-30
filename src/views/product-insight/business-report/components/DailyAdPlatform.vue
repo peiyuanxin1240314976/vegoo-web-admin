@@ -5,8 +5,8 @@
       <div class="dap-title-left">
         <span class="dap-title-app">整体</span>
         <span class="dap-title-app">全部平台</span>
-        <span class="dap-title-badge">日报</span>
-        <span class="dap-title-date">2026年3月13日</span>
+        <span class="dap-title-badge">{{ reportLabel }}</span>
+        <span class="dap-title-date">{{ titleDateText }}</span>
       </div>
     </div>
 
@@ -128,7 +128,7 @@
               <td>{{ p.cpc }}</td>
               <td :class="roiColor(p.roi1d)">{{ p.roi1d }}</td>
               <td :class="roiColor(p.roi7d)">{{ p.roi7d }}</td>
-              <td>—</td>
+              <td :class="profitClass(p.profit)">{{ p.profit || '—' }}</td>
             </tr>
           </tbody>
         </table>
@@ -136,7 +136,7 @@
     </div>
     <!-- ── 右下角推送 ─────────────────────────────────────── -->
     <div class="dap-push-bar">
-      <span class="dap-push-last">上次推送：今日 08:30 飞书群《经营日报》</span>
+      <span class="dap-push-last">{{ pushText }}</span>
       <button class="dap-push-btn" @click="openPushModal()">立即推送</button>
     </div>
   </div>
@@ -145,12 +145,96 @@
 <script setup lang="ts">
   import { computed, inject } from 'vue'
   import { businessReportContextKey } from '../composables/business-report-context'
+  import type { AdPlatformCard } from '../types'
   import { adPlatformCards } from '../mockData'
 
   const openPushModal = inject<() => void>('openPushModal', () => {})
   const ctx = inject(businessReportContextKey)
 
-  const cardList = computed(() => ctx?.adPlatform.value?.platforms ?? adPlatformCards)
+  const PLATFORM_VISUAL_MAP: Record<string, { logo: string; color: string }> = {
+    google: { logo: 'G', color: '#4285F4' },
+    facebook: { logo: 'f', color: '#1877F2' },
+    fb: { logo: 'f', color: '#1877F2' },
+    unity: { logo: 'U', color: '#22C55E' },
+    mintegral: { logo: 'M', color: '#F59E0B' },
+    tiktok: { logo: '♪', color: '#FF4D4F' },
+    snapchat: { logo: '👻', color: '#FFFC00' }
+  }
+
+  const DEFAULT_PLATFORM_VISUAL = { logo: '•', color: '#64748B' }
+
+  const resolvePlatformVisual = (platform: Partial<AdPlatformCard>) => {
+    const rawKey = `${platform.id ?? platform.name ?? ''}`.trim().toLowerCase()
+    const normalizedKey = rawKey.replace(/\s+/g, '')
+    return (
+      PLATFORM_VISUAL_MAP[normalizedKey] ?? PLATFORM_VISUAL_MAP[rawKey] ?? DEFAULT_PLATFORM_VISUAL
+    )
+  }
+
+  function parseCurrencyToNumber(text: string): number {
+    const num = Number.parseFloat(String(text ?? '').replace(/[^\d.]/g, ''))
+    return Number.isFinite(num) ? num : 0
+  }
+
+  function normalizePlatformCards(cards: AdPlatformCard[]) {
+    if (!cards.length) return []
+    const spendTotal = cards.reduce((acc, item) => acc + parseCurrencyToNumber(item.adSpend), 0)
+    return cards.map((item) => {
+      const spend = parseCurrencyToNumber(item.adSpend)
+      const sharePercent =
+        typeof item.sharePercent === 'number' && Number.isFinite(item.sharePercent)
+          ? item.sharePercent
+          : spendTotal > 0
+            ? Number(((spend / spendTotal) * 100).toFixed(1))
+            : 0
+      const visual = resolvePlatformVisual(item)
+      return {
+        ...item,
+        id: item.id || `platform-${Math.random().toString(36).slice(2)}`,
+        name: item.name || '',
+        logo: item.logo || visual.logo,
+        color: item.color || visual.color,
+        adSpendChange:
+          typeof item.adSpendChange === 'number' && Number.isFinite(item.adSpendChange)
+            ? item.adSpendChange
+            : 0,
+        acquisitions: item.acquisitions || '--',
+        campaigns:
+          typeof item.campaigns === 'number' && Number.isFinite(item.campaigns)
+            ? item.campaigns
+            : 0,
+        cpi: item.cpi || '--',
+        cpm: item.cpm || '--',
+        cpc: item.cpc || '--',
+        profit: item.profit || '--',
+        roi1d: item.roi1d || '--',
+        roi7d: item.roi7d || '--',
+        sharePercent
+      }
+    })
+  }
+
+  const cardList = computed<ReturnType<typeof normalizePlatformCards>>(() => {
+    const source = ctx?.adPlatform.value?.platforms ?? adPlatformCards
+    return normalizePlatformCards(source)
+  })
+  const reportLabel = computed(() => {
+    if (ctx?.period.value === 'weekly') return '周报'
+    if (ctx?.period.value === 'monthly') return '月报'
+    return '日报'
+  })
+  const titleDateText = computed(() => {
+    const range = ctx?.reportRange.value
+    if (!range) return '--'
+    if (ctx?.period.value === 'weekly') return `${range.startDate} - ${range.endDate}`
+    if (ctx?.period.value === 'monthly') return range.startDate.slice(0, 7)
+    return range.startDate
+  })
+  const pushText = computed(
+    () =>
+      ctx?.getLastPushText?.(ctx?.period.value ?? 'daily') ??
+      `上次推送：-- 飞书群《经营${reportLabel.value}》`
+  )
 
   const mainPlatforms = computed(() => cardList.value.slice(0, 5))
   const otherPlatforms = computed(() => cardList.value.slice(5))
@@ -161,6 +245,15 @@
     if (n >= 100) return 'roi-green'
     if (n >= 80) return 'roi-orange'
     return 'roi-normal'
+  }
+
+  const profitClass = (val: string) => {
+    const raw = `${val ?? ''}`.trim()
+    if (!raw || raw === '—' || raw === '-') return 'profit-neutral'
+    // 兼容 "$-14,644" / "-$14,644" / "-14644"
+    const normalized = raw.replace(/[$,]/g, '').replace(/\s+/g, '')
+    if (normalized.startsWith('-')) return 'profit-neg'
+    return 'profit-pos'
   }
 </script>
 
@@ -227,6 +320,7 @@
   }
 
   .platform-card {
+    position: relative;
     padding: 12px;
     background: linear-gradient(
       145deg,
@@ -236,13 +330,66 @@
     border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
     border-radius: 10px;
     transition:
-      border-color 0.2s,
-      transform 0.15s;
+      border-color 0.25s var(--ease-out),
+      transform 0.2s var(--ease-out),
+      box-shadow 0.25s var(--ease-out);
+  }
+
+  /* 顶部左边框发光线条 */
+  .platform-card::before {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 28px;
+    height: 2px;
+    content: '';
+    background: linear-gradient(
+      90deg,
+      var(--accent) 0%,
+      color-mix(in srgb, var(--accent) 42%, transparent) 100%
+    );
+    border-radius: 2px 0;
+    opacity: 0.9;
+    transition:
+      width 0.25s var(--ease-out),
+      opacity 0.25s var(--ease-out);
+  }
+
+  /* 底部进度条发光 */
+  .platform-card::after {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    content: '';
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      color-mix(in srgb, var(--accent) 68%, transparent) 40%,
+      var(--accent) 100%
+    );
+    border-radius: 0 0 2px 2px;
+    opacity: 0.6;
+    transition: opacity 0.25s var(--ease-out);
   }
 
   .platform-card:hover {
     border-color: color-mix(in srgb, var(--accent) 60%, transparent);
-    transform: translateY(-2px);
+    box-shadow:
+      0 14px 36px rgb(0 0 0 / 28%),
+      0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent),
+      0 0 32px color-mix(in srgb, var(--accent) 10%, transparent);
+    transform: translateY(-3px);
+  }
+
+  .platform-card:hover::before {
+    width: 42px;
+    opacity: 1;
+  }
+
+  .platform-card:hover::after {
+    opacity: 1;
   }
 
   /* 卡片标题 */
@@ -512,6 +659,20 @@
     color: rgb(255 255 255 / 75%);
   }
 
+  .profit-pos {
+    font-weight: 600;
+    color: var(--art-success);
+  }
+
+  .profit-neg {
+    font-weight: 600;
+    color: var(--art-danger);
+  }
+
+  .profit-neutral {
+    color: rgb(255 255 255 / 55%);
+  }
+
   /* ── 右下角推送栏 ─────────────────────────────────────────── */
   .dap-push-bar {
     position: absolute;
@@ -540,6 +701,21 @@
 
     &:hover {
       opacity: 0.85;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .platform-card {
+      transition: none;
+    }
+
+    .platform-card::before,
+    .platform-card::after {
+      transition: none;
+    }
+
+    .platform-card:hover {
+      transform: none;
     }
   }
 </style>

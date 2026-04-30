@@ -22,7 +22,7 @@
       {
         "moment": "用户操作",
         "detail": "任务行「取消」`cancelOrderImport`。",
-        "prerequisite": "`OrderImportApiSource.cancelImport`。"
+        "prerequisite": "`OrderImportListApiSource.cancelImport`。"
       }
     ],
     "defaultSelection": "无",

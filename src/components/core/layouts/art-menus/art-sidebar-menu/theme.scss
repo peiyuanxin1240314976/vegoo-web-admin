@@ -29,6 +29,23 @@ $popup-menu-radius: 6px;
   }
 }
 
+// hover 左侧指示条（非 active）
+@mixin menu-hover-indicator($indicator-color: var(--theme-color)) {
+  .el-sub-menu__title:hover,
+  .el-menu-item:not(.is-active):hover {
+    &::before {
+      position: absolute;
+      top: 20%;
+      bottom: 20%;
+      left: 0;
+      width: 3px;
+      content: '';
+      background: color-mix(in srgb, #{$indicator-color} 55%, transparent);
+      border-radius: 0 2px 2px 0;
+    }
+  }
+}
+
 // 通用选中样式
 @mixin menu-active($color, $bg-color, $icon-color: var(--theme-color)) {
   .el-menu-item.is-active {
@@ -80,9 +97,24 @@ $popup-menu-radius: 6px;
     .el-menu-item {
       @include popup-menu-item;
 
+      position: relative;
+
       &.is-active {
         color: $active-color !important;
         background-color: $active-bg !important;
+      }
+
+      &:not(.is-active):hover {
+        &::before {
+          position: absolute;
+          top: 20%;
+          bottom: 20%;
+          left: 0;
+          width: 3px;
+          content: '';
+          background: color-mix(in srgb, var(--theme-color) 55%, transparent);
+          border-radius: 0 2px 2px 0;
+        }
       }
     }
 
@@ -120,6 +152,7 @@ $popup-menu-radius: 6px;
   // 菜单高度
   .el-sub-menu__title,
   .el-menu-item {
+    position: relative;
     height: $menu-height !important;
     margin-bottom: 4px;
     line-height: $menu-height !important;
@@ -156,6 +189,7 @@ $popup-menu-radius: 6px;
     @include theme-menu-base;
     @include menu-active(var(--theme-color), var(--el-color-primary-light-9));
     @include menu-hover($hover-bg-color);
+    @include menu-hover-indicator(var(--theme-color));
 
     .el-sub-menu__icon-arrow {
       color: var(--art-gray-600);
@@ -167,6 +201,7 @@ $popup-menu-radius: 6px;
     @include theme-menu-base;
     @include menu-active(#fff, #27282d, #fff);
     @include menu-hover(#0f1015);
+    @include menu-hover-indicator(var(--theme-color));
 
     .el-sub-menu__icon-arrow {
       color: var(--art-gray-400);
@@ -201,6 +236,7 @@ $popup-menu-radius: 6px;
     }
 
     @include menu-hover($hover-bg-color);
+    @include menu-hover-indicator(var(--theme-color));
 
     .el-sub-menu__icon-arrow {
       color: var(--art-gray-600);

@@ -1,0 +1,43 @@
+{
+  "_comment": "导入报告数据统计，供中间数据统计卡片及质量计算使用。",
+  "fieldDescription": {
+    "request": {
+      "taskId": { "type": "string", "required": true, "description": "任务 ID。" }
+    },
+    "response": {
+      "totalRecords": { "type": "number", "required": true, "description": "总记录数。" },
+      "newImports": { "type": "number", "required": true, "description": "新增导入数。" },
+      "duplicateSkipped": { "type": "number", "required": true, "description": "重复跳过数。" },
+      "failedCount": { "type": "number", "required": true, "description": "失败记录数。" },
+      "duplicateRatio": { "type": "number", "required": true, "description": "重复占比，0~1。" }
+    }
+  },
+  "sampleRequest": { "taskId": "IMP-020" },
+  "sampleResponse": {
+    "data": {
+      "totalRecords": 2890,
+      "newImports": 2450,
+      "duplicateSkipped": 410,
+      "failedCount": 30,
+      "duplicateRatio": 0.1419
+    }
+  },
+  "api": {
+    "url": "POST /api/config-management/order-import/report/data-stats",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "{ taskId }",
+    "responseBody": "ImportReportDataStats"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "`import-report/index.vue` 并行调用 `fetchOrderImportReportDataStats(taskId)`。",
+        "prerequisite": "`OrderImportReportApiSource.reportDataStats`。"
+      }
+    ],
+    "defaultSelection": "taskId 必填。",
+    "dedupe": "taskId 不变时可复用缓存。"
+  }
+}

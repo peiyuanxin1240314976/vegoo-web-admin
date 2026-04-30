@@ -1,0 +1,80 @@
+{
+  "_comment": "账户管理 · 代理商 — 编辑。id 放入请求体。",
+  "fieldDescription": {
+    "request": {
+      "id": { "type": "string", "required": true, "description": "代理商 ID。" },
+      "agencyName": { "type": "string", "required": false, "description": "代理商名称。" },
+      "source": { "type": "string", "required": false, "description": "广告平台。" },
+      "coopMode": {
+        "type": "string",
+        "required": false,
+        "enum": ["授权代理", "直接开户"],
+        "description": "合作模式。"
+      },
+      "contact": { "type": "string", "required": false, "description": "联系人。" },
+      "email": { "type": "string", "required": false, "description": "联系邮箱。" },
+      "phone": { "type": "string", "required": false, "description": "联系电话。" },
+      "startDate": {
+        "type": "string",
+        "required": false,
+        "description": "合作开始日期，YYYY-MM-DD。"
+      },
+      "expireDate": {
+        "type": "string",
+        "required": false,
+        "description": "到期日期，YYYY-MM-DD。"
+      },
+      "remark": { "type": "string", "required": false, "description": "备注。" }
+    },
+    "response": {
+      "data": { "type": "AgencyItem", "required": true, "description": "更新后的代理商信息。" }
+    }
+  },
+  "sampleRequest": {
+    "id": "AGY-001",
+    "agencyName": "星达传媒",
+    "contact": "张三（更新）",
+    "email": "zhang3@xingda.com",
+    "phone": "+86 138-0000-1234",
+    "expireDate": "2025-12-31",
+    "remark": "续约后更新"
+  },
+  "sampleResponse": {
+    "data": {
+      "id": "AGY-001",
+      "agencyName": "星达传媒",
+      "source": "Meta Ads",
+      "coopMode": "授权代理",
+      "managedAccounts": 32,
+      "monthSpend": 128450,
+      "expireDate": "2025-12-31",
+      "status": "已合作",
+      "contact": "张三（更新）",
+      "email": "zhang3@xingda.com",
+      "phone": "+86 138-0000-1234",
+      "startDate": "2023-01-15",
+      "remark": "续约后更新",
+      "activeAccounts": 28,
+      "pausedAccounts": 4,
+      "monthRevenue": 8991,
+      "bcBmList": []
+    }
+  },
+  "api": {
+    "url": "POST /api/config-management/agency/update",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "{ id, ...Partial<AgencyFormModel> }",
+    "responseBody": "AgencyItem"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "列表行或详情点击编辑，弹窗提交后调用 `updateAgency`。"
+      }
+    ],
+    "defaultSelection": "请求体包含当前行 id 与变更字段。",
+    "dedupe": "无"
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "_comment": "角色管理 - 新增角色与编辑角色基础信息弹窗统一保存接口。",
+  "fieldDescription": {
+    "request": {
+      "roleId": {
+        "type": "number",
+        "required": false,
+        "description": "编辑角色时传已有 roleId；新增角色时可不传。"
+      },
+      "roleName": { "type": "string", "required": true, "description": "角色名称。" },
+      "roleCode": {
+        "type": "string",
+        "required": true,
+        "description": "角色编码，建议直接作为用户信息中的 permissions / roles 返回值。"
+      },
+      "description": { "type": "string", "required": true, "description": "角色说明文案。" },
+      "enabled": { "type": "boolean", "required": true, "description": "角色是否启用。" }
+    },
+    "response": {
+      "success": { "type": "boolean", "required": true, "description": "是否保存成功。" },
+      "roleId": { "type": "number", "required": true, "description": "新增或编辑后的角色 ID。" },
+      "message": { "type": "string", "required": false, "description": "结果提示文案。" }
+    }
+  },
+  "sampleRequest": {
+    "roleName": "投放经理",
+    "roleCode": "DeliveryManager",
+    "description": "重点查看投放与增长分析页面",
+    "enabled": true
+  },
+  "sampleResponse": {
+    "success": true,
+    "roleId": 3,
+    "message": "save success"
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/config-management/role/detail/save",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "roleId?, roleName, roleCode, description, enabled",
+    "responseBody": "success, roleId, message"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "点击新增角色弹窗确认按钮",
+        "detail": "提交角色基础信息，成功后刷新左侧角色列表。"
+      },
+      {
+        "moment": "点击编辑角色弹窗确认按钮",
+        "detail": "仅保存角色基础信息，不在弹窗内保存页面权限与日期权限。"
+      }
+    ],
+    "defaultSelection": "新增时 enabled 默认 true；编辑时前端回填现有角色信息。",
+    "dedupe": "提交按钮建议在请求期间禁用，避免重复创建角色。"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "页面权限和日期权限建议继续使用主面板中的专门接口，不要与角色基础信息混在同一个弹窗保存接口里。",
+      "如后端需要校验 roleCode 唯一性，建议在保存失败时返回明确 message。"
+    ]
+  }
+}

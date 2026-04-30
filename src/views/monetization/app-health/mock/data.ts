@@ -99,7 +99,7 @@ export const MOCK_APP_HEALTH: AppHealthOverview = {
     dates: revenueDates,
     series: [
       {
-        name: '内购收入',
+        name: '付费收入',
         percent: 60,
         data: [45000, 52000, 58000, 62000, 65000, 68000, 72000, 75000, 78000, 82000]
       },

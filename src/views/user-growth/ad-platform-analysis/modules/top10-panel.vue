@@ -27,7 +27,7 @@
         }"
       >
         <ElTableColumn prop="campaign" label="Campaign" min-width="80" show-overflow-tooltip />
-        <ElTableColumn label="广告平台" width="80" align="center">
+        <ElTableColumn label="广告平台" width="auto" align="center">
           <template #default="{ row }">
             <span
               class="top10-source-badge"
@@ -38,20 +38,26 @@
             </span>
           </template>
         </ElTableColumn>
-        <ElTableColumn label="花费" width="80" align="left">
+        <ElTableColumn label="花费" width="auto" align="left">
           <template #default="{ row }">{{ formatTopCurrency(row.cost) }}</template>
         </ElTableColumn>
-        <ElTableColumn label="CPI" width="80" align="left">
+        <ElTableColumn label="CPI" width="auto" align="left">
           <template #default="{ row }">
             <span class="top10-cpi">{{ formatNum2(row.cpi) }}</span>
           </template>
         </ElTableColumn>
-        <ElTableColumn label="ROI" width="80" align="left">
+        <ElTableColumn label="ROI" width="auto" align="left">
           <template #default="{ row }">
-            <span class="top10-roi" :class="roiTone(row.roi)">{{ formatNum2(row.roi) }}</span>
+            <span
+              v-if="row.roi !== null && row.roi !== undefined"
+              class="top10-roi"
+              :class="roiTone(row.roi)"
+              >{{ formatNum2(row.roi * 100) }}%</span
+            >
+            <span v-else class="top10-roi val-muted">—</span>
           </template>
         </ElTableColumn>
-        <ElTableColumn label="操作" width="48" align="center">
+        <ElTableColumn label="操作" width="auto" align="center">
           <template #default="{ row }">
             <ElButton type="primary" link round @click="onView(row)">查看</ElButton>
           </template>
@@ -68,7 +74,7 @@
     pending: boolean
     rows: TopCampaignRow[]
     rowKey: (row: TopCampaignRow) => string
-    formatTopCurrency: (n: number) => string
+    formatTopCurrency: (n: unknown) => string
     formatNum2: (v: unknown) => string
     sourceBadgeShort: (key: string) => string
     roiTone: (roi: number) => string

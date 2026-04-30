@@ -42,6 +42,7 @@ import { setPageTitle } from '@/utils/router'
 import { resetRouterState } from '@/router/guards/beforeEach'
 import { useMenuStore } from './menu'
 import { StorageConfig } from '@/utils/storage/storage-config'
+import { clearCockpitMetaFilterSession } from '@/utils/cockpit-meta-filter-session'
 
 /**
  * 用户状态管理
@@ -79,12 +80,36 @@ export const useUserStore = defineStore(
      * @param newInfo 新的用户信息（来自 get user 接口）
      */
     const setUserInfo = (newInfo: Api.Auth.UserInfo) => {
+      const normalizedRoles = newInfo.roles ?? newInfo.permissions ?? []
+      const normalizedButtons =
+        newInfo.buttons ??
+        newInfo.permissionConfig?.buttonPermissions?.codes ??
+        newInfo.permissions ??
+        []
+
       info.value = {
         ...newInfo,
         userId: newInfo.userId ?? newInfo.id,
         userName: newInfo.userName ?? newInfo.username,
-        roles: newInfo.roles ?? newInfo.permissions ?? [],
-        buttons: newInfo.buttons ?? newInfo.permissions ?? []
+        roles: normalizedRoles,
+        buttons: normalizedButtons,
+        permissionConfig: newInfo.permissionConfig ?? {
+          routePermissions: {
+            /** 接口未带 permissionConfig 时占位：空表示「尚未下发页面级 routeNames」，避免与角色名混用导致按 name 过滤菜单被滤空 */
+            routeNames: []
+          },
+          datePermissions: {
+            defaultDateScope: {
+              maxHistoryDays: -1,
+              defaultRangeDays: 7,
+              allowCustomRange: true
+            },
+            pageDateScopes: []
+          },
+          buttonPermissions: {
+            codes: normalizedButtons
+          }
+        }
       }
     }
 
@@ -146,7 +171,7 @@ export const useUserStore = defineStore(
      * 清空所有用户相关状态并跳转到登录页
      * 如果是同一账号重新登录，保留工作台标签页
      */
-    const logOut = () => {
+    const resetUserState = () => {
       // 保存当前用户 ID，用于下次登录时判断是否为同一用户
       const currentUserId = info.value.userId
       if (currentUserId) {
@@ -165,17 +190,46 @@ export const useUserStore = defineStore(
       accessToken.value = ''
       // 清空刷新令牌
       refreshToken.value = ''
-      // 注意：不清空工作台标签页，等下次登录时根据用户判断
+
+      // 清空工作台标签页（含 localStorage 持久化数据）
+      const worktabStore = useWorktabStore()
+      worktabStore.clearAll()
+      const worktabKeyPattern = StorageConfig.createKeyPattern('worktab')
+      Object.keys(localStorage).forEach((key) => {
+        if (worktabKeyPattern.test(key)) {
+          localStorage.removeItem(key)
+        }
+      })
+
+      localStorage.removeItem(
+        StorageConfig.generateStorageKey(
+          StorageConfig.REALTIME_DASHBOARD_AUTO_REFRESH_MINUTES_STORE_ID
+        )
+      )
+
       // 移除iframe路由缓存
       sessionStorage.removeItem('iframeRoutes')
+      // 公用顶栏 meta 的 session 缓存（Pinia 内存在 resetRouterState 中清空）
+      clearCockpitMetaFilterSession()
       // 清空主页路径
       useMenuStore().setHomePath('')
       // 重置路由状态
       resetRouterState(500)
-      // 跳转到登录页，携带当前路由作为 redirect 参数
+    }
+
+    const logOut = () => {
+      resetUserState()
+
+      // 跳转到登录页：hash 路由下建议 replace，避免“退出后返回键又回到业务页”
       const currentRoute = router.currentRoute.value
-      const redirect = currentRoute.path !== '/login' ? currentRoute.fullPath : undefined
-      router.push({
+      const redirect =
+        currentRoute.name !== 'Login'
+          ? currentRoute.fullPath
+            ? currentRoute.fullPath
+            : undefined
+          : undefined
+
+      router.replace({
         name: 'Login',
         query: redirect ? { redirect } : undefined
       })
@@ -228,6 +282,7 @@ export const useUserStore = defineStore(
       setLockStatus,
       setLockPassword,
       setToken,
+      resetUserState,
       logOut,
       checkAndClearWorktabs
     }

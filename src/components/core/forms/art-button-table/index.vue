@@ -6,7 +6,7 @@
       buttonClass
     ]"
     :style="{ backgroundColor: buttonBgColor, color: iconColor }"
-    @click="handleClick"
+    @click.stop="handleClick"
   >
     <ArtSvgIcon :icon="iconContent" />
   </div>

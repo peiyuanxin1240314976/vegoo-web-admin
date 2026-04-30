@@ -1,0 +1,101 @@
+{
+  "_comment": "角色管理 - 右侧权限摘要卡片。",
+  "fieldDescription": {
+    "request": {
+      "roleId": { "type": "number", "required": true, "description": "当前选中的角色 ID。" }
+    },
+    "response": {
+      "summary": {
+        "type": "PermissionSummary",
+        "required": true,
+        "description": "角色页面权限与日期权限概览。"
+      }
+    },
+    "PermissionSummary": {
+      "routeGrantedCount": {
+        "type": "number",
+        "required": true,
+        "description": "当前角色已授权的路由数量。"
+      },
+      "routeTotalCount": {
+        "type": "number",
+        "required": true,
+        "description": "当前系统可配置的路由总数。"
+      },
+      "defaultDateScopeText": {
+        "type": "string",
+        "required": true,
+        "description": "默认日期规则摘要文案。"
+      },
+      "overridePageCount": {
+        "type": "number",
+        "required": true,
+        "description": "页面级覆盖规则数量。"
+      },
+      "allowCustomRange": {
+        "type": "boolean",
+        "required": true,
+        "description": "默认规则下是否允许自定义日期。"
+      },
+      "lastUpdatedAt": {
+        "type": "string",
+        "required": true,
+        "description": "最后更新时间，格式 YYYY-MM-DD HH:mm:ss。"
+      },
+      "lastUpdatedBy": { "type": "string", "required": true, "description": "最后更新人。" },
+      "highlightedRoutes": {
+        "type": "string[]",
+        "required": true,
+        "description": "前端可直接展示的重点 routeName 列表，空数据时返回 []。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "roleId": 3
+  },
+  "sampleResponse": {
+    "summary": {
+      "routeGrantedCount": 6,
+      "routeTotalCount": 24,
+      "defaultDateScopeText": "近90天，默认7天，允许自定义",
+      "overridePageCount": 2,
+      "allowCustomRange": true,
+      "lastUpdatedAt": "2026-04-16 18:30:00",
+      "lastUpdatedBy": "admin",
+      "highlightedRoutes": [
+        "UserGrowth",
+        "MyAds",
+        "PerformanceAnalysis",
+        "ComprehensiveAnalysis",
+        "AgencyAnalysis"
+      ]
+    }
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/config-management/role/permissions/summary",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "roleId",
+    "responseBody": "summary"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "切换左侧角色",
+        "detail": "右侧摘要卡片与用户列表并行加载。"
+      },
+      {
+        "moment": "保存权限成功后",
+        "detail": "重新请求摘要，以刷新最新统计与最近修改信息。"
+      }
+    ],
+    "defaultSelection": "摘要卡片只负责展示，不回传任何可编辑状态。",
+    "dedupe": "与用户列表请求可并行，无前后依赖。"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "highlightedRoutes 可由后端按业务重要性返回前几个 routeName，也可后续扩展为包含 title 的对象数组。",
+      "如果需要审计能力，建议后续补充 lastUpdatedById 与 version 字段。"
+    ]
+  }
+}

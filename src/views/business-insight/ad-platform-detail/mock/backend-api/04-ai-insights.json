@@ -1,0 +1,76 @@
+{
+  "_comment": "商业洞察 · 广告平台详情 — AI 洞察与建议。对应页面 index.vue: aiInsights。",
+  "interaction": {
+    "route": "/business-insight/ad-platform-detail",
+    "surface": "右侧 AI 洞察列表",
+    "triggers": ["查询刷新", "可选展开阅读全文"]
+  },
+  "fieldDescription": {
+    "request": {
+      "startDate": { "type": "string", "required": true, "description": "YYYY-MM-DD。" },
+      "endDate": { "type": "string", "required": true, "description": "YYYY-MM-DD。" },
+      "appId": { "type": "string", "required": true, "description": "应用；空为全部。" },
+      "countryCode": { "type": "string", "required": true, "description": "国家；空为全部。" },
+      "source": {
+        "type": "string",
+        "required": false,
+        "description": "广告平台（与路由 query `source` 一致）。"
+      }
+    },
+    "response": {
+      "insights": {
+        "type": "AdPlatformDetailAiInsight[]",
+        "required": true,
+        "description": "洞察卡片列表。"
+      }
+    },
+    "AdPlatformDetailAiInsight": {
+      "title": { "type": "string", "required": true, "description": "卡片标题。" },
+      "content": { "type": "string", "required": true, "description": "正文，可较长。" },
+      "highlights": {
+        "type": "string[]",
+        "required": true,
+        "description": "需在正文中高亮的关键词（与前端着色逻辑一致）。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "startDate": "2025-10-01",
+    "endDate": "2025-10-31",
+    "appId": "",
+    "countryCode": "",
+    "source": "Google"
+  },
+  "sampleResponse": {
+    "insights": [
+      {
+        "title": "应用表现差异",
+        "content": "Veather8贡献了AdMob收入的75%，但其eCPM($3.10) 低于 PhoneTracker2($3.85)。建议分析 PhoneTracker2的高eCPM广告位，并将成功经验复制到Weather8。",
+        "highlights": ["75%", "PhoneTracker2", "PhoneTracker2"]
+      },
+      {
+        "title": "J地区增长机会",
+        "content": "AdMob在德国的收入增长了25%，eCPM稳定在$4.50以上，建议为该地区分配更多流量。",
+        "highlights": ["25%", "$4.50"]
+      },
+      {
+        "title": "瀑布流优化建议",
+        "content": "在Weather8的默认瀑布流中，AdMob位于第3位。数据显示其填充率高达98%，建议将其上调至第2位以提升收入。",
+        "highlights": ["98%", "第2位"]
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/business-insight/ad-platform-detail/overview/ai-insights",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "startDate, endDate, appId, countryCode, source?",
+    "responseBody": "{ insights: AdPlatformDetailAiInsight[] }"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "可由规则模板或 LLM 生成；需控制单卡长度避免撑破布局。",
+      "highlights 应与 content 中实际子串匹配，避免无效高亮。"
+    ]
+  }
+}

@@ -42,6 +42,12 @@
       "fullDesc": { "type": "string", "required": true, "description": "译后完整描述。" }
     }
   },
+  "interaction": {
+    "triggers": [
+      { "moment": "自动填充-单条执行", "detail": "点击单语种译化按钮时请求一次，回写该语种结果。" },
+      { "moment": "自动填充-批量执行", "detail": "勾选多个语种后按条串行/并行触发同一接口。" }
+    ]
+  },
   "sampleRequest": {
     "model": "claude-sonnet",
     "agent": "Store Listing Agent 1",
@@ -60,7 +66,7 @@
     }
   },
   "api": {
-    "url": "POST /api/product-operations/text-management/action/translate",
+    "url": "POST /api/v1/datacenter/analysis/product-operations/text-management/action/translate",
     "method": "POST",
     "priority": "P0",
     "requestBody": "model, agent, targetLang, content",
@@ -69,7 +75,8 @@
   "apiSuggestion": {
     "notes": [
       "长文本译化可能耗时较长，可配合任务队列与轮询接口；当前 UI 为同步等待时可设合理超时。",
-      "超限状态由前端根据字数与 limit 字段计算，或由服务端额外返回 flags。"
+      "超限状态由前端根据字数与 limit 字段计算，或由服务端额外返回 flags。",
+      "批量译化时建议后端支持幂等与限流，避免同语种短时间重复触发。"
     ]
   }
 }

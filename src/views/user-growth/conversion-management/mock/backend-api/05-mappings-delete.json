@@ -1,11 +1,11 @@
 {
   "_comment": "转化管理（name Tab）- 删除转化映射。对应删除确认弹窗。",
   "fieldDescription": {
-    "pathParam": {
+    "request": {
       "id": {
         "type": "string",
         "required": true,
-        "description": "映射记录 ID。"
+        "description": "映射记录 ID（POST JSON body）。"
       }
     },
     "response": {
@@ -24,12 +24,15 @@
       "description": "如删除会影响历史报表口径，建议后端采用软删并在 message 中明确提示；也可返回业务错误码供前端特殊处理。"
     }
   },
+  "sampleRequest": {
+    "id": "2"
+  },
   "sampleResponse": {
     "success": true,
     "message": "删除成功"
   },
   "api": {
-    "url": "POST /api/user-growth/conversion-management/mappings-delete",
+    "url": "POST /api/v1/datacenter/analysis/user-growth/conversion-management/mappings-delete",
     "method": "POST",
     "priority": "P2",
     "requestBody": "id (必填)",
@@ -40,5 +43,16 @@
       "若存在回收站/审计：建议软删字段 deletedAt/deletedBy，不影响前端。",
       "如需二次确认逻辑（例如：该映射已绑定活动），建议返回明确 message。"
     ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户确认删除",
+        "detail": "`conversion-delete-dialog.vue` 确认 → `handleDeleteConfirm`；当前为 console mock，接接口后 POST 本契约并在成功后刷新列表。",
+        "prerequisite": "行数据含 id。"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "弹窗确认前置防重复点击。"
   }
 }

@@ -1,0 +1,14 @@
+{
+  "_comment": "POST meta-conversion-type-options，与 backend-api/08 的 sampleResponse 一致",
+  "sampleResponse": {
+    "conversionTypeOptions": [
+      { "label": "全部", "value": "" },
+      { "label": "PHONE_CALL_LEAD", "value": "PHONE_CALL_LEAD" },
+      { "label": "DOWNLOAD", "value": "DOWNLOAD" },
+      { "label": "PURCHASE", "value": "PURCHASE" },
+      { "label": "ADD_TO_CART", "value": "ADD_TO_CART" },
+      { "label": "PAGE_VIEW", "value": "PAGE_VIEW" },
+      { "label": "BEGIN_CHECKOUT", "value": "BEGIN_CHECKOUT" }
+    ]
+  }
+}

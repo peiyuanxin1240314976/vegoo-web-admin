@@ -2,7 +2,12 @@
  * 成本系数 Mock，与契约及 `Api.Common.PaginatedResponse` 一致。
  */
 import { getAppNow } from '@/utils/app-now'
-import type { CostCoefficientFormModel, CostCoefficientItem, CostCoefficientQuery } from '../types'
+import type {
+  CostCoefficientFormModel,
+  CostCoefficientItem,
+  CostCoefficientOverviewKpi,
+  CostCoefficientQuery
+} from '../types'
 import { cloneCostList, getHistory, getPlatform } from './data'
 
 let mockList: CostCoefficientItem[] = cloneCostList()
@@ -39,6 +44,26 @@ export function mockFetchCostCoefficientTable(
     total: filtered.length,
     current: params.page,
     size: params.pageSize
+  })
+}
+
+export function mockFetchCostCoefficientOverviewKpi(
+  params: Partial<CostCoefficientQuery>
+): Promise<CostCoefficientOverviewKpi> {
+  const filtered = filterRows({
+    nSource: params.nSource,
+    tStartYear: params.tStartYear,
+    keyword: params.keyword,
+    page: 1,
+    pageSize: 100000
+  })
+  const today = getAppNow().toISOString().slice(0, 10)
+  const monthPrefix = today.slice(0, 7)
+  return Promise.resolve({
+    total: filtered.length,
+    active: filtered.filter((row) => row.tStart <= today).length,
+    platforms: new Set(filtered.map((row) => row.nSource)).size,
+    monthChanges: filtered.filter((row) => row.updatedAt.startsWith(monthPrefix)).length
   })
 }
 

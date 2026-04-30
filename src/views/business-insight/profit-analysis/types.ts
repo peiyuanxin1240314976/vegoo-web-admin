@@ -13,7 +13,7 @@ export interface ProfitAnalysisQueryParams {
   dateRange: string
   platform: string
   /** 应用 ID，全部传 all */
-  sAppId: string
+  sAppId: string | string[]
   /** 国家代码，全部传 all */
   sCountryCode: string
 }
@@ -57,7 +57,53 @@ export interface ProfitKpiCard {
   bg: string
 }
 
-/** 应用利润详情表行（对齐 ProfitAppRowDto） */
+/** 应用利润表行「利润趋势」单点（按筛选日期范围逐日） */
+export interface ProfitTrendPoint {
+  date: string
+  /** 当日利润数值（USD，可正可负） */
+  profit: number
+}
+
+/**
+ * 应用利润详情（树表）行：根节点为「全部应用、全部国家…」，子节点为国家维度行。
+ * 说明：这里沿用“展示值字符串”策略，避免与后端格式化口径冲突。
+ */
+export interface ProfitAppProfitTreeNode {
+  /** 稳定主键（根可固定为 root；国家行可用 countryCode 或拼接） */
+  id: string
+  /** 首列显示名称：根为「全部应用、全部国家」；子节点为国家名 */
+  name: string
+  /** 应用展示名（根行：全部应用；子行：具体应用名，用于表格「应用」列展示） */
+  appName?: string
+  /** 国家代码（子节点可选，ISO 3166-1 alpha-2 小写；根节点为空串或不传） */
+  countryCode?: string
+  /** 指标：广告收入展示值 */
+  adRev: string
+  /** 指标：付费收入展示值 */
+  paidRev: string
+  /** 指标：广告支出展示值 */
+  adSpend: string
+  /** 指标：预估利润展示值（可含 +/- 前缀） */
+  profit: string
+  /** 预估利润颜色 HEX（用于涨跌色） */
+  profitColor: string
+  /** 指标：首日 ROI（百分比展示值，如 86.52%） */
+  roi1d: string
+  /** 指标：平均 DAU（整数展示值） */
+  avgDau: string
+  /** 指标：新用户（整数展示值） */
+  newUsers: string
+  /** 指标：买量用户（整数展示值） */
+  paidUsers: string
+  /** 指标：自然量（整数展示值） */
+  organicUsers: string
+  /** 趋势：按筛选日期范围返回的利润序列（用于迷你趋势） */
+  profitTrend: ProfitTrendPoint[]
+  /** 子节点：国家行（仅根节点有） */
+  children?: ProfitAppProfitTreeNode[]
+}
+
+/** （保留）旧版应用利润平铺行：历史字段，避免外部引用时报错 */
 export interface ProfitAppRow {
   app: string
   adRev: string
@@ -68,11 +114,10 @@ export interface ProfitAppRow {
   profitColor: string
   rate: string
   rateColor: string
-  /** 趋势：常见 up / down / flat / none，其它值按无迷你图处理 */
-  trend: string
+  profitTrend: ProfitTrendPoint[]
 }
 
-/** 应用利润表合计行（对齐 ProfitAppTotalDto） */
+/** （保留）旧版应用利润合计行：历史字段 */
 export interface ProfitAppTotal {
   adRev: string
   paidRev: string
@@ -82,10 +127,9 @@ export interface ProfitAppTotal {
   rate: string
 }
 
-/** 应用利润详情表 table/app-profit 的 data 结构 */
+/** 应用利润详情表 table/app-profit 的 data 结构（树表） */
 export interface ProfitAppProfitResponseDto {
-  rows?: ProfitAppRow[]
-  total?: ProfitAppTotal
+  root: ProfitAppProfitTreeNode
 }
 
 /** 国家利润 Top10 表行（对齐 ProfitCountryRowDto） */

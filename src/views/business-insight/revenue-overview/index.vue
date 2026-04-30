@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div ref="rootRef" class="revenue-overview-root art-full-height revenue-overview-page">
     <div
       class="revenue-overview-wrap"
@@ -12,44 +12,24 @@
       <!-- 顶部栏：筛选 + 导出（对齐原型右上角） -->
       <header class="rev-header rev-entry-1">
         <div class="rev-header__filters rev-filter-panel">
-          <div class="rev-pill">
-            <span class="rev-pill__k">App:</span>
-            <ElSelect
-              v-model="filtersDraft.s_app_id"
-              class="rev-select"
-              popper-class="rev-select__popper"
-              :teleported="true"
-              :fit-input-width="true"
-            >
-              <ElOption
-                v-for="opt in appOptions"
-                :key="opt.value"
-                :label="opt.label"
-                :value="opt.value"
-              />
-            </ElSelect>
+          <div class="rev-pill rev-pill--app-multi">
+            <span class="rev-pill__k">应用:</span>
+            <AppPlatformSearchSelect
+              v-model="filtersDraft.appIds"
+              mode="app"
+              multiple
+              placeholder="应用（多选，空为不限）"
+              search-placeholder="搜索类别/应用名称/应用简称"
+              :setting-apps="metaSettingApps"
+              :height="32"
+              :min-width="220"
+              :max-width="320"
+              input-class="rev-app-platform-select"
+            />
           </div>
 
           <div class="rev-pill">
-            <span class="rev-pill__k">Platform:</span>
-            <ElSelect
-              v-model="filtersDraft.platform"
-              class="rev-select"
-              popper-class="rev-select__popper"
-              :teleported="true"
-              :fit-input-width="true"
-            >
-              <ElOption
-                v-for="opt in platformOptions"
-                :key="opt.value"
-                :label="opt.label"
-                :value="opt.value"
-              />
-            </ElSelect>
-          </div>
-
-          <div class="rev-pill">
-            <span class="rev-pill__k">Country:</span>
+            <span class="rev-pill__k">国家：</span>
             <ElSelect
               v-model="filtersDraft.s_country_code"
               class="rev-select"
@@ -57,10 +37,11 @@
               :teleported="true"
               :fit-input-width="true"
               filterable
+              placeholder="国家"
             >
               <ElOption
                 v-for="opt in countryOptions"
-                :key="opt.value"
+                :key="opt.value === '' ? '__country_empty__' : opt.value"
                 :label="opt.label"
                 :value="opt.value"
               />
@@ -86,13 +67,17 @@
           </div> -->
 
           <div class="rev-pill">
-            <span class="rev-pill__k">Date:</span>
-            <ElDatePicker
-              v-model="filtersDraft.t_date"
-              type="date"
+            <span class="rev-pill__k">日期：</span>
+            <AppDatePicker
+              v-model="dateRangePicker"
+              type="daterange"
+              unlink-panels
+              range-separator="～"
+              :shortcuts="dateRangeShortcuts"
               value-format="YYYY-MM-DD"
               format="YYYY-MM-DD"
               class="rev-date"
+              popper-class="rev-select__popper"
               :teleported="true"
               :clearable="false"
             />
@@ -156,7 +141,7 @@
                 <span class="rev-kpi__subitem">{{ k.subLeftLabel }} {{ k.subLeftValue }}</span>
                 <span class="rev-kpi__subitem">{{ k.subRightLabel }} {{ k.subRightValue }}</span>
               </div>
-              <div :ref="(el) => setSparkRef(k.id, el)" class="rev-kpi__spark" />
+              <RevenueKpiSpark :spark="k.spark" :accent="k.accent" />
             </article>
           </section>
 
@@ -264,6 +249,7 @@
                 <div class="rev-table-wrap rev-table-wrap--iaa">
                   <ArtTable
                     class="rev-art-table"
+                    :class="{ 'rev-art-table--iaa-platform-clickable': iaaTab === 'platform' }"
                     :data="iaaRowsWithTotal"
                     :columns="iaaColumns"
                     row-key="_rowKey"
@@ -274,6 +260,7 @@
                     :header-cell-style="iaaHeaderCellStyle"
                     :cell-style="iaaCellStyle"
                     :row-class-name="iaaRowClassName"
+                    @row-click="onIaaTableRowClick"
                   >
                     <template #s_name="{ row }">
                       <span
@@ -399,7 +386,7 @@
 
                   <div class="rev-iap-bottom">
                     <div class="rev-mini-kpi">
-                      <div class="rev-mini-kpi__k">付费转化率</div>
+                      <div class="rev-mini-kpi__k">付费率</div>
                       <div class="rev-mini-kpi__v rev-mini-kpi__v--accent">{{
                         iapProductFoot.conversionRateText
                       }}</div>
@@ -411,7 +398,7 @@
                       }}</div>
                     </div>
                     <div class="rev-mini-kpi">
-                      <div class="rev-mini-kpi__k">订阅续费率</div>
+                      <div class="rev-mini-kpi__k">续订率</div>
                       <div class="rev-mini-kpi__v rev-mini-kpi__v--accent">{{
                         iapProductFoot.renewalRateText
                       }}</div>
@@ -619,7 +606,12 @@
                     :row-class-name="top5RowClassName"
                   >
                     <template #s_country_name="{ row }">
-                      <span class="rev-flag">{{ flagEmojiByCode(row.s_country_code) }}</span>
+                      <span
+                        v-if="iaaCountryFlagClass(row.s_country_code)"
+                        class="fi rev-flag"
+                        :class="iaaCountryFlagClass(row.s_country_code)"
+                        aria-hidden="true"
+                      />
                       {{ row.s_country_name }}
                     </template>
                   </ArtTable>
@@ -705,9 +697,15 @@
     watch,
     type CSSProperties
   } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
+  import { useRouter } from 'vue-router'
+  import { storeToRefs } from 'pinia'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import 'flag-icons/css/flag-icons.min.css'
   import { useChart } from '@/hooks/core/useChart'
   import { graphic, type EChartsOption } from '@/plugins/echarts'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import type { ColumnOption } from '@/types'
   import {
     fetchRevenueOverviewTopCountries,
@@ -721,10 +719,12 @@
     fetchRevenueOverviewIaaCountry,
     fetchRevenueOverviewIaaAdUnit,
     fetchRevenueOverviewIaaPlatform,
-    fetchRevenueOverviewMetaFilterOptions,
     fetchRevenueOverviewIaaAdType,
     fetchRevenueOverviewOverviewKpis
   } from '@/api/business-insight'
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore Vetur 对 <script setup> 的误报
+  import RevenueKpiSpark from './modules/revenue-kpi-spark.vue'
   import {
     MOCK_REVENUE_OVERVIEW_ECPM_7D,
     MOCK_REVENUE_OVERVIEW_FILTERS,
@@ -764,6 +764,31 @@
 
   defineOptions({ name: 'RevenueOverview' })
 
+  const router = useRouter()
+  const cockpitMetaStore = useCockpitMetaFilterStore()
+  const { data: cockpitMeta } = storeToRefs(cockpitMetaStore)
+  const metaSettingApps = computed(() => cockpitMeta.value?.settingApps ?? [])
+
+  /** IAA 广告平台 Tab 行点击进入商业洞察 · 广告平台详情 */
+  function onIaaTableRowClick(row: Record<string, unknown>) {
+    if (iaaTab.value !== 'platform') return
+    const platformName =
+      typeof row.s_platform_name === 'string'
+        ? row.s_platform_name.trim()
+        : typeof row.s_name === 'string'
+          ? row.s_name.trim()
+          : ''
+    if (!platformName || platformName === '合计') return
+    const source = typeof row.source === 'string' ? row.source.trim() : ''
+    void router.push({
+      name: 'AdPlatformDetail',
+      query: {
+        'platform-name': platformName,
+        source
+      }
+    })
+  }
+
   // 高度仍保留设计稿基准，宽度改为自适应容器
   const designHeight = 980
   const rootRef = ref<HTMLElement>()
@@ -791,58 +816,68 @@
   // applied filters：仅在点击「查询」时更新，用于所有接口请求
   const filters = reactive<RevenueOverviewFilterState>({ ...MOCK_REVENUE_OVERVIEW_FILTERS })
 
-  const appOptions = ref<SelectOption[]>([
-    { label: 'Weather5', value: 'weather5' },
-    { label: 'App A', value: 'app_a' },
-    { label: 'App B', value: 'app_b' }
-  ])
-  const platformOptions = ref<SelectOption<RevenueOverviewFilterState['platform']>[]>([
-    { label: 'Android & iOS', value: 'all' },
-    { label: 'Android', value: 'android' },
-    { label: 'iOS', value: 'ios' }
-  ])
-  const countryOptions = ref<SelectOption[]>([
-    { label: '全部', value: 'all' },
+  /** 与 AppDatePicker daterange 双向绑定，底层为 filtersDraft.startDate / endDate */
+  const dateRangePicker = computed<[string, string] | null>({
+    get() {
+      const a = (filtersDraft.startDate ?? '').trim()
+      const b = (filtersDraft.endDate ?? '').trim()
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(a) || !/^\d{4}-\d{2}-\d{2}$/.test(b)) return null
+      return [a, b]
+    },
+    set(v: [string, string] | null) {
+      if (v?.[0] && v?.[1]) {
+        filtersDraft.startDate = v[0]
+        filtersDraft.endDate = v[1]
+      }
+    }
+  })
+
+  /** 驾驶舱 meta 未就绪时的国家下拉兜底（与 store 中 CockpitMetaOptionItem 形态一致） */
+  const COUNTRY_OPTIONS_FALLBACK: SelectOption[] = [
+    { label: '不限', value: '' },
     { label: '美国', value: 'US' },
     { label: '英国', value: 'GB' },
     { label: '德国', value: 'DE' },
     { label: '台湾', value: 'TW' },
     { label: '日本', value: 'JP' }
-  ])
-  const versionOptions = ref<SelectOption[]>([
-    { label: '全部', value: 'all' },
-    { label: '1.2.0', value: '1.2.0' },
-    { label: '1.1.8', value: '1.1.8' },
-    { label: '1.1.2', value: '1.1.2' }
-  ])
+  ]
 
+  const countryOptions = computed<SelectOption[]>(() => {
+    const fromStore = cockpitMeta.value?.countryOptions
+    const emptyFirst: SelectOption = { label: '不限', value: '' }
+    if (fromStore?.length) {
+      const mapped = fromStore
+        .filter((o) => String(o.value).toLowerCase() !== 'all')
+        .map((o) => ({ label: o.label, value: o.value }))
+      const hasEmpty = mapped.some((o) => o.value === '')
+      return hasEmpty ? mapped : [emptyFirst, ...mapped]
+    }
+    return COUNTRY_OPTIONS_FALLBACK
+  })
+
+  /** 版本筛选项（模板中注释）；未在驾驶舱 meta 中提供，保持本地静态 */
+  // const versionOptions: SelectOption[] = [
+  //   { label: '全部', value: 'all' },
+  //   { label: '1.2.0', value: '1.2.0' },
+  //   { label: '1.1.8', value: '1.1.8' },
+  //   { label: '1.1.2', value: '1.1.2' }
+  // ]
+
+  /** 筛选项统一来自 `useCockpitMetaFilterStore`（GET …/cockpit/meta-filter-options），不再请求 revenue-overview 专用 meta */
   async function loadMetaFilterOptions() {
     try {
-      const data = await fetchRevenueOverviewMetaFilterOptions()
-      if (data.appOptions.length) {
-        appOptions.value = data.appOptions
-
-        const selected = String(filtersDraft.s_app_id || '')
-        const byValue = appOptions.value.find((o) => o.value === selected)
-        if (!byValue) {
-          const byLabel = appOptions.value.find((o) => o.label === selected)
-          filtersDraft.s_app_id = byLabel?.value || appOptions.value[0]?.value || ''
-        }
-      }
-      if (data.platformOptions.length) {
-        platformOptions.value = data.platformOptions as SelectOption<
-          RevenueOverviewFilterState['platform']
-        >[]
-      }
-      if (data.countryOptions.length) countryOptions.value = data.countryOptions
-      if (data.versionOptions.length) versionOptions.value = data.versionOptions
+      await cockpitMetaStore.ensureLoaded()
     } catch {
-      // 保留本地默认筛选项，避免首屏不可用
+      // 失败时仍可用 country 兜底、settingApps 为空
     }
   }
 
   function applyDraftFilters() {
-    Object.assign(filters, filtersDraft)
+    Object.assign(filters, {
+      ...filtersDraft,
+      appIds: [...filtersDraft.appIds],
+      platform: ''
+    })
   }
 
   function triggerQueryLoads() {
@@ -864,24 +899,6 @@
     if (iapTrendInited.value && iapTab.value === 'trend') {
       chartIapTrend.updateChart(buildIapTrendOption())
     }
-    kpis.value.forEach((k) => {
-      const dom = sparkRefs.value[k.id]
-      const chart = sparkCharts.get(k.id)
-      if (!dom || !chart) return
-      const accent =
-        k.accent === 'blue'
-          ? getVar(dom, '--rev-c-blue', '#60a5fa')
-          : k.accent === 'teal'
-            ? getVar(dom, '--rev-c-teal', '#20d6b5')
-            : k.accent === 'purple'
-              ? getVar(dom, '--rev-c-purple', '#a78bfa')
-              : k.accent === 'amber'
-                ? getVar(dom, '--rev-c-amber', '#f59e0b')
-                : k.accent === 'green'
-                  ? getVar(dom, '--rev-c-green', '#22c55e')
-                  : getVar(dom, '--rev-c-indigo', '#60a5fa')
-      chart.updateChart(buildSparkOption(k.spark, accent))
-    })
   }
 
   function onQuery() {
@@ -953,33 +970,6 @@
     try {
       const data = await fetchRevenueOverviewOverviewKpis({ ...filters })
       if (Array.isArray(data.kpis)) kpis.value = data.kpis
-      await nextTick()
-      kpis.value.forEach((k) => {
-        let isNewChart = false
-        let chart = sparkCharts.get(k.id)
-        if (!chart) {
-          chart = useChart({ autoTheme: true })
-          sparkCharts.set(k.id, chart)
-          isNewChart = true
-        }
-        const dom = sparkRefs.value[k.id]
-        if (!dom) return
-        chart.chartRef!.value = dom
-        const accent =
-          k.accent === 'blue'
-            ? getVar(dom, '--rev-c-blue', '#60a5fa')
-            : k.accent === 'teal'
-              ? getVar(dom, '--rev-c-teal', '#20d6b5')
-              : k.accent === 'purple'
-                ? getVar(dom, '--rev-c-purple', '#a78bfa')
-                : k.accent === 'amber'
-                  ? getVar(dom, '--rev-c-amber', '#f59e0b')
-                  : k.accent === 'green'
-                    ? getVar(dom, '--rev-c-green', '#22c55e')
-                    : getVar(dom, '--rev-c-indigo', '#60a5fa')
-        if (isNewChart) chart.initChart(buildSparkOption(k.spark, accent))
-        else chart.updateChart(buildSparkOption(k.spark, accent))
-      })
     } catch {
       // 失败时保留当前卡片，避免首屏闪断
     }
@@ -1426,6 +1416,8 @@
       const rows = iaaPlatformRows.value.map((r) => ({
         _rowKey: `pf-${r.s_platform_name}`,
         s_name: r.s_platform_name,
+        s_platform_name: r.s_platform_name,
+        source: String((r as any).source ?? ''),
         revenue: r.revenue,
         percent: r.percent,
         n_impression: r.n_impression,
@@ -1438,6 +1430,8 @@
       rows.push({
         _rowKey: 'pf-total',
         s_name: '合计',
+        s_platform_name: '合计',
+        source: '',
         revenue: sumR,
         percent: 100,
         n_impression: sumI,
@@ -1887,7 +1881,7 @@
       formatter: (row: any) => `$${formatFixed(row.d_arppu, 2)}`
     },
     {
-      label: '转化率',
+      label: '付费率',
       prop: 'd_conversion_rate',
       minWidth: 88,
       useSlot: true,
@@ -2047,53 +2041,13 @@
     return rows
   })
 
-  function flagEmojiByCode(code: string) {
-    const upper = String(code || '').toUpperCase()
-    if (upper === 'ALL') return '🏳️'
-    if (!/^[A-Z]{2}$/.test(upper)) return '🏳️'
-    const base = 0x1f1e6
-    const chars = [...upper].map((c) => String.fromCodePoint(base + (c.charCodeAt(0) - 65)))
-    return chars.join('')
-  }
-
   function getVar(el: HTMLElement | null, name: string, fallback: string) {
     const root = el ?? document.documentElement
     const v = getComputedStyle(root).getPropertyValue(name).trim()
     return v || fallback
   }
 
-  // --- 图表：KPI sparkline（每卡一个） ---
-  const sparkRefs = ref<Record<string, HTMLElement>>({})
-  function setSparkRef(id: string, el: unknown) {
-    if (el instanceof HTMLElement) sparkRefs.value[id] = el
-    else if (el === null) delete sparkRefs.value[id]
-  }
-  const sparkCharts = new Map<string, ReturnType<typeof useChart>>()
-  kpis.value.forEach((k) => sparkCharts.set(k.id, useChart({ autoTheme: true })))
-
-  function buildSparkOption(data: number[], accent: string): EChartsOption {
-    return {
-      grid: { left: 0, right: 0, top: 2, bottom: 0 },
-      xAxis: { type: 'category', show: false, data: data.map((_, i) => i) },
-      yAxis: { type: 'value', show: false, scale: true },
-      series: [
-        {
-          type: 'line',
-          data,
-          smooth: true,
-          symbol: 'none',
-          lineStyle: { color: accent, width: 1.8 },
-          areaStyle: {
-            color: new graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: accent },
-              { offset: 1, color: 'rgba(0,0,0,0)' }
-            ]),
-            opacity: 0.22
-          }
-        }
-      ]
-    }
-  }
+  // --- KPI sparkline 已拆至 modules/revenue-kpi-spark.vue（在子组件 setup 内注册 useChart，避免 await 后调用触发 Vue 警告）---
 
   // --- 图表：趋势 / 饼图 / eCPM / IAA 构成 ---
   const trend7dRef = ref<HTMLElement>()
@@ -2512,28 +2466,6 @@
   async function initCharts() {
     await nextTick()
 
-    // KPI sparks
-    kpis.value.forEach((k) => {
-      const dom = sparkRefs.value[k.id]
-      if (!dom) return
-      const chart = sparkCharts.get(k.id)
-      if (!chart) return
-      chart.chartRef!.value = dom
-      const accent =
-        k.accent === 'blue'
-          ? getVar(dom, '--rev-c-blue', '#60a5fa')
-          : k.accent === 'teal'
-            ? getVar(dom, '--rev-c-teal', '#20d6b5')
-            : k.accent === 'purple'
-              ? getVar(dom, '--rev-c-purple', '#a78bfa')
-              : k.accent === 'amber'
-                ? getVar(dom, '--rev-c-amber', '#f59e0b')
-                : k.accent === 'green'
-                  ? getVar(dom, '--rev-c-green', '#22c55e')
-                  : getVar(dom, '--rev-c-indigo', '#60a5fa')
-      chart.initChart(buildSparkOption(k.spark, accent))
-    })
-
     if (trend7dRef.value) {
       chartTrend7d.chartRef!.value = trend7dRef.value
       chartTrend7d.initChart(buildTrend7dOption())
@@ -2589,7 +2521,6 @@
   })
 
   onUnmounted(() => {
-    sparkCharts.forEach((c) => c.destroyChart?.())
     chartTrend7d.destroyChart?.()
     chartEcpm.destroyChart?.()
     chartPie.destroyChart?.()
@@ -2837,56 +2768,103 @@
   }
 
   .rev-filter-panel :deep(.rev-select .el-select__wrapper) {
-    min-height: 32px;
+    min-height: 36px;
     padding: 0 10px;
-    background: rgb(0 0 0 / 28%);
-    border: 1px solid rgb(96 165 250 / 24%);
-    border-radius: 10px;
-    box-shadow: 0 0 0 1px rgb(59 130 246 / 6%) inset;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: none;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      background 0.2s ease;
   }
 
-  .rev-filter-panel :deep(.rev-date .el-input__wrapper) {
-    min-height: 32px;
+  /*
+   * 日期范围：与 .rev-select / 应用选择器同一条主题实线；EP 仍走 --el-input-border-color
+   */
+  .rev-filter-panel :deep(.rev-date.el-date-editor) {
+    --el-input-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-text-color-primary: #fff;
+  }
+
+  .rev-filter-panel :deep(.rev-date .el-range-input) {
+    color: #fff;
+  }
+
+  .rev-filter-panel :deep(.rev-date .el-range-input::placeholder) {
+    color: var(--el-text-color-placeholder);
+  }
+
+  .rev-filter-panel :deep(.rev-date .el-range-separator) {
+    color: #fff;
+  }
+
+  .rev-filter-panel :deep(.rev-date .el-input__wrapper),
+  .rev-filter-panel :deep(.rev-date.el-date-editor .el-input__wrapper),
+  .rev-filter-panel :deep(.rev-date .el-range-editor.el-input__wrapper) {
+    min-height: 36px;
     padding: 0 10px;
-    background: rgb(0 0 0 / 28%);
-    border: 1px solid rgb(96 165 250 / 24%);
-    border-radius: 10px;
-    box-shadow: 0 0 0 1px rgb(59 130 246 / 6%) inset;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: none !important;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      background 0.2s ease;
   }
 
   :global(html:not(.dark) .rev-filter-panel) :deep(.rev-select .el-select__wrapper),
-  :global(html:not(.dark) .rev-filter-panel) :deep(.rev-date .el-input__wrapper) {
-    background: rgb(255 255 255 / 90%);
-    border: 1px solid var(--rev-pill-border);
-    box-shadow: none;
+  :global(html:not(.dark) .rev-filter-panel) :deep(.rev-date .el-input__wrapper),
+  :global(html:not(.dark) .rev-filter-panel) :deep(.rev-date .el-range-editor.el-input__wrapper) {
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: none !important;
+  }
+
+  .rev-filter-panel :deep(.rev-select .el-select__wrapper:hover),
+  .rev-filter-panel :deep(.rev-date .el-input__wrapper:hover),
+  .rev-filter-panel :deep(.rev-date.el-date-editor:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
+  }
+
+  .rev-filter-panel :deep(.rev-select .el-select__wrapper.is-focused),
+  .rev-filter-panel :deep(.rev-date .el-input__wrapper.is-focus),
+  .rev-filter-panel :deep(.rev-date .el-input__wrapper:focus-within),
+  .rev-filter-panel :deep(.rev-date.el-date-editor.is-active),
+  .rev-filter-panel :deep(.rev-date.el-date-editor:focus-within) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
   }
 
   .rev-filter-panel :deep(.rev-query-btn.el-button) {
     height: 36px;
     padding: 0 18px;
     font-weight: 600;
-    color: #f8fafc;
-    background: linear-gradient(135deg, rgb(37 99 235 / 96%), rgb(6 182 212 / 88%));
-    border: 1px solid rgb(96 165 250 / 55%);
-    box-shadow:
-      0 0 0 1px rgb(186 230 253 / 14%) inset,
-      0 8px 26px rgb(37 99 235 / 38%),
-      0 0 32px rgb(6 182 212 / 12%);
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: none;
   }
 
   .rev-filter-panel :deep(.rev-query-btn.el-button:hover) {
-    filter: brightness(1.08);
-    border-color: rgb(147 197 253 / 62%);
-    box-shadow:
-      0 0 0 1px rgb(186 230 253 / 20%) inset,
-      0 10px 34px rgb(37 99 235 / 45%),
-      0 0 44px rgb(6 182 212 / 20%);
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
   }
 
   :global(html:not(.dark) .rev-filter-panel) :deep(.rev-query-btn.el-button) {
-    color: var(--rev-text);
-    background: var(--rev-pill);
-    border: 1px solid var(--rev-pill-border);
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
     box-shadow: none;
   }
 
@@ -2909,6 +2887,16 @@
   .rev-pill__k {
     font-size: 12px;
     color: var(--rev-muted);
+  }
+
+  .rev-pill--app-multi {
+    align-items: center;
+  }
+
+  .rev-filter-panel :deep(.rev-app-platform-select) {
+    flex: 1;
+    min-width: 220px;
+    max-width: 320px;
   }
 
   .rev-export {
@@ -3024,40 +3012,51 @@
     animation-delay: 0.2s;
   }
 
-  .rev-select,
-  .rev-date {
+  .rev-select {
     width: 140px;
   }
 
+  .rev-date {
+    width: min(100%, 280px);
+    min-width: 240px;
+  }
+
   :deep(.rev-select .el-select__wrapper) {
-    min-height: 30px;
-    padding: 0 8px;
-    background: transparent;
-    border: 0;
-    box-shadow: none;
+    min-height: 36px;
+    padding: 0 10px;
   }
 
   :deep(.rev-date .el-input__wrapper) {
-    min-height: 30px;
-    padding: 0 8px;
-    background: transparent;
-    border: 0;
-    box-shadow: none;
+    min-height: 36px;
+    padding: 0 10px;
+  }
+
+  :deep(.rev-date .el-range-input) {
+    color: #fff;
+  }
+
+  :deep(.rev-date .el-range-input::placeholder) {
+    color: var(--el-text-color-placeholder);
   }
 
   :deep(.rev-date .el-input__inner) {
-    color: var(--rev-text);
+    color: #fff;
+  }
+
+  :deep(.rev-date .el-range-separator) {
+    color: #fff;
   }
 
   :deep(.rev-select .el-select__selected-item),
   :deep(.rev-select .el-select__placeholder),
   :deep(.rev-select .el-select__caret) {
-    color: var(--rev-text);
+    color: #fff;
   }
 
   :deep(.rev-date .el-input__prefix),
-  :deep(.rev-date .el-input__suffix) {
-    color: var(--rev-text);
+  :deep(.rev-date .el-input__suffix),
+  :deep(.rev-date .el-range__icon) {
+    color: #fff;
   }
 
   .rev-kpi-grid {
@@ -3081,7 +3080,6 @@
     border-radius: 12px;
     box-shadow: 0 1px 0 rgb(255 255 255 / 4%) inset;
     transition:
-      transform 0.22s cubic-bezier(0.4, 0, 0.2, 1),
       box-shadow 0.22s ease,
       border-color 0.22s ease,
       filter 0.22s ease,
@@ -3149,8 +3147,8 @@
     box-shadow:
       0 14px 36px rgb(0 0 0 / 42%),
       0 0 0 1px rgb(255 255 255 / 6%) inset,
-      0 0 32px var(--rev-kpi-glow);
-    transform: translateY(-3px) scale(1.02);
+      0 0 32px var(--rev-kpi-glow),
+      0 0 72px color-mix(in srgb, var(--rev-kpi-glow) 55%, transparent);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -3602,6 +3600,10 @@
 
   .rev-table-wrap--iaa .rev-art-table {
     height: 100%;
+  }
+
+  .rev-art-table--iaa-platform-clickable :deep(.el-table__body tr:not(.is-iaa-total)) {
+    cursor: pointer;
   }
 
   .rev-panel--iaa :deep(.el-table) {
@@ -4463,7 +4465,6 @@
     border: 1px solid rgb(139 109 49 / 88%);
     box-shadow: 0 0 0 1px rgb(230 162 60 / 8%) inset;
     transition:
-      transform 0.22s cubic-bezier(0.4, 0, 0.2, 1),
       box-shadow 0.22s ease,
       filter 0.22s ease,
       border-color 0.22s ease;
@@ -4476,8 +4477,8 @@
     box-shadow:
       0 10px 28px rgb(0 0 0 / 45%),
       0 0 32px rgb(230 162 60 / 14%),
-      0 0 0 1px rgb(255 255 255 / 5%) inset;
-    transform: translateY(-2px);
+      0 0 0 1px rgb(255 255 255 / 5%) inset,
+      0 0 80px rgb(230 162 60 / 10%);
   }
 
   .rev-panel--ai .rev-panel__title {
@@ -4550,7 +4551,6 @@
     background: linear-gradient(150deg, rgb(22 22 24 / 96%), rgb(12 12 14 / 99%));
     border: 1px solid rgb(51 65 85 / 38%);
     transition:
-      transform 0.22s cubic-bezier(0.4, 0, 0.2, 1),
       box-shadow 0.22s ease,
       filter 0.22s ease,
       border-color 0.22s ease;
@@ -4560,8 +4560,9 @@
     z-index: 1;
     filter: brightness(1.05);
     border-color: rgb(100 116 139 / 45%);
-    box-shadow: 0 10px 28px rgb(0 0 0 / 38%);
-    transform: translateY(-2px);
+    box-shadow:
+      0 10px 28px rgb(0 0 0 / 38%),
+      0 0 68px rgb(59 130 246 / 10%);
   }
 
   :global(html:not(.dark) .rev-panel.rev-panel--quality) {
@@ -4581,7 +4582,6 @@
     cursor: pointer;
     border-radius: 12px;
     transition:
-      transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
       box-shadow 0.2s ease,
       filter 0.2s ease,
       border-color 0.2s ease;
@@ -4619,8 +4619,9 @@
   .rev-quality:hover {
     z-index: 1;
     filter: brightness(1.09);
-    box-shadow: 0 8px 22px rgb(0 0 0 / 35%);
-    transform: scale(1.02);
+    box-shadow:
+      0 8px 22px rgb(0 0 0 / 35%),
+      0 0 64px rgb(34 211 238 / 10%);
   }
 
   :global(html:not(.dark) .rev-quality:nth-child(1)),

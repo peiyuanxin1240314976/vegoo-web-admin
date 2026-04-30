@@ -89,9 +89,21 @@
           </span>
           <span class="ad-performance-table__summary-item">
             预估利润
-            <b :class="profitClass(props.ownerTeamSummary.estimatedProfit)">
-              {{ props.ownerTeamSummary.estimatedProfit >= 0 ? '+' : '' }}
-              {{ formatMoney(props.ownerTeamSummary.estimatedProfit) }}
+            <b class="ap-profit" :class="profitClass(props.ownerTeamSummary.estimatedProfit)">
+              <span
+                class="ap-profit__tip"
+                :class="[
+                  profitClass(props.ownerTeamSummary.estimatedProfit),
+                  trendClass(props.ownerTeamSummary.estimatedProfit)
+                ]"
+                aria-hidden="true"
+              >
+                <span class="ap-profit__arrow"></span>
+              </span>
+              <span class="ap-profit__value">
+                {{ props.ownerTeamSummary.estimatedProfit >= 0 ? '+' : ''
+                }}{{ formatMoney(props.ownerTeamSummary.estimatedProfit) }}
+              </span>
             </b>
           </span>
         </div>
@@ -117,9 +129,21 @@
           </span>
           <span class="ad-performance-table__summary-item">
             预估利润
-            <b :class="profitClass(props.accountSummary.estimatedProfit)">
-              {{ props.accountSummary.estimatedProfit >= 0 ? '+' : '' }}
-              {{ formatMoney(props.accountSummary.estimatedProfit) }}
+            <b class="ap-profit" :class="profitClass(props.accountSummary.estimatedProfit)">
+              <span
+                class="ap-profit__tip"
+                :class="[
+                  profitClass(props.accountSummary.estimatedProfit),
+                  trendClass(props.accountSummary.estimatedProfit)
+                ]"
+                aria-hidden="true"
+              >
+                <span class="ap-profit__arrow"></span>
+              </span>
+              <span class="ap-profit__value">
+                {{ props.accountSummary.estimatedProfit >= 0 ? '+' : ''
+                }}{{ formatMoney(props.accountSummary.estimatedProfit) }}
+              </span>
             </b>
           </span>
         </div>
@@ -215,11 +239,23 @@
                 <div class="ad-performance-detail__item">
                   <span class="ad-performance-detail__k">预估利润</span>
                   <span
-                    class="ad-performance-detail__v"
+                    class="ad-performance-detail__v ap-profit"
                     :class="profitClass(drawerRowAny?.estimatedProfit ?? 0)"
                   >
-                    {{ (drawerRowAny?.estimatedProfit ?? 0) >= 0 ? '+' : '' }}
-                    {{ formatMoney(drawerRowAny?.estimatedProfit ?? 0) }}
+                    <span
+                      class="ap-profit__tip"
+                      :class="[
+                        profitClass(drawerRowAny?.estimatedProfit ?? 0),
+                        trendClass(drawerRowAny?.estimatedProfit ?? 0)
+                      ]"
+                      aria-hidden="true"
+                    >
+                      <span class="ap-profit__arrow"></span>
+                    </span>
+                    <span class="ap-profit__value">
+                      {{ (drawerRowAny?.estimatedProfit ?? 0) >= 0 ? '+' : ''
+                      }}{{ formatMoney(drawerRowAny?.estimatedProfit ?? 0) }}
+                    </span>
                   </span>
                 </div>
               </div>
@@ -276,11 +312,23 @@
                 <div class="ad-performance-detail__item">
                   <span class="ad-performance-detail__k">预估利润</span>
                   <span
-                    class="ad-performance-detail__v"
+                    class="ad-performance-detail__v ap-profit"
                     :class="profitClass(drawerRowAny?.estimatedProfit ?? 0)"
                   >
-                    {{ (drawerRowAny?.estimatedProfit ?? 0) >= 0 ? '+' : '' }}
-                    {{ formatMoney(drawerRowAny?.estimatedProfit ?? 0) }}
+                    <span
+                      class="ap-profit__tip"
+                      :class="[
+                        profitClass(drawerRowAny?.estimatedProfit ?? 0),
+                        trendClass(drawerRowAny?.estimatedProfit ?? 0)
+                      ]"
+                      aria-hidden="true"
+                    >
+                      <span class="ap-profit__arrow"></span>
+                    </span>
+                    <span class="ap-profit__value">
+                      {{ (drawerRowAny?.estimatedProfit ?? 0) >= 0 ? '+' : ''
+                      }}{{ formatMoney(drawerRowAny?.estimatedProfit ?? 0) }}
+                    </span>
                   </span>
                 </div>
               </div>
@@ -358,11 +406,23 @@
                 <div class="ad-performance-detail__item">
                   <span class="ad-performance-detail__k">预估利润</span>
                   <span
-                    class="ad-performance-detail__v"
+                    class="ad-performance-detail__v ap-profit"
                     :class="profitClass(drawerRowAny?.estimatedProfit ?? 0)"
                   >
-                    {{ (drawerRowAny?.estimatedProfit ?? 0) >= 0 ? '+' : '' }}
-                    {{ formatMoney(drawerRowAny?.estimatedProfit ?? 0) }}
+                    <span
+                      class="ap-profit__tip"
+                      :class="[
+                        profitClass(drawerRowAny?.estimatedProfit ?? 0),
+                        trendClass(drawerRowAny?.estimatedProfit ?? 0)
+                      ]"
+                      aria-hidden="true"
+                    >
+                      <span class="ap-profit__arrow"></span>
+                    </span>
+                    <span class="ap-profit__value">
+                      {{ (drawerRowAny?.estimatedProfit ?? 0) >= 0 ? '+' : ''
+                      }}{{ formatMoney(drawerRowAny?.estimatedProfit ?? 0) }}
+                    </span>
                   </span>
                 </div>
               </div>
@@ -411,11 +471,23 @@
                 <div class="ad-performance-detail__item">
                   <span class="ad-performance-detail__k">预估利润</span>
                   <span
-                    class="ad-performance-detail__v"
+                    class="ad-performance-detail__v ap-profit"
                     :class="profitClass(drawerRowAny?.estimatedProfit ?? 0)"
                   >
-                    {{ (drawerRowAny?.estimatedProfit ?? 0) >= 0 ? '+' : '' }}
-                    {{ formatMoney(drawerRowAny?.estimatedProfit ?? 0) }}
+                    <span
+                      class="ap-profit__tip"
+                      :class="[
+                        profitClass(drawerRowAny?.estimatedProfit ?? 0),
+                        trendClass(drawerRowAny?.estimatedProfit ?? 0)
+                      ]"
+                      aria-hidden="true"
+                    >
+                      <span class="ap-profit__arrow"></span>
+                    </span>
+                    <span class="ap-profit__value">
+                      {{ (drawerRowAny?.estimatedProfit ?? 0) >= 0 ? '+' : ''
+                      }}{{ formatMoney(drawerRowAny?.estimatedProfit ?? 0) }}
+                    </span>
                   </span>
                 </div>
               </div>
@@ -434,6 +506,7 @@
   import { useI18n } from 'vue-i18n'
   import { fetchAdPerformanceCampaignDetailDrawer } from '@/api/user-growth/ad-performance'
   import mittBus from '@/utils/sys/mittBus'
+  import { trendClass } from '../utils/tab-utils'
   import CampaignTab from './table-tabs/campaign-tab.vue'
   import CountryTab from './table-tabs/country-tab.vue'
   import OwnerTab from './table-tabs/owner-tab.vue'
@@ -630,6 +703,31 @@
     })
   })
 
+  const campaignIdByName = computed(() => {
+    const map = new Map<string, string>()
+    for (const row of props.campaignRows ?? []) {
+      const name = String(row.name ?? '').trim()
+      const campaignId = String(row.campaignId ?? '').trim()
+      if (name && campaignId) map.set(name, campaignId)
+    }
+    return map
+  })
+
+  function resolveCampaignIdFromRow(
+    row: AdPerformanceCampaignRow | AdPerformanceOwnerRow | AdPerformanceAccountRow
+  ) {
+    const directCampaignId = String((row as { campaignId?: string | null }).campaignId ?? '').trim()
+    if (directCampaignId) return directCampaignId
+    const campaignName =
+      'campaignName' in row
+        ? String(row.campaignName ?? '').trim()
+        : 'name' in row
+          ? String(row.name ?? '').trim()
+          : ''
+    if (!campaignName) return ''
+    return campaignIdByName.value.get(campaignName) ?? ''
+  }
+
   const activeTabExtraProps = computed(() => {
     if (props.activeTab !== 'campaign') return {}
     return { childrenMap: campaignChildrenMap.value }
@@ -667,12 +765,11 @@
   function treeChildToCampaignRow(
     row: AdPerformanceOwnerRow | AdPerformanceAccountRow
   ): AdPerformanceCampaignRow {
-    const id =
-      row.campaignId != null && String(row.campaignId).trim() !== ''
-        ? String(row.campaignId)
-        : row.id
+    const campaignId = resolveCampaignIdFromRow(row)
+    const id = campaignId !== '' ? campaignId : row.id
     return {
       id,
+      campaignId: campaignId || undefined,
       appName: '',
       name: row.campaignName ?? '',
       channel: row.channel ?? '',
@@ -696,10 +793,11 @@
     const campaignRow: AdPerformanceCampaignRow = isCampaignTableRow(row)
       ? row
       : treeChildToCampaignRow(row)
-    const campaignId =
-      !isCampaignTableRow(row) && row.campaignId != null && String(row.campaignId).trim() !== ''
-        ? String(row.campaignId)
-        : campaignRow.id
+    const campaignId = resolveCampaignIdFromRow(row)
+    if (campaignId === '') {
+      ElMessage.warning('缺少 campaignId，无法打开系列详情')
+      return
+    }
 
     drawerTab.value = 'campaign'
     drawerRow.value = campaignRow
@@ -1117,7 +1215,7 @@
     border-top: 7px solid var(--el-text-color-secondary) !important;
     border-right: 6px solid transparent !important;
     border-left: 6px solid transparent !important;
-    transform: translateY(-6px) rotate(-90deg) !important;
+    transform: rotate(-90deg) !important;
   }
 
   .ad-performance-table__percent {
@@ -1140,6 +1238,48 @@
 
   .ad-performance-table__profit--down {
     color: var(--art-danger);
+  }
+
+  .ap-profit {
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+    justify-content: flex-end;
+    white-space: nowrap;
+  }
+
+  .ap-profit__tip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 18px;
+    padding: 0 6px;
+    background: color-mix(in srgb, currentcolor 10%, transparent);
+    border: 1px solid color-mix(in srgb, currentcolor 28%, transparent);
+    border-radius: 9999px;
+    box-shadow: 0 0 0 1px color-mix(in srgb, currentcolor 8%, transparent) inset;
+  }
+
+  .ap-profit__arrow {
+    width: 0;
+    height: 0;
+    opacity: 0.95;
+  }
+
+  .ap-profit__tip.is-trend-up .ap-profit__arrow {
+    border-right: 5px solid transparent;
+    border-bottom: 7px solid currentcolor;
+    border-left: 5px solid transparent;
+  }
+
+  .ap-profit__tip.is-trend-down .ap-profit__arrow {
+    border-top: 7px solid currentcolor;
+    border-right: 5px solid transparent;
+    border-left: 5px solid transparent;
+  }
+
+  .ap-profit__tip.is-trend-flat {
+    display: none;
   }
 
   .ad-performance-table__footer {

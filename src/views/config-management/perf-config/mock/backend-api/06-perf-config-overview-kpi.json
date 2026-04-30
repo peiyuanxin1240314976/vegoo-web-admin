@@ -1,0 +1,91 @@
+{
+  "_comment": "绩效配置 — 顶栏 KPI 汇总。与列表使用相同筛选维度，**不含分页**；统计当前条件下**全部**配置行按激活版本 `status` 聚合，避免仅用表格当前页数据推算。对应 types.ts: PerfConfigOverviewKpi。",
+  "fieldDescription": {
+    "request": {
+      "keyword": {
+        "type": "string",
+        "required": false,
+        "description": "应用展示名或 appId 关键词；与 `01-perf-config-table` 一致。"
+      },
+      "appId": {
+        "type": "string",
+        "required": false,
+        "description": "应用筛选；cockpit appOptions[].value；空字符串表示全部。"
+      },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "description": "终端平台筛选；与列表契约一致。"
+      },
+      "source": {
+        "type": "string",
+        "required": false,
+        "description": "广告平台筛选；匹配行 `source` 或 `sourceList`；空字符串表示全部。"
+      },
+      "status": {
+        "type": "string",
+        "required": false,
+        "description": "版本状态筛选；与列表一致。传空或省略表示不按状态过滤后再聚合三分项（`published`/`draft`/`archived` 仍为各状态条数，与 `total` 一致）。"
+      }
+    },
+    "response": {
+      "total": {
+        "type": "number",
+        "required": true,
+        "description": "符合筛选条件的配置总行数（与列表 `total` 口径一致）。"
+      },
+      "published": {
+        "type": "number",
+        "required": true,
+        "description": "其中激活版本状态为 `published` 的条数。"
+      },
+      "draft": {
+        "type": "number",
+        "required": true,
+        "description": "其中激活版本状态为 `draft` 的条数。"
+      },
+      "archived": {
+        "type": "number",
+        "required": true,
+        "description": "其中激活版本状态为 `archived` 的条数。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "keyword": "",
+    "appId": "",
+    "platform": "",
+    "source": "",
+    "status": ""
+  },
+  "sampleResponse": {
+    "total": 12,
+    "published": 5,
+    "draft": 4,
+    "archived": 3
+  },
+  "api": {
+    "url": "POST /api/config-management/perf-config/overview/kpi",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "keyword?, appId?, platform?, source?, status?",
+    "responseBody": "PerfConfigOverviewKpi"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "与 `POST .../table` 使用相同筛选字段；不得要求前端用当前页 `records.length` 推算 KPI。",
+      "当请求带 `status` 筛选时，`total` 为命中条数；`published`/`draft`/`archived` 仅在对应状态上有计数，其余为 0。",
+      "无数据时返回 `total: 0` 及三个 0。",
+      "开发态 Mock：`fetchPerfOverviewKpi` 第二参可传页面内存中的完整列表，使新建未写入 seed 的行仍计入 KPI；联调仅 POST 单参 JSON。"
+    ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "进入页面 / 筛选变更",
+        "detail": "`fetchPerfOverviewKpi`；`PerfConfigApiSource[PerfConfigEndpoint.OverviewKpi]` 为 true 时由 `computePerfOverviewKpi` 基于全量 mock 数据与筛选计算。"
+      }
+    ],
+    "defaultSelection": "与列表顶栏筛选同步。"
+  }
+}

@@ -8,28 +8,58 @@
         <span class="bc-sep">›</span>
         <span class="bc-cur">ECPM分析</span>
       </div> -->
-      <div class="header-filters ecpm-filter-panel">
-        <div class="ecpm-pill ecpm-pill--date">
-          <span class="ecpm-pill__k">日期</span>
-          <el-date-picker
+      <div class="bi-filters bi-filter-panel">
+        <div class="bi-filter-field">
+          <span class="bi-filter-label">日期</span>
+          <AppDatePicker
             v-model="dateRange"
             type="daterange"
+            unlink-panels
+            :shortcuts="dateRangeShortcuts"
             size="default"
-            range-separator="~"
+            range-separator="～"
             start-placeholder="开始日期"
             end-placeholder="结束日期"
             value-format="YYYY/MM/DD"
-            class="ecpm-date"
+            format="YYYY/MM/DD"
+            class="bi-filter-date"
+            popper-class="bi-select__popper"
           />
         </div>
 
-        <div class="ecpm-pill">
-          <span class="ecpm-pill__k">广告平台</span>
+        <div class="bi-filter-field">
+          <span class="bi-filter-label">应用</span>
           <el-skeleton :loading="loadingMetaFilterOptions" animated>
             <template #template>
               <el-skeleton-item variant="text" class="filter-sel-skeleton" />
             </template>
-            <el-select v-model="filterPlatform" size="default" class="ecpm-select">
+            <AppPlatformSearchSelect
+              v-model="filterApp"
+              mode="app"
+              class="bi-filter-select bi-filter-select--app"
+              input-class="bi-filter-select__input"
+              placeholder="应用"
+              search-placeholder="应用"
+              :setting-apps="settingAppsForSelect"
+              :height="36"
+              :min-width="148"
+              :max-width="220"
+            />
+          </el-skeleton>
+        </div>
+
+        <div class="bi-filter-field">
+          <span class="bi-filter-label">广告平台</span>
+          <el-skeleton :loading="loadingMetaFilterOptions" animated>
+            <template #template>
+              <el-skeleton-item variant="text" class="filter-sel-skeleton" />
+            </template>
+            <el-select
+              v-model="filterPlatform"
+              size="default"
+              class="bi-filter-select"
+              popper-class="bi-select__popper"
+            >
               <el-option
                 v-for="item in sourceOptions"
                 :key="item.value"
@@ -40,30 +70,19 @@
           </el-skeleton>
         </div>
 
-        <div class="ecpm-pill">
-          <span class="ecpm-pill__k">App</span>
+        <div class="bi-filter-field">
+          <span class="bi-filter-label">国家</span>
           <el-skeleton :loading="loadingMetaFilterOptions" animated>
             <template #template>
               <el-skeleton-item variant="text" class="filter-sel-skeleton" />
             </template>
-            <el-select v-model="filterApp" size="default" class="ecpm-select">
-              <el-option
-                v-for="item in appOptions"
-                :key="item.value"
-                :label="item.label"
-                :value="toSelectValue(item.value)"
-              />
-            </el-select>
-          </el-skeleton>
-        </div>
-
-        <div class="ecpm-pill">
-          <span class="ecpm-pill__k">国家</span>
-          <el-skeleton :loading="loadingMetaFilterOptions" animated>
-            <template #template>
-              <el-skeleton-item variant="text" class="filter-sel-skeleton" />
-            </template>
-            <el-select v-model="filterCountry" size="default" class="ecpm-select">
+            <el-select
+              v-model="filterCountry"
+              size="default"
+              class="bi-filter-select"
+              popper-class="bi-select__popper"
+              filterable
+            >
               <el-option
                 v-for="item in countryOptions"
                 :key="item.value"
@@ -74,115 +93,130 @@
           </el-skeleton>
         </div>
 
-        <el-button size="default" type="primary" plain round>查询</el-button>
+        <el-button
+          class="bi-query-btn"
+          size="default"
+          type="primary"
+          plain
+          round
+          :loading="querying"
+          :disabled="querying"
+          @click="handleQuery"
+        >
+          查询
+        </el-button>
       </div>
     </header>
 
-    <!-- ══════════════════ KPI ROW ══════════════════ -->
-    <div class="kpi-row">
-      <!-- 预估 ECPM -->
-      <el-skeleton :loading="loadingOverviewKpis" animated>
-        <template #template>
-          <div class="kpi-card-skeleton-lines">
-            <el-skeleton-item variant="p" class="s-line w40" />
-            <el-skeleton-item variant="p" class="s-line w70" />
-            <el-skeleton-item variant="p" class="s-line w45" />
-            <el-skeleton-item variant="p" class="s-line w55" />
-          </div>
-        </template>
-        <div class="kpi-card kpi-teal">
-          <div class="kpi-label">
-            <el-icon class="kpi-icon teal"><TrendCharts /></el-icon>
-            ECPM（预估）
-          </div>
-          <div class="kpi-value teal">{{ fmt2(kpis.d_ecpm_estimated) }}</div>
-          <div class="kpi-meta">广告平台上报</div>
-          <div
-            class="kpi-change"
-            :class="kpis.estimated_change_pct_vs_prev_month >= 0 ? 'up' : 'dn'"
-          >
-            {{ kpis.estimated_change_pct_vs_prev_month >= 0 ? '↑' : '↓'
-            }}{{ Math.abs(kpis.estimated_change_pct_vs_prev_month) }}% vs 上月
-          </div>
-        </div>
-      </el-skeleton>
-
-      <!-- 真实 ECPM -->
-      <el-skeleton :loading="loadingOverviewKpis" animated>
-        <template #template>
-          <div class="kpi-card-skeleton-lines">
-            <el-skeleton-item variant="p" class="s-line w40" />
-            <el-skeleton-item variant="p" class="s-line w70" />
-            <el-skeleton-item variant="p" class="s-line w45" />
-            <el-skeleton-item variant="p" class="s-line w55" />
-          </div>
-        </template>
-        <div class="kpi-card kpi-blue">
-          <div class="kpi-label">
-            <el-icon class="kpi-icon blue"><Money /></el-icon>
-            ECPM（真实）
-          </div>
-          <div class="kpi-value blue">{{ fmt2(kpis.d_ecpm_real) }}</div>
-          <div class="kpi-meta">实际入账</div>
-          <div class="kpi-change" :class="kpis.real_change_pct_vs_prev_month >= 0 ? 'up' : 'dn'">
-            {{ kpis.real_change_pct_vs_prev_month >= 0 ? '↑' : '↓'
-            }}{{ Math.abs(kpis.real_change_pct_vs_prev_month) }}% vs 上月
-          </div>
-        </div>
-      </el-skeleton>
-
-      <!-- 最高 ECPM 国家 -->
-      <el-skeleton :loading="loadingOverviewKpis" animated>
-        <template #template>
-          <div class="kpi-card-skeleton-lines">
-            <el-skeleton-item variant="p" class="s-line w40" />
-            <el-skeleton-item variant="p" class="s-line w70" />
-            <el-skeleton-item variant="p" class="s-line w45" />
-            <el-skeleton-item variant="p" class="s-line w55" />
-          </div>
-        </template>
-        <div class="kpi-card kpi-dark">
-          <div class="kpi-label">
-            <el-icon class="kpi-icon white"><Location /></el-icon>
-            最高ECPM国家
-          </div>
-          <div class="kpi-value white large">
-            {{ kpis.top_country.label_display }} ${{ fmt2(kpis.top_country.d_ecpm) }}
-          </div>
-          <div class="kpi-meta">全球最高</div>
-          <div class="kpi-meta dim">
-            {{ kpis.top_country.second.label_display }} ${{ fmt2(kpis.top_country.second.d_ecpm) }}
-            第二
-          </div>
-        </div>
-      </el-skeleton>
-
-      <!-- 最高 ECPM 广告位 -->
-      <el-skeleton :loading="loadingOverviewKpis" animated>
-        <template #template>
-          <div class="kpi-card-skeleton-lines">
-            <el-skeleton-item variant="p" class="s-line w40" />
-            <el-skeleton-item variant="p" class="s-line w70" />
-            <el-skeleton-item variant="p" class="s-line w45" />
-            <el-skeleton-item variant="p" class="s-line w55" />
-          </div>
-        </template>
-        <div class="kpi-card kpi-orange">
-          <div class="kpi-label">
-            <el-icon class="kpi-icon orange"><Grid /></el-icon>
-            最高ECPM广告位
-          </div>
-          <div class="kpi-value orange xlarge">{{ kpis.top_ad_slot.s_app_name }}</div>
-          <div class="kpi-meta orange-dim">
-            ${{ fmt2(kpis.top_ad_slot.d_ecpm) }} {{ kpis.top_ad_slot.n_ad_type_label }}
-          </div>
-          <div class="kpi-meta dim">远高于平均水平</div>
-        </div>
-      </el-skeleton>
-    </div>
-
     <!-- ══════════════════ MAIN GRID ══════════════════ -->
     <div class="main-grid">
+      <!-- ══════════════════ KPI ROW ══════════════════ -->
+      <div class="kpi-row">
+        <!-- 预估 ECPM（暂隐藏；恢复时请取消本段注释，并将 .kpi-row 改回 repeat(4,1fr)，并恢复 TrendCharts 导入） -->
+        <!--
+        <el-skeleton :loading="loadingOverviewKpis" animated>
+          <template #template>
+            <div class="kpi-card-skeleton-lines">
+              <el-skeleton-item variant="p" class="s-line w40" />
+              <el-skeleton-item variant="p" class="s-line w70" />
+              <el-skeleton-item variant="p" class="s-line w45" />
+              <el-skeleton-item variant="p" class="s-line w55" />
+            </div>
+          </template>
+          <div class="kpi-card kpi-teal">
+            <div class="kpi-label">
+              <el-icon class="kpi-icon teal"><TrendCharts /></el-icon>
+              ECPM（预估）
+            </div>
+            <div class="kpi-value teal">{{ fmt2(kpis.d_ecpm_estimated) }}</div>
+            <div class="kpi-meta">广告平台上报</div>
+            <div
+              class="kpi-change"
+              :class="kpis.estimated_change_pct_vs_prev_month >= 0 ? 'up' : 'dn'"
+            >
+              {{ kpis.estimated_change_pct_vs_prev_month >= 0 ? '↑' : '↓'
+              }}{{ Math.abs(kpis.estimated_change_pct_vs_prev_month) }}% vs 上月
+            </div>
+          </div>
+        </el-skeleton>
+        -->
+
+        <!-- 真实 ECPM -->
+        <el-skeleton :loading="loadingOverviewKpis" animated>
+          <template #template>
+            <div class="kpi-card-skeleton-lines">
+              <el-skeleton-item variant="p" class="s-line w40" />
+              <el-skeleton-item variant="p" class="s-line w70" />
+              <el-skeleton-item variant="p" class="s-line w45" />
+              <el-skeleton-item variant="p" class="s-line w55" />
+            </div>
+          </template>
+          <div class="kpi-card kpi-blue">
+            <div class="kpi-label">
+              <el-icon class="kpi-icon blue"><Money /></el-icon>
+              ECPM（真实）
+            </div>
+            <div class="kpi-value blue">{{ fmt2(kpis.d_ecpm_real) }}</div>
+            <div class="kpi-meta">实际入账</div>
+            <div class="kpi-change" :class="kpis.real_change_pct_vs_prev_month >= 0 ? 'up' : 'dn'">
+              {{ kpis.real_change_pct_vs_prev_month >= 0 ? '↑' : '↓'
+              }}{{ Math.abs(kpis.real_change_pct_vs_prev_month) }}% vs 上周期
+            </div>
+          </div>
+        </el-skeleton>
+
+        <!-- 最高 ECPM 国家 -->
+        <el-skeleton :loading="loadingOverviewKpis" animated>
+          <template #template>
+            <div class="kpi-card-skeleton-lines">
+              <el-skeleton-item variant="p" class="s-line w40" />
+              <el-skeleton-item variant="p" class="s-line w70" />
+              <el-skeleton-item variant="p" class="s-line w45" />
+              <el-skeleton-item variant="p" class="s-line w55" />
+            </div>
+          </template>
+          <div class="kpi-card kpi-dark">
+            <div class="kpi-label">
+              <el-icon class="kpi-icon white"><Location /></el-icon>
+              最高ECPM国家
+            </div>
+            <div class="kpi-value white large">
+              {{ kpis.top_country.label_display }} ${{ fmt2(kpis.top_country.d_ecpm) }}
+            </div>
+            <div class="kpi-meta">全球最高</div>
+            <div class="kpi-meta dim">
+              {{ kpis.top_country.second.label_display }} ${{
+                fmt2(kpis.top_country.second.d_ecpm)
+              }}
+              第二
+            </div>
+          </div>
+        </el-skeleton>
+
+        <!-- 最高 ECPM 广告位 -->
+        <el-skeleton :loading="loadingOverviewKpis" animated>
+          <template #template>
+            <div class="kpi-card-skeleton-lines">
+              <el-skeleton-item variant="p" class="s-line w40" />
+              <el-skeleton-item variant="p" class="s-line w70" />
+              <el-skeleton-item variant="p" class="s-line w45" />
+              <el-skeleton-item variant="p" class="s-line w55" />
+            </div>
+          </template>
+          <div class="kpi-card kpi-orange">
+            <div class="kpi-label">
+              <el-icon class="kpi-icon orange"><Grid /></el-icon>
+              最高ECPM广告位
+            </div>
+            <div class="kpi-value orange xlarge">{{ kpis.top_ad_slot.n_ad_type_label }}</div>
+            <div class="kpi-meta orange-dim">
+              ${{ fmt2(kpis.top_ad_slot.d_ecpm) }} {{ kpis.top_ad_slot.s_app_name }}
+            </div>
+            <div class="kpi-meta dim">远高于平均水平</div>
+          </div>
+        </el-skeleton>
+      </div>
+
       <!-- ── LEFT COLUMN ── -->
       <div class="col col-left">
         <!-- 趋势图 -->
@@ -201,6 +235,7 @@
               </div>
             </div>
           </div>
+          <!-- 趋势 Tab 文案来自 trendTabs；「预估ECPM」项在脚本中注释保留 -->
           <div class="tab-row">
             <button
               v-for="tab in trendTabs"
@@ -242,9 +277,6 @@
               <template #name="{ row }">
                 <span class="pname">{{ row.name }}</span>
               </template>
-              <template #estimated="{ row }">
-                <span class="tr teal">{{ fmt2(row.estimated) }}</span>
-              </template>
               <template #real="{ row }">
                 <span class="tr blue">{{ fmt2(row.real) }}</span>
               </template>
@@ -280,11 +312,14 @@
           <div class="card-header-row">
             <span class="card-title">ECPM国家分布</span>
             <div class="toggle-group">
+              <!-- 预估ECPM（暂隐藏；恢复时请取消注释，并将 mapMode 默认值改回 estimated 如需一致） -->
+              <!--
               <button
                 :class="['tgl', mapMode === 'estimated' && 'active']"
                 @click="mapMode = 'estimated'"
                 >预估ECPM</button
               >
+              -->
               <button :class="['tgl', mapMode === 'real' && 'active']" @click="mapMode = 'real'"
                 >真实ECPM</button
               >
@@ -305,8 +340,8 @@
           </div>
         </div>
 
-        <!-- Top 10 国家 -->
-        <div class="card" style="margin-top: 10px">
+        <!-- Top 10 国家（与右侧列整体等高，图表区自适应拉伸） -->
+        <div class="card card-top10" style="margin-top: 10px">
           <div class="card-title">ECPM Top 10 国家</div>
           <div class="chart-loading-wrap">
             <div ref="top10Ref" class="echart echart-top10" />
@@ -373,7 +408,8 @@
           <div class="card-header-row">
             <span class="card-title">ECPM应用排行</span>
             <el-select v-model="appRankType" size="small" class="mini-sel">
-              <el-option label="预估ECPM" value="estimated" />
+              <!-- 预估ECPM（暂隐藏；恢复时请取消注释，并将 appRankType 默认值改回 estimated 如需一致） -->
+              <!-- <el-option label="预估ECPM" value="estimated" /> -->
               <el-option label="真实ECPM" value="real" />
             </el-select>
           </div>
@@ -419,10 +455,21 @@
 
 <script setup lang="ts">
   import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
-  import * as echarts from 'echarts'
-  import type { ECharts } from 'echarts'
-  import { TrendCharts, Money, Location, Grid, Warning } from '@element-plus/icons-vue'
+  import { storeToRefs } from 'pinia'
+  import { useResizeObserver } from '@vueuse/core'
+  import { echarts } from '@/plugins/echarts'
+  import {
+    // TrendCharts, // 与「预估 ECPM」卡片一并恢复
+    Money,
+    Location,
+    Grid,
+    Warning
+  } from '@element-plus/icons-vue'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { getAppNow, cloneAppDate } from '@/utils/app-now'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import {
     fetchEcpmMetaFilterOptions,
     fetchEcpmOverviewAdSlotRanking,
@@ -441,8 +488,14 @@
     EcpmTrendBundle
   } from './types'
   import type { ColumnOption } from '@/types'
+  import { ISO2_TO_ECHARTS_WORLD_GEO_NAME } from './config/world-map-iso-to-geo-json-name'
 
   defineOptions({ name: 'EcpmDashboard' })
+
+  const cockpitMetaStore = useCockpitMetaFilterStore()
+  const { data: cockpitMeta } = storeToRefs(cockpitMetaStore)
+  /** 应用下拉与驾驶舱 settingApps 对齐（sAppId），勿仅用 ecpm meta 的 apps 文案项 */
+  const settingAppsForSelect = computed(() => cockpitMeta.value?.settingApps ?? [])
 
   function fmt2(n: number) {
     return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -474,7 +527,6 @@
     }
   })
   const platformSubtotal = ref({
-    d_ecpm_estimated: 0,
     d_ecpm_real: 0,
     revenue_display: '',
     share_display: ''
@@ -482,7 +534,6 @@
   const platforms = ref<
     Array<{
       name: string
-      estimated: number
       real: number
       revenue: string
       share: string
@@ -524,7 +575,7 @@
     formatYmdSlash(defaultEnd)
   ])
   const filterPlatform = ref(ALL_OPTION_VALUE)
-  const filterApp = ref(ALL_OPTION_VALUE)
+  const filterApp = ref<string | string[]>([])
   const filterCountry = ref(ALL_OPTION_VALUE)
   const loadingMetaFilterOptions = ref(false)
   const loadingOverviewKpis = ref(false)
@@ -535,6 +586,7 @@
   const loadingOverviewAdSlotRanking = ref(false)
   const loadingOverviewAppRanking = ref(false)
   const loadingOverviewInsightTip = ref(false)
+  const querying = ref(false)
   const sourceOptions = ref<EcpmFilterOption[]>([])
   const appOptions = ref<EcpmFilterOption[]>([])
   const countryOptions = ref<EcpmCountryFilterOption[]>([])
@@ -555,16 +607,19 @@
   const top10Countries = ref<
     Array<{ s_country_code: string; label_zh: string; d_ecpm: number; bar_color: string }>
   >([])
-  const mapMode = ref<'estimated' | 'real'>('estimated')
-  const activeTrendTab = ref('预估ECPM')
-  const trendTabs = ['预估ECPM', '真实ECPM', '广告收入']
-  const appRankType = ref('estimated')
+  const mapMode = ref<'estimated' | 'real'>('real')
+  const activeTrendTab = ref('真实ECPM')
+  const trendTabs = [
+    // '预估ECPM', // 暂隐藏；恢复时请取消注释并将 activeTrendTab 默认改回「预估ECPM」如需一致
+    '真实ECPM',
+    '广告收入'
+  ]
+  const appRankType = ref('real')
 
   const platformTableRows = computed(() => [
     ...platforms.value.map((row) => ({ ...row, __isSubtotal: false })),
     {
       name: '小计',
-      estimated: platformSubtotal.value.d_ecpm_estimated,
       real: platformSubtotal.value.d_ecpm_real,
       revenue: platformSubtotal.value.revenue_display,
       share: platformSubtotal.value.share_display,
@@ -582,14 +637,6 @@
       useSlot: true,
       slotName: 'name',
       showOverflowTooltip: true
-    },
-    {
-      prop: 'estimated',
-      label: '预估ECPM',
-      minWidth: 100,
-      align: 'left',
-      useSlot: true,
-      slotName: 'estimated'
     },
     {
       prop: 'real',
@@ -627,32 +674,31 @@
   const worldMapRef = ref<HTMLDivElement>()
   const top10Ref = ref<HTMLDivElement>()
 
-  let trendChart: ECharts | null = null
-  let worldMapChart: ECharts | null = null
-  let top10Chart: ECharts | null = null
+  let trendChart: ReturnType<typeof echarts.init> | null = null
+  let worldMapChart: ReturnType<typeof echarts.init> | null = null
+  let top10Chart: ReturnType<typeof echarts.init> | null = null
   let mapRequestSeq = 0
   let top10RequestSeq = 0
 
-  const WORLD_GEO_COORD_MAP: Record<string, [number, number]> = {
-    'United States': [-95.7129, 37.0902],
-    'South Korea': [127.7669, 35.9078],
-    Germany: [10.4515, 51.1657],
-    'United Kingdom': [-3.436, 55.3781],
-    Japan: [138.2529, 36.2048],
-    France: [2.2137, 46.2276],
-    Canada: [-106.3468, 56.1304],
-    Australia: [133.7751, -25.2744],
-    Brazil: [-51.9253, -14.235],
-    'South Africa': [22.9375, -30.5595],
-    Kazakhstan: [66.9237, 48.0196]
-  }
+  useResizeObserver(top10Ref, () => {
+    nextTick(() => top10Chart?.resize())
+  })
 
   // ─── Spark Line Helper ────────────────────────────────────────────────────
   function toSelectValue(value: string) {
     return value === '' ? ALL_OPTION_VALUE : value
   }
 
-  function fromSelectValue(value: string) {
+  function fromSelectValue(value: string): string {
+    return value === ALL_OPTION_VALUE ? '' : value
+  }
+
+  function fromSelectAppValue(value: string | string[]): string | string[] {
+    if (Array.isArray(value)) {
+      return value
+        .map((item) => String(item ?? '').trim())
+        .filter((item) => item && item !== ALL_OPTION_VALUE)
+    }
     return value === ALL_OPTION_VALUE ? '' : value
   }
 
@@ -673,6 +719,52 @@
         return `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)},${y.toFixed(1)}`
       })
       .join(' ')
+  }
+
+  /** 去掉 min/max 上的 IEEE-754 噪声，减轻 ECharts 等分刻度时出现 5.7680000000000001 */
+  function snapTrendAxisBound(n: number): number {
+    return Number.parseFloat(Number(n).toPrecision(10))
+  }
+
+  /**
+   * 趋势图 Y 轴刻度文案：避免 split 计算产生的浮点尾数直接显示在标签上
+   * （根因：JS 浮点运算 + ECharts 内部等分，与业务数据精度无关）
+   */
+  function formatTrendYAxisTick(raw: number | string): string {
+    const v = typeof raw === 'number' ? raw : Number(raw)
+    if (!Number.isFinite(v)) return ''
+    if (v === 0) return '0'
+    const snapped = Number.parseFloat(v.toPrecision(12))
+    const abs = Math.abs(snapped)
+    if (abs >= 1000) return String(Math.round(snapped))
+    if (abs >= 100) return String(Math.round(snapped))
+    if (abs >= 10) return String(Number(snapped.toFixed(1)))
+    return String(Number(snapped.toFixed(2)))
+  }
+
+  /** 趋势折线图左侧数值轴：按当前序列留出上下边距，无有效数据时交给 ECharts 自适应 */
+  function trendValueAxisFromSeries(values: number[]) {
+    const nums = values.map((v) => Number(v)).filter((n) => Number.isFinite(n))
+    if (!nums.length) {
+      return {
+        yMin: null as number | null,
+        yMax: null as number | null,
+        yInterval: null as number | null
+      }
+    }
+    const minV = Math.min(...nums)
+    const maxV = Math.max(...nums)
+    const span = maxV - minV || (Math.abs(maxV) > 1e-9 ? Math.abs(maxV) * 0.1 : 1)
+    const padLow = span * 0.05
+    const padHigh = span * 0.12
+    let min = minV - padLow
+    let max = maxV + padHigh
+    if (minV >= 0 && min < 0) min = 0
+    return {
+      yMin: snapTrendAxisBound(min),
+      yMax: snapTrendAxisBound(max),
+      yInterval: null as number | null
+    }
   }
 
   // ─── ECharts Theme ────────────────────────────────────────────────────────
@@ -715,6 +807,7 @@
       }
     }
     if (activeTrendTab.value === '真实ECPM') {
+      const axis = trendValueAxisFromSeries(trendData.value.series_real)
       return {
         legend: ['真实ECPM'],
         series: [
@@ -733,11 +826,12 @@
             }
           }
         ],
-        yMin: 2.8,
-        yMax: 4.5,
-        yInterval: 0.5
+        yMin: axis.yMin,
+        yMax: axis.yMax,
+        yInterval: axis.yInterval
       }
     }
+    const axisEst = trendValueAxisFromSeries(trendData.value.series_estimated)
     return {
       legend: ['预估ECPM'],
       series: [
@@ -756,9 +850,9 @@
           }
         }
       ],
-      yMin: 2.8,
-      yMax: 4.5,
-      yInterval: 0.5
+      yMin: axisEst.yMin,
+      yMax: axisEst.yMax,
+      yInterval: axisEst.yInterval
     }
   }
 
@@ -812,11 +906,15 @@
       },
       yAxis: {
         type: 'value',
-        min: 2.8,
-        max: 4.5,
-        interval: 0.5,
+        min: null,
+        max: null,
+        interval: null,
         splitLine: { lineStyle: { color: AXIS_COLOR, type: 'dashed' } },
-        axisLabel: { color: LABEL_COLOR, fontSize: 10 },
+        axisLabel: {
+          color: LABEL_COLOR,
+          fontSize: 10,
+          formatter: formatTrendYAxisTick
+        },
         axisLine: { show: false },
         axisTick: { show: false }
       },
@@ -863,6 +961,7 @@
       'Russian Federation': 'Russia',
       'Korea, South': 'South Korea',
       'Korea (Republic Of)': 'South Korea',
+      'South Korea': 'Korea',
       'United Kingdom Of Great Britain And Northern Ireland': 'United Kingdom',
       'Brunei Darussalam': 'Brunei'
     }
@@ -870,32 +969,46 @@
     return aliasMap[normalized] ?? normalized
   }
 
-  function getMapCountryName(item: { geo_name?: string; s_country_code?: string }) {
+  /** 与 `public/geo/world.json` 的 `properties.name` 对齐，供 map / geo 系列匹配 */
+  function resolveWorldMapSeriesName(item: { geo_name?: string; s_country_code?: string }) {
+    const code = String(item.s_country_code ?? '')
+      .trim()
+      .toUpperCase()
+    if (code && ISO2_TO_ECHARTS_WORLD_GEO_NAME[code]) {
+      return ISO2_TO_ECHARTS_WORLD_GEO_NAME[code]
+    }
     return normalizeMapCountryName(item.geo_name || item.s_country_code || '')
+  }
+
+  function mapVisualValueMax() {
+    const vals = mapSeriesData().map((d) => Number(d.value))
+    return Math.max(10, ...vals, 0)
   }
 
   function mapSeriesData() {
     return mapCountries.value.map((c) => ({
-      name: getMapCountryName(c),
+      name: resolveWorldMapSeriesName(c),
       value: mapMode.value === 'estimated' ? c.d_ecpm_estimated : c.d_ecpm_real
     }))
   }
 
+  function mapEffectScatterSymbolSize(_val: unknown, params: { data?: { value?: unknown } }) {
+    const v = Number(params?.data?.value ?? 0)
+    return Math.max(7, Math.min(20, v * 2))
+  }
+
+  /** Top N：用国家名让 geo 解析经纬度（勿再依赖手写坐标表） */
   function mapPulseData() {
     return mapCountries.value
       .map((c) => {
         const value = mapMode.value === 'estimated' ? c.d_ecpm_estimated : c.d_ecpm_real
-        const name = getMapCountryName(c)
-        const coord = WORLD_GEO_COORD_MAP[name]
-        if (!coord) return null
-        return {
-          name,
-          value: [...coord, value]
-        }
+        const name = resolveWorldMapSeriesName(c)
+        if (!name) return null
+        return { name, value }
       })
-      .filter(Boolean)
-      .sort((a, b) => Number((b as any).value[2]) - Number((a as any).value[2]))
-      .slice(0, 8) as Array<{ name: string; value: [number, number, number] }>
+      .filter((d): d is { name: string; value: number } => d !== null)
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 8)
   }
 
   // ─── World Map ────────────────────────────────────────────────────────────
@@ -918,7 +1031,9 @@
           ...TOOLTIP_STYLE,
           formatter: (params: any) => {
             const rawValue = Array.isArray(params.value) ? params.value[2] : params.value
-            return `${params.name}<br/>$${rawValue ?? 'N/A'}`
+            const row = mapCountries.value.find((c) => resolveWorldMapSeriesName(c) === params.name)
+            const label = String(row?.geo_name ?? '').trim() || String(params.name ?? '')
+            return `${label}<br/>$${rawValue != null && rawValue !== '' ? fmt2(Number(rawValue)) : 'N/A'}`
           }
         },
         geo: {
@@ -951,7 +1066,7 @@
         visualMap: {
           show: false,
           min: 0,
-          max: 10,
+          max: mapVisualValueMax(),
           left: 'left',
           bottom: 8,
           orient: 'horizontal',
@@ -973,7 +1088,7 @@
             type: 'effectScatter',
             coordinateSystem: 'geo',
             zlevel: 3,
-            symbolSize: (val: number[]) => Math.max(7, Math.min(20, Number(val[2] ?? 0) * 2)),
+            symbolSize: mapEffectScatterSymbolSize,
             rippleEffect: {
               period: 3,
               scale: 4,
@@ -1037,6 +1152,7 @@
       yAxis: {
         type: 'category',
         data: countries,
+        inverse: true,
         axisLine: { show: false },
         axisTick: { show: false },
         axisLabel: { color: TEXT_COLOR, fontSize: 11 }
@@ -1071,12 +1187,17 @@
   async function loadMetaFilterOptions() {
     loadingMetaFilterOptions.value = true
     try {
+      await cockpitMetaStore.ensureLoaded()
       const response = await fetchEcpmMetaFilterOptions()
       sourceOptions.value = response.sources
       appOptions.value = response.apps
       countryOptions.value = response.countries
       filterPlatform.value = toSelectValue(response.sources[0]?.value ?? '')
-      filterApp.value = toSelectValue(response.apps[0]?.value ?? '')
+      const cockpitApps = cockpitMeta.value?.settingApps ?? []
+      filterApp.value =
+        cockpitApps.length > 0
+          ? [String(cockpitApps[0]!.sAppId ?? '').trim()].filter(Boolean)
+          : [String(response.apps[0]?.value ?? '').trim()].filter(Boolean)
       filterCountry.value = toSelectValue(response.countries[0]?.value ?? '')
     } finally {
       loadingMetaFilterOptions.value = false
@@ -1093,7 +1214,8 @@
         t_end_date: normalizeYmd(end),
         platform: 'all',
         source: fromSelectValue(filterPlatform.value),
-        s_app_id: fromSelectValue(filterApp.value),
+        // 网关 POST 体由 fetchEcpm* 转为 appIds: string[]（见 api/business-insight.ts）
+        s_app_id: fromSelectAppValue(filterApp.value),
         s_country_code: fromSelectValue(filterCountry.value)
       })
     } finally {
@@ -1111,7 +1233,8 @@
         t_end_date: normalizeYmd(end),
         platform: 'all',
         source: fromSelectValue(filterPlatform.value),
-        s_app_id: fromSelectValue(filterApp.value),
+        // 网关 POST 体由 fetchEcpm* 转为 appIds: string[]（见 api/business-insight.ts）
+        s_app_id: fromSelectAppValue(filterApp.value),
         s_country_code: fromSelectValue(filterCountry.value)
       })
       if (trendChart) initTrendChart()
@@ -1129,12 +1252,12 @@
         t_start_date: normalizeYmd(start),
         t_end_date: normalizeYmd(end),
         platform: 'all',
-        s_app_id: fromSelectValue(filterApp.value),
+        // 网关 POST 体由 fetchEcpm* 转为 appIds: string[]（见 api/business-insight.ts）
+        s_app_id: fromSelectAppValue(filterApp.value),
         s_country_code: fromSelectValue(filterCountry.value)
       })
       platforms.value = response.rows.map((row) => ({
         name: row.name,
-        estimated: row.d_ecpm_estimated,
         real: row.d_ecpm_real,
         revenue: row.revenue_display,
         share: row.share_display,
@@ -1142,7 +1265,6 @@
         sparkData: row.spark_series
       }))
       platformSubtotal.value = {
-        d_ecpm_estimated: response.subtotal.d_ecpm_estimated,
         d_ecpm_real: response.subtotal.d_ecpm_real,
         revenue_display: response.subtotal.revenue_display,
         share_display: response.subtotal.share_display
@@ -1163,7 +1285,8 @@
         t_end_date: normalizeYmd(end),
         platform: 'all',
         source: fromSelectValue(filterPlatform.value),
-        s_app_id: fromSelectValue(filterApp.value),
+        // 网关 POST 体由 fetchEcpm* 转为 appIds: string[]（见 api/business-insight.ts）
+        s_app_id: fromSelectAppValue(filterApp.value),
         s_country_code: fromSelectValue(filterCountry.value),
         map_metric: mapMode.value
       })
@@ -1173,13 +1296,30 @@
         const pulse = mapPulseData()
         worldMapChart.setOption(
           {
+            visualMap: { min: 0, max: mapVisualValueMax() },
             series: [
               { type: 'map', geoIndex: 0, label: { show: false }, data: mapSeriesData() },
-              { type: 'effectScatter', coordinateSystem: 'geo', zlevel: 3, data: pulse },
+              {
+                type: 'effectScatter',
+                coordinateSystem: 'geo',
+                zlevel: 3,
+                symbolSize: mapEffectScatterSymbolSize,
+                rippleEffect: { period: 3, scale: 4, brushType: 'stroke' },
+                showEffectOn: 'render',
+                itemStyle: {
+                  color: '#ffd166',
+                  shadowBlur: 16,
+                  shadowColor: 'rgb(255 209 102 / 68%)'
+                },
+                emphasis: { scale: true },
+                data: pulse
+              },
               {
                 type: 'scatter',
                 coordinateSystem: 'geo',
                 zlevel: 2,
+                symbolSize: 4,
+                itemStyle: { color: '#7dd3fc', opacity: 0.9 },
                 silent: true,
                 data: pulse.map((d) => ({ name: d.name, value: d.value }))
               }
@@ -1208,7 +1348,8 @@
         t_end_date: normalizeYmd(end),
         platform: 'all',
         source: fromSelectValue(filterPlatform.value),
-        s_app_id: fromSelectValue(filterApp.value),
+        // 网关 POST 体由 fetchEcpm* 转为 appIds: string[]（见 api/business-insight.ts）
+        s_app_id: fromSelectAppValue(filterApp.value),
         s_country_code: fromSelectValue(filterCountry.value),
         metric: mapMode.value
       })
@@ -1234,7 +1375,8 @@
         t_end_date: normalizeYmd(end),
         platform: 'all',
         source: fromSelectValue(filterPlatform.value),
-        s_app_id: fromSelectValue(filterApp.value),
+        // 网关 POST 体由 fetchEcpm* 转为 appIds: string[]（见 api/business-insight.ts）
+        s_app_id: fromSelectAppValue(filterApp.value),
         s_country_code: fromSelectValue(filterCountry.value)
       })
       adSlots.value = response.rows.map((row) => ({
@@ -1257,6 +1399,8 @@
         t_end_date: normalizeYmd(end),
         platform: 'all',
         source: fromSelectValue(filterPlatform.value),
+        // 网关 POST 体由 fetchEcpm* 转为 appIds: string[]（见 api/business-insight.ts）
+        s_app_id: fromSelectAppValue(filterApp.value),
         s_country_code: fromSelectValue(filterCountry.value)
       })
       appRankRows.value = response.rows
@@ -1274,7 +1418,8 @@
         t_start_date: normalizeYmd(start),
         t_end_date: normalizeYmd(end),
         platform: 'all',
-        s_app_id: fromSelectValue(filterApp.value)
+        // 网关 POST 体由 fetchEcpm* 转为 appIds: string[]（见 api/business-insight.ts）
+        s_app_id: fromSelectAppValue(filterApp.value)
       })
       insightTip.value = response.message
     } finally {
@@ -1293,6 +1438,16 @@
       loadOverviewAppRanking(),
       loadOverviewInsightTip()
     ])
+  }
+
+  async function handleQuery() {
+    if (querying.value) return
+    querying.value = true
+    try {
+      await loadOverviewModulesInParallel()
+    } finally {
+      querying.value = false
+    }
   }
 
   // ─── Lifecycle ────────────────────────────────────────────────────────────
@@ -1323,9 +1478,14 @@
   })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+  @use '../../user-growth/ad-performance/styles/ap-card-fx.scss' as ap;
+
   /* ── Root & Variables ─────────────────────────────────────────── */
   .ecpm-dash {
+    /* 优先继承布局 --theme-color，否则 Art 主色，最后回退 EP 主色（避免再强制绑死 --el-color-primary） */
+    --ecpm-accent: var(--theme-color, var(--art-primary, var(--el-color-primary)));
+    --text-sec: #64748b;
     --bg: #0d1422;
     --bg-card: #131d2f;
     --bg-card-2: #162038;
@@ -1391,10 +1551,10 @@
     pointer-events: none;
     content: '';
     background:
-      linear-gradient(to right, rgb(255 255 255 / 5%) 1px, transparent 1px),
-      linear-gradient(to bottom, rgb(255 255 255 / 5%) 1px, transparent 1px);
+      linear-gradient(to right, rgb(255 255 255 / 1%) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(255 255 255 / 1%) 1px, transparent 1px);
     background-size: 22px 22px;
-    opacity: 0.42;
+    opacity: 0.18;
     mask-image: radial-gradient(ellipse 92% 52% at 40% 0%, #000 0%, transparent 70%);
   }
 
@@ -1440,7 +1600,7 @@
   /* ── Header ──────────────────────────────────────────────────── */
   .dash-header {
     padding: 14px 20px;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 0;
   }
 
   /* .breadcrumb {
@@ -1467,104 +1627,151 @@
     color: var(--text);
   } */
 
-  .header-filters {
+  .bi-filters {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 12px;
     align-items: center;
   }
 
-  .ecpm-filter-panel {
+  .bi-filter-panel {
     position: relative;
     padding: 10px 14px;
     overflow: hidden;
-    background:
-      radial-gradient(880px 240px at 12% 0%, rgb(77 182 232 / 12%), transparent 60%),
-      radial-gradient(780px 260px at 92% 10%, rgb(0 212 170 / 10%), transparent 55%),
-      linear-gradient(148deg, rgb(19 29 47 / 92%), rgb(22 32 56 / 92%));
-    border: 1px solid rgb(77 182 232 / 18%);
     border-radius: 16px;
-    box-shadow:
-      0 10px 34px rgb(0 0 0 / 44%),
-      0 0 0 1px rgb(96 165 250 / 10%),
-      inset 0 1px 0 rgb(186 230 253 / 10%);
+
+    @include ap.ap-neon-bg;
+    @include ap.ap-card-mesh;
+
     transition:
-      box-shadow 0.35s cubic-bezier(0, 0, 0.2, 1),
-      border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow 0.35s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
+      border-color 0.3s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
+
+    &:hover {
+      border-color: rgb(96 165 250 / 48%);
+      box-shadow:
+        0 12px 40px rgb(0 0 0 / 44%),
+        0 0 0 1px rgb(96 165 250 / 22%),
+        inset 0 1px 0 rgb(186 230 253 / 16%),
+        0 0 48px rgb(59 130 246 / 14%);
+    }
+
+    > * {
+      position: relative;
+      z-index: 1;
+    }
   }
 
-  .ecpm-filter-panel:hover {
-    border-color: rgb(96 165 250 / 38%);
-    box-shadow:
-      0 12px 40px rgb(0 0 0 / 52%),
-      0 0 0 1px rgb(96 165 250 / 18%),
-      inset 0 1px 0 rgb(186 230 253 / 14%),
-      0 0 44px rgb(59 130 246 / 12%);
+  .bi-filter-panel :deep(.bi-filter-select .el-select__wrapper),
+  .bi-filter-panel :deep(.bi-filter-select__input .el-select__wrapper),
+  .bi-filter-panel :deep(.bi-filter-date.el-date-editor--daterange) {
+    min-height: 36px;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: none;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      background 0.2s ease;
   }
 
-  .ecpm-filter-panel::after {
-    position: absolute;
-    inset: -40% -20%;
-    z-index: 0;
-    pointer-events: none;
-    content: '';
-    background:
-      linear-gradient(to right, rgb(255 255 255 / 6%) 1px, transparent 1px),
-      linear-gradient(to bottom, rgb(255 255 255 / 6%) 1px, transparent 1px);
-    background-size: 22px 22px;
-    opacity: 0.55;
-    mask-image: radial-gradient(circle at 30% 0%, #000 0%, transparent 62%);
+  .bi-filter-panel :deep(.bi-filter-select .el-select__wrapper:hover),
+  .bi-filter-panel :deep(.bi-filter-select__input .el-select__wrapper:hover),
+  .bi-filter-panel :deep(.bi-filter-date.el-date-editor--daterange:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
   }
 
-  .ecpm-filter-panel > * {
-    position: relative;
-    z-index: 1;
+  .bi-filter-panel :deep(.bi-filter-select .el-select__wrapper.is-focused),
+  .bi-filter-panel :deep(.bi-filter-select__input .el-select__wrapper.is-focused),
+  .bi-filter-panel :deep(.bi-filter-date.el-date-editor--daterange.is-active),
+  .bi-filter-panel :deep(.bi-filter-date.el-date-editor--daterange:focus-within) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
   }
 
-  .ecpm-pill {
-    display: inline-flex;
+  .bi-filter-field {
+    display: flex;
     gap: 8px;
     align-items: center;
-    height: 36px;
-    padding: 0 10px;
-    border-radius: 9999px;
+    min-height: 32px;
   }
 
-  .ecpm-pill--date {
-    padding-right: 6px;
-  }
-
-  .ecpm-pill__k {
+  .bi-filter-label {
+    flex-shrink: 0;
     font-size: 12px;
-    font-weight: 600;
-    color: rgb(226 232 240 / 78%);
+    color: var(--text-sec);
     white-space: nowrap;
   }
 
-  /* Override Element Plus to fit dark theme (sync with revenue-overview) */
-  :deep(.ecpm-select .el-select__wrapper),
-  :deep(.ecpm-date .el-input__wrapper) {
-    min-height: 32px;
-    padding: 0 10px;
-    background: rgb(0 0 0 / 28%);
-    border: 1px solid rgb(96 165 250 / 24%);
-    border-radius: 10px;
-    box-shadow: 0 0 0 1px rgb(59 130 246 / 6%) inset;
+  .bi-filter-select {
+    width: 148px;
   }
 
-  :deep(.ecpm-date.el-date-editor) {
-    width: 240px;
-    font-size: 12px;
+  .bi-filter-select--app {
+    display: inline-flex;
   }
 
-  :deep(.ecpm-select.el-select) {
-    width: 140px;
+  .bi-filter-date {
+    width: 260px;
+  }
+
+  :deep(.bi-filter-select .el-select__wrapper),
+  :deep(.bi-filter-select__input .el-select__wrapper),
+  :deep(.bi-filter-date.el-date-editor--daterange) {
+    min-height: 36px;
+  }
+
+  :deep(.bi-filter-select .el-select__wrapper:hover),
+  :deep(.bi-filter-select__input .el-select__wrapper:hover),
+  :deep(.bi-filter-date.el-date-editor--daterange:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+  }
+
+  :deep(.bi-filter-select .el-select__placeholder),
+  :deep(.bi-filter-select .el-select__selected-item),
+  :deep(.bi-filter-select .el-select__caret),
+  :deep(.bi-filter-date .el-range-input),
+  :deep(.bi-filter-select__input .el-select__placeholder),
+  :deep(.bi-filter-select__input .el-select__selected-item),
+  :deep(.bi-filter-select__input .el-select__caret) {
+    color: #fff;
+  }
+
+  :deep(.bi-filter-date .el-range-separator) {
+    color: #fff;
+  }
+
+  :deep(.bi-filter-date .el-range__icon),
+  :deep(.bi-filter-date .el-input__prefix),
+  :deep(.bi-filter-date .el-input__suffix),
+  :deep(.bi-filter-date .el-input__inner) {
+    color: #fff;
+  }
+
+  .bi-filter-panel :deep(.bi-query-btn.el-button) {
+    height: 36px;
+    padding: 0 18px;
+    font-weight: 600;
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: none;
+  }
+
+  .bi-filter-panel :deep(.bi-query-btn.el-button:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
   }
 
   :deep(.filter-sel-skeleton.el-skeleton__item) {
-    width: 140px;
-    height: 32px;
-    border-radius: 6px;
+    width: 148px;
+    height: 36px;
+    border-radius: var(--el-border-radius-base, 4px);
   }
 
   .kpi-card-skeleton-lines,
@@ -1715,11 +1922,11 @@
       animation: none;
     }
 
-    .ecpm-filter-panel {
+    .bi-filter-panel {
       transition: none;
     }
 
-    .ecpm-filter-panel::after {
+    .bi-filter-panel::after {
       opacity: 0.35;
     }
   }
@@ -1735,15 +1942,17 @@
   /* ── KPI Row ─────────────────────────────────────────────────── */
   .kpi-row {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
+    grid-column: 1 / -1;
     gap: 10px;
-    padding: 14px 20px;
+    padding: 0 0 14px;
   }
 
   .kpi-card {
     position: relative;
     padding: 16px 18px;
     overflow: hidden;
+    cursor: pointer;
     background:
       radial-gradient(780px 260px at 10% 0%, rgb(255 255 255 / 8%), transparent 58%),
       radial-gradient(620px 240px at 92% 12%, rgb(255 255 255 / 6%), transparent 60%),
@@ -1756,10 +1965,9 @@
       inset 0 1px 0 rgb(186 230 253 / 10%),
       inset 0 -10px 22px rgb(0 0 0 / 26%);
     transition:
-      transform var(--duration-normal, 250ms) var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
       box-shadow var(--duration-slow, 350ms) var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
-      border-color var(--duration-normal, 250ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
-    transform: translateY(0);
+      border-color var(--duration-normal, 250ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
+      filter var(--duration-fast, 150ms) var(--ease-out, cubic-bezier(0, 0, 0.2, 1));
   }
 
   .kpi-card::before {
@@ -1796,14 +2004,15 @@
   }
 
   .kpi-card:hover {
+    filter: brightness(1.05) saturate(1.06);
     border-color: rgb(96 165 250 / 34%);
     box-shadow:
       0 16px 46px rgb(0 0 0 / 56%),
       0 0 0 1px rgb(96 165 250 / 16%),
       inset 0 1px 0 rgb(186 230 253 / 14%),
       0 0 52px rgb(59 130 246 / 12%),
-      0 0 40px rgb(34 211 238 / 8%);
-    transform: translateY(-4px);
+      0 0 40px rgb(34 211 238 / 8%),
+      0 0 96px rgb(34 211 238 / 10%);
   }
 
   .kpi-card.kpi-teal {
@@ -1815,6 +2024,16 @@
       0 0 40px rgb(0 212 170 / 10%);
   }
 
+  .kpi-card.kpi-teal:hover {
+    border-color: rgb(0 212 170 / 44%);
+    box-shadow:
+      0 16px 46px rgb(0 0 0 / 56%),
+      0 0 0 1px rgb(0 212 170 / 18%),
+      inset 0 1px 0 rgb(153 246 228 / 12%),
+      0 0 52px rgb(0 212 170 / 14%),
+      0 0 110px rgb(0 212 170 / 14%);
+  }
+
   .kpi-card.kpi-blue {
     border-color: rgb(77 182 232 / 20%);
     box-shadow:
@@ -1824,8 +2043,28 @@
       0 0 44px rgb(77 182 232 / 10%);
   }
 
+  .kpi-card.kpi-blue:hover {
+    border-color: rgb(77 182 232 / 42%);
+    box-shadow:
+      0 16px 46px rgb(0 0 0 / 56%),
+      0 0 0 1px rgb(77 182 232 / 18%),
+      inset 0 1px 0 rgb(186 230 253 / 12%),
+      0 0 54px rgb(77 182 232 / 14%),
+      0 0 120px rgb(77 182 232 / 14%);
+  }
+
   .kpi-card.kpi-dark {
     border-color: rgb(96 165 250 / 12%);
+  }
+
+  .kpi-card.kpi-dark:hover {
+    border-color: rgb(96 165 250 / 32%);
+    box-shadow:
+      0 16px 46px rgb(0 0 0 / 56%),
+      0 0 0 1px rgb(96 165 250 / 14%),
+      inset 0 1px 0 rgb(186 230 253 / 12%),
+      0 0 52px rgb(59 130 246 / 12%),
+      0 0 110px rgb(59 130 246 / 10%);
   }
 
   .kpi-card.kpi-orange {
@@ -1835,6 +2074,16 @@
       0 0 0 1px rgb(245 166 35 / 12%),
       inset 0 1px 0 rgb(254 215 170 / 10%),
       0 0 44px rgb(245 166 35 / 10%);
+  }
+
+  .kpi-card.kpi-orange:hover {
+    border-color: rgb(245 166 35 / 46%);
+    box-shadow:
+      0 16px 46px rgb(0 0 0 / 56%),
+      0 0 0 1px rgb(245 166 35 / 18%),
+      inset 0 1px 0 rgb(254 215 170 / 12%),
+      0 0 56px rgb(245 166 35 / 14%),
+      0 0 120px rgb(245 166 35 / 14%);
   }
 
   .kpi-label {
@@ -1907,12 +2156,54 @@
     }
 
     .kpi-card:hover {
+      filter: brightness(1.05) saturate(1.06);
       box-shadow:
-        0 12px 38px rgb(0 0 0 / 46%),
-        0 0 0 1px rgb(96 165 250 / 10%),
-        inset 0 1px 0 rgb(186 230 253 / 10%),
-        inset 0 -10px 22px rgb(0 0 0 / 26%);
-      transform: none;
+        0 16px 46px rgb(0 0 0 / 56%),
+        0 0 0 1px rgb(96 165 250 / 16%),
+        inset 0 1px 0 rgb(186 230 253 / 14%),
+        0 0 52px rgb(59 130 246 / 12%),
+        0 0 40px rgb(34 211 238 / 8%),
+        0 0 96px rgb(34 211 238 / 10%);
+    }
+
+    .kpi-card.kpi-teal:hover {
+      border-color: rgb(0 212 170 / 44%);
+      box-shadow:
+        0 16px 46px rgb(0 0 0 / 56%),
+        0 0 0 1px rgb(0 212 170 / 18%),
+        inset 0 1px 0 rgb(153 246 228 / 12%),
+        0 0 52px rgb(0 212 170 / 14%),
+        0 0 110px rgb(0 212 170 / 14%);
+    }
+
+    .kpi-card.kpi-blue:hover {
+      border-color: rgb(77 182 232 / 42%);
+      box-shadow:
+        0 16px 46px rgb(0 0 0 / 56%),
+        0 0 0 1px rgb(77 182 232 / 18%),
+        inset 0 1px 0 rgb(186 230 253 / 12%),
+        0 0 54px rgb(77 182 232 / 14%),
+        0 0 120px rgb(77 182 232 / 14%);
+    }
+
+    .kpi-card.kpi-dark:hover {
+      border-color: rgb(96 165 250 / 32%);
+      box-shadow:
+        0 16px 46px rgb(0 0 0 / 56%),
+        0 0 0 1px rgb(96 165 250 / 14%),
+        inset 0 1px 0 rgb(186 230 253 / 12%),
+        0 0 52px rgb(59 130 246 / 12%),
+        0 0 110px rgb(59 130 246 / 10%);
+    }
+
+    .kpi-card.kpi-orange:hover {
+      border-color: rgb(245 166 35 / 46%);
+      box-shadow:
+        0 16px 46px rgb(0 0 0 / 56%),
+        0 0 0 1px rgb(245 166 35 / 18%),
+        inset 0 1px 0 rgb(254 215 170 / 12%),
+        0 0 56px rgb(245 166 35 / 14%),
+        0 0 120px rgb(245 166 35 / 14%);
     }
   }
 
@@ -1947,16 +2238,35 @@
 
   /* ── Main Grid ───────────────────────────────────────────────── */
   .main-grid {
+    position: relative;
     display: grid;
     grid-template-columns: 38% 38% 24%;
     gap: 10px;
-    padding: 0 20px 20px;
+    align-items: stretch;
+    padding: 14px 20px 20px;
+  }
+
+  .main-grid::before {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 0;
+    height: 22px;
+    pointer-events: none;
+    content: '';
+
+    /* background: var(--bg); */
   }
 
   .col {
     display: flex;
     flex-direction: column;
     min-width: 0;
+  }
+
+  .col-mid {
+    min-height: 0;
   }
 
   /* ── Card ────────────────────────────────────────────────────── */
@@ -1976,10 +2286,8 @@
       inset 0 1px 0 rgb(186 230 253 / 10%),
       inset 0 -10px 26px rgb(0 0 0 / 26%);
     transition:
-      transform var(--duration-normal, 250ms) var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
       box-shadow var(--duration-slow, 350ms) var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
       border-color var(--duration-normal, 250ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
-    transform: translateY(0);
   }
 
   .card::before {
@@ -1989,8 +2297,8 @@
     pointer-events: none;
     content: '';
     background:
-      linear-gradient(to right, rgb(255 255 255 / 5%) 1px, transparent 1px),
-      linear-gradient(to bottom, rgb(255 255 255 / 5%) 1px, transparent 1px);
+      linear-gradient(to right, rgb(255 255 255 / 1%) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(255 255 255 / 1%) 1px, transparent 1px);
     background-size: 22px 22px;
     opacity: 0.66;
     mask-image: radial-gradient(circle at 16% 0%, #000 0%, transparent 62%);
@@ -2005,7 +2313,7 @@
     height: 2px;
     pointer-events: none;
     content: '';
-    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 40%), transparent);
+    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0%), transparent);
     filter: blur(0.2px);
     opacity: 0.55;
   }
@@ -2022,8 +2330,8 @@
       0 0 0 1px rgb(96 165 250 / 16%),
       inset 0 1px 0 rgb(186 230 253 / 14%),
       0 0 56px rgb(59 130 246 / 12%),
-      0 0 44px rgb(34 211 238 / 8%);
-    transform: translateY(-4px);
+      0 0 44px rgb(34 211 238 / 8%),
+      0 0 110px rgb(34 211 238 / 10%);
   }
 
   .card-title {
@@ -2044,6 +2352,21 @@
 
   .card-header-row .card-title {
     margin-bottom: 0;
+  }
+
+  /* Top 10：在网格行内与右侧区块底部对齐，图表高度随列剩余空间变化 */
+  .card.card-top10 {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .card-top10 .chart-loading-wrap {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
   }
 
   /* ── Charts ──────────────────────────────────────────────────── */
@@ -2067,7 +2390,9 @@
   }
 
   .echart-top10 {
-    height: 220px;
+    flex: 1 1 auto;
+    width: 100%;
+    min-height: 160px;
   }
 
   /* ── Trend Tabs ──────────────────────────────────────────────── */
@@ -2087,7 +2412,6 @@
     border-radius: 9999px;
     box-shadow: 0 0 0 1px rgb(59 130 246 / 6%) inset;
     transition:
-      transform var(--duration-fast, 150ms) var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
       border-color var(--duration-fast, 150ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
       background-color var(--duration-fast, 150ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
       box-shadow var(--duration-normal, 250ms) var(--ease-out, cubic-bezier(0, 0, 0.2, 1));
@@ -2098,8 +2422,8 @@
     border-color: rgb(0 212 170 / 40%);
     box-shadow:
       0 10px 26px rgb(0 0 0 / 44%),
-      0 0 0 1px rgb(0 212 170 / 14%);
-    transform: translateY(-1px);
+      0 0 0 1px rgb(0 212 170 / 14%),
+      0 0 60px rgb(0 212 170 / 8%);
   }
 
   .tab-btn.active {
@@ -2133,7 +2457,6 @@
     border: 0;
     border-radius: 9999px;
     transition:
-      transform var(--duration-fast, 150ms) var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
       background-color var(--duration-fast, 150ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
       color var(--duration-fast, 150ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
       box-shadow var(--duration-normal, 250ms) var(--ease-out, cubic-bezier(0, 0, 0.2, 1));
@@ -2145,7 +2468,7 @@
 
   .tgl:hover {
     color: var(--text-mid);
-    transform: translateY(-1px);
+    box-shadow: 0 0 0 1px rgb(0 212 170 / 14%) inset;
   }
 
   .tgl.active {
@@ -2221,11 +2544,12 @@
 
     .card:hover {
       box-shadow:
-        0 12px 40px rgb(0 0 0 / 44%),
-        0 0 0 1px rgb(96 165 250 / 10%),
-        inset 0 1px 0 rgb(186 230 253 / 10%),
-        inset 0 -10px 26px rgb(0 0 0 / 26%);
-      transform: none;
+        0 16px 52px rgb(0 0 0 / 56%),
+        0 0 0 1px rgb(96 165 250 / 16%),
+        inset 0 1px 0 rgb(186 230 253 / 14%),
+        0 0 56px rgb(59 130 246 / 12%),
+        0 0 44px rgb(34 211 238 / 8%),
+        0 0 110px rgb(34 211 238 / 10%);
     }
 
     .tab-btn {
@@ -2233,7 +2557,10 @@
     }
 
     .tab-btn:hover {
-      transform: none;
+      box-shadow:
+        0 10px 26px rgb(0 0 0 / 44%),
+        0 0 0 1px rgb(0 212 170 / 14%),
+        0 0 60px rgb(0 212 170 / 8%);
     }
 
     .tgl {
@@ -2241,7 +2568,7 @@
     }
 
     .tgl:hover {
-      transform: none;
+      box-shadow: 0 0 0 1px rgb(0 212 170 / 14%) inset;
     }
   }
 

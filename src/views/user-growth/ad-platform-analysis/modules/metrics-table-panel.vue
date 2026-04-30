@@ -23,68 +23,80 @@
           >
             <template #roi="{ row }">
               <span class="detail-cell detail-cell--metric">
-                <span class="detail-metric-value">{{ formatNum2(row.roi) }}</span>
-                <div
-                  class="detail-sparkline"
-                  :class="row.roiTrendUp ? 'is-good' : 'is-bad'"
-                  role="img"
-                  :aria-label="`ROI 趋势 ${formatNum2(row.roi)}`"
-                >
-                  <span
-                    v-for="(h, i) in metricSparklineBars(row, 'roi')"
-                    :key="i"
-                    class="detail-sparkline__bar"
-                    :style="{ height: `${Math.round(h * 20)}px` }"
-                  />
-                </div>
+                <template v-if="row.roi !== null && row.roi !== undefined">
+                  <span class="detail-metric-value">{{ formatNum2(row.roi * 100) }}%</span>
+                  <div
+                    class="detail-sparkline"
+                    :class="row.roiTrendUp ? 'is-good' : 'is-bad'"
+                    role="img"
+                    :aria-label="`ROI 趋势 ${formatNum2(row.roi * 100)}%`"
+                  >
+                    <span
+                      v-for="(h, i) in metricSparklineBars(row, 'roi')"
+                      :key="i"
+                      class="detail-sparkline__bar"
+                      :style="{ height: `${Math.round(h * 20)}px` }"
+                    />
+                  </div>
+                </template>
+                <span v-else class="detail-metric-value">—</span>
               </span>
             </template>
             <template #cpi="{ row }">
               <span class="detail-cell detail-cell--metric">
-                <span class="detail-metric-value">{{ formatUsd2(row.cpi) }}</span>
-                <div
-                  class="detail-sparkline"
-                  :class="!row.cpiTrendUp ? 'is-good' : 'is-bad'"
-                  role="img"
-                  :aria-label="`CPI 趋势 ${formatUsd2(row.cpi)}`"
-                >
-                  <span
-                    v-for="(h, i) in metricSparklineBars(row, 'cpi')"
-                    :key="i"
-                    class="detail-sparkline__bar"
-                    :style="{ height: `${Math.round(h * 20)}px` }"
-                  />
-                </div>
+                <template v-if="row.cpi !== null && row.cpi !== undefined">
+                  <span class="detail-metric-value">{{ formatUsd2(row.cpi) }}</span>
+                  <div
+                    class="detail-sparkline"
+                    :class="!row.cpiTrendUp ? 'is-good' : 'is-bad'"
+                    role="img"
+                    :aria-label="`CPI 趋势 ${formatUsd2(row.cpi)}`"
+                  >
+                    <span
+                      v-for="(h, i) in metricSparklineBars(row, 'cpi')"
+                      :key="i"
+                      class="detail-sparkline__bar"
+                      :style="{ height: `${Math.round(h * 20)}px` }"
+                    />
+                  </div>
+                </template>
+                <span v-else class="detail-metric-value">—</span>
               </span>
             </template>
             <template #userQualityD7="{ row }">
               <div class="detail-uq-cell">
-                <span class="detail-uq-value">{{ formatNum2(row.userQualityD7) }}%</span>
-                <span class="arrow" :class="row.userQualityD7TrendUp ? 'up' : 'down'">{{
-                  row.userQualityD7TrendUp ? '↑' : '↓'
-                }}</span>
-                <ElProgress
-                  :percentage="userQualityProgressPercent(row.userQualityD7)"
-                  :stroke-width="4"
-                  :show-text="false"
-                  :color="userQualityProgressColor(row.userQualityD7TrendUp)"
-                  class="detail-uq-progress"
-                />
+                <template v-if="row.userQualityD7 !== null && row.userQualityD7 !== undefined">
+                  <span class="detail-uq-value">{{ formatNum2(row.userQualityD7) }}%</span>
+                  <span class="arrow" :class="row.userQualityD7TrendUp ? 'up' : 'down'">{{
+                    row.userQualityD7TrendUp ? '↑' : '↓'
+                  }}</span>
+                  <ElProgress
+                    :percentage="userQualityProgressPercent(row.userQualityD7)"
+                    :stroke-width="4"
+                    :show-text="false"
+                    :color="userQualityProgressColor(row.userQualityD7TrendUp)"
+                    class="detail-uq-progress"
+                  />
+                </template>
+                <span v-else class="detail-uq-value">—</span>
               </div>
             </template>
             <template #userQualityPay="{ row }">
               <div class="detail-uq-cell">
-                <span class="detail-uq-value">{{ formatNum2(row.userQualityPay) }}%</span>
-                <span class="arrow" :class="row.userQualityPayTrendUp ? 'up' : 'down'">{{
-                  row.userQualityPayTrendUp ? '↑' : '↓'
-                }}</span>
-                <ElProgress
-                  :percentage="userQualityProgressPercent(row.userQualityPay)"
-                  :stroke-width="4"
-                  :show-text="false"
-                  :color="userQualityProgressColor(row.userQualityPayTrendUp)"
-                  class="detail-uq-progress"
-                />
+                <template v-if="row.userQualityPay !== null && row.userQualityPay !== undefined">
+                  <span class="detail-uq-value">{{ formatNum2(row.userQualityPay) }}%</span>
+                  <span class="arrow" :class="row.userQualityPayTrendUp ? 'up' : 'down'">{{
+                    row.userQualityPayTrendUp ? '↑' : '↓'
+                  }}</span>
+                  <ElProgress
+                    :percentage="userQualityProgressPercent(row.userQualityPay)"
+                    :stroke-width="4"
+                    :show-text="false"
+                    :color="userQualityProgressColor(row.userQualityPayTrendUp)"
+                    class="detail-uq-progress"
+                  />
+                </template>
+                <span v-else class="detail-uq-value">—</span>
               </div>
             </template>
             <template #status="{ row }">

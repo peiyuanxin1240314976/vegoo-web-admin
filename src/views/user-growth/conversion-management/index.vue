@@ -79,7 +79,6 @@
 
 <script setup lang="ts">
   import { useTable } from '@/hooks/core/useTable'
-  import { useIntervalFn } from '@vueuse/core'
   import ConversionTabs from './modules/conversion-tabs.vue'
   import ConversionFilters from './modules/conversion-filters.vue'
   import ConversionTable from './modules/conversion-table.vue'
@@ -91,12 +90,15 @@
   import ConversionMappingDialog from './modules/conversion-mapping-dialog.vue'
   import ConversionDeleteDialog from './modules/conversion-delete-dialog.vue'
   import {
-    fetchConversionMappingListMock,
-    MOCK_TYPE_DISTRIBUTION,
-    MOCK_MAPPING_STATS,
-    MOCK_PLATFORM_STATS
-  } from './mock/data'
-  import { fetchConversionDataMock } from './mock/data-tab'
+    fetchConversionMappingsList,
+    fetchConversionMappingsStats,
+    fetchConversionDataTabOverviewKpi,
+    fetchConversionDataTabTableRows,
+    fetchConversionDataTabSidePanels,
+    fetchConversionMappingsCreate,
+    fetchConversionMappingsUpdate,
+    fetchConversionMappingsDelete
+  } from '@/api/user-growth/conversion-management'
   import type {
     ConversionDataFilterParams,
     ConversionDataSidePanels,
@@ -108,8 +110,12 @@
   } from './types'
   import { ElMessage } from 'element-plus'
   import { getAppNow, cloneAppDate } from '@/utils/app-now'
+  import { useConversionMetaConversionTypeOptions } from '@/composables/use-conversion-meta-conversion-type'
 
   defineOptions({ name: 'ConversionManagement' })
+
+  const { ensureLoaded: ensureConversionMetaConversionTypeLoaded } =
+    useConversionMetaConversionTypeOptions()
 
   const activeTab = ref<'name' | 'data'>('name')
 
@@ -123,13 +129,12 @@
     handleCurrentChange
   } = useTable({
     core: {
-      apiFn: fetchConversionMappingListMock,
+      apiFn: fetchConversionMappingsList,
       apiParams: {
         current: 1,
         size: 20,
         platform: '',
-        appPackage: '',
-        app: '',
+        appId: [],
         conversionType: '',
         status: '',
         keyword: ''
@@ -140,22 +145,42 @@
 
   const filterForForm = computed(() => searchParams as ConversionFilterParams)
 
-  const sideStats = computed(() => ({
-    typeDistribution: MOCK_TYPE_DISTRIBUTION,
-    mappingStats: MOCK_MAPPING_STATS,
-    platformStats: MOCK_PLATFORM_STATS
-  }))
+  onMounted(() => {
+    void loadSideStats()
+    void ensureConversionMetaConversionTypeLoaded()
+  })
+
+  const sideStats = ref({
+    typeDistribution: [] as any[],
+    mappingStats: { mapped: 0, duplicate: 0, unmapped: 0 },
+    platformStats: { android: 0, ios: 0 }
+  })
+
+  let sideSeq = 0
+  async function loadSideStats() {
+    const seq = ++sideSeq
+    try {
+      const filters: ConversionFilterParams = { ...(searchParams as ConversionFilterParams) }
+      delete filters.current
+      delete filters.size
+      const res = await fetchConversionMappingsStats(filters)
+      if (seq !== sideSeq) return
+      sideStats.value = res as any
+    } finally {
+      void seq
+    }
+  }
 
   function handleSearch(payload: ConversionFilterParams) {
     Object.assign(searchParams, {
       platform: payload.platform ?? '',
-      appPackage: payload.appPackage ?? payload.app ?? '',
-      app: payload.appPackage ?? payload.app ?? '',
+      appId: payload.appId ?? [],
       conversionType: payload.conversionType ?? '',
       status: payload.status ?? '',
       keyword: payload.keyword ?? ''
     })
     getData()
+    void loadSideStats()
   }
 
   const dialogVisible = ref(false)
@@ -168,10 +193,21 @@
     dialogVisible.value = true
   }
 
-  function handleDialogSubmit(form: ConversionMappingForm) {
-    console.log('Mapping submit (mock):', form)
-    dialogVisible.value = false
-    getData()
+  async function handleDialogSubmit(form: ConversionMappingForm) {
+    try {
+      if (dialogType.value === 'add') {
+        await fetchConversionMappingsCreate(form)
+      } else {
+        const id = String(dialogRowData.value?.id ?? '')
+        await fetchConversionMappingsUpdate({ id, ...form })
+      }
+      dialogVisible.value = false
+      getData()
+      void loadSideStats()
+    } catch (e) {
+      console.error(e)
+      ElMessage.error('操作失败')
+    }
   }
 
   const deleteDialogVisible = ref(false)
@@ -182,9 +218,15 @@
     deleteDialogVisible.value = true
   }
 
-  function handleDeleteConfirm(row: ConversionMappingItem) {
-    console.log('Delete (mock):', row.id)
-    getData()
+  async function handleDeleteConfirm(row: ConversionMappingItem) {
+    try {
+      await fetchConversionMappingsDelete({ id: row.id })
+      getData()
+      void loadSideStats()
+    } catch (e) {
+      console.error(e)
+      ElMessage.error('删除失败')
+    }
   }
 
   function handleBatchEnable() {
@@ -202,9 +244,7 @@
   /**
    * 转化数据（Data Tab）
    */
-  const refreshIntervalMs = 30_000
-
-  function getDefaultDateRange(): [string, string] {
+  function getDefaultDateBounds(): { startDate: string; endDate: string } {
     const end = getAppNow()
     const start = cloneAppDate(end)
     start.setDate(end.getDate() - 6)
@@ -214,14 +254,13 @@
       const day = String(d.getDate()).padStart(2, '0')
       return `${y}-${m}-${day}`
     }
-    return [toYmd(start), toYmd(end)]
+    return { startDate: toYmd(start), endDate: toYmd(end) }
   }
 
   const dataFilter = reactive<ConversionDataFilterParams>({
-    dateRange: getDefaultDateRange(),
+    ...getDefaultDateBounds(),
     platform: '',
-    app: '',
-    appPackage: '',
+    appId: [],
     source: '',
     adPlatform: '',
     conversionType: ''
@@ -245,59 +284,45 @@
     const seq = ++dataLoadSeq
     dataLoading.value = true
     try {
-      const res = await fetchConversionDataMock({ ...dataFilter })
+      const [kpiRes, tableRes, sideRes] = await Promise.all([
+        fetchConversionDataTabOverviewKpi({ ...dataFilter }),
+        fetchConversionDataTabTableRows({ ...dataFilter }),
+        fetchConversionDataTabSidePanels({ ...dataFilter })
+      ])
       if (seq !== dataLoadSeq || activeTab.value !== 'data') return
-      dataKpi.value = res.kpi
-      dataTableRows.value = res.tableRows
-      dataSidePanels.value = res.sidePanels
+      dataKpi.value = kpiRes.kpi
+      dataTableRows.value = tableRes.tableRows
+      dataSidePanels.value = sideRes.sidePanels
     } finally {
       if (seq === dataLoadSeq) dataLoading.value = false
     }
   }
 
-  const interval = useIntervalFn(
-    () => {
-      if (activeTab.value !== 'data') return
-      if (dataLoading.value) return
-      void loadDataTab()
-    },
-    refreshIntervalMs,
-    { immediate: false }
-  )
-
-  function restartInterval() {
-    interval.pause()
-    interval.resume()
-  }
-
   function handleDataSearch(payload: ConversionDataFilterParams) {
+    const bounds =
+      payload.startDate && payload.endDate
+        ? { startDate: payload.startDate, endDate: payload.endDate }
+        : getDefaultDateBounds()
     Object.assign(dataFilter, {
-      dateRange: payload.dateRange ?? getDefaultDateRange(),
+      ...bounds,
       platform: payload.platform ?? '',
-      appPackage: payload.appPackage ?? payload.app ?? '',
-      app: payload.appPackage ?? payload.app ?? '',
+      appId: payload.appId ?? [],
       source: payload.source ?? payload.adPlatform ?? '',
       adPlatform: payload.source ?? payload.adPlatform ?? '',
       conversionType: payload.conversionType ?? ''
     })
-    void loadDataTab().then(() => restartInterval())
+    void loadDataTab()
   }
 
   watch(
     () => activeTab.value,
     (tab) => {
       if (tab === 'data') {
-        void loadDataTab().then(() => restartInterval())
-      } else {
-        interval.pause()
+        void loadDataTab()
       }
     },
     { immediate: true }
   )
-
-  onBeforeUnmount(() => {
-    interval.pause()
-  })
 </script>
 
 <style scoped lang="scss">

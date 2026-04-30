@@ -1,0 +1,83 @@
+{
+  "_comment": "开户主体配置-顶部卡片统计。与分页列表分离，避免列表接口承载卡片数据。",
+  "interaction": {
+    "entry": "页面进入后拉取；保存、删除、平台开关变更后可按需刷新。",
+    "uiBinding": [
+      "index.vue -> SubjectSettingStatCards :stats",
+      "modules/subject-setting-stat-cards.vue"
+    ]
+  },
+  "fieldDescription": {
+    "request": {
+      "keyword": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "与列表同源筛选关键字，按当前筛选统计。"
+      },
+      "platformStatus": {
+        "type": "string",
+        "required": false,
+        "enum": ["all", "facebook", "tiktok", "both", "none"],
+        "default": "all",
+        "description": "平台状态筛选。"
+      },
+      "hasBusinessLicense": {
+        "type": "string",
+        "required": false,
+        "enum": ["all", "yes", "no"],
+        "default": "all",
+        "description": "营业执照筛选。"
+      }
+    },
+    "response": {
+      "total": {
+        "type": "number",
+        "required": true,
+        "description": "主体总数。"
+      },
+      "facebookEnabled": {
+        "type": "number",
+        "required": true,
+        "description": "Facebook 可用主体数。"
+      },
+      "tiktokEnabled": {
+        "type": "number",
+        "required": true,
+        "description": "TikTok 可用主体数。"
+      },
+      "bothEnabled": {
+        "type": "number",
+        "required": true,
+        "description": "双平台均可用主体数。"
+      },
+      "latestUpdateTime": {
+        "type": "string",
+        "required": true,
+        "description": "最新更新时间，格式 YYYY-MM-DD HH:mm:ss。无数据时返回 '--'。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "keyword": "",
+    "platformStatus": "all",
+    "hasBusinessLicense": "all"
+  },
+  "sampleResponse": {
+    "total": 24,
+    "facebookEnabled": 16,
+    "tiktokEnabled": 13,
+    "bothEnabled": 9,
+    "latestUpdateTime": "2026-04-17 16:45:00"
+  },
+  "api": {
+    "url": "POST /api/account-management/open-account/subject-settings/overview-cards",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "keyword?, platformStatus?, hasBusinessLicense?",
+    "responseBody": "total, facebookEnabled, tiktokEnabled, bothEnabled, latestUpdateTime"
+  },
+  "apiSuggestion": {
+    "notes": ["该接口只返回卡片统计，不返回 records。", "卡片统计建议与列表筛选口径一致。"]
+  }
+}

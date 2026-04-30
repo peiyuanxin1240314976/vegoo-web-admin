@@ -3,6 +3,7 @@
  */
 import request from '@/utils/http'
 import { ANALYSIS_API_BASE } from '@/api/analysis-api-base'
+import { toAppsRequestBody } from '@/utils/app-id-request'
 import type {
   ComprehensiveAnalysisApiParams,
   ComprehensiveAnalysisData,
@@ -26,9 +27,17 @@ import {
   isComprehensiveAnalysisEndpointMock
 } from '@/views/user-growth/comprehensive-analysis/config/data-source'
 import * as comprehensiveAnalysisMock from '@/views/user-growth/comprehensive-analysis/mock/comprehensive-analysis-api-mock'
+import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
 
 /** 与 `MY_PERFORMANCE_BASE` 同级结构：`.../analysis/user-growth/comprehensive-analysis` */
 export const COMPREHENSIVE_ANALYSIS_BASE = `${ANALYSIS_API_BASE}/user-growth/comprehensive-analysis`
+
+function withApps<T extends { appIds: string[] }>(params: T) {
+  return {
+    ...params,
+    apps: toAppsRequestBody(params.appIds)
+  }
+}
 
 /**
  * 兼容后端多层 data 包裹：
@@ -65,22 +74,30 @@ const EMPTY_ECPM: EcpmAnalysis = {
   }
 }
 
-/** 契约 01-meta-filter-options — POST */
-export function fetchComprehensiveAnalysisFilterOptions() {
-  if (isComprehensiveAnalysisEndpointMock(ComprehensiveAnalysisEndpoint.MetaFilterOptions)) {
-    return comprehensiveAnalysisMock.mockFetchComprehensiveAnalysisMetaFilterOptions()
+/** meta 下拉「全部」须与请求体一致为 `''`；兼容后端仍返回字面量 `all` */
+function normalizeMetaSelectOptions(options: unknown): SelectOption[] {
+  return asArray<SelectOption>(options).map((o) => ({
+    ...o,
+    value: o.value === 'all' ? '' : o.value
+  }))
+}
+
+/**
+ * 筛选项与公用 **`GET .../cockpit/meta-filter-options`** 同构：读 Pinia **`useCockpitMetaFilterStore`**，
+ * 不调用本模块 `.../comprehensive-analysis/meta-filter-options`。
+ * 供仍使用 `fetch*` 命名的历史调用方（如其它页的 `onMounted`）兼容；新页面优先用 `useCockpitMetaFilterOptions`。
+ */
+export async function fetchComprehensiveAnalysisFilterOptions(): Promise<ComprehensiveAnalysisFilterOptions> {
+  const store = useCockpitMetaFilterStore()
+  const raw = await store.ensureLoaded()
+  if (!raw) {
+    return { appOptions: [], sourceOptions: [], countryOptions: [] }
   }
-  return request
-    .post<any>({
-      url: `${COMPREHENSIVE_ANALYSIS_BASE}/meta-filter-options`,
-      data: {}
-    })
-    .then((res) => unwrapDataDeep<ComprehensiveAnalysisFilterOptions>(res))
-    .then((opts) => ({
-      appOptions: asArray<SelectOption>(opts?.appOptions),
-      sourceOptions: asArray<SelectOption>(opts?.sourceOptions),
-      countryOptions: asArray<SelectOption>(opts?.countryOptions)
-    }))
+  return {
+    appOptions: normalizeMetaSelectOptions(raw.appOptions),
+    sourceOptions: normalizeMetaSelectOptions(raw.sourceOptions),
+    countryOptions: normalizeMetaSelectOptions(raw.countryOptions)
+  }
 }
 
 /** 契约 02-kpi — POST */
@@ -91,7 +108,7 @@ export function fetchComprehensiveAnalysisKpi(params: ComprehensiveAnalysisApiPa
   return request
     .post<any>({
       url: `${COMPREHENSIVE_ANALYSIS_BASE}/kpi`,
-      data: params
+      data: withApps(params)
     })
     .then((res) => asArray<KpiCard>(unwrapDataDeep(res)))
 }
@@ -104,7 +121,7 @@ export function fetchComprehensiveAnalysisPlatformCpiBar(params: ComprehensiveAn
   return request
     .post<any>({
       url: `${COMPREHENSIVE_ANALYSIS_BASE}/platform-cpi-bar`,
-      data: params
+      data: withApps(params)
     })
     .then((res) => unwrapDataDeep<PlatformCpiBarData>(res))
     .then((d) => ({
@@ -121,7 +138,7 @@ export function fetchComprehensiveAnalysisAppCpiRank(params: ComprehensiveAnalys
   return request
     .post<any>({
       url: `${COMPREHENSIVE_ANALYSIS_BASE}/app-cpi-rank`,
-      data: params
+      data: withApps(params)
     })
     .then((res) => asArray<AppCpiRankItem>(unwrapDataDeep(res)))
 }
@@ -136,7 +153,7 @@ export function fetchComprehensiveAnalysisCountryDistribution(
   return request
     .post<any>({
       url: `${COMPREHENSIVE_ANALYSIS_BASE}/country-distribution`,
-      data: params
+      data: withApps(params)
     })
     .then((res) => unwrapDataDeep(res))
     .then((d) => {
@@ -156,7 +173,7 @@ export function fetchComprehensiveAnalysisAlerts(params: ComprehensiveAnalysisAp
   return request
     .post<any>({
       url: `${COMPREHENSIVE_ANALYSIS_BASE}/alerts`,
-      data: params
+      data: withApps(params)
     })
     .then((res) => asArray<AlertItem>(unwrapDataDeep(res)))
 }
@@ -169,7 +186,7 @@ export function fetchComprehensiveAnalysisPlatformCpiTrend(params: Comprehensive
   return request
     .post<any>({
       url: `${COMPREHENSIVE_ANALYSIS_BASE}/platform-cpi-trend`,
-      data: params
+      data: withApps(params)
     })
     .then((res) => unwrapDataDeep<PlatformCpiTrend>(res))
     .then((d) => ({
@@ -187,7 +204,7 @@ export function fetchComprehensiveAnalysisEcpmAnalysis(params: ComprehensiveAnal
   return request
     .post<any>({
       url: `${COMPREHENSIVE_ANALYSIS_BASE}/ecpm-analysis`,
-      data: params
+      data: withApps(params)
     })
     .then((res) => unwrapDataDeep(res))
     .then((d) => {
@@ -208,15 +225,9 @@ export function fetchComprehensiveAnalysisEcpmAnalysis(params: ComprehensiveAnal
 }
 
 /**
- * 页面聚合（不含仅前端的 viewMode）。
- * 兼容现有页面逻辑：内部按契约拆分请求后合并为 `ComprehensiveAnalysisData`。
+ * 页面聚合：内部按契约拆分请求后合并为 `ComprehensiveAnalysisData`。
  */
-export async function fetchComprehensiveAnalysisData(
-  filters: Pick<
-    ComprehensiveAnalysisFilterState,
-    'dateRange' | 's_app_id' | 'adPlatform' | 's_country_code'
-  >
-) {
+export async function fetchComprehensiveAnalysisData(filters: ComprehensiveAnalysisFilterState) {
   const params = buildComprehensiveAnalysisApiParams(filters)
   const [
     kpis,

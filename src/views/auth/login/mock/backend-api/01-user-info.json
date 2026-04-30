@@ -1,0 +1,193 @@
+{
+  "_comment": "认证 - 获取当前用户信息，对应登录成功后的用户态初始化。该结构同时服务于角色路由过滤与日期权限控制。",
+  "fieldDescription": {
+    "request": {},
+    "response": {
+      "id": { "type": "number", "required": true, "description": "用户唯一 ID。" },
+      "phone": { "type": "string", "required": true, "description": "用户手机号。" },
+      "email": { "type": "string", "required": true, "description": "用户邮箱。" },
+      "username": { "type": "string", "required": true, "description": "登录账号。" },
+      "name": { "type": "string", "required": true, "description": "用户展示姓名。" },
+      "isAdmin": {
+        "type": "number",
+        "required": true,
+        "description": "管理员标记。当前前端不依赖该字段做权限判断，0 表示否，1 表示是。"
+      },
+      "roles": {
+        "type": "string[]",
+        "required": true,
+        "description": "正式角色列表。前端侧边导航、动态路由、页面权限判断统一优先使用该字段。"
+      },
+      "permissions": {
+        "type": "string[]",
+        "required": true,
+        "description": "兼容旧版字段。迁移阶段建议与 roles 保持一致。"
+      },
+      "permissionConfig": {
+        "type": "PermissionConfig",
+        "required": true,
+        "description": "当前用户最终权限配置，包含页面权限、日期权限与按钮权限预留。"
+      }
+    },
+    "PermissionConfig": {
+      "routePermissions": {
+        "type": "RoutePermissionsConfig",
+        "required": true,
+        "description": "页面访问权限配置。"
+      },
+      "datePermissions": {
+        "type": "DatePermissionsConfig",
+        "required": true,
+        "description": "日期筛选权限配置。"
+      },
+      "buttonPermissions": {
+        "type": "ButtonPermissionsConfig",
+        "required": true,
+        "description": "按钮级权限配置预留。"
+      }
+    },
+    "RoutePermissionsConfig": {
+      "routeNames": {
+        "type": "string[]",
+        "required": true,
+        "description": "当前用户最终可访问的 routeName 列表，建议直接与前端路由 name 对齐。"
+      }
+    },
+    "DatePermissionsConfig": {
+      "defaultDateScope": {
+        "type": "DateScopeConfig",
+        "required": true,
+        "description": "默认日期权限规则。"
+      },
+      "pageDateScopes": {
+        "type": "PageDateScopeConfig[]",
+        "required": true,
+        "description": "页面级日期覆盖规则，未配置时返回 []。"
+      }
+    },
+    "DateScopeConfig": {
+      "maxHistoryDays": {
+        "type": "number",
+        "required": true,
+        "description": "最大可回看天数，基于当前日期计算。30 表示最早可选日期为今天往前 30 天；-1 表示不限。"
+      },
+      "defaultRangeDays": {
+        "type": "number",
+        "required": true,
+        "description": "页面初始化时默认展示的日期范围天数。"
+      },
+      "allowCustomRange": {
+        "type": "boolean",
+        "required": true,
+        "description": "是否允许用户手动选择自定义日期区间。"
+      }
+    },
+    "PageDateScopeConfig": {
+      "pageKey": {
+        "type": "string",
+        "required": true,
+        "description": "页面唯一标识，建议与 routeName 保持一致。"
+      },
+      "maxHistoryDays": {
+        "type": "number",
+        "required": true,
+        "description": "该页面覆盖后的最大可回看天数。"
+      },
+      "defaultRangeDays": {
+        "type": "number",
+        "required": true,
+        "description": "该页面覆盖后的默认日期范围天数。"
+      },
+      "allowCustomRange": {
+        "type": "boolean",
+        "required": true,
+        "description": "该页面是否允许自定义日期区间。"
+      }
+    },
+    "ButtonPermissionsConfig": {
+      "codes": {
+        "type": "string[]",
+        "required": true,
+        "description": "按钮权限编码列表。当前阶段可返回空数组，后续可扩展为 routeName:action 形式。"
+      }
+    }
+  },
+  "sampleRequest": {},
+  "sampleResponse": {
+    "id": 10287,
+    "phone": "13528817986",
+    "email": "123@163.com",
+    "username": "admin",
+    "name": "admin",
+    "isAdmin": 1,
+    "roles": ["SuperAdmin"],
+    "permissions": ["SuperAdmin"],
+    "permissionConfig": {
+      "routePermissions": {
+        "routeNames": [
+          "Cockpit",
+          "UserGrowth",
+          "MyAds",
+          "PerformanceAnalysis",
+          "ComprehensiveAnalysis",
+          "ConfigManagement",
+          "Role"
+        ]
+      },
+      "datePermissions": {
+        "defaultDateScope": {
+          "maxHistoryDays": 30,
+          "defaultRangeDays": 7,
+          "allowCustomRange": true
+        },
+        "pageDateScopes": [
+          {
+            "pageKey": "RealTimeData",
+            "maxHistoryDays": 3,
+            "defaultRangeDays": 1,
+            "allowCustomRange": false
+          },
+          {
+            "pageKey": "PerformanceAnalysis",
+            "maxHistoryDays": 15,
+            "defaultRangeDays": 7,
+            "allowCustomRange": true
+          }
+        ]
+      },
+      "buttonPermissions": {
+        "codes": []
+      }
+    }
+  },
+  "api": {
+    "url": "GET /api/v1/datacenter/biz/user/get",
+    "method": "GET",
+    "priority": "P0",
+    "requestBody": "无 body，请求头携带 Authorization",
+    "responseBody": "id, phone, email, username, name, isAdmin, roles, permissions, permissionConfig"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "登录成功写入 token 后",
+        "detail": "前端调用该接口初始化用户信息、角色身份和权限配置。",
+        "prerequisite": "本地已存在有效 Authorization token。"
+      },
+      {
+        "moment": "应用刷新或重新进入系统",
+        "detail": "若本地仍有 token，则重新调用该接口恢复用户态，避免长期依赖本地缓存的旧权限。",
+        "prerequisite": "本地 token 未被清理。"
+      }
+    ],
+    "defaultSelection": "前端优先使用 roles 和 permissionConfig，permissions 仅作为兼容兜底字段。",
+    "dedupe": "短时间内重复触发时以后返回的最新用户信息为准。"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "推荐后端同时返回 roles 与 permissionConfig，前端无需再根据角色自行推导 routeNames 或日期规则。",
+      "日期权限的最终安全控制必须由后端查询接口继续校验，前端日期控件限制只负责交互体验。",
+      "若当前后端尚未完成新结构改造，可先保留 permissions，并补充 permissionConfig，前端即可平滑兼容。"
+    ]
+  }
+}

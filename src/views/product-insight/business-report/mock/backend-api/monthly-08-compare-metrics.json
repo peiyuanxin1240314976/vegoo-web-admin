@@ -1,0 +1,66 @@
+{
+  "_comment": "月报-对比模式-指标矩阵。",
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/report/monthly/compare-metrics",
+    "method": "POST",
+    "priority": "P0"
+  },
+  "interaction": {
+    "triggers": [
+      { "moment": "月报趋势图后并行", "detail": "加载指标矩阵与最佳项" },
+      {
+        "moment": "对比模式右上角切换日期/开关",
+        "detail": "独立于顶部筛选栏，参数变化后重拉指标矩阵"
+      }
+    ]
+  },
+  "sampleRequest": {
+    "startDate": "2026-04-01",
+    "endDate": "2026-04-30",
+    "appId": "",
+    "appIds": [],
+    "platformList": [],
+    "sourceList": [],
+    "countryCodeList": [],
+    "account": "",
+    "compareAppIds": ["overall", "health", "ai"],
+    "compareEnabled": true,
+    "compareStartDate": "2026-03-01",
+    "compareEndDate": "2026-03-31"
+  },
+  "sampleResponse": {
+    "rows": [
+      {
+        "metric": "MAU",
+        "values": { "overall": "8,234万", "health": "2,456万", "ai": "1,654万" },
+        "bestId": "overall"
+      },
+      {
+        "metric": "首日ROI",
+        "values": { "overall": "36%", "health": "34%", "ai": "31%" },
+        "bestId": "overall"
+      },
+      {
+        "metric": "7日ROI",
+        "values": { "overall": "96%", "health": "91%", "ai": "84%" },
+        "bestId": "overall"
+      },
+      {
+        "metric": "30日ROI",
+        "values": { "overall": "113%", "health": "108%", "ai": "99%" },
+        "bestId": "overall"
+      },
+      {
+        "metric": "费用抄扣收缴比",
+        "values": { "overall": "1.75%", "health": "1.74%", "ai": "1.79%" },
+        "bestId": "health"
+      }
+    ]
+  },
+  "apiSuggestion": {
+    "notes": [
+      "对比模式右上角日期与开关为独立控制，参数变化后需重拉指标矩阵。",
+      "compareEnabled=false 时，建议保持 values 返回当前期值，bestId 继续按当前期口径给出。"
+    ]
+  }
+}

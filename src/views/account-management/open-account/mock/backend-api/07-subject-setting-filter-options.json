@@ -1,0 +1,69 @@
+{
+  "_comment": "开户主体配置-筛选下拉选项（平台状态/执照状态/排序）统一接口。",
+  "interaction": {
+    "entry": "页面初始化时拉取。",
+    "uiBinding": ["modules/subject-setting-toolbar.vue -> 三个下拉选项"],
+    "usage": "value 与列表查询入参 platformStatus/hasBusinessLicense/sortOrder 保持一致。"
+  },
+  "fieldDescription": {
+    "request": {},
+    "response": {
+      "platformStatusOptions": {
+        "type": "OptionItem[]",
+        "required": true,
+        "description": "平台状态下拉选项。"
+      },
+      "licenseStatusOptions": {
+        "type": "OptionItem[]",
+        "required": true,
+        "description": "执照状态下拉选项。"
+      },
+      "sortOrderOptions": {
+        "type": "OptionItem[]",
+        "required": true,
+        "description": "排序下拉选项。"
+      }
+    },
+    "OptionItem": {
+      "label": {
+        "type": "string",
+        "required": true,
+        "description": "选项展示文案。"
+      },
+      "value": {
+        "type": "string",
+        "required": true,
+        "description": "选项值。"
+      }
+    }
+  },
+  "sampleRequest": {},
+  "sampleResponse": {
+    "platformStatusOptions": [
+      { "label": "全部平台状态", "value": "all" },
+      { "label": "Facebook 可用", "value": "facebook" },
+      { "label": "TikTok 可用", "value": "tiktok" },
+      { "label": "双平台可用", "value": "both" },
+      { "label": "全部未启用", "value": "none" }
+    ],
+    "licenseStatusOptions": [
+      { "label": "全部执照状态", "value": "all" },
+      { "label": "有营业执照", "value": "yes" },
+      { "label": "无营业执照", "value": "no" }
+    ],
+    "sortOrderOptions": [
+      { "label": "最近更新优先", "value": "updated_desc" },
+      { "label": "最早更新优先", "value": "updated_asc" }
+    ]
+  },
+  "api": {
+    "url": "POST /api/account-management/open-account/subject-settings/filter-options",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "无",
+    "responseBody": "platformStatusOptions, licenseStatusOptions, sortOrderOptions"
+  },
+  "apiSuggestion": {
+    "notes": ["建议前端缓存选项结果，减少重复请求。", "下拉 value 需与列表筛选入参严格一致。"]
+  }
+}

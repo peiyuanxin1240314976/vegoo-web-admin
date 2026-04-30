@@ -2,19 +2,29 @@
  * 收入总览页 Mock 常量与类型；与 `mock/backend-api/*.json` 契约中的 sampleResponse 对齐。
  * 接入远程接口时在 `revenue-overview/config/` 按接口配置 mock/remote，并实现 `src/api` 内 fetch*。
  */
-import { getAppTodayYYYYMMDD } from '@/utils/app-now'
+import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
 
 export type RevenueOverviewFilterState = {
-  /** 应用 */
-  s_app_id: string
-  /** 平台 */
-  platform: 'all' | 'android' | 'ios'
-  /** 国家 */
+  /** 应用多选，不限为 [] */
+  appIds: string[]
+  /** 终端平台：收入概览页固定传空串，不提供筛选 */
+  platform: ''
+  /** 国家码；空字符串表示不按国家筛选（不限） */
   s_country_code: string
   /** 版本 */
   app_version: string
-  /** 日期 */
-  t_date: string
+  /** 统计区间开始日 YYYY-MM-DD */
+  startDate: string
+  /** 统计区间结束日 YYYY-MM-DD */
+  endDate: string
+}
+
+function buildDefaultRevenueOverviewDateRange(): { startDate: string; endDate: string } {
+  const appNow = getAppNow()
+  const endDate = formatYYYYMMDD(appNow)
+  const startD = cloneAppDate(appNow)
+  startD.setDate(startD.getDate() - 4)
+  return { startDate: formatYYYYMMDD(startD), endDate }
 }
 
 export type RevenueOverviewKpiCard = {
@@ -175,11 +185,11 @@ export const MOCK_REVENUE_OVERVIEW_IAP_PRODUCT_FOOT = {
 } as const
 
 export const MOCK_REVENUE_OVERVIEW_FILTERS: RevenueOverviewFilterState = {
-  s_app_id: 'weather5',
-  platform: 'all',
-  s_country_code: 'all',
+  appIds: [],
+  platform: '',
+  s_country_code: '',
   app_version: 'all',
-  t_date: getAppTodayYYYYMMDD()
+  ...buildDefaultRevenueOverviewDateRange()
 }
 
 export const MOCK_REVENUE_OVERVIEW_KPIS: RevenueOverviewKpiCard[] = [
@@ -708,13 +718,13 @@ export const MOCK_REVENUE_OVERVIEW_IAP_TREND_KPIS: RevenueOverviewIapTrendKpiCar
     trendUp: true
   },
   {
-    title: '付费转化率',
+    title: '付费率',
     valueText: '2.4%',
     trendText: '-0.2%↓',
     trendUp: false
   },
   {
-    title: '订阅续费率',
+    title: '续订率',
     valueText: '76.8%',
     trendText: '+0.9%↑',
     trendUp: true

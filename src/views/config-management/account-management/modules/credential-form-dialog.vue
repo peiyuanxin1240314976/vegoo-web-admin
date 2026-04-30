@@ -188,7 +188,7 @@
       <div class="form-item">
         <div class="form-label">过期时间</div>
         <div class="form-control">
-          <el-date-picker
+          <AppDatePicker
             v-model="form.expireTime"
             type="datetime"
             placeholder="2024-06-26 10:30"
@@ -248,6 +248,7 @@
 
 <script setup lang="ts">
   import { ref, computed, watch, reactive } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import type { FormInstance, FormRules } from 'element-plus'
   import { appOptions } from '../mock/data'
   import type { AdAccountItem, CredentialItem, CredentialFormModel } from '../types'
@@ -391,6 +392,7 @@
 
   .el-dialog:has(.cred-form-dialog-bd) .el-dialog__headerbtn .el-icon {
     color: var(--cm-dialog-text-muted) !important;
+
     &:hover {
       color: var(--cm-dialog-text-primary) !important;
     }
@@ -405,6 +407,7 @@
     &::-webkit-scrollbar {
       width: 4px;
     }
+
     &::-webkit-scrollbar-track {
       background: transparent;
     }
@@ -539,6 +542,7 @@
       &:hover {
         border-color: rgb(59 130 246 / 40%) !important;
       }
+
       &.is-focus {
         border-color: #3b82f6 !important;
       }
@@ -547,6 +551,7 @@
     :deep(.el-input__inner) {
       font-size: 13px;
       color: #e2e8f0 !important;
+
       &::placeholder {
         color: #475569 !important;
       }
@@ -590,6 +595,7 @@
     background: none;
     border: none;
     opacity: 0.7;
+
     &:hover {
       opacity: 1;
     }
@@ -639,6 +645,7 @@
     background: #0d9488 !important;
     border: none !important;
     border-radius: 8px !important;
+
     &:hover {
       filter: brightness(1.1);
     }
@@ -655,6 +662,7 @@
       &:hover {
         border-color: rgb(59 130 246 / 40%) !important;
       }
+
       &.is-focus {
         border-color: #3b82f6 !important;
       }
@@ -663,6 +671,7 @@
     :deep(.el-input__inner) {
       font-size: 13px;
       color: #e2e8f0 !important;
+
       &::placeholder {
         color: #475569 !important;
       }
@@ -678,12 +687,15 @@
       border: 1px solid rgb(255 255 255 / 10%) !important;
       border-radius: 7px !important;
       box-shadow: none !important;
+
       &::placeholder {
         color: #475569 !important;
       }
+
       &:hover {
         border-color: rgb(59 130 246 / 40%) !important;
       }
+
       &:focus {
         border-color: #3b82f6 !important;
       }
@@ -701,6 +713,7 @@
       border: 1px solid rgb(255 255 255 / 10%) !important;
       border-radius: 7px !important;
       box-shadow: none !important;
+
       &:hover {
         border-color: rgb(59 130 246 / 40%) !important;
       }

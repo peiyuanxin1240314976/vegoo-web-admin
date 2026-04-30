@@ -15,7 +15,11 @@
     "request": {
       "appId": { "type": "string", "required": true, "description": "应用 ID。" },
       "platform": { "type": "string", "required": true, "description": "Android | iOS。" },
-      "adPlatform": { "type": "string", "required": true, "description": "广告平台展示值。" },
+      "source": {
+        "type": "string",
+        "required": true,
+        "description": "广告平台枚举 string，与公用 cockpit `sourceOptions.value`、列表行 `source` 一致。"
+      },
       "optimizer": { "type": "string", "required": true, "description": "优化师。" },
       "note": { "type": "string", "required": false, "description": "备注。" },
       "configVersionId": { "type": "string", "required": true, "description": "绩效配置版本 id。" },
@@ -36,7 +40,7 @@
   "sampleRequest": {
     "appId": "Weather8A",
     "platform": "Android",
-    "adPlatform": "Google",
+    "source": "2",
     "optimizer": "李四",
     "note": "",
     "configVersionId": "v2",
@@ -48,6 +52,7 @@
     "appId": "Weather8A",
     "iconColor": "#a78bfa",
     "platform": "Android",
+    "source": "2",
     "adPlatform": "Google",
     "optimizer": "李四",
     "configVersionId": "v2",
@@ -95,7 +100,7 @@
   },
   "apiSuggestion": {
     "notes": [
-      "若 (appId, platform, adPlatform) 要求唯一，冲突时返回业务错误码。",
+      "若 (appId, platform, source) 要求唯一，冲突时返回业务错误码。",
       "`sampleResponse` 为 unwrap 后 `data`。"
     ]
   }

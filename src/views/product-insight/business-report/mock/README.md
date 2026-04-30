@@ -8,32 +8,35 @@
 - 与 `types.ts`、页面组件、`reportService.ts` 保持数据结构一致
 - 接口就绪后通过 `config/data-source.ts` 逐接口平滑切换为真实请求
 
+**页面操作与「何时调哪些接口」的说明**：见 [`docs/经营报告-操作与接口说明.md`](../docs/经营报告-操作与接口说明.md)。
+
+**与后端真实联调前的字段/路径核对**：见 [`docs/后端联调核对清单.md`](../docs/后端联调核对清单.md)。
+
 ## 目录结构
 
 ```
 mock/
 ├── README.md             # 本文件：模块总览
 └── backend-api/
-    ├── README.md         # 接口契约清单（交付后端开发的参考文档）
-    ├── 01-summary.json
-    ├── 02-ad-platform.json
-    ├── 03-by-country.json
-    ├── 04-platform-country.json
-    ├── 05-campaigns.json
+    ├── README.md         # 接口契约清单（交付后端）；含「侧栏 app-list 接口设计说明（给后端）」
+    ├── daily-00-app-list.json + daily-01~08.json
+    ├── weekly-00-app-list.json + weekly-01~08.json
+    ├── monthly-00-app-list.json + monthly-01~08.json
     ├── 06-lark-config-get.json
     ├── 07-lark-config-save.json
-    └── 08-lark-push-now.json
+    ├── 08-lark-push-now.json
+    └── rollout-checklist.md
 ```
 
 ## 与页面的对应关系
 
 | 页面 / Tab | 主要数据来源（契约） |
-| --- | --- |
-| 日报 / 周报 / 月报 — 汇总 | `01-summary` |
-| 日报 / 周报 / 月报 — 广告平台 | `02-ad-platform` |
-| 日报 / 周报 / 月报 — 分国家 | `03-by-country` |
-| 日报 / 周报 / 月报 — 广告平台分国家 | `04-platform-country` |
-| 日报 / 周报 / 月报 — 在投广告系列 | `05-campaigns` |
+| --- | --- | --- | --- |
+| 侧栏应用列表（三周期） | `daily | weekly | monthly-00-app-list` |
+| 日报 — 汇总/广告平台/分国家/平台分国家/在投系列 | `daily-01~05` |
+| 周报 — 汇总/广告平台/分国家/平台分国家/在投系列 | `weekly-01~05` |
+| 月报 — 汇总/广告平台/分国家/平台分国家/在投系列 | `monthly-01~05` |
+| 对比模式（日报/周报/月报） | `daily | weekly | monthly-06~08` |
 | 飞书推送配置弹窗 | `06-lark-config-get`、`07-lark-config-save`、`08-lark-push-now` |
 
 ## Mock 开关
@@ -41,11 +44,15 @@ mock/
 在 `config/data-source.ts` 中可逐接口切换 Mock / 真实：
 
 ```ts
-import { BUSINESS_REPORT_USE_MOCK, BusinessReportEndpoint } from './config/data-source'
+import { BUSINESS_REPORT_USE_MOCK, BusinessReportReadEndpoint } from './config/data-source'
 
 // 将某接口改为 false 即可接入真实后端
-BUSINESS_REPORT_USE_MOCK[BusinessReportEndpoint.Summary] = false
+BUSINESS_REPORT_USE_MOCK[BusinessReportReadEndpoint.DailyOverview] = false
 ```
+
+## 契约与实现口径
+
+- 仅维护 **`daily-* / weekly-* / monthly-*`** 契约与对应 `fetch*`；前端**不再**做旧路径或旧响应字段（如详情里嵌套 `appList`）的兼容。
 
 ## 数据来源
 

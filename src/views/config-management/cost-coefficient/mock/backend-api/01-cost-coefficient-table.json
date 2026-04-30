@@ -9,18 +9,92 @@
       "pageSize": { "type": "number", "required": true, "description": "每页条数。", "default": 10 }
     },
     "response": {
-      "total": { "type": "number", "required": true, "description": "总数。" },
-      "list": { "type": "CostCoefficientItem[]", "required": true, "description": "列表。" }
+      "records": {
+        "type": "CostCoefficientItem[]",
+        "required": true,
+        "description": "当前页列表。"
+      },
+      "total": { "type": "number", "required": true, "description": "符合筛选条件的总条数。" },
+      "current": { "type": "number", "required": true, "description": "当前页码。" },
+      "size": { "type": "number", "required": true, "description": "每页条数。" }
+    },
+    "CostCoefficientItem": {
+      "id": { "type": "string", "required": true, "description": "记录 ID。" },
+      "nSource": { "type": "number", "required": true, "description": "广告平台 n_source。" },
+      "platformName": { "type": "string", "required": true, "description": "广告平台名称。" },
+      "tStart": { "type": "string", "required": true, "description": "生效起始日期 YYYY-MM-DD。" },
+      "dCostRatio": {
+        "type": "number",
+        "required": true,
+        "description": "折算比例 d_cost_ratio（展示保留 3 位小数）。"
+      },
+      "dInstallCost": {
+        "type": "number",
+        "required": true,
+        "description": "安装成本 d_install_cost（展示保留 5 位小数）。"
+      },
+      "updatedAt": {
+        "type": "string",
+        "required": true,
+        "description": "最后修改时间 YYYY-MM-DD HH:mm。"
+      },
+      "updatedBy": { "type": "string", "required": true, "description": "操作人。" },
+      "remark": { "type": "string", "required": true, "description": "备注。" },
+      "isDeleted": { "type": "boolean", "required": true, "description": "逻辑删除标记。" }
     }
   },
   "sampleRequest": { "nSource": 1, "tStartYear": "2026", "keyword": "", "page": 1, "pageSize": 10 },
-  "sampleResponse": { "data": { "total": 1, "list": [{ "id": "CC-001", "nSource": 1 }] } },
+  "sampleResponse": {
+    "data": {
+      "records": [
+        {
+          "id": "CC-001",
+          "nSource": 1,
+          "platformName": "Google Ads",
+          "tStart": "2026-01-01",
+          "dCostRatio": 0.875,
+          "dInstallCost": 1.25678,
+          "updatedAt": "2026-04-15 10:20",
+          "updatedBy": "alice",
+          "remark": "Q2 调整",
+          "isDeleted": false
+        },
+        {
+          "id": "CC-002",
+          "nSource": 2,
+          "platformName": "Facebook Ads",
+          "tStart": "2026-03-01",
+          "dCostRatio": 0.923,
+          "dInstallCost": 1.10234,
+          "updatedAt": "2026-04-12 09:10",
+          "updatedBy": "bob",
+          "remark": "季中优化",
+          "isDeleted": false
+        },
+        {
+          "id": "CC-003",
+          "nSource": 3,
+          "platformName": "TikTok Ads",
+          "tStart": "2026-05-01",
+          "dCostRatio": 1.012,
+          "dInstallCost": 1.45999,
+          "updatedAt": "2026-04-10 14:35",
+          "updatedBy": "carol",
+          "remark": "新渠道试投",
+          "isDeleted": false
+        }
+      ],
+      "total": 18,
+      "current": 1,
+      "size": 10
+    }
+  },
   "api": {
     "url": "POST /api/config-management/cost-coefficient/table",
     "method": "POST",
     "priority": "P0",
     "requestBody": "CostCoefficientQuery",
-    "responseBody": "{ total, list }"
+    "responseBody": "{ records, total, current, size }"
   },
   "interaction": {
     "triggers": [

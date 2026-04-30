@@ -14,7 +14,12 @@
  * @author VeGoo Team
  */
 
-import axios, { AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
+import axios, {
+  AxiosRequestConfig,
+  AxiosResponse,
+  InternalAxiosRequestConfig,
+  RawAxiosRequestHeaders
+} from 'axios'
 import { useUserStore } from '@/store/modules/user'
 import { ApiStatus } from './status'
 import { HttpError, handleError, showError, showSuccess } from './error'
@@ -40,10 +45,14 @@ interface ExtendedAxiosRequestConfig extends AxiosRequestConfig {
 
 const { VITE_API_URL, VITE_WITH_CREDENTIALS } = import.meta.env
 
+// 生产环境请求前缀使用当前站点 origin，避免写死旧后端域名
+const axiosBaseURL =
+  import.meta.env.PROD && typeof window !== 'undefined' ? window.location.origin : VITE_API_URL
+
 /** Axios实例 */
 const axiosInstance = axios.create({
   timeout: REQUEST_TIMEOUT,
-  baseURL: VITE_API_URL,
+  baseURL: axiosBaseURL,
   withCredentials: VITE_WITH_CREDENTIALS === 'true',
   validateStatus: (status) => status >= 200 && status < 300,
   transformResponse: [
@@ -59,6 +68,19 @@ const axiosInstance = axios.create({
       return data
     }
   ]
+})
+
+/**
+ * 文件下载专用 Axios 实例：
+ * - 复用 baseURL / timeout / withCredentials
+ * - 复用鉴权与 JSON body 处理
+ * - 不走 BaseResponse 的 code 判断（避免 blob 被当作 JSON 解析）
+ */
+const fileAxiosInstance = axios.create({
+  timeout: REQUEST_TIMEOUT,
+  baseURL: axiosBaseURL,
+  withCredentials: VITE_WITH_CREDENTIALS === 'true',
+  validateStatus: (status) => status >= 200 && status < 300
 })
 
 /** 请求拦截器 */
@@ -78,6 +100,21 @@ axiosInstance.interceptors.request.use(
     showError(createHttpError($t('httpMsg.requestConfigError'), ApiStatus.error))
     return Promise.reject(error)
   }
+)
+
+fileAxiosInstance.interceptors.request.use(
+  (request: InternalAxiosRequestConfig) => {
+    const { accessToken } = useUserStore()
+    if (accessToken) request.headers.set('Authorization', `Bearer ${accessToken}`)
+
+    if (request.data && !(request.data instanceof FormData) && !request.headers['Content-Type']) {
+      request.headers.set('Content-Type', 'application/json')
+      request.data = JSON.stringify(request.data)
+    }
+
+    return request
+  },
+  (error) => Promise.reject(error)
 )
 
 /** 从响应中取错误文案（兼容 msg / message），无值时返回空字符串 */
@@ -188,8 +225,10 @@ async function request<T = any>(config: ExtendedAxiosRequestConfig): Promise<T> 
     const res = await axiosInstance.request<BaseResponse<T>>(config)
 
     // 显示成功消息
-    if (config.showSuccessMessage && res.data.msg) {
-      showSuccess(res.data.msg)
+    if (config.showSuccessMessage) {
+      const payload = res.data as BaseResponse<T> & { message?: string }
+      const text = (payload.msg ?? payload.message ?? '').trim()
+      if (text) showSuccess(text)
     }
 
     return res.data.data as T
@@ -222,3 +261,24 @@ const api = {
 }
 
 export default api
+
+export interface BlobRequestConfig extends AxiosRequestConfig {
+  /**
+   * 仅用于对齐常规 request 的调用参数；文件流请求默认不弹错（由调用方处理）。
+   * 这里保留字段是为了减少业务侧分支改造成本。
+   */
+  showErrorMessage?: boolean
+}
+
+/**
+ * 发起文件流请求（默认 responseType='blob'）。
+ * 返回完整 AxiosResponse，便于读取 Content-Disposition / Content-Type 等响应头。
+ */
+export function requestBlob(
+  config: BlobRequestConfig & { headers?: RawAxiosRequestHeaders }
+): Promise<AxiosResponse<Blob>> {
+  return fileAxiosInstance.request<Blob>({
+    responseType: 'blob',
+    ...config
+  })
+}

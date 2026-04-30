@@ -12,7 +12,7 @@ export function buildSystemUserMockSeed(): Api.SystemManage.UserListItem[] {
     userGender: i % 2 === 0 ? '男' : '女',
     userPhone: `1380013${String(8000 + i).slice(-4)}`,
     userEmail: `user${i}@example.com`,
-    userRoles: i % 5 === 0 ? ['admin'] : ['ops'],
+    userRoles: i % 5 === 0 ? (['1'] as any) : (['3'] as any),
     accessibleApps: i % 4 === 0 ? ['com.demo.app'] : [],
     remark: i % 6 === 0 ? 'Mock 备注' : '',
     createBy: 'admin',
@@ -35,7 +35,7 @@ export function buildSystemUserMockSeed(): Api.SystemManage.UserListItem[] {
     userGender: '男',
     userPhone: '13800138000',
     userEmail: 'demo@example.com',
-    userRoles: ['ops'],
+    userRoles: ['3'] as any,
     accessibleApps: [],
     remark: '',
     createBy: 'admin',
@@ -53,4 +53,16 @@ export function getSystemUserMockList(): Api.SystemManage.UserListItem[] {
     cachedSeed = buildSystemUserMockSeed()
   }
   return cachedSeed.map((r) => ({ ...r }))
+}
+
+export function patchSystemUserMockItem(
+  id: number,
+  patch: Partial<Api.SystemManage.UserListItem>
+): void {
+  if (!cachedSeed) {
+    cachedSeed = buildSystemUserMockSeed()
+  }
+  const index = cachedSeed.findIndex((item) => item.id === id)
+  if (index < 0) return
+  cachedSeed[index] = { ...cachedSeed[index], ...patch }
 }

@@ -1,46 +1,110 @@
 {
-  "_comment": "人员绩效 - 右侧指标概览。列表页右侧卡片使用。",
+  "_comment": "人员绩效列表页 - 右侧「指标概览」卡片。与 performance-list 使用相同筛选维度（无分页），由服务端直接给出汇总，避免前端对大列表再算一遍。",
   "fieldDescription": {
     "request": {
-      "startDate": { "type": "string", "required": true, "description": "开始日期，YYYY-MM-DD。" },
-      "endDate": { "type": "string", "required": true, "description": "结束日期，YYYY-MM-DD。" },
-      "personId": { "type": "string", "required": false, "description": "人员 ID，空表示全部。" },
-      "appCategory": { "type": "string", "required": false, "description": "应用分类。" },
-      "status": { "type": "string", "required": false, "description": "达标状态筛选。" },
-      "keyword": { "type": "string", "required": false, "description": "搜索关键字。" }
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "开始日期，YYYY-MM-DD（含）。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": true,
+        "description": "结束日期，YYYY-MM-DD（含）。"
+      },
+      "personFilter": {
+        "type": "string",
+        "required": false,
+        "description": "同 performance-list。"
+      },
+      "appFilter": { "type": "string", "required": false, "description": "同 performance-list。" },
+      "statusFilter": {
+        "type": "string",
+        "required": false,
+        "enum": ["", "达标", "未达标"],
+        "description": "同 performance-list。"
+      },
+      "keyword": { "type": "string", "required": false, "description": "同 performance-list。" }
     },
     "response": {
-      "adSpend": { "type": "number", "required": true, "description": "团队广告支出。" },
+      "adSpend": { "type": "number", "required": true, "description": "团队广告支出合计（USD）。" },
+      "adSpendWeekOverWeekText": {
+        "type": "string",
+        "required": false,
+        "description": "广告支出环比文案（已含符号，如 +8%）；无则前端可隐藏。"
+      },
       "avgRoi1": {
         "type": "number",
         "required": true,
-        "description": "首日 ROI 均值，百分比数值。"
+        "description": "首日 ROI 均值（百分比数值）。"
       },
-      "estProfit": { "type": "number", "required": true, "description": "团队预估利润。" },
-      "failCount": { "type": "number", "required": true, "description": "未达标人数。" },
-      "failNames": { "type": "string[]", "required": true, "description": "未达标人员姓名列表。" }
+      "roiStatusLabel": {
+        "type": "string",
+        "required": true,
+        "description": "基于 avgRoi1 等的达标结论文案（如 达标 / 未达标）。"
+      },
+      "estProfit": {
+        "type": "number",
+        "required": true,
+        "description": "团队预估利润合计（USD，可负）。"
+      },
+      "estProfitWeekOverWeekText": {
+        "type": "string",
+        "required": false,
+        "description": "预估利润环比文案（如 +12%）。"
+      },
+      "failCount": {
+        "type": "number",
+        "required": true,
+        "description": "未达标关注人数（与产品口径一致：可含接近达标+未达标）。"
+      },
+      "failNames": {
+        "type": "string[]",
+        "required": true,
+        "description": "上述人员姓名列表，顺序可自定；无则空数组。"
+      }
     }
   },
   "sampleRequest": {
-    "startDate": "2026-03-20",
-    "endDate": "2026-03-26",
-    "personId": "",
-    "appCategory": "",
-    "status": "",
+    "startDate": "2026-03-28",
+    "endDate": "2026-04-04",
+    "personFilter": "",
+    "appFilter": "",
+    "statusFilter": "",
     "keyword": ""
   },
   "sampleResponse": {
-    "adSpend": 131179,
-    "avgRoi1": 92.0,
-    "estProfit": 28000,
-    "failCount": 0,
-    "failNames": []
+    "adSpend": 148029,
+    "adSpendWeekOverWeekText": "+8%",
+    "avgRoi1": 88.5,
+    "roiStatusLabel": "达标",
+    "estProfit": 27700,
+    "estProfitWeekOverWeekText": "+12%",
+    "failCount": 2,
+    "failNames": ["吴十", "王五"]
   },
   "api": {
-    "url": "POST /api/user-growth/performance-analysis/overview-metrics",
+    "url": "POST /api/v1/datacenter/analysis/user-growth/performance-analysis/overview-metrics",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "startDate, endDate, personId?, appCategory?, status?, keyword?",
-    "responseBody": "adSpend, avgRoi1, estProfit, failCount, failNames"
+    "requestBody": "startDate, endDate, personFilter?, appFilter?, statusFilter?, keyword?",
+    "responseBody": "adSpend, adSpendWeekOverWeekText?, avgRoi1, roiStatusLabel, estProfit, estProfitWeekOverWeekText?, failCount, failNames"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "failCount/failNames 口径须与列表页「未达标人员」卡片一致（当前前端逻辑为 statusClass 为 fail 或 near）。",
+      "可与 performance-list 并行请求；参数须一致。"
+    ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "列表页首屏 / 筛选变更",
+        "detail": "与 performance-list 同一批筛选参数变化后刷新侧栏；仅折叠侧栏不请求。",
+        "prerequisite": "startDate/endDate 与列表一致。"
+      }
+    ],
+    "defaultSelection": "筛选默认值同列表；全空串表示全部人员。",
+    "dedupe": "与 performance-list 并行；注意与列表合计 totals 的数值口径可不同（侧栏为业务汇总，表尾为列合计）。"
   }
 }

@@ -47,9 +47,10 @@
     </div>
     <div class="am-toolbar__row am-toolbar__row--date">
       <span class="am-toolbar__label">时间范围</span>
-      <ElDatePicker
+      <AppDatePicker
         v-model="localDate"
         type="date"
+        :shortcuts="dateShortcuts"
         value-format="YYYY-MM-DD"
         placeholder="选择日期"
         size="default"
@@ -62,6 +63,8 @@
 
 <script setup lang="ts">
   import { computed } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
+  import { dateShortcuts } from '@/utils/form/date-shortcuts'
   import type { AlertFilterCategory, AlertFilterSeverity, AlertFilterStatus } from '../types'
 
   defineOptions({ name: 'AmAlertToolbar' })

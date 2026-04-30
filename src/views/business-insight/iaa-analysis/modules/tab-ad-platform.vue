@@ -47,7 +47,7 @@
           <template #header><span>平台详细对比表</span></template>
           <div v-if="loading" class="iaa-chart-sk iaa-chart-sk--line"></div>
           <ArtTable
-            v-else
+            v-else-if="hasTableData"
             :data="tableData"
             :columns="tableColumns"
             row-key="sourceName"
@@ -69,6 +69,7 @@
               </span>
             </template>
           </ArtTable>
+          <ElEmpty v-else class="iaa-panel-empty iaa-panel-empty--table" description="暂无数据" />
         </ElCard>
       </div>
 
@@ -120,6 +121,7 @@
   import type { IaaFilterState, IaaPlatformTabData, IaaPlatformTableRow } from '../types'
   import { fetchIaaPlatformTabData } from '@/api/business-insight'
   import { useIaaTheme } from '../composables/useIaaTheme'
+  import { useIaaPageLoading } from '../composables/useIaaPageLoading'
 
   defineOptions({ name: 'IaaTabAdPlatform' })
 
@@ -127,10 +129,20 @@
 
   const tabData = ref<IaaPlatformTabData | null>(null)
   const loading = ref(false)
+  const pageLoading = useIaaPageLoading()
+
+  watch(loading, (v) => {
+    pageLoading?.setTabLoading('adPlatform', v)
+  })
+
+  onMounted(() => {
+    pageLoading?.setTabLoading('adPlatform', loading.value)
+  })
   const { colors } = useIaaTheme()
 
   const kpis = computed(() => tabData.value?.kpis ?? [])
   const tableData = computed(() => tabData.value?.tableRows ?? [])
+  const hasTableData = computed(() => tableData.value.length > 0)
   const platformInsight = computed(() => tabData.value?.platformInsight ?? '')
   const donutData = computed(() => tabData.value?.donut ?? [])
 
@@ -165,7 +177,7 @@
     {
       prop: 'revenueShare',
       label: '占比',
-      minWidth: 60,
+      minWidth: 80,
       formatter: (row: IaaPlatformTableRow) => `${n(row.revenueShare)}%`
     },
     {
@@ -177,7 +189,7 @@
     {
       prop: 'impressionShare',
       label: '展示占比',
-      minWidth: 74,
+      minWidth: 84,
       formatter: (row: IaaPlatformTableRow) => `${n(row.impressionShare)}%`
     },
     {
@@ -189,28 +201,28 @@
     {
       prop: 'userShare',
       label: '用户占比',
-      minWidth: 70,
+      minWidth: 80,
       formatter: (row: IaaPlatformTableRow) => `${n(row.userShare)}%`
     },
     {
       prop: 'ecpmEst',
       label: 'ECPM(预)',
-      minWidth: 80,
+      minWidth: 90,
       formatter: (row: IaaPlatformTableRow) => n(row.ecpmEst).toFixed(2)
     },
     {
       prop: 'ecpmReal',
       label: 'ECPM(真)',
-      minWidth: 80,
+      minWidth: 90,
       formatter: (row: IaaPlatformTableRow) => n(row.ecpmReal).toFixed(2)
     },
-    { prop: 'variance', label: '偏差', minWidth: 68, useSlot: true, slotName: 'variance' },
-    {
-      prop: 'fillRate',
-      label: '充填率',
-      minWidth: 70,
-      formatter: (row: IaaPlatformTableRow) => `${n(row.fillRate)}%`
-    },
+    { prop: 'variance', label: '偏差', minWidth: 88, useSlot: true, slotName: 'variance' },
+    // {
+    //   prop: 'fillRate',
+    //   label: '充填率',
+    //   minWidth: 70,
+    //   formatter: (row: IaaPlatformTableRow) => `${n(row.fillRate)}%`
+    // },
     { prop: 'trend', label: '趋势', minWidth: 56, useSlot: true, slotName: 'trend' }
   ])
 
@@ -518,6 +530,10 @@
     border: 1px solid var(--default-border);
     border-radius: 8px;
 
+    &:not(.iaa-kpi--sk) {
+      @include iaa-panel-hover;
+    }
+
     &[data-accent='teal'] .iaa-kpi__value {
       color: var(--art-primary);
     }
@@ -707,5 +723,16 @@
     &.down {
       color: var(--art-success);
     }
+  }
+
+  .iaa-panel-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .iaa-panel-empty--table {
+    min-height: 240px;
   }
 </style>

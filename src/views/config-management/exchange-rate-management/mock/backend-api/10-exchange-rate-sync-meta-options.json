@@ -1,0 +1,68 @@
+{
+  "_comment": "汇率管理弹窗元数据（同步弹窗 + 手动录入弹窗），用于 rate-sync-dialog 与 rate-manual-dialog 初始化。",
+  "fieldDescription": {
+    "request": {},
+    "response": {
+      "sourceOptions": {
+        "type": "OptionItem[]",
+        "required": true,
+        "description": "数据源选项。"
+      },
+      "pairOptions": {
+        "type": "OptionItem[]",
+        "required": true,
+        "description": "可同步货币对选项。"
+      },
+      "currencyOptions": {
+        "type": "OptionItem[]",
+        "required": true,
+        "description": "手动录入弹窗的来源货币/目标货币选项。"
+      }
+    },
+    "OptionItem": {
+      "label": { "type": "string", "required": true, "description": "选项文案。" },
+      "value": { "type": "string", "required": true, "description": "选项值。" }
+    }
+  },
+  "sampleRequest": {},
+  "sampleResponse": {
+    "data": {
+      "sourceOptions": [
+        { "label": "Open Exchange Rates", "value": "openexchange" },
+        { "label": "Fixer.io", "value": "fixer" },
+        { "label": "自定义API", "value": "custom" }
+      ],
+      "pairOptions": [
+        { "label": "USD/EUR", "value": "USD/EUR" },
+        { "label": "USD/GBP", "value": "USD/GBP" },
+        { "label": "USD/JPY", "value": "USD/JPY" }
+      ],
+      "currencyOptions": [
+        { "label": "USD", "value": "USD" },
+        { "label": "EUR", "value": "EUR" },
+        { "label": "GBP", "value": "GBP" }
+      ]
+    }
+  },
+  "api": {
+    "url": "POST /api/config-management/exchange-rate/sync-meta-options",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "empty object",
+    "responseBody": "{ sourceOptions, pairOptions, currencyOptions }"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "弹窗打开",
+        "detail": "打开同步弹窗时拉取可选数据源与货币对列表。"
+      },
+      {
+        "moment": "弹窗打开",
+        "detail": "打开手动录入弹窗时拉取来源货币与目标货币选项。"
+      }
+    ],
+    "defaultSelection": "sync 弹窗：source 默认 openexchange、pair 默认全选；manual 弹窗：货币下拉默认空。",
+    "dedupe": "同标签页可短时缓存。"
+  }
+}

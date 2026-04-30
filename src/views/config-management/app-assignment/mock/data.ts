@@ -1,4 +1,17 @@
+import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
 import type { AppAssignmentItem, PerformanceVersion } from '../types'
+
+/** cockpit `sourceOptions` 不可用时，与 Mock 列表行 `source` 对齐的兜底项 */
+export const assignmentSourceFallbackOptions: CockpitMetaOptionItem[] = [
+  { label: 'Facebook', value: '1' },
+  { label: 'Google', value: '2' },
+  { label: 'TikTok', value: '3' }
+]
+
+export function assignmentAdPlatformLabel(source: string): string {
+  const map: Record<string, string> = { '': '全部', '1': 'Facebook', '2': 'Google', '3': 'TikTok' }
+  return map[source] ?? source
+}
 
 // ─── 公共绩效版本模板 ────────────────────────────────────────────────────────
 
@@ -99,6 +112,7 @@ export const assignmentMockList: AppAssignmentItem[] = [
     appId: 'Weather8A',
     iconColor: '#a78bfa',
     platform: 'Android',
+    source: '1',
     adPlatform: 'Facebook',
     optimizer: '张三',
     configVersionId: 'v3',
@@ -172,6 +186,7 @@ export const assignmentMockList: AppAssignmentItem[] = [
     appId: 'Weather8A',
     iconColor: '#a78bfa',
     platform: 'Android',
+    source: '2',
     adPlatform: 'Google',
     optimizer: '李四',
     configVersionId: 'v2',
@@ -200,6 +215,7 @@ export const assignmentMockList: AppAssignmentItem[] = [
     appId: 'HealthBS2A',
     iconColor: '#f97316',
     platform: 'Android',
+    source: '2',
     adPlatform: 'Google',
     optimizer: '王五',
     configVersionId: 'v2',
@@ -228,6 +244,7 @@ export const assignmentMockList: AppAssignmentItem[] = [
     appId: 'PhoneTrackerA',
     iconColor: '#8b5cf6',
     platform: 'Android',
+    source: '1',
     adPlatform: 'Facebook',
     optimizer: '张三',
     configVersionId: 'v2',
@@ -256,6 +273,7 @@ export const assignmentMockList: AppAssignmentItem[] = [
     appId: 'PhoneTrackerA',
     iconColor: '#8b5cf6',
     platform: 'Android',
+    source: '3',
     adPlatform: 'TikTok',
     optimizer: '李四',
     configVersionId: 'v2',
@@ -284,6 +302,7 @@ export const assignmentMockList: AppAssignmentItem[] = [
     appId: 'DeepSearchA',
     iconColor: '#06b6d4',
     platform: 'Android',
+    source: '2',
     adPlatform: 'Google',
     optimizer: '赵六',
     configVersionId: 'v2',
@@ -312,6 +331,7 @@ export const assignmentMockList: AppAssignmentItem[] = [
     appId: 'KDramaA',
     iconColor: '#ec4899',
     platform: 'Android',
+    source: '1',
     adPlatform: 'Facebook',
     optimizer: '王五',
     configVersionId: 'v2',
@@ -340,6 +360,7 @@ export const assignmentMockList: AppAssignmentItem[] = [
     appId: 'YearCamA',
     iconColor: '#eab308',
     platform: 'Android',
+    source: '2',
     adPlatform: 'Google',
     optimizer: '赵六',
     configVersionId: 'v2',
@@ -368,6 +389,7 @@ export const assignmentMockList: AppAssignmentItem[] = [
     appId: 'FaceMeA',
     iconColor: '#22c55e',
     platform: 'Android',
+    source: '2',
     adPlatform: 'Google',
     optimizer: '张三',
     configVersionId: 'v2',
@@ -396,6 +418,7 @@ export const assignmentMockList: AppAssignmentItem[] = [
     appId: 'HealthHT3A',
     iconColor: '#2dd4bf',
     platform: 'Android',
+    source: '',
     adPlatform: '全部',
     optimizer: '李四',
     configVersionId: 'v1',
@@ -437,13 +460,6 @@ export const assignmentMockList: AppAssignmentItem[] = [
 ]
 
 // ─── 筛选选项 ────────────────────────────────────────────────────────────────
-
-export const adPlatformOptions = [
-  { label: 'Facebook', value: 'Facebook' },
-  { label: 'Google', value: 'Google' },
-  { label: 'TikTok', value: 'TikTok' },
-  { label: '全部', value: '全部' }
-]
 
 export const optimizerOptions = [
   { label: '张三', value: '张三' },

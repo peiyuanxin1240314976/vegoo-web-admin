@@ -1,0 +1,19 @@
+{
+  "data": [
+    {
+      "id": "a1",
+      "level": "danger",
+      "text": "Google Ads × US: CPI $3.21 超标 28.4%，ROI D1 仅 22%"
+    },
+    {
+      "id": "a2",
+      "level": "warning",
+      "text": "Facebook × DE: 预算消耗 92%，建议关注次日转化"
+    },
+    {
+      "id": "a3",
+      "level": "info",
+      "text": "TikTok × JP: CPI 低于目标 15%，可适度放量"
+    }
+  ]
+}

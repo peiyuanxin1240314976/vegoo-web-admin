@@ -24,7 +24,11 @@
           <span v-else>{{ idx + 1 }}</span>
         </div>
         <span class="step-label">{{ step }}</span>
-        <div v-if="idx < steps.length - 1" class="step-line" :class="{ 'step-line--done': currentStep > idx }" />
+        <div
+          v-if="idx < steps.length - 1"
+          class="step-line"
+          :class="{ 'step-line--done': currentStep > idx }"
+        />
       </div>
     </div>
 
@@ -75,15 +79,15 @@
         />
       </div>
 
-      <div class="required-fields">
-        必填字段：国家代码、中文名称、国家名称、时区、电话代码
-      </div>
+      <div class="required-fields"> 必填字段：国家代码、中文名称、国家名称、时区、电话代码 </div>
     </div>
 
     <!-- Step 2: 确认数据预览 -->
     <div v-if="currentStep === 1" class="step-content">
       <div class="preview-info">
-        <span class="preview-count">已解析 <strong>{{ previewRows }}</strong> 条记录</span>
+        <span class="preview-count"
+          >已解析 <strong>{{ previewRows }}</strong> 条记录</span
+        >
         <span class="preview-hint">请确认数据无误后点击「确认导入」</span>
       </div>
       <div class="preview-table-wrap">
@@ -126,9 +130,7 @@
         <ElButton v-if="currentStep === 1" class="btn-next" @click="confirmImport">
           确认导入
         </ElButton>
-        <ElButton v-if="currentStep === 2" class="btn-next" @click="handleClose">
-          完成
-        </ElButton>
+        <ElButton v-if="currentStep === 2" class="btn-next" @click="handleClose"> 完成 </ElButton>
       </div>
     </template>
   </el-dialog>
@@ -183,10 +185,13 @@
   }
 
   const downloadTemplate = (type: 'excel' | 'csv') => {
-    const header = 'code,nameCn,nameEn,timezone,phoneCode,code3,criteriaId,currency,currencySymbol,region,isMainMarket'
-    const sample = 'US,美国,United States,GMT-5,1,840,2840,USD - 美元,$,北美,true'
+    const header =
+      'code,nameCn,nameEn,timezone,phoneCode,code3,criteriaId,flagIconUrl,currency,currencySymbol,region,isMainMarket'
+    const sample = 'US,美国,United States,GMT-5,1,840,2840,,USD - 美元,$,北美,true'
     const content = `${header}\n${sample}`
-    const blob = new Blob([content], { type: type === 'csv' ? 'text/csv' : 'application/vnd.ms-excel' })
+    const blob = new Blob([content], {
+      type: type === 'csv' ? 'text/csv' : 'application/vnd.ms-excel'
+    })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
@@ -201,6 +206,7 @@
       code: ['US', 'GB', 'DE', 'FR', 'JP'][i] ?? `C${i}`,
       code3: ['840', '826', '276', '250', '392'][i] ?? '',
       criteriaId: ['2840', '2826', '2276', '2250', '2392'][i] ?? '',
+      flagIconUrl: '',
       nameCn: ['美国', '英国', '德国', '法国', '日本'][i] ?? `国家${i}`,
       nameEn: ['United States', 'United Kingdom', 'Germany', 'France', 'Japan'][i] ?? `Country${i}`,
       aliases: [],
@@ -446,8 +452,8 @@
 
     &--has-file {
       cursor: default;
-      border-style: solid;
       border-color: rgb(45 212 191 / 30%);
+      border-style: solid;
     }
   }
 
@@ -634,8 +640,8 @@
     border-radius: 8px !important;
 
     &:disabled {
-      opacity: 0.4 !important;
       cursor: not-allowed;
+      opacity: 0.4 !important;
     }
 
     &:hover:not(:disabled) {

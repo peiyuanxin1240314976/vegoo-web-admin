@@ -1,0 +1,100 @@
+{
+  "_comment": "整体回收 Tab1 - ROI 对比表（付费 vs 整体等）。对应 types.ts: Pick<OverallTabData,'roiCompare'>。",
+  "fieldDescription": {
+    "request": {
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "统计起始日 YYYY-MM-DD（含）。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": true,
+        "description": "统计结束日 YYYY-MM-DD（含）。"
+      },
+      "appId": { "type": "string", "required": true, "description": "应用；全部 `''`。" },
+      "source": { "type": "string", "required": true, "description": "广告平台；全部 `''`。" },
+      "countryCode": {
+        "type": "string",
+        "required": true,
+        "description": "国家小写码；全部 `''`。"
+      }
+    },
+    "response": {
+      "data": {
+        "type": "RoiCompareRow[]",
+        "required": true,
+        "description": "键名 roiCompare。"
+      },
+      "RoiCompareRow": {
+        "label": { "type": "string", "required": true },
+        "day1": { "type": "string", "required": true },
+        "day14": { "type": "string", "required": true },
+        "day30": { "type": "string", "required": true },
+        "day60": { "type": "string", "required": true },
+        "day90": { "type": "string", "required": true },
+        "isHighlight": {
+          "type": "boolean",
+          "required": false,
+          "description": "高亮行（如「整体」）。"
+        }
+      }
+    }
+  },
+  "sampleRequest": {
+    "startDate": "2026-02-20",
+    "endDate": "2026-03-21",
+    "appId": "",
+    "source": "",
+    "countryCode": ""
+  },
+  "sampleResponse": {
+    "data": {
+      "roiCompare": [
+        {
+          "label": "付费",
+          "day1": "10%",
+          "day14": "85%",
+          "day30": "212%",
+          "day60": "310%",
+          "day90": "380%"
+        },
+        {
+          "label": "整体",
+          "day1": "12%",
+          "day14": "95%",
+          "day30": "230%",
+          "day60": "335%",
+          "day90": "412%",
+          "isHighlight": true
+        },
+        {
+          "label": "自然量增益",
+          "day1": "+2%",
+          "day14": "+10%",
+          "day30": "+18%",
+          "day60": "+25%",
+          "day90": "+32%"
+        }
+      ]
+    }
+  },
+  "api": {
+    "url": "POST /api/user-growth/overall-recovery/overall-tab/roi-compare",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "同 kpis 公共体",
+    "responseBody": "{ roiCompare: RoiCompareRow[] }"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "Tab1 首屏 / 顶栏检索",
+        "detail": "与曲线、日均量并行；右侧「ROI 对比」表格。",
+        "prerequisite": "同 kpis。"
+      }
+    ],
+    "defaultSelection": "同公共筛选。",
+    "dedupe": "同 kpis。"
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "_comment": "自动填充/预演框架 - 服务端导出译文文件。",
+  "fieldDescription": {
+    "request": {
+      "format": {
+        "type": "string",
+        "required": true,
+        "enum": ["xlsx", "csv", "json"],
+        "description": "导出格式。"
+      },
+      "scope": {
+        "type": "string",
+        "required": true,
+        "enum": ["completed", "selected", "custom"],
+        "description": "导出范围。"
+      },
+      "langCodes": { "type": "string[]", "required": true, "description": "参与导出的语言码列表。" }
+    },
+    "response": {
+      "data": {
+        "type": "TranslationsExportResult",
+        "required": true,
+        "description": "导出文件信息。"
+      }
+    },
+    "TranslationsExportResult": {
+      "downloadUrl": {
+        "type": "string",
+        "required": true,
+        "description": "下载地址（短时有效）。"
+      },
+      "fileName": { "type": "string", "required": true, "description": "导出文件名。" },
+      "expiresAt": { "type": "string", "required": true, "description": "下载链接过期时间。" }
+    }
+  },
+  "interaction": {
+    "triggers": [
+      { "moment": "点击导出按钮", "detail": "按所选范围与格式生成导出文件并返回下载链接。" }
+    ]
+  },
+  "sampleRequest": {
+    "format": "xlsx",
+    "scope": "selected",
+    "langCodes": ["zh-CN", "ja", "fr"]
+  },
+  "sampleResponse": {
+    "data": {
+      "downloadUrl": "https://mock.vegoo.local/text-management/export/translations.xlsx",
+      "fileName": "translations-export.xlsx",
+      "expiresAt": "2026-04-10T12:00:00.000Z"
+    }
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/product-operations/text-management/action/translations-export",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "format, scope, langCodes",
+    "responseBody": "TranslationsExportResult"
+  }
+}

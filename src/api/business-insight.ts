@@ -4,6 +4,7 @@
  */
 import request from '@/utils/http'
 import { ANALYSIS_API_BASE } from '@/api/analysis-api-base'
+import { buildAppSelectionRequestBody, toAppsRequestBody } from '@/utils/app-id-request'
 import {
   IaaAnalysisEndpoint,
   isIaaAnalysisEndpointMock
@@ -57,6 +58,10 @@ import type {
   ProfitSankeyDto,
   ProfitTrend30d
 } from '@/views/business-insight/profit-analysis/types'
+import {
+  ProfitAnalysisEndpoint,
+  isProfitAnalysisEndpointMock
+} from '@/views/business-insight/profit-analysis/config/data-source'
 import type {
   EcpmMetaFilterOptions,
   EcpmOverviewKpis,
@@ -77,6 +82,18 @@ export {
   fetchIapDetailTrend
 } from './iap-analysis'
 export type { IapOverviewTableQuery } from './iap-analysis'
+
+export {
+  fetchAdPlatformDetailAiInsights,
+  fetchAdPlatformDetailOverviewKpis,
+  fetchAdPlatformDetailOverviewTrend,
+  fetchAdPlatformDetailTableApps,
+  fetchAppAdPlatformPerformanceAiInsights,
+  fetchAppAdPlatformPerformanceOverviewKpis,
+  fetchAppAdPlatformPerformanceOverviewTrend,
+  fetchAppAdPlatformPerformanceTableAdUnits,
+  fetchAppAdPlatformPerformanceWaterfall
+} from './ad-platform-detail'
 
 const IAA_BASE = `${ANALYSIS_API_BASE}/business-insight/iaa-analysis`
 const REVENUE_OVERVIEW_BASE = `${ANALYSIS_API_BASE}/business-insight/revenue-overview`
@@ -167,8 +184,18 @@ type EcpmOverviewKpiParams = {
   t_end_date: string
   platform: string
   source?: string
-  s_app_id?: string
+  /** 页面筛选的应用 ID；写入网关时为 `appIds: string[]`（见 `normalizeEcpmOverviewRequestBody`） */
+  s_app_id?: string | string[]
   s_country_code?: string
+}
+
+/** 与 IAP `normalizeIapOverviewBody` 一致：POST 体使用 `appIds`，不限为 `[]` */
+function normalizeEcpmOverviewRequestBody(params: EcpmOverviewKpiParams) {
+  const { s_app_id, ...rest } = params
+  return {
+    ...rest,
+    ...buildAppSelectionRequestBody(s_app_id)
+  }
 }
 
 /** ECPM 分析 - 顶部 KPI POST .../overview/kpis */
@@ -179,7 +206,7 @@ export async function fetchEcpmOverviewKpis(params: EcpmOverviewKpiParams) {
   }
   const raw = await request.post<unknown>({
     url: `${ECPM_ANALYSIS_BASE}/overview/kpis`,
-    data: params
+    data: normalizeEcpmOverviewRequestBody(params)
   })
   return normalizeEcpmOverviewKpis(unwrapIaaPayload<EcpmOverviewKpis>(raw))
 }
@@ -207,7 +234,7 @@ export async function fetchEcpmOverviewTrend(params: EcpmOverviewKpiParams) {
   }
   const raw = await request.post<unknown>({
     url: `${ECPM_ANALYSIS_BASE}/overview/trend`,
-    data: params
+    data: normalizeEcpmOverviewRequestBody(params)
   })
   return normalizeEcpmTrendBundle(unwrapIaaPayload<EcpmTrendBundle>(raw))
 }
@@ -286,7 +313,7 @@ export async function fetchEcpmTablePlatform(params: EcpmOverviewKpiParams) {
   }
   const raw = await request.post<unknown>({
     url: `${ECPM_ANALYSIS_BASE}/table/platform`,
-    data: params
+    data: normalizeEcpmOverviewRequestBody(params)
   })
   return normalizeEcpmPlatformTableResponse(unwrapIaaPayload<EcpmPlatformTableResponse>(raw))
 }
@@ -326,7 +353,7 @@ export async function fetchEcpmOverviewMapCountry(params: EcpmMapCountryParams) 
   }
   const raw = await request.post<unknown>({
     url: `${ECPM_ANALYSIS_BASE}/overview/map-country`,
-    data: params
+    data: normalizeEcpmOverviewRequestBody(params)
   })
   return normalizeEcpmMapCountryResponse(unwrapIaaPayload<EcpmMapCountryResponse>(raw))
 }
@@ -366,7 +393,7 @@ export async function fetchEcpmOverviewTop10Country(params: EcpmTop10CountryPara
   }
   const raw = await request.post<unknown>({
     url: `${ECPM_ANALYSIS_BASE}/overview/top10-country`,
-    data: params
+    data: normalizeEcpmOverviewRequestBody(params)
   })
   return normalizeEcpmTop10CountryResponse(unwrapIaaPayload<EcpmTop10CountryResponse>(raw))
 }
@@ -406,7 +433,7 @@ export async function fetchEcpmOverviewAdSlotRanking(params: EcpmOverviewKpiPara
   }
   const raw = await request.post<unknown>({
     url: `${ECPM_ANALYSIS_BASE}/overview/ad-slot-ranking`,
-    data: params
+    data: normalizeEcpmOverviewRequestBody(params)
   })
   return normalizeEcpmAdSlotRankingResponse(unwrapIaaPayload<EcpmAdSlotRankingResponse>(raw))
 }
@@ -446,7 +473,7 @@ export async function fetchEcpmOverviewAppRanking(params: EcpmOverviewKpiParams)
   }
   const raw = await request.post<unknown>({
     url: `${ECPM_ANALYSIS_BASE}/overview/app-ranking`,
-    data: params
+    data: normalizeEcpmOverviewRequestBody(params)
   })
   return normalizeEcpmAppRankingResponse(unwrapIaaPayload<EcpmAppRankingResponse>(raw))
 }
@@ -471,7 +498,7 @@ export async function fetchEcpmOverviewInsightTip(params: EcpmOverviewKpiParams)
   }
   const raw = await request.post<unknown>({
     url: `${ECPM_ANALYSIS_BASE}/overview/insight-tip`,
-    data: params
+    data: normalizeEcpmOverviewRequestBody(params)
   })
   return normalizeEcpmInsightTipResponse(unwrapIaaPayload<EcpmInsightTipResponse>(raw))
 }
@@ -577,14 +604,15 @@ export type RevenueOverviewQualityMetricsResponse = {
   metrics: RevenueOverviewQualityMetric[]
 }
 
-function emptyIfAll(v: string | undefined, all = 'all') {
+function emptyIfAll(v: string | string[] | undefined, all = 'all') {
+  if (Array.isArray(v)) return v.filter((item) => String(item ?? '').trim() !== all)
   if (v === undefined || v === '' || v === all) return ''
   return v
 }
 
 function normalizeIaaBody(state: IaaFilterState) {
   return {
-    s_app_id: emptyIfAll(state.s_app_id),
+    ...buildAppSelectionRequestBody(emptyIfAll(state.s_app_id)),
     platform: emptyIfAll(state.platform),
     s_country_code: emptyIfAll(state.s_country_code),
     t_date: state.t_date
@@ -831,7 +859,7 @@ export async function fetchRevenueOverviewOverviewKpis(params: RevenueOverviewFi
   }
   const raw = await request.post<unknown>({
     url: `${REVENUE_OVERVIEW_BASE}/overview/kpis`,
-    data: params
+    data: { ...params, apps: toAppsRequestBody(params.appIds ?? []) }
   })
   return normalizeRevenueOverviewKpisResponse(unwrapIaaPayload<RevenueOverviewKpisResponse>(raw))
 }
@@ -840,6 +868,13 @@ const PROFIT_BASE = `${ANALYSIS_API_BASE}/business-insight/profit-analysis`
 
 /** 利润分析 - 顶栏筛选项 GET .../meta-filter-options（仅依赖全局 Token，无 query/body） */
 export function fetchProfitMetaFilterOptions() {
+  if (isProfitAnalysisEndpointMock(ProfitAnalysisEndpoint.MetaFilterOptions)) {
+    return Promise.resolve(
+      import('@/views/business-insight/profit-analysis/mock/profit-analysis-api-mock').then((m) =>
+        m.mockFetchProfitMetaFilterOptions()
+      )
+    )
+  }
   return request.get<ProfitFilterOptions>({
     url: `${PROFIT_BASE}/meta-filter-options`
   })
@@ -862,7 +897,7 @@ export async function fetchRevenueOverviewIaaAdType(params: RevenueOverviewFilte
   }
   const raw = await request.post<unknown>({
     url: `${REVENUE_OVERVIEW_BASE}/overview/iaa/ad-type`,
-    data: params
+    data: { ...params, apps: toAppsRequestBody(params.appIds ?? []) }
   })
   return normalizeRevenueOverviewIaaAdTypeResponse(
     unwrapIaaPayload<RevenueOverviewIaaAdTypeResponse>(raw)
@@ -886,7 +921,7 @@ export async function fetchRevenueOverviewIaaPlatform(params: RevenueOverviewFil
   }
   const raw = await request.post<unknown>({
     url: `${REVENUE_OVERVIEW_BASE}/overview/iaa/platform`,
-    data: params
+    data: { ...params, apps: toAppsRequestBody(params.appIds ?? []) }
   })
   return normalizeRevenueOverviewIaaPlatformResponse(
     unwrapIaaPayload<RevenueOverviewIaaPlatformResponse>(raw)
@@ -910,7 +945,7 @@ export async function fetchRevenueOverviewIaaAdUnit(params: RevenueOverviewFilte
   }
   const raw = await request.post<unknown>({
     url: `${REVENUE_OVERVIEW_BASE}/overview/iaa/ad-unit`,
-    data: params
+    data: { ...params, apps: toAppsRequestBody(params.appIds ?? []) }
   })
   return normalizeRevenueOverviewIaaAdUnitResponse(
     unwrapIaaPayload<RevenueOverviewIaaAdUnitResponse>(raw)
@@ -934,7 +969,7 @@ export async function fetchRevenueOverviewIaaCountry(params: RevenueOverviewFilt
   }
   const raw = await request.post<unknown>({
     url: `${REVENUE_OVERVIEW_BASE}/overview/iaa/country`,
-    data: params
+    data: { ...params, apps: toAppsRequestBody(params.appIds ?? []) }
   })
   return normalizeRevenueOverviewIaaCountryResponse(
     unwrapIaaPayload<RevenueOverviewIaaCountryResponse>(raw)
@@ -958,7 +993,7 @@ export async function fetchRevenueOverviewIaaVersion(params: RevenueOverviewFilt
   }
   const raw = await request.post<unknown>({
     url: `${REVENUE_OVERVIEW_BASE}/overview/iaa/version`,
-    data: params
+    data: { ...params, apps: toAppsRequestBody(params.appIds ?? []) }
   })
   return normalizeRevenueOverviewIaaVersionResponse(
     unwrapIaaPayload<RevenueOverviewIaaVersionResponse>(raw)
@@ -999,7 +1034,7 @@ export async function fetchRevenueOverviewIapProduct(params: RevenueOverviewFilt
   }
   const raw = await request.post<unknown>({
     url: `${REVENUE_OVERVIEW_BASE}/overview/iap/product`,
-    data: params
+    data: { ...params, apps: toAppsRequestBody(params.appIds ?? []) }
   })
   return normalizeRevenueOverviewIapProductResponse(
     unwrapIaaPayload<RevenueOverviewIapProductResponse>(raw)
@@ -1031,7 +1066,7 @@ export async function fetchRevenueOverviewIapChannel(params: RevenueOverviewFilt
   }
   const raw = await request.post<unknown>({
     url: `${REVENUE_OVERVIEW_BASE}/overview/iap/channel`,
-    data: params
+    data: { ...params, apps: toAppsRequestBody(params.appIds ?? []) }
   })
   return normalizeRevenueOverviewIapChannelResponse(
     unwrapIaaPayload<RevenueOverviewIapChannelResponse>(raw)
@@ -1069,7 +1104,7 @@ export async function fetchRevenueOverviewIapTrend(params: RevenueOverviewFilter
   }
   const raw = await request.post<unknown>({
     url: `${REVENUE_OVERVIEW_BASE}/overview/iap/trend`,
-    data: params
+    data: { ...params, apps: toAppsRequestBody(params.appIds ?? []) }
   })
   return normalizeRevenueOverviewIapTrendResponse(
     unwrapIaaPayload<RevenueOverviewIapTrendResponse>(raw)
@@ -1099,7 +1134,7 @@ export async function fetchRevenueOverviewTrend7dIaaIap(params: RevenueOverviewF
   }
   const raw = await request.post<unknown>({
     url: `${REVENUE_OVERVIEW_BASE}/overview/trend-7d/iaa-iap`,
-    data: params
+    data: { ...params, apps: toAppsRequestBody(params.appIds ?? []) }
   })
   return normalizeRevenueOverviewTrend7dIaaIapResponse(
     unwrapIaaPayload<RevenueOverviewTrend7dIaaIapResponse>(raw)
@@ -1129,7 +1164,7 @@ export async function fetchRevenueOverviewTrend7dEcpm(params: RevenueOverviewFil
   }
   const raw = await request.post<unknown>({
     url: '/api/v1/datacenter/analysis/business-insight/revenue-overview/overview/trend-7d/ecpm',
-    data: params
+    data: { ...params, apps: toAppsRequestBody(params.appIds ?? []) }
   })
   return normalizeRevenueOverviewTrend7dEcpmResponse(
     unwrapIaaPayload<RevenueOverviewTrend7dEcpmResponse>(raw)
@@ -1153,7 +1188,7 @@ export async function fetchRevenueOverviewPlatformPie(params: RevenueOverviewFil
   }
   const raw = await request.post<unknown>({
     url: '/api/v1/datacenter/analysis/business-insight/revenue-overview/overview/platform-pie',
-    data: params
+    data: { ...params, apps: toAppsRequestBody(params.appIds ?? []) }
   })
   return normalizeRevenueOverviewPlatformPieResponse(
     unwrapIaaPayload<RevenueOverviewPlatformPieResponse>(raw)
@@ -1177,7 +1212,7 @@ export async function fetchRevenueOverviewTopCountries(params: RevenueOverviewFi
   }
   const raw = await request.post<unknown>({
     url: '/api/v1/datacenter/analysis/business-insight/revenue-overview/overview/top-countries',
-    data: params
+    data: { ...params, apps: toAppsRequestBody(params.appIds ?? []) }
   })
   return normalizeRevenueOverviewTopCountriesResponse(
     unwrapIaaPayload<RevenueOverviewTopCountriesResponse>(raw)
@@ -1202,7 +1237,7 @@ export async function fetchRevenueOverviewAiInsight(params: RevenueOverviewFilte
   }
   const raw = await request.post<unknown>({
     url: '/api/v1/datacenter/analysis/business-insight/revenue-overview/overview/ai-insight',
-    data: params
+    data: { ...params, apps: toAppsRequestBody(params.appIds ?? []) }
   })
   return normalizeRevenueOverviewAiInsightResponse(
     unwrapIaaPayload<RevenueOverviewAiInsightResponse>(raw)
@@ -1226,7 +1261,7 @@ export async function fetchRevenueOverviewQualityMetrics(params: RevenueOverview
   }
   const raw = await request.post<unknown>({
     url: '/api/v1/datacenter/analysis/business-insight/revenue-overview/overview/quality-metrics',
-    data: params
+    data: { ...params, apps: toAppsRequestBody(params.appIds ?? []) }
   })
   return normalizeRevenueOverviewQualityMetricsResponse(
     unwrapIaaPayload<RevenueOverviewQualityMetricsResponse>(raw)
@@ -1234,42 +1269,75 @@ export async function fetchRevenueOverviewQualityMetrics(params: RevenueOverview
 }
 
 /** 利润分析 - 顶部 KPI POST .../overview/kpi，body 扁平 ProfitAnalysisQueryParams */
+function normalizeProfitAnalysisBody(params: ProfitAnalysisQueryParams) {
+  const { sAppId, ...rest } = params
+  return {
+    ...rest,
+    ...buildAppSelectionRequestBody(sAppId === 'all' ? '' : (sAppId ?? ''))
+  }
+}
+
 export function fetchProfitOverviewKpi(fo: ProfitAnalysisQueryParams) {
+  if (isProfitAnalysisEndpointMock(ProfitAnalysisEndpoint.OverviewKpi)) {
+    return import('@/views/business-insight/profit-analysis/mock/profit-analysis-api-mock').then(
+      (m) => m.mockFetchProfitOverviewKpi()
+    )
+  }
   return request.post<ProfitKpiOverviewDto>({
     url: `${PROFIT_BASE}/overview/kpi`,
-    data: fo
+    data: normalizeProfitAnalysisBody(fo)
   })
 }
 
 /** 利润分析 - 应用利润详情表 POST .../table/app-profit */
 export function fetchProfitTableAppProfit(fo: ProfitAnalysisQueryParams) {
+  if (isProfitAnalysisEndpointMock(ProfitAnalysisEndpoint.TableAppProfit)) {
+    return import('@/views/business-insight/profit-analysis/mock/profit-analysis-api-mock').then(
+      (m) => m.mockFetchProfitTableAppProfit()
+    )
+  }
   return request.post<ProfitAppProfitResponseDto>({
     url: `${PROFIT_BASE}/table/app-profit`,
-    data: fo
+    data: normalizeProfitAnalysisBody(fo)
   })
 }
 
 /** 利润分析 - 国家利润分布 POST .../overview/country-profit */
 export function fetchProfitOverviewCountryProfit(fo: ProfitAnalysisQueryParams) {
+  if (isProfitAnalysisEndpointMock(ProfitAnalysisEndpoint.OverviewCountryProfit)) {
+    return import('@/views/business-insight/profit-analysis/mock/profit-analysis-api-mock').then(
+      (m) => m.mockFetchProfitOverviewCountryProfit()
+    )
+  }
   return request.post<ProfitCountryProfitResponseDto>({
     url: `${PROFIT_BASE}/overview/country-profit`,
-    data: fo
+    data: normalizeProfitAnalysisBody(fo)
   })
 }
 
 /** 利润分析 - 近 30 天趋势 POST .../profit-analysis/overview/trend30d，响应 data 为 ProfitTrend30d */
 export function fetchProfitOverviewTrend30d(fo: ProfitAnalysisQueryParams) {
+  if (isProfitAnalysisEndpointMock(ProfitAnalysisEndpoint.OverviewTrend30d)) {
+    return import('@/views/business-insight/profit-analysis/mock/profit-analysis-api-mock').then(
+      (m) => m.mockFetchProfitOverviewTrend30d()
+    )
+  }
   return request.post<ProfitTrend30d>({
     url: `${PROFIT_BASE}/overview/trend30d`,
-    data: fo
+    data: normalizeProfitAnalysisBody(fo)
   })
 }
 
 /** 利润分析 - 利润构成桑基图 POST .../overview/sankey */
 export function fetchProfitOverviewSankey(fo: ProfitAnalysisQueryParams) {
+  if (isProfitAnalysisEndpointMock(ProfitAnalysisEndpoint.OverviewSankey)) {
+    return import('@/views/business-insight/profit-analysis/mock/profit-analysis-api-mock').then(
+      (m) => m.mockFetchProfitOverviewSankey()
+    )
+  }
   return request.post<ProfitSankeyDto>({
     url: `${PROFIT_BASE}/overview/sankey`,
-    data: fo
+    data: normalizeProfitAnalysisBody(fo)
   })
 }
 
@@ -1286,7 +1354,7 @@ export async function fetchIaaAdTypeTabData(params: IaaFilterState) {
 
 type IaaOverviewUserBreakdownParams = {
   platform: string
-  s_app_id: string
+  s_app_id: string | string[]
   s_app_version: string
   s_country_code: string
   t_date: string
@@ -1324,11 +1392,21 @@ function normalizeIaaOverviewUserBreakdown(
  * 新网关：POST /api/v1/datacenter/analysis/business-insight/iaa-analysis/overview/user-breakdown
  */
 export async function fetchIaaOverviewUserBreakdown(params: IaaOverviewUserBreakdownParams) {
+  const { s_app_id, ...rest } = params
   const raw = await request.post<unknown>({
     url: '/api/v1/datacenter/analysis/business-insight/iaa-analysis/overview/user-breakdown',
-    data: params
+    data: { ...rest, ...buildAppSelectionRequestBody(emptyIfAll(s_app_id)) }
   })
-  return normalizeIaaOverviewUserBreakdown(unwrapIaaPayload<IaaOverviewUserBreakdownResponse>(raw))
+  const unwrapped = unwrapIaaPayload<unknown>(raw)
+  const payload =
+    unwrapped &&
+    typeof unwrapped === 'object' &&
+    !Array.isArray(unwrapped) &&
+    'code' in (unwrapped as Record<string, unknown>) &&
+    'data' in (unwrapped as Record<string, unknown>)
+      ? ((unwrapped as Record<string, unknown>).data as IaaOverviewUserBreakdownResponse)
+      : (unwrapped as IaaOverviewUserBreakdownResponse)
+  return normalizeIaaOverviewUserBreakdown(payload)
 }
 
 export async function fetchIaaPlatformTabData(params: IaaFilterState) {

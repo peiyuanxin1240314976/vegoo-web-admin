@@ -1,0 +1,64 @@
+{
+  "_comment": "配置管理 - 用户管理 - 顶部统计卡片。对应 UserStats。",
+  "fieldDescription": {
+    "request": {},
+    "response": {
+      "total": {
+        "type": "number",
+        "required": true,
+        "description": "平台用户总数（所有状态），无数据时返回 0。"
+      },
+      "active": {
+        "type": "number",
+        "required": true,
+        "description": "当前在线用户数（status=1），无数据时返回 0。"
+      },
+      "disabled": {
+        "type": "number",
+        "required": true,
+        "description": "已禁用用户数（status=4），无数据时返回 0。"
+      },
+      "pending": {
+        "type": "number",
+        "required": true,
+        "description": "离线或异常用户数（status=2 或 status=3 之和），无数据时返回 0。"
+      }
+    }
+  },
+  "sampleRequest": {},
+  "sampleResponse": {
+    "total": 24,
+    "active": 8,
+    "disabled": 5,
+    "pending": 11
+  },
+  "api": {
+    "url": "POST /api/config-management/user/stats",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "无",
+    "responseBody": "{ total, active, disabled, pending }"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "该接口用于渲染页面顶部 4 个统计卡片，数字由服务端聚合计算，前端不再从列表接口 total 自行映射。",
+      "空数据场景保持返回 shape 稳定：所有字段为 0。"
+    ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "进入 /config-management/user-management 时，与列表接口并行请求统计卡片。",
+        "prerequisite": "登录态有效"
+      },
+      {
+        "moment": "用户操作",
+        "detail": "搜索、筛选、分页切换后，统计卡片应同步刷新。",
+        "prerequisite": "无"
+      }
+    ],
+    "defaultSelection": "无条件，返回全量聚合数据。",
+    "dedupe": "统计请求可与列表请求并发，互不影响。"
+  }
+}

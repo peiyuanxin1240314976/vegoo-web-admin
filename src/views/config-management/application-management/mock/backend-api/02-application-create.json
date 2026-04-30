@@ -2,10 +2,30 @@
   "_comment": "应用管理 - 新增。对应 types.ts: ApplicationFormPayload / ApplicationAppItem。",
   "fieldDescription": {
     "request": {
+      "id": {
+        "type": "string | null",
+        "required": false,
+        "description": "新增时可不传或传 null，由后端生成业务 ID。"
+      },
+      "appName": { "type": "string", "required": true, "description": "应用名称。" },
+      "platform": {
+        "type": "string",
+        "required": true,
+        "description": "平台：Android / iOS / Web。"
+      },
+      "category": { "type": "string", "required": true, "description": "应用类别。" },
+      "bundleId": { "type": "string", "required": true, "description": "Bundle ID。" },
+      "packageId": { "type": "string", "required": false, "description": "软件包 ID。" },
+      "iconFileKey": {
+        "type": "string",
+        "required": false,
+        "description": "图标上传后的文件标识或 URL。"
+      },
+      "creator": { "type": "string", "required": false, "description": "创建人。" },
       "body": {
         "type": "ApplicationFormPayload",
         "required": true,
-        "description": "表单提交，含 id/appName/platform/bundleId 等。"
+        "description": "完整表单提交体（含图标上传字段，不要求传 iconColor）。"
       }
     },
     "response": {
@@ -17,18 +37,20 @@
     }
   },
   "sampleRequest": {
-    "id": "NewApp01",
+    "id": null,
     "appName": "Demo",
     "platform": "Android",
     "category": "Weather",
     "bundleId": "com.demo.app",
     "packageId": "com.demo.app",
+    "iconFileKey": "oss://app-icons/demo.png",
     "creator": "系统"
   },
   "sampleResponse": {
-    "id": "NewApp01",
+    "id": "APP1711524600000",
     "appName": "Demo",
     "iconColor": "hsl(200 42% 46%)",
+    "iconUrl": "https://cdn.example.com/app-icons/demo.png",
     "platform": "Android",
     "bundleId": "com.demo.app",
     "packageId": "com.demo.app",

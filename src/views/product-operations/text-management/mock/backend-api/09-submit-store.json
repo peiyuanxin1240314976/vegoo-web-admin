@@ -1,0 +1,77 @@
+{
+  "_comment": "预演框架 - 提交到商店后台任务。",
+  "fieldDescription": {
+    "request": {
+      "appContent": { "type": "AppContent", "required": true, "description": "主文案。" },
+      "translations": {
+        "type": "Translation[]",
+        "required": true,
+        "description": "待提交译文列表。"
+      },
+      "platform": {
+        "type": "string",
+        "required": true,
+        "enum": ["google_play", "app_store", "huawei"],
+        "description": "目标商店平台。"
+      }
+    },
+    "response": {
+      "data": { "type": "SubmitStoreResult", "required": true, "description": "提交任务信息。" }
+    },
+    "SubmitStoreResult": {
+      "taskId": { "type": "string", "required": true, "description": "后台任务ID。" },
+      "status": {
+        "type": "string",
+        "required": true,
+        "enum": ["queued", "processing"],
+        "description": "任务状态。"
+      },
+      "submittedAt": { "type": "string", "required": true, "description": "提交时间（ISO 8601）。" }
+    }
+  },
+  "interaction": {
+    "triggers": [
+      { "moment": "步骤三点击“提交到商店后台”", "detail": "提交当前文案与译文，创建上架任务。" }
+    ]
+  },
+  "sampleRequest": {
+    "appContent": {
+      "appName": "People Search, People Finder",
+      "shortDesc": "AI People Search, People Finder",
+      "fullDesc": "information across multiple open sources."
+    },
+    "translations": [
+      {
+        "id": "1",
+        "lang": "简体中文",
+        "langCode": "zh-CN",
+        "status": "completed",
+        "appName": "人物搜索，人物查找器",
+        "shortDesc": "AI人物搜索，按姓名查找人物",
+        "fullDesc": "跨多个公开来源的信息。",
+        "appNameCount": 8,
+        "shortDescCount": 15,
+        "fullDescCount": 12,
+        "appNameLimit": 30,
+        "shortDescLimit": 80,
+        "fullDescLimit": 4000,
+        "selected": false
+      }
+    ],
+    "platform": "google_play"
+  },
+  "sampleResponse": {
+    "data": {
+      "taskId": "tm-submit-20260409-001",
+      "status": "queued",
+      "submittedAt": "2026-04-09T20:35:00.000Z"
+    }
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/product-operations/text-management/action/submit-store",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "appContent, translations, platform",
+    "responseBody": "SubmitStoreResult"
+  }
+}

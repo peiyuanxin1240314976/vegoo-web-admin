@@ -1,0 +1,45 @@
+{
+  "data": [
+    {
+      "id": "cpiToday",
+      "title": "今日CPI（综合）",
+      "subTitle": "安装成本",
+      "primaryValue": "$2.38",
+      "trendText": "5.20%",
+      "trendUp": true,
+      "trendCompareLabel": "vs昨日"
+    },
+    {
+      "id": "installsToday",
+      "title": "今日安装数",
+      "subTitle": "买量用户",
+      "primaryValue": "42,156",
+      "trendText": "2.30%",
+      "trendUp": true
+    },
+    {
+      "id": "ecpmKpi",
+      "title": "ECPM",
+      "subTitle": "广告变现效率",
+      "primaryValue": "19.20",
+      "trendText": "5.20%",
+      "trendUp": true
+    },
+    {
+      "id": "roiD1Comprehensive",
+      "title": "首日ROI（综合）",
+      "subTitle": "回收率",
+      "primaryValue": "87%",
+      "trendText": "2.10%",
+      "trendUp": true
+    },
+    {
+      "id": "estProfit",
+      "title": "预估利润",
+      "subTitle": "今日",
+      "primaryValue": "$3,358",
+      "trendText": "8.40%",
+      "trendUp": true
+    }
+  ]
+}

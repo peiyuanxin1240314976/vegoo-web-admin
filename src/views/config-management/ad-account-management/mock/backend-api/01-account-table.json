@@ -1,0 +1,192 @@
+{
+  "_comment": "Ad account management - paginated table query. Used by search, filters, pagination and table rendering. Dimension values align with GET cockpit/meta-filter-options (appOptions/platformOptions/sourceOptions value).",
+  "fieldDescription": {
+    "request": {
+      "current": {
+        "type": "number",
+        "required": true,
+        "description": "Current page number, starts from 1."
+      },
+      "size": { "type": "number", "required": true, "description": "Page size." },
+      "keyword": {
+        "type": "string",
+        "required": false,
+        "description": "Fuzzy keyword for appName, appId and managerAccount. Empty string means no keyword filter."
+      },
+      "appId": {
+        "type": "string",
+        "required": false,
+        "description": "App filter; value matches cockpit appOptions[].value (e.g. package id). Empty string means all."
+      },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "description": "Terminal platform filter; value matches cockpit platformOptions[].value (e.g. \"0\" Android, \"1\" iOS). Empty string means all."
+      },
+      "source": {
+        "type": "string",
+        "required": false,
+        "description": "Ad platform filter; value matches cockpit sourceOptions[].value (string enum). Empty string means all."
+      },
+      "status": {
+        "type": "string",
+        "required": false,
+        "enum": ["", "enabled", "disabled"],
+        "description": "Status filter. Empty string means all."
+      }
+    },
+    "response": {
+      "records": {
+        "type": "AdAccountRow[]",
+        "required": true,
+        "description": "Current page records. Return [] when no data."
+      },
+      "current": { "type": "number", "required": true, "description": "Current page number." },
+      "size": { "type": "number", "required": true, "description": "Page size." },
+      "total": { "type": "number", "required": true, "description": "Total matched rows." }
+    },
+    "AdAccountRow": {
+      "id": { "type": "number", "required": true, "description": "Primary key ID." },
+      "status": {
+        "type": "string",
+        "required": true,
+        "enum": ["enabled", "disabled"],
+        "description": "Account status."
+      },
+      "appId": {
+        "type": "string",
+        "required": true,
+        "description": "Application id; same value domain as cockpit appOptions[].value."
+      },
+      "appName": {
+        "type": "string",
+        "required": true,
+        "description": "Application display name for UI."
+      },
+      "platform": {
+        "type": "string",
+        "required": true,
+        "description": "Terminal platform value; same value domain as cockpit platformOptions[].value."
+      },
+      "source": {
+        "type": "string",
+        "required": true,
+        "description": "Ad platform value; same value domain as cockpit sourceOptions[].value."
+      },
+      "managerAccount": {
+        "type": "string",
+        "required": true,
+        "description": "Manager account ID or name."
+      },
+      "adAccounts": {
+        "type": "string[]",
+        "required": true,
+        "description": "Ad account ID list. Return [] when not configured."
+      },
+      "credential": {
+        "type": "string",
+        "required": true,
+        "description": "Credential name. Empty string is allowed."
+      },
+      "token": {
+        "type": "string|null",
+        "required": true,
+        "description": "Raw token value or null. Frontend masks it by itself."
+      }
+    }
+  },
+  "sampleRequest": {
+    "current": 1,
+    "size": 10,
+    "keyword": "",
+    "appId": "",
+    "platform": "",
+    "source": "",
+    "status": ""
+  },
+  "sampleResponse": {
+    "records": [
+      {
+        "id": 101,
+        "status": "enabled",
+        "appId": "com.accurate.weather.forecast.live",
+        "appName": "Weather5",
+        "platform": "0",
+        "source": "1",
+        "managerAccount": "560-369-9741",
+        "adAccounts": ["385-510-4056", "250-161-1888", "542-141-4898", "292-126-4627"],
+        "credential": "AdCost",
+        "token": "32ba778abac3978d34a0a46db475d7147f1997b8"
+      },
+      {
+        "id": 102,
+        "status": "enabled",
+        "appId": "com.accurate.local.weather.forecast.live",
+        "appName": "Weather6",
+        "platform": "1",
+        "source": "10",
+        "managerAccount": "744708116631368720",
+        "adAccounts": ["744708116631368721", "744708116631368722"],
+        "credential": "TikTokGlobalMain",
+        "token": "tt_x9w2k4v8c1m5n7p3s6d0f2g4h8j1"
+      },
+      {
+        "id": 103,
+        "status": "enabled",
+        "appId": "com.accurate.live.weather.widget",
+        "appName": "Weather8",
+        "platform": "0",
+        "source": "9",
+        "managerAccount": "vegoo",
+        "adAccounts": [],
+        "credential": "MintegralAdCost1",
+        "token": null
+      },
+      {
+        "id": 104,
+        "status": "disabled",
+        "appId": "com.accurate.local.live.weather",
+        "appName": "Weather9",
+        "platform": "1",
+        "source": "20",
+        "managerAccount": "196006482456592752",
+        "adAccounts": [],
+        "credential": "NewsBreakCost2",
+        "token": null
+      }
+    ],
+    "current": 1,
+    "size": 10,
+    "total": 4
+  },
+  "api": {
+    "url": "POST /api/config-management/ad-account-management/account/table",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "current, size, keyword?, appId?, platform?, source?, status?",
+    "responseBody": "Api.Common.PaginatedResponse<AdAccountRow>"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "Return records: [] and total: 0 when there is no data.",
+      "Do server-side pagination by current and size.",
+      "Token can be returned as raw value or null because masking is handled on the frontend.",
+      "appId/platform/source filter values must match cockpit meta-filter-options option values."
+    ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "page init",
+        "detail": "Load table data when /config-management/ad-account-management is opened.",
+        "prerequisite": "none"
+      },
+      {
+        "moment": "user action",
+        "detail": "Reload when keyword, appId, platform, source, status, current or size changes."
+      }
+    ],
+    "defaultSelection": "keyword, appId, platform, source and status default to empty string. current defaults to 1 and size defaults to 10.",
+    "dedupe": "Use the latest request result when filters change quickly."
+  }
+}

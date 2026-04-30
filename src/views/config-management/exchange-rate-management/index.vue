@@ -1,223 +1,257 @@
 <template>
-  <div class="er-page art-full-height">
-    <!-- ── 页面头部 ─────────────────────────────────────── -->
-    <div class="page-header">
-      <span class="breadcrumb">
-        <span class="bc-parent">系统管理</span>
-        <span class="bc-sep">›</span>
-        <span class="bc-current">汇率管理</span>
-      </span>
-      <div class="header-actions">
-        <ElButton round class="btn-sync" @click="openSyncDialog">
-          <ElIcon><Refresh /></ElIcon>同步汇率
-        </ElButton>
-        <ElButton round class="btn-secondary" @click="manualVisible = true">
-          <ElIcon><Edit /></ElIcon>手动输入
-        </ElButton>
-        <ElButton round class="btn-secondary" @click="handleExport">
-          <ElIcon><Download /></ElIcon>导出
-        </ElButton>
-        <ElDatePicker
-          v-model="filterDate"
-          type="date"
-          placeholder="选择日期"
-          value-format="YYYY-MM-DD"
-          class="header-date"
-        />
-        <el-select v-model="filterPair" placeholder="货币对 全部" class="header-select" clearable>
-          <el-option v-for="p in ALL_CURRENCY_PAIRS" :key="p" :label="p" :value="p" />
-        </el-select>
-      </div>
-    </div>
-
-    <!-- ── 内容区：左右两列 ─────────────────────────────── -->
-    <div class="content-grid">
-      <!-- 左列：KPI四卡 + 汇率列表表格 -->
-      <div class="left-col">
-        <!-- KPI 四卡 -->
-        <div class="kpi-row">
-          <div class="kpi-card kpi-card--teal">
-            <div class="kpi-icon-wrap kpi-icon-wrap--teal">💱</div>
-            <div class="kpi-body">
-              <div class="kpi-label">已配置货币对</div>
-              <div class="kpi-value kpi-value--teal"
-                >{{ kpi.total }}<span class="kpi-unit">对</span></div
-              >
-            </div>
-            <div class="kpi-accent kpi-accent--teal" />
+  <div class="account-sub-page credential-page er-page art-full-height">
+    <div class="account-sub-page__toolbar">
+      <div class="account-sub-page__toolbar-fx" aria-hidden="true" />
+      <div class="account-sub-page__toolbar-row">
+        <div class="account-sub-page__toolbar-copy">
+          <span class="account-sub-page__toolbar-line" aria-hidden="true" />
+          <div class="account-sub-page__toolbar-titles">
+            <span class="account-sub-page__toolbar-eyebrow">FX</span>
+            <span class="account-sub-page__toolbar-title">汇率管理</span>
           </div>
-          <div class="kpi-card kpi-card--blue">
-            <div class="kpi-icon-wrap kpi-icon-wrap--blue">🕐</div>
-            <div class="kpi-body">
-              <div class="kpi-label">最后同步时间</div>
-              <div class="kpi-value kpi-value--blue kpi-value--sm">{{ kpi.lastSyncLabel }}</div>
-            </div>
-            <div class="kpi-accent kpi-accent--blue" />
-          </div>
-          <div class="kpi-card kpi-card--amber">
-            <div class="kpi-icon-wrap kpi-icon-wrap--amber">⚠️</div>
-            <div class="kpi-body">
-              <div class="kpi-label">异常汇率</div>
-              <div class="kpi-value kpi-value--amber">
-                {{ kpi.abnormal }}<span class="kpi-unit">个</span>
-              </div>
-              <div class="kpi-sub">偏差超过 {{ syncConfig.alertThreshold }}%</div>
-            </div>
-            <div class="kpi-accent kpi-accent--amber" />
-          </div>
-          <div class="kpi-card kpi-card--source">
-            <div class="kpi-icon-wrap kpi-icon-wrap--teal">🔗</div>
-            <div class="kpi-body">
-              <div class="kpi-label">数据来源</div>
-              <div class="kpi-value kpi-value--source">Open Exchange</div>
-            </div>
-            <div class="kpi-accent kpi-accent--teal" />
-          </div>
+          <span class="account-sub-page__toolbar-hint">同步、手动维护、走势与异常阈值</span>
         </div>
-
-        <!-- 表格 -->
-        <div class="table-panel">
-          <el-table
-            :data="rateList"
-            class="rate-table"
-            style="width: 100%"
-            @row-click="handleRowClick"
+        <div class="account-sub-page__toolbar-actions">
+          <ElButton
+            type="primary"
+            round
+            class="account-sub-page__btn-primary"
+            @click="openSyncDialog"
           >
-            <el-table-column prop="pair" label="货币对" min-width="90" show-overflow-tooltip />
-            <el-table-column label="当前汇率" min-width="100" align="right">
-              <template #default="{ row }">
-                <span class="rate-val">{{ formatRate(row.currentRate) }}</span>
-              </template>
-            </el-table-column>
-            <el-table-column label="昨日汇率" min-width="100" align="right">
-              <template #default="{ row }">
-                <span class="rate-val rate-val--dim">{{ formatRate(row.yesterdayRate) }}</span>
-              </template>
-            </el-table-column>
-            <el-table-column label="变动幅度" min-width="100" align="center">
-              <template #default="{ row }">
-                <span
-                  :class="[
-                    'change-badge',
-                    row.changePercent >= 0 ? 'change-badge--up' : 'change-badge--down'
-                  ]"
-                >
-                  {{ row.changePercent >= 0 ? '▲' : '▼' }}
-                  {{ Math.abs(row.changePercent).toFixed(2) }}%
-                </span>
-              </template>
-            </el-table-column>
-            <el-table-column prop="lastUpdated" label="最后更新" min-width="90" align="center" />
-            <el-table-column label="数据来源" min-width="90" align="center">
-              <template #default="{ row }">
-                <span
-                  :class="[
-                    'source-tag',
-                    row.dataSource === 'manual' ? 'source-tag--manual' : 'source-tag--auto'
-                  ]"
-                >
-                  {{ row.dataSource === 'manual' ? '手动' : '自动同步' }}
-                </span>
-              </template>
-            </el-table-column>
-            <el-table-column label="操作" width="90" align="center" fixed="right">
-              <template #default="{ row }">
-                <button
-                  :class="['override-btn', row.overrideAuto && 'override-btn--active']"
-                  @click.stop="toggleOverride(row)"
-                >
-                  {{ row.overrideAuto ? '已覆盖' : '覆盖' }}
-                </button>
-              </template>
-            </el-table-column>
-          </el-table>
-
-          <div class="pagination-bar">
-            <span class="total-text">共 {{ serverTotal }} 条</span>
-            <el-pagination
-              v-model:current-page="currentPage"
-              :page-size="pageSize"
-              :total="serverTotal"
-              layout="prev, pager, next"
-              class="er-pagination"
-            />
-          </div>
-        </div>
-      </div>
-
-      <!-- 右列：走势图 + 同步设置 -->
-      <div class="right-col">
-        <!-- 走势图 -->
-        <div class="chart-card">
-          <div class="chart-header">
-            <span class="chart-title">{{ activePair }} 走势（30天）</span>
-          </div>
-          <div ref="lineEl" class="line-chart" />
-        </div>
-
-        <!-- 同步设置 -->
-        <div class="settings-card">
-          <div class="settings-title">同步设置</div>
-
-          <div class="settings-item">
-            <span class="settings-label">同步频率</span>
-            <div class="freq-tabs">
-              <button
-                v-for="f in FREQ_OPTIONS"
-                :key="f.value"
-                :class="['freq-tab', syncConfig.frequency === f.value && 'freq-tab--active']"
-                @click="syncConfig.frequency = f.value"
-              >
-                {{ f.label }}
-              </button>
-            </div>
-          </div>
-
-          <div class="settings-item">
-            <span class="settings-label">异常预警阈值</span>
-            <div class="threshold-row">
-              <span class="threshold-prefix">偏差超过</span>
-              <ElInputNumber
-                v-model="syncConfig.alertThreshold"
-                :min="1"
-                :max="50"
-                :step="1"
-                class="threshold-input"
-                controls-position="right"
-              />
-              <span class="threshold-suffix">% 时发送警告</span>
-            </div>
-          </div>
-
-          <div class="settings-item">
-            <span class="settings-label">数据来源</span>
-            <div class="source-row">
-              <span class="source-name">Open Exchange Rates API</span>
-              <span class="source-status source-status--ok">已连接 ✓</span>
-            </div>
-          </div>
-
-          <div class="settings-item">
-            <span class="settings-label">备用来源</span>
-            <div class="source-row">
-              <span class="source-name">Fixer.io</span>
-              <ElSwitch
-                v-model="syncConfig.backupSourceEnabled"
-                active-color="#2dd4bf"
-                class="backup-switch"
-              />
-            </div>
-          </div>
-
-          <ElButton round class="btn-save-settings" @click="handleSaveSettings">保存设置</ElButton>
+            <ElIcon><Refresh /></ElIcon>同步汇率
+          </ElButton>
+          <ElButton round class="account-sub-page__btn-secondary" @click="manualVisible = true">
+            <ElIcon><Edit /></ElIcon>手动输入
+          </ElButton>
+          <ElButton round class="account-sub-page__btn-secondary" @click="handleExport">
+            <ElIcon><Download /></ElIcon>导出
+          </ElButton>
         </div>
       </div>
     </div>
+
+    <section class="account-sub-page__list-panel credential-page__panel" aria-label="汇率管理">
+      <div class="account-sub-page__list-panel-fx" aria-hidden="true" />
+      <div class="account-sub-page__list-panel-body credential-page__panel-body">
+        <div class="er-filter-bar">
+          <AppDatePicker
+            v-model="filterDate"
+            type="date"
+            placeholder="选择日期"
+            value-format="YYYY-MM-DD"
+            class="header-date"
+          />
+          <el-select v-model="filterPair" placeholder="货币对 全部" class="header-select" clearable>
+            <el-option v-for="p in ALL_CURRENCY_PAIRS" :key="p" :label="p" :value="p" />
+          </el-select>
+        </div>
+
+        <!-- ── 内容区：左右两列 ─────────────────────────────── -->
+        <div class="content-grid">
+          <!-- 左列：KPI四卡 + 汇率列表表格 -->
+          <div class="left-col">
+            <!-- KPI 四卡 -->
+            <div class="kpi-row">
+              <div class="kpi-card kpi-card--teal">
+                <div class="kpi-icon-wrap kpi-icon-wrap--teal">💱</div>
+                <div class="kpi-body">
+                  <div class="kpi-label">已配置货币对</div>
+                  <div class="kpi-value kpi-value--teal"
+                    >{{ kpi.total }}<span class="kpi-unit">对</span></div
+                  >
+                </div>
+                <div class="kpi-accent kpi-accent--teal" />
+              </div>
+              <div class="kpi-card kpi-card--blue">
+                <div class="kpi-icon-wrap kpi-icon-wrap--blue">🕐</div>
+                <div class="kpi-body">
+                  <div class="kpi-label">最后同步时间</div>
+                  <div class="kpi-value kpi-value--blue kpi-value--sm">{{ kpi.lastSyncLabel }}</div>
+                </div>
+                <div class="kpi-accent kpi-accent--blue" />
+              </div>
+              <div class="kpi-card kpi-card--amber">
+                <div class="kpi-icon-wrap kpi-icon-wrap--amber">⚠️</div>
+                <div class="kpi-body">
+                  <div class="kpi-label">异常汇率</div>
+                  <div class="kpi-value kpi-value--amber">
+                    {{ kpi.abnormal }}<span class="kpi-unit">个</span>
+                  </div>
+                  <div class="kpi-sub">偏差超过 {{ syncConfig.alertThreshold }}%</div>
+                </div>
+                <div class="kpi-accent kpi-accent--amber" />
+              </div>
+              <div class="kpi-card kpi-card--source">
+                <div class="kpi-icon-wrap kpi-icon-wrap--teal">🔗</div>
+                <div class="kpi-body">
+                  <div class="kpi-label">数据来源</div>
+                  <div class="kpi-value kpi-value--source">{{ kpi.dataSourceLabel }}</div>
+                </div>
+                <div class="kpi-accent kpi-accent--teal" />
+              </div>
+            </div>
+
+            <!-- 表格 -->
+            <div class="table-panel">
+              <el-table
+                :data="rateList"
+                class="rate-table"
+                style="width: 100%"
+                @row-click="handleRowClick"
+              >
+                <el-table-column prop="pair" label="货币对" min-width="90" show-overflow-tooltip />
+                <el-table-column label="当前汇率" min-width="100" align="right">
+                  <template #default="{ row }">
+                    <span class="rate-val">{{ formatRate(row.currentRate) }}</span>
+                  </template>
+                </el-table-column>
+                <el-table-column label="昨日汇率" min-width="100" align="right">
+                  <template #default="{ row }">
+                    <span class="rate-val rate-val--dim">{{ formatRate(row.yesterdayRate) }}</span>
+                  </template>
+                </el-table-column>
+                <el-table-column label="变动幅度" min-width="100" align="center">
+                  <template #default="{ row }">
+                    <span
+                      :class="[
+                        'change-badge',
+                        row.changePercent >= 0 ? 'change-badge--up' : 'change-badge--down'
+                      ]"
+                    >
+                      {{ row.changePercent >= 0 ? '▲' : '▼' }}
+                      {{ Math.abs(row.changePercent).toFixed(2) }}%
+                    </span>
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  prop="lastUpdated"
+                  label="最后更新"
+                  min-width="90"
+                  align="center"
+                />
+                <el-table-column label="数据来源" min-width="90" align="center">
+                  <template #default="{ row }">
+                    <span
+                      :class="[
+                        'source-tag',
+                        row.dataSource === 'manual' ? 'source-tag--manual' : 'source-tag--auto'
+                      ]"
+                    >
+                      {{ row.dataSource === 'manual' ? '手动' : '自动同步' }}
+                    </span>
+                  </template>
+                </el-table-column>
+                <el-table-column label="操作" width="110" align="center" fixed="right">
+                  <template #default="{ row }">
+                    <button
+                      :class="['override-btn', row.overrideAuto && 'override-btn--active']"
+                      @click.stop="toggleOverride(row)"
+                    >
+                      {{ row.overrideAuto ? '已覆盖' : '覆盖' }}
+                    </button>
+                  </template>
+                </el-table-column>
+              </el-table>
+
+              <div class="pagination-bar">
+                <span class="total-text">共 {{ serverTotal }} 条</span>
+                <el-pagination
+                  v-model:current-page="currentPage"
+                  :page-size="pageSize"
+                  :total="serverTotal"
+                  layout="prev, pager, next"
+                  class="er-pagination"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- 右列：走势图 + 同步设置 -->
+          <div class="right-col">
+            <!-- 走势图 -->
+            <div class="chart-card">
+              <div class="chart-header">
+                <span class="chart-title">{{ activePair }} 走势（30天）</span>
+              </div>
+              <div ref="lineEl" class="line-chart" />
+            </div>
+
+            <!-- 同步设置 -->
+            <div class="settings-card">
+              <div class="settings-title">同步设置</div>
+
+              <div class="settings-item">
+                <span class="settings-label">同步频率</span>
+                <div class="freq-tabs">
+                  <button
+                    v-for="f in FREQ_OPTIONS"
+                    :key="f.value"
+                    :class="['freq-tab', syncConfig.frequency === f.value && 'freq-tab--active']"
+                    @click="syncConfig.frequency = f.value"
+                  >
+                    {{ f.label }}
+                  </button>
+                </div>
+              </div>
+
+              <div class="settings-item">
+                <span class="settings-label">异常预警阈值</span>
+                <div class="threshold-row">
+                  <span class="threshold-prefix">偏差超过</span>
+                  <ElInputNumber
+                    v-model="syncConfig.alertThreshold"
+                    :min="1"
+                    :max="50"
+                    :step="1"
+                    class="threshold-input"
+                    controls-position="right"
+                  />
+                  <span class="threshold-suffix">% 时发送警告</span>
+                </div>
+              </div>
+
+              <div class="settings-item">
+                <span class="settings-label">数据来源</span>
+                <div class="source-row">
+                  <span class="source-name">Open Exchange Rates API</span>
+                  <span class="source-status source-status--ok">已连接 ✓</span>
+                </div>
+              </div>
+
+              <div class="settings-item">
+                <span class="settings-label">备用来源</span>
+                <div class="source-row">
+                  <span class="source-name">Fixer.io</span>
+                  <ElSwitch v-model="syncConfig.backupSourceEnabled" class="backup-switch" />
+                </div>
+              </div>
+
+              <ElButton
+                type="primary"
+                round
+                class="account-sub-page__btn-primary btn-save-settings"
+                @click="handleSaveSettings"
+                >保存设置</ElButton
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- ── 弹窗 ─────────────────────────────────────────── -->
-    <RateManualDialog v-model:visible="manualVisible" @success="handleManualSuccess" />
+    <RateManualDialog
+      v-model:visible="manualVisible"
+      :currency-options="syncMetaOptions.currencyOptions"
+      @success="handleManualSuccess"
+    />
 
-    <RateSyncDialog v-model:visible="syncDialogVisible" @sync="handleStartSync" />
+    <RateSyncDialog
+      v-model:visible="syncDialogVisible"
+      :source-options="syncMetaOptions.sourceOptions"
+      :pair-options="syncMetaOptions.pairOptions"
+      @sync="handleStartSync"
+    />
 
     <RateSyncProgressDialog
       v-model:visible="syncProgressVisible"
@@ -236,13 +270,18 @@
   import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
   import { Refresh, Edit, Download } from '@element-plus/icons-vue'
   import { ElMessage } from 'element-plus'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import * as echarts from 'echarts/core'
   import { LineChart } from 'echarts/charts'
   import { TooltipComponent, GridComponent } from 'echarts/components'
   import { CanvasRenderer } from 'echarts/renderers'
-  import { getAppNow, cloneAppDate } from '@/utils/app-now'
+  import { getAppNow } from '@/utils/app-now'
   import {
     fetchExchangeRateTable,
+    fetchExchangeRateOverviewKpi,
+    fetchExchangeRateTrend,
+    fetchExchangeRateSyncConfig,
+    fetchExchangeRateSyncMetaOptions,
     createExchangeRate,
     syncExchangeRates,
     saveSyncConfig,
@@ -253,8 +292,16 @@
   import RateSyncDialog from './modules/rate-sync-dialog.vue'
   import RateSyncProgressDialog from './modules/rate-sync-progress-dialog.vue'
   import RateSyncDoneDialog from './modules/rate-sync-done-dialog.vue'
-  import { ALL_CURRENCY_PAIRS, mockTrendData, mockSyncConfig } from './mock/data'
-  import type { ExchangeRateItem, ManualRateFormModel, SyncResult, SyncConfig } from './types'
+  import { ALL_CURRENCY_PAIRS } from './mock/data'
+  import type {
+    ExchangeRateItem,
+    ExchangeRateOverviewKpi,
+    ExchangeRateSyncMetaOptions,
+    ExchangeRateTrendPoint,
+    ManualRateFormModel,
+    SyncResult,
+    SyncConfig
+  } from './types'
 
   echarts.use([LineChart, TooltipComponent, GridComponent, CanvasRenderer])
 
@@ -268,6 +315,11 @@
   const currentPage = ref(1)
   const pageSize = ref(10)
   const activePair = ref('USD/EUR')
+  const syncMetaOptions = ref<ExchangeRateSyncMetaOptions>({
+    sourceOptions: [],
+    pairOptions: [],
+    currencyOptions: []
+  })
 
   watch(filterPair, () => {
     currentPage.value = 1
@@ -278,13 +330,20 @@
 
   // ─── 同步设置 ───────────────────────────────────────────
   const syncConfig = reactive<SyncConfig & { alertThreshold: number }>({
-    ...mockSyncConfig,
-    alertThreshold: mockSyncConfig.alertThreshold
+    frequency: 'hourly',
+    alertThreshold: 2,
+    primarySource: 'openexchange',
+    backupSourceEnabled: true
   })
 
   // ─── KPI ────────────────────────────────────────────────
   const lastSyncTime = ref(getAppNow())
-  const kpiData = ref({ total: 0, abnormal: 0 })
+  const kpiData = ref<ExchangeRateOverviewKpi>({
+    total: 0,
+    abnormal: 0,
+    lastSyncTime: '',
+    dataSourceLabel: 'Open Exchange'
+  })
 
   const kpi = computed(() => {
     const diff = Math.round((getAppNow().getTime() - lastSyncTime.value.getTime()) / 60000)
@@ -292,7 +351,8 @@
     return {
       total: kpiData.value.total,
       lastSyncLabel: diffLabel,
-      abnormal: kpiData.value.abnormal
+      abnormal: kpiData.value.abnormal,
+      dataSourceLabel: kpiData.value.dataSourceLabel
     }
   })
 
@@ -318,19 +378,23 @@
     }
   }
 
+  async function loadSyncMetaOptions() {
+    try {
+      syncMetaOptions.value = await fetchExchangeRateSyncMetaOptions()
+    } catch {
+      // 保持组件内默认兜底
+    }
+  }
+
   async function loadKpiFromApi() {
     try {
-      const res = await fetchExchangeRateTable({
+      const data = await fetchExchangeRateOverviewKpi({
         ...tableQueryBase(),
-        page: 1,
-        pageSize: 10000
+        alertThreshold: syncConfig.alertThreshold
       })
-      const r = res as Api.Common.PaginatedResponse<ExchangeRateItem>
-      const rows = r.records ?? []
-      kpiData.value = {
-        total: r.total ?? rows.length,
-        abnormal: rows.filter((row) => Math.abs(row.changePercent) > syncConfig.alertThreshold)
-          .length
+      kpiData.value = data
+      if (data.lastSyncTime) {
+        lastSyncTime.value = new Date(data.lastSyncTime.replace(' ', 'T'))
       }
     } catch {
       // 保持 KPI 上轮值
@@ -342,6 +406,9 @@
   })
   watch([filterPair, filterDate], () => {
     void loadKpiFromApi()
+  })
+  watch(filterDate, () => {
+    void loadTrend()
   })
   watch(
     () => syncConfig.alertThreshold,
@@ -368,20 +435,35 @@
   // ─── 折线图 ─────────────────────────────────────────────
   const lineEl = ref<HTMLElement | null>(null)
   let lineChart: echarts.ECharts | null = null
+  const trendPoints = ref<ExchangeRateTrendPoint[]>([])
+
+  async function loadTrend() {
+    try {
+      trendPoints.value = await fetchExchangeRateTrend({
+        pair: activePair.value,
+        date: filterDate.value || undefined
+      })
+      lineChart?.setOption(buildLineOption())
+    } catch {
+      trendPoints.value = []
+      lineChart?.setOption(buildLineOption())
+      ElMessage.error('加载走势图失败')
+    }
+  }
 
   function buildLineOption() {
-    const dates = Array.from({ length: 30 }, (_, i) => {
-      const d = cloneAppDate(getAppNow())
-      d.setDate(d.getDate() - (29 - i))
+    const dates = trendPoints.value.map((item) => {
+      const d = new Date(item.date)
       return `${d.getMonth() + 1}/${d.getDate()}`
     })
+    const trendData = trendPoints.value.map((item) => item.rate)
     return {
       backgroundColor: 'transparent',
       grid: { left: 8, right: 8, top: 12, bottom: 6, containLabel: true },
       tooltip: {
         trigger: 'axis',
-        backgroundColor: '#1a2540',
-        borderColor: 'rgba(255,255,255,0.1)',
+        backgroundColor: 'rgba(15, 23, 42, 0.94)',
+        borderColor: 'rgba(255,255,255,0.08)',
         textStyle: { color: '#e2e8f0', fontSize: 12 },
         formatter: (params: { name: string; value: number }[]) =>
           `${params[0].name}：${params[0].value.toFixed(4)}`
@@ -405,14 +487,14 @@
       series: [
         {
           type: 'line',
-          data: mockTrendData,
+          data: trendData,
           smooth: true,
           symbol: 'none',
-          lineStyle: { color: '#2dd4bf', width: 2 },
+          lineStyle: { color: '#14b8a6', width: 2 },
           areaStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: 'rgba(45,212,191,0.25)' },
-              { offset: 1, color: 'rgba(45,212,191,0.02)' }
+              { offset: 0, color: 'rgba(20,184,166,0.22)' },
+              { offset: 1, color: 'rgba(20,184,166,0.02)' }
             ])
           }
         }
@@ -430,8 +512,21 @@
       }
     })
     window.addEventListener('resize', resizeChart)
+    void loadSyncMetaOptions()
+    void (async () => {
+      try {
+        const config = await fetchExchangeRateSyncConfig()
+        syncConfig.frequency = config.frequency
+        syncConfig.alertThreshold = config.alertThreshold
+        syncConfig.primarySource = config.primarySource
+        syncConfig.backupSourceEnabled = config.backupSourceEnabled
+      } catch {
+        // 保持默认配置
+      }
+    })()
     void loadTable()
     void loadKpiFromApi()
+    void loadTrend()
   })
 
   onBeforeUnmount(() => {
@@ -442,6 +537,7 @@
   // ─── 操作 ──────────────────────────────────────────────
   const handleRowClick = (row: ExchangeRateItem) => {
     activePair.value = row.pair
+    void loadTrend()
   }
 
   const toggleOverride = async (row: ExchangeRateItem) => {
@@ -583,94 +679,344 @@
 </script>
 
 <style lang="scss" scoped>
-  .er-page {
-    --bg-page: #0b1120;
-    --bg-card: #131c2e;
-    --border: rgb(255 255 255 / 7%);
-    --text-primary: #e2e8f0;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
-    --accent: #2dd4bf;
-    --accent-dim: rgb(45 212 191 / 10%);
+  .account-sub-page.credential-page.er-page {
+    --page-border: color-mix(in srgb, var(--el-color-primary) 16%, transparent);
+    --page-text-main: color-mix(in srgb, var(--text-primary) 92%, white 8%);
+    --as-border: color-mix(in srgb, var(--el-color-primary) 14%, transparent);
+    --as-surface: color-mix(in srgb, var(--default-box-color) 94%, transparent);
+    --as-header-bg: color-mix(in srgb, var(--default-box-color) 78%, black 4%);
+    --bg-card: var(--as-surface);
+    --border: color-mix(in srgb, var(--el-color-primary) 18%, transparent);
+    --accent: var(--el-color-primary);
+    --accent-dim: color-mix(in srgb, var(--el-color-primary) 12%, transparent);
+    --text-primary: var(--text-primary);
+    --text-secondary: var(--text-secondary);
+    --text-muted: var(--text-tertiary);
 
     position: relative;
-    padding: 0 24px 24px;
-    overflow-y: auto;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    padding: 24px;
+    overflow: clip auto;
     font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-    color: var(--text-primary);
-    background: var(--bg-page);
+    font-size: 13px;
+    color: var(--page-text-main);
+    background: var(--default-bg-color);
+    isolation: isolate;
   }
 
-  // ─── 头部 ───────────────────────────────────────────────
-  .page-header {
+  .account-sub-page.credential-page.er-page::before {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    content: '';
+    background:
+      radial-gradient(
+        ellipse 55% 40% at 88% 0%,
+        color-mix(in srgb, var(--theme-color) 22%, transparent) 0%,
+        transparent 58%
+      ),
+      radial-gradient(
+        ellipse 40% 32% at 12% 6%,
+        color-mix(in srgb, var(--el-color-primary) 16%, transparent) 0%,
+        transparent 55%
+      );
+    mask-image: linear-gradient(to bottom, black 0%, black 28%, transparent 55%);
+  }
+
+  .account-sub-page.credential-page.er-page > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .account-sub-page__toolbar {
+    position: relative;
+    flex-shrink: 0;
+    margin-bottom: 16px;
+    overflow: hidden;
+    backdrop-filter: blur(18px);
+    border: 1px solid var(--page-border);
+    border-radius: 20px;
+    box-shadow:
+      0 18px 48px rgb(0 0 0 / 18%),
+      0 0 0 1px color-mix(in srgb, var(--el-color-primary) 7%, transparent),
+      inset 0 1px 0 color-mix(in srgb, white 7%, transparent);
+  }
+
+  .account-sub-page__toolbar-fx {
+    position: absolute;
+    inset: -50% -10% 35%;
+    z-index: 0;
+    pointer-events: none;
+    background: conic-gradient(
+      from 200deg at 70% 40%,
+      color-mix(in srgb, var(--el-color-primary) 14%, transparent),
+      color-mix(in srgb, var(--theme-color) 12%, transparent),
+      color-mix(in srgb, var(--art-success) 8%, transparent),
+      color-mix(in srgb, var(--el-color-primary) 14%, transparent)
+    );
+    filter: blur(40px);
+    opacity: 0.5;
+  }
+
+  .account-sub-page__toolbar-row {
+    position: relative;
+    z-index: 1;
     display: flex;
+    flex-wrap: wrap;
+    gap: 16px 20px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 18px;
+    background:
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--default-box-color) 88%, transparent),
+        color-mix(in srgb, var(--default-box-color) 76%, transparent)
+      ),
+      linear-gradient(
+        118deg,
+        color-mix(in srgb, var(--theme-color) 8%, transparent),
+        color-mix(in srgb, var(--el-color-primary) 6%, transparent)
+      );
+
+    &::after {
+      position: absolute;
+      top: 0;
+      right: 0;
+      left: 0;
+      height: 2px;
+      pointer-events: none;
+      content: '';
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        color-mix(in srgb, var(--el-color-primary) 45%, transparent) 35%,
+        color-mix(in srgb, var(--theme-color) 38%, transparent) 65%,
+        transparent 100%
+      );
+      opacity: 0.85;
+    }
+  }
+
+  .account-sub-page__toolbar-copy {
+    display: grid;
+    flex: 1 1 220px;
+    grid-template-rows: auto auto;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 4px 12px;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .account-sub-page__toolbar-line {
+    display: inline-block;
+    grid-row: 1 / span 2;
+    align-self: center;
+    width: 4px;
+    height: 36px;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--el-color-primary) 70%, transparent),
+      color-mix(in srgb, var(--theme-color) 55%, transparent)
+    );
+    border-radius: 999px;
+    box-shadow: 0 0 18px color-mix(in srgb, var(--el-color-primary) 28%, transparent);
+  }
+
+  .account-sub-page__toolbar-titles {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .account-sub-page__toolbar-hint {
+    grid-column: 2;
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-tertiary);
+  }
+
+  .account-sub-page__toolbar-eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    opacity: 0.65;
+  }
+
+  .account-sub-page__toolbar-title {
+    font-size: 17px;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    background-color: transparent;
+    background-image: linear-gradient(
+      105deg,
+      var(--page-text-main) 0%,
+      color-mix(in srgb, var(--el-color-primary) 72%, var(--page-text-main) 28%) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .account-sub-page__toolbar-actions {
+    display: flex;
+    flex: 1 1 280px;
     flex-wrap: wrap;
     gap: 10px;
     align-items: center;
-    padding: 18px 0 14px;
+    justify-content: flex-end;
   }
 
-  .breadcrumb {
+  .account-sub-page__list-panel {
+    position: relative;
     display: flex;
-    gap: 6px;
-    align-items: center;
-    margin-right: 8px;
-    font-size: 14px;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--default-box-color) 93%, transparent) 0%,
+        color-mix(in srgb, var(--default-box-color) 86%, transparent) 100%
+      ),
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--el-color-primary) 5%, transparent),
+        color-mix(in srgb, var(--theme-color) 4%, transparent)
+      );
+    isolation: isolate;
+    backdrop-filter: blur(18px);
+    border: 1px solid var(--page-border);
+    border-radius: 20px;
+    box-shadow:
+      0 18px 48px rgb(0 0 0 / 16%),
+      0 0 0 1px color-mix(in srgb, var(--el-color-primary) 7%, transparent),
+      inset 0 1px 0 color-mix(in srgb, white 6%, transparent);
+
+    &::before {
+      position: absolute;
+      top: 0;
+      right: 0;
+      left: 0;
+      z-index: 2;
+      height: 2px;
+      pointer-events: none;
+      content: '';
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        color-mix(in srgb, var(--el-color-primary) 42%, transparent) 40%,
+        color-mix(in srgb, var(--theme-color) 32%, transparent) 70%,
+        transparent 100%
+      );
+      border-radius: 20px 20px 0 0;
+      opacity: 0.8;
+    }
   }
 
-  .bc-parent {
-    color: var(--text-secondary);
+  .account-sub-page__list-panel-fx {
+    position: absolute;
+    inset: -35% 20% 40%;
+    z-index: 0;
+    pointer-events: none;
+    background: radial-gradient(
+      ellipse 80% 55% at 18% 0%,
+      color-mix(in srgb, var(--el-color-primary) 18%, transparent) 0%,
+      transparent 62%
+    );
+    filter: blur(32px);
+    opacity: 0.55;
   }
 
-  .bc-sep {
-    color: var(--text-muted);
+  .account-sub-page__list-panel-body {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+    padding: 14px 14px 16px;
+    overflow: auto;
+    scrollbar-gutter: stable;
   }
 
-  .bc-current {
-    font-weight: 600;
-    color: var(--text-primary);
+  .account-sub-page__btn-primary.el-button--primary {
+    font-weight: 600 !important;
+    box-shadow:
+      0 10px 22px color-mix(in srgb, var(--el-color-primary) 28%, transparent),
+      inset 0 1px 0 color-mix(in srgb, white 14%, transparent) !important;
+    transition:
+      box-shadow var(--duration-normal) var(--ease-out),
+      transform var(--duration-normal) var(--ease-out),
+      filter var(--duration-normal) var(--ease-out);
+
+    &:hover {
+      filter: brightness(1.04);
+      box-shadow:
+        0 12px 28px color-mix(in srgb, var(--el-color-primary) 34%, transparent),
+        inset 0 1px 0 color-mix(in srgb, white 18%, transparent) !important;
+      transform: translateY(-1px);
+    }
   }
 
-  .header-actions {
+  .account-sub-page__btn-secondary.el-button {
+    --el-button-bg-color: color-mix(in srgb, var(--default-box-color) 52%, transparent);
+    --el-button-border-color: color-mix(in srgb, var(--el-color-primary) 20%, transparent);
+    --el-button-text-color: var(--text-secondary);
+    --el-button-hover-text-color: var(--el-color-primary);
+    --el-button-hover-border-color: color-mix(in srgb, var(--el-color-primary) 48%, transparent);
+    --el-button-hover-bg-color: color-mix(in srgb, var(--el-color-primary) 9%, transparent);
+    --el-button-active-text-color: var(--el-color-primary);
+    --el-button-active-border-color: color-mix(in srgb, var(--el-color-primary) 55%, transparent);
+    --el-button-active-bg-color: color-mix(in srgb, var(--el-color-primary) 12%, transparent);
+
+    font-weight: 500;
+    transition:
+      border-color var(--duration-normal) var(--ease-out),
+      background-color var(--duration-normal) var(--ease-out),
+      color var(--duration-normal) var(--ease-out),
+      box-shadow var(--duration-normal) var(--ease-out),
+      transform var(--duration-normal) var(--ease-out);
+
+    &:hover {
+      box-shadow: 0 8px 18px color-mix(in srgb, var(--el-color-primary) 14%, transparent);
+      transform: translateY(-1px);
+    }
+  }
+
+  .er-filter-bar {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 10px 12px;
     align-items: center;
-    margin-left: auto;
-  }
-
-  .btn-sync {
-    display: inline-flex;
-    gap: 5px;
-    align-items: center;
-    padding: 8px 16px !important;
-    font-weight: 600 !important;
-    color: #0b1120 !important;
-    background: var(--accent) !important;
-    border: none !important;
-    border-radius: 8px !important;
-    transition: all 0.2s;
-
-    &:hover {
-      filter: brightness(1.1);
-    }
-  }
-
-  .btn-secondary {
-    display: inline-flex;
-    gap: 5px;
-    align-items: center;
-    padding: 8px 14px !important;
-    color: var(--text-secondary) !important;
-    background: transparent !important;
-    border: 1px solid var(--border) !important;
-    border-radius: 8px !important;
-    transition: all 0.2s;
-
-    &:hover {
-      color: var(--accent) !important;
-      border-color: var(--accent) !important;
-    }
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    background:
+      radial-gradient(
+        ellipse 90% 70% at 12% 0%,
+        color-mix(in srgb, var(--el-color-primary) 10%, transparent) 0%,
+        transparent 58%
+      ),
+      linear-gradient(
+        165deg,
+        color-mix(in srgb, var(--default-box-color) 96%, transparent) 0%,
+        color-mix(in srgb, var(--default-box-color) 88%, transparent) 100%
+      );
+    border: 1px solid var(--as-border);
+    border-radius: 14px;
+    box-shadow:
+      0 8px 24px rgb(0 0 0 / 6%),
+      inset 0 1px 0 color-mix(in srgb, white 6%, transparent);
   }
 
   .header-date {
@@ -678,7 +1024,7 @@
 
     :deep(.el-input__wrapper) {
       color: var(--text-primary);
-      background: rgb(255 255 255 / 4%) !important;
+      background: color-mix(in srgb, var(--default-box-color) 40%, transparent) !important;
       border: 1px solid var(--border) !important;
       border-radius: 7px;
       box-shadow: none !important;
@@ -699,7 +1045,7 @@
 
     :deep(.el-select__wrapper) {
       color: var(--text-primary);
-      background: rgb(255 255 255 / 4%) !important;
+      background: color-mix(in srgb, var(--default-box-color) 40%, transparent) !important;
       border: 1px solid var(--border) !important;
       border-radius: 7px;
       box-shadow: none !important;
@@ -740,13 +1086,15 @@
     border-radius: 10px;
 
     &--teal {
-      background: rgb(45 212 191 / 15%);
+      background: color-mix(in srgb, var(--el-color-primary) 18%, transparent);
     }
+
     &--blue {
-      background: rgb(96 165 250 / 15%);
+      background: color-mix(in srgb, var(--el-color-info) 18%, transparent);
     }
+
     &--amber {
-      background: rgb(245 158 11 / 15%);
+      background: color-mix(in srgb, var(--art-warning) 18%, transparent);
     }
   }
 
@@ -767,21 +1115,21 @@
     line-height: 1;
 
     &--teal {
-      color: #2dd4bf;
+      color: var(--accent);
     }
 
     &--blue {
-      color: #60a5fa;
+      color: var(--el-color-info);
     }
 
     &--amber {
-      color: #f59e0b;
+      color: var(--art-warning);
     }
 
     &--source {
       font-size: 16px;
       font-weight: 700;
-      color: #2dd4bf;
+      color: var(--accent);
     }
 
     &--sm {
@@ -811,13 +1159,15 @@
     border-radius: 0 0 10px 10px;
 
     &--teal {
-      background: linear-gradient(90deg, #2dd4bf, transparent);
+      background: linear-gradient(90deg, var(--accent), transparent);
     }
+
     &--blue {
-      background: linear-gradient(90deg, #60a5fa, transparent);
+      background: linear-gradient(90deg, var(--el-color-info), transparent);
     }
+
     &--amber {
-      background: linear-gradient(90deg, #f59e0b, transparent);
+      background: linear-gradient(90deg, var(--art-warning), transparent);
     }
   }
 
@@ -855,8 +1205,8 @@
     cursor: pointer;
 
     --el-table-bg-color: transparent;
-    --el-table-header-bg-color: #0f1829;
-    --el-table-row-hover-bg-color: #162035;
+    --el-table-header-bg-color: var(--as-header-bg);
+    --el-table-row-hover-bg-color: color-mix(in srgb, var(--el-color-primary) 8%, transparent);
     --el-table-border-color: var(--border);
     --el-table-text-color: var(--text-primary);
     --el-table-header-text-color: var(--text-secondary);
@@ -868,7 +1218,7 @@
       padding: 11px 8px;
       font-size: 12px;
       font-weight: 500;
-      background: #0f1829 !important;
+      background: var(--as-header-bg) !important;
       border-bottom: 1px solid var(--border) !important;
     }
 
@@ -907,13 +1257,13 @@
     border-radius: 4px;
 
     &--up {
-      color: #22c55e;
-      background: rgb(34 197 94 / 12%);
+      color: var(--art-success);
+      background: color-mix(in srgb, var(--art-success) 12%, transparent);
     }
 
     &--down {
-      color: #ef4444;
-      background: rgb(239 68 68 / 12%);
+      color: var(--art-danger);
+      background: color-mix(in srgb, var(--art-danger) 12%, transparent);
     }
   }
 
@@ -925,13 +1275,13 @@
     border-radius: 4px;
 
     &--auto {
-      color: #60a5fa;
-      background: rgb(96 165 250 / 12%);
+      color: var(--el-color-info);
+      background: color-mix(in srgb, var(--el-color-info) 12%, transparent);
     }
 
     &--manual {
-      color: #f59e0b;
-      background: rgb(245 158 11 / 12%);
+      color: var(--art-warning);
+      background: color-mix(in srgb, var(--art-warning) 12%, transparent);
     }
   }
 
@@ -946,14 +1296,14 @@
     transition: all 0.15s;
 
     &--active {
-      color: #f59e0b;
-      background: rgb(245 158 11 / 12%);
-      border-color: #f59e0b;
+      color: var(--art-warning);
+      background: color-mix(in srgb, var(--art-warning) 12%, transparent);
+      border-color: var(--art-warning);
     }
 
     &:hover:not(.override-btn--active) {
       color: var(--text-primary);
-      border-color: rgb(255 255 255 / 15%);
+      border-color: color-mix(in srgb, var(--el-color-primary) 18%, transparent);
     }
   }
 
@@ -987,7 +1337,7 @@
 
       &.is-active {
         font-weight: 700;
-        color: #0b1120;
+        color: #fff;
         background: var(--accent);
       }
     }
@@ -995,7 +1345,7 @@
     :deep(.btn-prev),
     :deep(.btn-next) {
       color: var(--text-secondary) !important;
-      background: rgb(255 255 255 / 4%) !important;
+      background: color-mix(in srgb, var(--default-box-color) 40%, transparent) !important;
       border: 1px solid var(--border) !important;
       border-radius: 5px;
 
@@ -1067,7 +1417,7 @@
     font-size: 12px;
     color: var(--text-muted);
     cursor: pointer;
-    background: rgb(255 255 255 / 4%);
+    background: color-mix(in srgb, var(--default-box-color) 40%, transparent);
     border: 1px solid var(--border);
     border-radius: 5px;
     transition: all 0.15s;
@@ -1100,7 +1450,7 @@
     width: 80px;
 
     :deep(.el-input__wrapper) {
-      background: rgb(255 255 255 / 4%) !important;
+      background: color-mix(in srgb, var(--default-box-color) 40%, transparent) !important;
       border: 1px solid var(--border) !important;
       box-shadow: none !important;
 
@@ -1133,16 +1483,80 @@
     font-weight: 600;
 
     &--ok {
-      color: #22c55e;
+      color: var(--art-success);
     }
+  }
+
+  .backup-switch.el-switch {
+    --el-switch-on-color: var(--el-color-primary);
   }
 
   .btn-save-settings {
     width: 100%;
-    font-weight: 600 !important;
-    color: #0b1120 !important;
-    background: var(--accent) !important;
-    border: none !important;
-    border-radius: 8px !important;
+    margin-top: 4px;
+  }
+
+  :deep(.el-select-dropdown) {
+    background: color-mix(in srgb, var(--default-box-color) 96%, transparent) !important;
+    border: 1px solid var(--border) !important;
+  }
+
+  :deep(.el-select-dropdown__item) {
+    color: var(--text-secondary) !important;
+
+    &:hover,
+    &.is-hovering {
+      color: var(--accent) !important;
+      background: color-mix(in srgb, var(--el-color-primary) 10%, transparent) !important;
+    }
+
+    &.is-selected {
+      color: var(--accent) !important;
+      background: color-mix(in srgb, var(--el-color-primary) 14%, transparent) !important;
+    }
+  }
+
+  @media (width <= 1100px) {
+    .content-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (width <= 900px) {
+    .kpi-row {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .account-sub-page__toolbar-actions {
+      gap: 8px;
+    }
+  }
+
+  @media (width <= 600px) {
+    .account-sub-page__toolbar-row {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .account-sub-page__toolbar-actions {
+      justify-content: flex-start;
+    }
+
+    .kpi-row {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .er-filter-bar .header-date,
+    .er-filter-bar .header-select {
+      width: 100%;
+      min-width: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .account-sub-page__btn-primary.el-button--primary:hover,
+    .account-sub-page__btn-secondary.el-button:hover {
+      transform: none;
+    }
   }
 </style>

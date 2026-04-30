@@ -25,11 +25,7 @@
             placeholder="请选择广告平台"
             class="full-width"
           >
-            <el-option
-              v-for="p in AD_PLATFORMS"
-              :key="p.nSource"
-              :value="p.nSource"
-            >
+            <el-option v-for="p in platformOptions" :key="p.nSource" :value="p.nSource">
               <div class="platform-opt">
                 <span class="platform-icon" :style="{ background: p.color }">{{ p.abbr }}</span>
                 <span>{{ p.name }} ({{ p.nSource }})</span>
@@ -47,9 +43,11 @@
           <div v-else class="locked-platform">
             <span
               class="platform-icon"
-              :style="{ background: editData ? getPlatform(editData.nSource).color : '#475569' }"
+              :style="{
+                background: editData ? getPlatformBySource(editData.nSource).color : '#475569'
+              }"
             >
-              {{ editData ? getPlatform(editData.nSource).abbr : '' }}
+              {{ editData ? getPlatformBySource(editData.nSource).abbr : '' }}
             </span>
             <span class="locked-name">
               {{ editData?.platformName }} ({{ editData?.nSource }})
@@ -60,7 +58,7 @@
 
         <!-- 生效起始日期 -->
         <el-form-item label="生效起始日期 (t_start)" prop="tStart" class="form-item">
-          <el-date-picker
+          <AppDatePicker
             v-model="form.tStart"
             type="date"
             placeholder="选择日期"
@@ -94,12 +92,7 @@
 
       <!-- 备注 -->
       <el-form-item label="备注" prop="remark">
-        <el-input
-          v-model="form.remark"
-          type="textarea"
-          :rows="3"
-          placeholder="可选备注信息"
-        />
+        <el-input v-model="form.remark" type="textarea" :rows="3" placeholder="可选备注信息" />
       </el-form-item>
 
       <!-- 编辑模式：当前生效值 -->
@@ -128,11 +121,13 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, reactive, computed, watch } from 'vue'
+  import { computed, onMounted, reactive, ref, watch } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { ElMessage } from 'element-plus'
   import type { FormInstance, FormRules } from 'element-plus'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import { AD_PLATFORMS, getPlatform } from '../mock/data'
-  import type { CostCoefficientItem, CostCoefficientFormModel } from '../types'
+  import type { AdPlatform, CostCoefficientFormModel, CostCoefficientItem } from '../types'
 
   defineOptions({ name: 'CostFormDialog' })
 
@@ -149,6 +144,29 @@
   }>()
 
   const isEdit = computed(() => !!props.editData)
+  const cockpitMetaFilterStore = useCockpitMetaFilterStore()
+
+  const platformOptions = computed<AdPlatform[]>(() => {
+    const sourceOptions = cockpitMetaFilterStore.data?.sourceOptions ?? []
+    const mapped = sourceOptions
+      .map((item) => {
+        const nSource = Number(item.value)
+        if (!Number.isFinite(nSource) || nSource <= 0) return null
+        const fallback = getPlatform(nSource)
+        return {
+          nSource,
+          name: item.label || fallback.name,
+          abbr: fallback.abbr,
+          color: fallback.color
+        } as AdPlatform
+      })
+      .filter((item): item is AdPlatform => item !== null)
+    return mapped.length > 0 ? mapped : AD_PLATFORMS.map((item) => ({ ...item }))
+  })
+
+  const getPlatformBySource = (nSource: number): AdPlatform => {
+    return platformOptions.value.find((item) => item.nSource === nSource) ?? getPlatform(nSource)
+  }
 
   const formRef = ref<FormInstance>()
   const saving = ref(false)
@@ -161,9 +179,7 @@
     remark: ''
   })
 
-  const selectedPlatform = computed(() =>
-    form.nSource ? getPlatform(form.nSource) : null
-  )
+  const selectedPlatform = computed(() => (form.nSource ? getPlatformBySource(form.nSource) : null))
 
   watch(
     () => props.editData,
@@ -185,6 +201,12 @@
     { immediate: true }
   )
 
+  onMounted(() => {
+    if (!cockpitMetaFilterStore.data) {
+      void cockpitMetaFilterStore.ensureLoaded()
+    }
+  })
+
   const rules: FormRules = {
     nSource: [{ required: true, message: '请选择广告平台', trigger: 'change' }],
     tStart: [{ required: true, message: '请选择生效起始日期', trigger: 'change' }],
@@ -193,8 +215,14 @@
       {
         validator: (_: unknown, value: number | '', cb: (e?: Error) => void) => {
           const v = Number(value)
-          if (!value && value !== 0) { cb(new Error('请输入折算比例')); return }
-          if (v < 0.001 || v > 9.999) { cb(new Error('范围 0.001 ~ 9.999')); return }
+          if (!value && value !== 0) {
+            cb(new Error('请输入折算比例'))
+            return
+          }
+          if (v < 0.001 || v > 9.999) {
+            cb(new Error('范围 0.001 ~ 9.999'))
+            return
+          }
           cb()
         },
         trigger: 'blur'
@@ -205,8 +233,14 @@
       {
         validator: (_: unknown, value: number | '', cb: (e?: Error) => void) => {
           const v = Number(value)
-          if (!value && value !== 0) { cb(new Error('请输入安装成本')); return }
-          if (v < 0.00001 || v > 9.99999) { cb(new Error('范围 0.00001 ~ 9.99999')); return }
+          if (!value && value !== 0) {
+            cb(new Error('请输入安装成本'))
+            return
+          }
+          if (v < 0.00001 || v > 9.99999) {
+            cb(new Error('范围 0.00001 ~ 9.99999'))
+            return
+          }
           cb()
         },
         trigger: 'blur'
@@ -332,17 +366,17 @@
     padding: 10px 14px;
     margin-top: 4px;
     font-size: 12px;
+    line-height: 1.6;
     color: #93c5fd;
     background: rgb(59 130 246 / 10%);
     border: 1px solid rgb(59 130 246 / 20%);
     border-radius: 8px;
-    line-height: 1.6;
   }
 
   .info-icon {
     flex-shrink: 0;
-    font-weight: 700;
     font-style: normal;
+    font-weight: 700;
   }
 </style>
 

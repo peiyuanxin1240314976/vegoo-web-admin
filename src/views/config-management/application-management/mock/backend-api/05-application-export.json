@@ -1,13 +1,7 @@
 {
-  "_comment": "应用管理 - 服务端导出（与列表筛选对齐）；前端可并行生成本地 CSV 兜底。",
+  "_comment": "应用管理 - 导出列表。筛选与 table 一致；响应为 HTTP **二进制文件流**，无 JSON 业务体。",
   "fieldDescription": {
     "request": {
-      "current": {
-        "type": "number",
-        "required": false,
-        "description": "当前页（同步任务可选用）。"
-      },
-      "size": { "type": "number", "required": false, "description": "每页条数。" },
       "keyword": { "type": "string", "required": false, "description": "与列表一致。" },
       "category": { "type": "string", "required": false, "description": "类别。" },
       "platform": { "type": "string", "required": false, "description": "终端平台。" },
@@ -15,13 +9,24 @@
       "creator": { "type": "string", "required": false, "description": "创建人。" }
     },
     "response": {
-      "downloadUrl": { "type": "string", "required": false, "description": "异步导出下载地址。" },
-      "fileName": { "type": "string", "required": false, "description": "建议文件名。" }
+      "httpBody": {
+        "type": "binary stream",
+        "required": true,
+        "description": "HTTP 响应体为原始文件二进制流，**不是** JSON。前端使用 `requestBlob` 接收后 `FileSaver.saveAs` 落盘。"
+      },
+      "contentType": {
+        "type": "string (response header)",
+        "required": false,
+        "description": "响应头 `Content-Type`；过渡期不完整时前端仍保存 blob，并按类型粗判默认后缀。"
+      },
+      "contentDisposition": {
+        "type": "string (response header)",
+        "required": false,
+        "description": "响应头 `Content-Disposition`：有则解析 `filename` / `filename*=`。"
+      }
     }
   },
   "sampleRequest": {
-    "current": 1,
-    "size": 20,
     "keyword": "",
     "category": "",
     "platform": "",
@@ -29,24 +34,28 @@
     "creator": ""
   },
   "sampleResponse": {
-    "downloadUrl": "https://example.com/exports/applications-20260327.xlsx",
-    "fileName": "applications-20260327.xlsx"
+    "_note": "无 JSON 业务体；联调以实际 HTTP 响应流为准。",
+    "httpBody": "<binary stream — not representable as JSON object>"
   },
   "api": {
     "url": "POST /api/config-management/application/export",
     "method": "POST",
     "priority": "P1",
-    "requestBody": "与列表筛选字段一致",
-    "responseBody": "downloadUrl + fileName，或二进制流"
+    "requestBody": "keyword?, category?, platform?, status?, creator?（与列表筛选一致；不传 current/size）",
+    "responseBody": "binary file stream (blob); not JSON"
   },
   "apiSuggestion": {
-    "notes": ["若返回文件流，需在 request 层设置 responseType: blob。"]
+    "notes": [
+      "前端：`src/api/config-management/application-management.ts` 中 `exportApplicationList`；Mock 为 `mockExportApplicationList` 本地 CSV。",
+      "页面：`handleExport` 优先流式导出，失败则 `fetchApplicationTable` + 本地 CSV 兜底。",
+      "无匹配行时仍建议返回含表头的合法文件流。"
+    ]
   },
   "interaction": {
     "triggers": [
       {
         "moment": "用户点击「导出」",
-        "detail": "先 fetchApplicationTable(current=1,size=10000,筛选) 生成 CSV；再调用 exportApplicationList 联调远端。",
+        "detail": "`exportApplicationList`（`requestBlob`）；失败时 `exportCsvLocal` 拉表生成 CSV。",
         "prerequisite": "无"
       }
     ],

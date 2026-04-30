@@ -46,10 +46,15 @@
       },
       "installs": { "type": "number", "required": true, "description": "安装量（原始值）。" },
       "cpi": { "type": "number", "required": true, "description": "CPI，单位美元，保留两位小数。" },
-      "roi": {
+      "roi1": {
         "type": "number",
         "required": true,
-        "description": "ROI，百分比值（如 142 表示 142%）。"
+        "description": "1 日 ROI，百分比数值（如 93 表示 93%）。"
+      },
+      "roiTotal": {
+        "type": "number",
+        "required": true,
+        "description": "总 ROI，百分比数值。"
       }
     }
   },
@@ -63,7 +68,8 @@
         "spend": 45000,
         "installs": 28000,
         "cpi": 1.61,
-        "roi": 142
+        "roi1": 138.5,
+        "roiTotal": 142
       },
       {
         "id": "2",
@@ -72,7 +78,8 @@
         "spend": 38000,
         "installs": 24000,
         "cpi": 1.72,
-        "roi": 128
+        "roi1": 124,
+        "roiTotal": 128
       },
       {
         "id": "3",
@@ -81,7 +88,8 @@
         "spend": 29000,
         "installs": 19000,
         "cpi": 1.68,
-        "roi": 115
+        "roi1": 110.25,
+        "roiTotal": 115
       },
       {
         "id": "4",
@@ -90,7 +98,8 @@
         "spend": 18000,
         "installs": 11000,
         "cpi": 1.83,
-        "roi": 92
+        "roi1": 88,
+        "roiTotal": 92
       }
     ]
   },

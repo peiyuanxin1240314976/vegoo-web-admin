@@ -2,7 +2,8 @@
  * 驾驶舱数据接口层
  *
  * - 第一排总数据（KPI 卡片）：真实接口 POST /api/v1/datacenter/analysis/cockpit/overall
- * - 其余子模块（警示、花费节奏、地图、Top3、收入趋势等）：仍走 Mock 或各自独立接口，结构清晰便于后续按模块接独立接口与骨架屏
+ * - Top3：POST `.../cockpit/top3`（`fetchCockpitTop3`）。
+ * - 无聚合 `cockpit/overview` / `today-summary-cards` / `yesterday-summary-panel` 时：`fetchCockpitOverview` 与 Tab 专属 fetch 返回空壳/空数组，数据由各子接口与 `overall` 合并。
  */
 import request from '@/utils/http'
 import { ANALYSIS_API_BASE } from '@/api/analysis-api-base'
@@ -33,6 +34,8 @@ import type {
   CockpitRevenueStructureInsight,
   CockpitAlertBanner,
   CockpitAlertSummaryMetric,
+  CockpitTodaySummaryCard,
+  CockpitYesterdaySummarySection,
   CockpitWarnListItem,
   CockpitAppSimulationParams,
   CockpitAppSimulationData,
@@ -45,13 +48,23 @@ import type {
   CountryInfoTop5CampaignItem,
   CountryInfoUserPayLaunchData
 } from '../types'
-import { MOCK_COCKPIT_OVERVIEW } from '../mock/data'
 
-/** 是否使用 Mock 数据（仅影响非 overall 的其余概览字段）；overall 接口始终请求真实接口 */
-const COCKPIT_USE_MOCK = true
-
-/** 驾驶舱概览接口路径（其余模块对接时替换） */
-const COCKPIT_OVERVIEW_URL = `${ANALYSIS_API_BASE}/cockpit/overview`
+/** 无 `cockpit/overview` 时首屏 merge 用空壳（不发无效聚合请求） */
+const EMPTY_COCKPIT_OVERVIEW: CockpitOverview = {
+  kpi: [],
+  alertBanners: [],
+  revenueCostTrend: { dates: [], revenue: [], cost: [] },
+  userQuality: [],
+  spendPace: [],
+  mapCountries: [],
+  mapLegend: [],
+  topRevenue: [],
+  topSpend: [],
+  topUser: [],
+  smartAlerts: [],
+  top5Apps: [],
+  top10Campaigns: []
+}
 
 /** 经营驾驶舱第一排总数据接口（KPI 卡片数据源） */
 const COCKPIT_OVERALL_URL = `${ANALYSIS_API_BASE}/cockpit/overall`
@@ -333,7 +346,10 @@ export function mapOverallDataToKpiCards(data: CockpitOverallData): CockpitKpiCa
       format: 'money',
       changeKey: 'totalRevenueChange',
       listKey: 'totalRevenueList',
-      detail: (n) => `广告 ${formatMoney(n.adRevenue ?? 0)}  付费 ${formatMoney(n.payRevenue ?? 0)}`
+      detail: (n) => {
+        const ad = (n as { dAdRevenue?: number; adRevenue?: number }).dAdRevenue ?? n.adRevenue ?? 0
+        return `广告 ${formatMoney(ad)}  付费 ${formatMoney(n.payRevenue ?? 0)}`
+      }
     },
     {
       type: 'paidRevenue',
@@ -349,7 +365,7 @@ export function mapOverallDataToKpiCards(data: CockpitOverallData): CockpitKpiCa
       label: '广告支出',
       valueKey: 'dCost',
       format: 'money',
-      changeKey: 'adCostChange',
+      changeKey: 'dCostChange',
       listKey: 'dCostList',
       detail: () => undefined
     },
@@ -368,7 +384,7 @@ export function mapOverallDataToKpiCards(data: CockpitOverallData): CockpitKpiCa
     },
     {
       type: 'dau',
-      label: 'DAU',
+      label: '新用户',
       valueKey: 'dau',
       format: 'int',
       changeKey: 'dauChange',
@@ -387,7 +403,7 @@ export function mapOverallDataToKpiCards(data: CockpitOverallData): CockpitKpiCa
       format: 'money',
       changeKey: 'profitChange',
       listKey: 'profitList',
-      detail: () => '当前广告｜内购收入-广告支出'
+      detail: () => '当前广告｜付费收入-广告支出'
     }
   ]
   return cards.map(({ type, label, valueKey, format, changeKey, listKey, detail }) => {
@@ -395,7 +411,12 @@ export function mapOverallDataToKpiCards(data: CockpitOverallData): CockpitKpiCa
     const prev = (last[valueKey] as number | null | undefined) ?? 0
     const value = format === 'money' ? formatMoney(curr) : formatInt(curr)
     const lastStr = format === 'money' ? formatMoney(prev) : formatInt(prev)
-    const change = changeKey ? (data[changeKey] as number | undefined) : undefined
+    const change =
+      type === 'adSpend'
+        ? (data.dCostChange ?? data.adCostChange)
+        : changeKey
+          ? (data[changeKey] as number | undefined)
+          : undefined
     const { compare, compareUp } = buildCompareFromChange(change, lastStr, format)
     const chartData = listKey
       ? seriesToChartData(data[listKey] as CockpitOverallSeriesItem[] | undefined)
@@ -437,7 +458,7 @@ export function mapOverallDataToKpiCards(data: CockpitOverallData): CockpitKpiCa
 }
 
 /**
- * 从 overall 接口的 now + *Change 组装警示摘要指标（DNU、自然量、买量应用、广告系列、广告账户）
+ * 从 overall 接口的 now + *Change 组装警示摘要指标（DNU、自然量、买量用户、广告系列、广告账户）
  * 返回 null 的字段默认按 0 展示
  */
 export function mapOverallDataToAlertSummaryMetrics(
@@ -449,7 +470,7 @@ export function mapOverallDataToAlertSummaryMetrics(
   // DNU：取值 now.dnu，null 按 0 展示；变化 dnuChange
   const dnuChange = data.dnuChange
   metrics.push({
-    label: 'DNU',
+    label: '新用户',
     value: formatInt(now.dnu),
     ...(dnuChange != null && Number.isFinite(dnuChange)
       ? { change: Math.abs(dnuChange), trend: (dnuChange >= 0 ? 'up' : 'down') as 'up' | 'down' }
@@ -469,10 +490,17 @@ export function mapOverallDataToAlertSummaryMetrics(
       : {})
   })
 
-  // 买量应用：取值 now.initialCount，null 按 0 展示
+  // 买量用户：取值 now.initialCount，null 按 0 展示
+  const initialCountChange = data.initialCountChange
   metrics.push({
-    label: '买量应用',
-    value: `${formatInt(now.initialCount)}个`
+    label: '买量用户',
+    value: `${formatInt(now.initialCount)}个`,
+    ...(initialCountChange != null && Number.isFinite(initialCountChange)
+      ? {
+          change: Math.abs(initialCountChange),
+          trend: (initialCountChange >= 0 ? 'up' : 'down') as 'up' | 'down'
+        }
+      : {})
   })
 
   // 广告系列：取值 now.adGroupCount，null 按 0 展示
@@ -586,7 +614,7 @@ export function mapOverallToKpiCards(
       label: '预估利润',
       valueKey: 'profit',
       format: 'money',
-      detail: () => '当前广告｜内购收入-广告支出'
+      detail: () => '当前广告｜付费收入-广告支出'
     }
   ]
   return cards.map(({ type, label, valueKey, format, detail, subItems }) => {
@@ -659,8 +687,24 @@ export function mapCountryInfoOverallToStatCards(
     const sign = change >= 0 ? '+' : ''
     return `${sign}${Number(change).toFixed(1)}%`
   }
+  /** ROI 与环比：接口为倍数口径（如 1.32），展示为百分比需 *100 */
+  const fmtRoiAsPercent = (roi: number | null | undefined): string => {
+    if (roi == null || !Number.isFinite(Number(roi)) || Number(roi) <= 0) return '—'
+    const pct = Number(roi) * 100
+    return pct.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%'
+  }
+  const fmtRoiChangeAsPercent = (change: number | undefined): string => {
+    if (change == null || !Number.isFinite(change)) return '—'
+    const sign = change >= 0 ? '+' : ''
+    const pct = change * 100
+    return `${sign}${pct.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`
+  }
   const compareStr = (change: number | undefined, up: boolean): string => {
     const pct = fmtPct(change)
+    return pct === '—' ? `${cycleText}数据` : `${up ? '↑' : '↓'}${pct} vs${cycleText}`
+  }
+  const compareStrRoi = (change: number | undefined, up: boolean): string => {
+    const pct = fmtRoiChangeAsPercent(change)
     return pct === '—' ? `${cycleText}数据` : `${up ? '↑' : '↓'}${pct} vs${cycleText}`
   }
   return [
@@ -680,8 +724,8 @@ export function mapCountryInfoOverallToStatCards(
     },
     {
       label: 'ROI',
-      value: now?.roi != null ? String(Number(now.roi).toFixed(2)) : '0.00',
-      compare: compareStr(data.roiChange, (data.roiChange ?? 0) >= 0),
+      value: fmtRoiAsPercent(now?.roi),
+      compare: compareStrRoi(data.roiChange, (data.roiChange ?? 0) >= 0),
       compareUp: (data.roiChange ?? 0) >= 0,
       bgClass: 'bg-blue'
     },
@@ -867,7 +911,7 @@ export function mapLtvToChart(data: CountryInfoLtvData): { data: number[]; note:
 }
 
 /**
- * 获取国家详情用户分层（用户分层饼图 + 付费转化率文案）
+ * 获取国家详情用户分层（用户分层饼图 + 付费率文案）
  * POST /api/v1/datacenter/analysis/countryInfo/userPayLaunch，请求体：{}
  */
 export async function fetchCountryInfoUserPayLaunch(
@@ -903,7 +947,7 @@ export function mapUserPayLaunchToSegment(data: CountryInfoUserPayLaunchData): {
   const globalRate = Number(data.payConversionGlobalAvgRate) || 0
   const ratePct = rate <= 1 && rate >= 0 ? rate * 100 : rate
   const globalPct = globalRate <= 1 && globalRate >= 0 ? globalRate * 100 : globalRate
-  const note = `付费转化率 ${ratePct.toFixed(1)}% (vs 全局 ${globalPct.toFixed(1)}%)`
+  const note = `付费率 ${ratePct.toFixed(1)}% (vs 全局 ${globalPct.toFixed(1)}%)`
   return { segmentData, note }
 }
 
@@ -941,19 +985,6 @@ export function mapConsumptionRhythmToSpendPace(
   const selfList = (res.self || []).map((i) => toItem(i, 'default'))
   const proxyList = (res.proxy || []).map((i) => toItem(i, 'managed'))
   return [...selfList, ...proxyList]
-}
-
-/**
- * 获取消耗节奏监控数据（自投 + 代投）
- * 请求体：{ date: 'YYYY-MM-DD' }
- */
-export async function fetchConsumptionRhythmMonitoring(params?: {
-  date?: string
-}): Promise<CockpitConsumptionRhythmResponse> {
-  return request.post<CockpitConsumptionRhythmResponse>({
-    url: COCKPIT_CONSUMPTION_RHYTHM_URL,
-    data: params?.date ? { date: params.date } : {}
-  })
 }
 
 /** 将 Top3 接口 app 转为 TopRevenueItem */
@@ -1035,6 +1066,19 @@ export async function fetchCockpitTop3(params?: { date?: string }): Promise<Cock
 }
 
 /**
+ * 获取消耗节奏监控数据（自投 + 代投）
+ * 请求体：{ date: 'YYYY-MM-DD' }
+ */
+export async function fetchConsumptionRhythmMonitoring(params?: {
+  date?: string
+}): Promise<CockpitConsumptionRhythmResponse> {
+  return request.post<CockpitConsumptionRhythmResponse>({
+    url: COCKPIT_CONSUMPTION_RHYTHM_URL,
+    data: params?.date ? { date: params.date } : {}
+  })
+}
+
+/**
  * 将广告平台 ROI&安装量接口数据转为表格/折线用结构
  * - 广告平台名称：使用 channel 字段
  * - 消耗、安装量、CPI：使用 list 数组中索引为 0 的对象（list[0]）的 cost、install、cpl（接口可能返回 null，已做兼容）
@@ -1047,14 +1091,16 @@ export function mapChannelRoiInstallToItems(
   const num = (v: unknown) => (v != null && Number.isFinite(Number(v)) ? Number(v) : 0)
   return data.map((row) => {
     const list = row.list ?? []
-    const first = list[0] ?? { cost: null, cpl: null, install: null }
-    const trend = list.map((d) => num(d.cost))
+    const first = list[0] ?? { cost: null, cpl: null, install: null, roi: null }
     return {
       channel: row.channel ?? '—',
       spend: num(first.cost),
+      spendChange: num((row as { costChange?: unknown }).costChange),
       installs: num(first.install),
-      cpi: num(first.cpl),
-      trend
+      installsChange: num((row as { installChange?: unknown }).installChange),
+      roi: num((first as { roi?: unknown }).roi),
+      roiChange: num((row as { roiChange?: unknown }).roiChange),
+      cpi: num(first.cpl)
     }
   })
 }
@@ -1170,7 +1216,7 @@ export async function fetchCockpitBusinessMap(params?: {
  *
  * 接口语义：每条记录的 dAdRevenue、dIapRevenue 是该 APP 在该国家的值；
  * 同一国家下多条记录（不同 APP）需汇总为该国家的总和；顶层为全局汇总。
- * 结构：广告收入/内购收入(depth0) -> 国家(depth1) -> 应用(depth2)
+ * 结构：广告收入/付费收入(depth0) -> 国家(depth1) -> 应用(depth2)
  */
 export function mapIncomeStructureToFlow(
   data: CockpitIncomeStructureRow[] | null
@@ -1209,7 +1255,7 @@ export function mapIncomeStructureToFlow(
     byAppTotal[appName] = (byAppTotal[appName] ?? 0) + value
   })
   const nodeAd = '广告收入'
-  const nodeIap = '内购收入'
+  const nodeIap = '付费收入'
   /** 国家节点唯一 id（避免与 app 同名如「其他」导致 ECharts 报 duplicate name） */
   const countryId = (c: string) => `country:${c}`
   /** 应用节点唯一 id */
@@ -1277,7 +1323,7 @@ export function mapIncomeStructureToFlow(
     })
     insights.push({
       color: '#409eff',
-      text: `内购收入占比 ${iapPct}%`
+      text: `付费收入占比 ${iapPct}%`
     })
   }
   return { nodes, links, insights }
@@ -1299,20 +1345,31 @@ export async function fetchIncomeStructure(params?: {
 }
 
 /**
- * 获取驾驶舱全量数据
- * - KPI 卡片：来自真实接口 fetchCockpitOverall，与 dateRange 换算的 startTime/endTime 在 useCockpitData 中调用
- * - 其余模块：Mock 或后续各子模块独立接口
+ * 今日 Tab 专属：四卡片汇总（当前网关无独立 `cockpit/today-summary-cards` 时，非 Mock 返回空数组）
+ */
+export async function fetchCockpitTodaySummaryCards(params?: {
+  date?: string
+}): Promise<CockpitTodaySummaryCard[]> {
+  void params
+  return Promise.resolve([])
+}
+
+/**
+ * 昨日 Tab 专属：汇总面板分组块（当前网关无独立 `cockpit/yesterday-summary-panel` 时，非 Mock 返回空数组）
+ */
+export async function fetchCockpitYesterdaySummaryPanel(params?: {
+  date?: string
+}): Promise<CockpitYesterdaySummarySection[]> {
+  void params
+  return Promise.resolve([])
+}
+
+/**
+ * 驾驶舱「概览」形状数据：不发 `cockpit/overview`，返回空壳；由 overall、top3、地图等子请求写入 mergeOverview。
  */
 export async function fetchCockpitOverview(
   params?: CockpitOverviewParams
 ): Promise<CockpitOverview> {
-  if (COCKPIT_USE_MOCK) {
-    return Promise.resolve({ ...MOCK_COCKPIT_OVERVIEW })
-  }
-
-  const res = await request.get<CockpitOverview>({
-    url: COCKPIT_OVERVIEW_URL,
-    params: params ?? {}
-  })
-  return res
+  void params
+  return Promise.resolve({ ...EMPTY_COCKPIT_OVERVIEW })
 }

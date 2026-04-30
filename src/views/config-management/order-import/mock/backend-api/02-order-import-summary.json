@@ -1,7 +1,20 @@
 {
   "_comment": "今日导入统计。",
   "fieldDescription": {
-    "request": {},
+    "request": {
+      "dataSource": {
+        "type": "string",
+        "required": false,
+        "enum": ["appstore", "googleplay"],
+        "description": "按数据源过滤统计，不传或空字符串表示全部。"
+      },
+      "status": {
+        "type": "string",
+        "required": false,
+        "enum": ["completed", "processing", "partial", "failed"],
+        "description": "按状态过滤统计，不传或空字符串表示全部。"
+      }
+    },
     "response": {
       "todayTotal": { "type": "number", "required": true, "description": "今日任务数。" },
       "completed": { "type": "number", "required": true, "description": "完成数。" },
@@ -9,7 +22,7 @@
       "failed": { "type": "number", "required": true, "description": "失败数。" }
     }
   },
-  "sampleRequest": {},
+  "sampleRequest": { "dataSource": "", "status": "" },
   "sampleResponse": { "data": { "todayTotal": 5, "completed": 3, "processing": 1, "failed": 1 } },
   "api": {
     "url": "POST /api/config-management/order-import/summary",
@@ -23,7 +36,7 @@
       {
         "moment": "页面首屏初始化",
         "detail": "列表页顶部 KPI 与表格并行 `fetchOrderImportSummary`。",
-        "prerequisite": "`OrderImportApiSource.importSummary`。"
+        "prerequisite": "`OrderImportListApiSource.importSummary`。"
       }
     ],
     "defaultSelection": "无请求参数。",

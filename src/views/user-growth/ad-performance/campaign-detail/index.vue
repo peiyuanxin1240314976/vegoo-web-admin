@@ -1,7 +1,7 @@
 <template>
   <div class="cd-page">
     <!-- ── 顶部导航栏 ─────────────────────────────────────── -->
-    <div class="cd-topbar">
+    <div class="cd-topbar campaign-detail-filters">
       <div class="cd-topbar__left">
         <button type="button" class="cd-back-btn" @click="router.back()">
           <el-icon><ArrowLeft /></el-icon>
@@ -11,6 +11,15 @@
           <el-breadcrumb-item>广告系列详情</el-breadcrumb-item>
         </el-breadcrumb>
       </div>
+      <AppDatePicker
+        v-model="dateRangeValue"
+        type="daterange"
+        value-format="YYYY-MM-DD"
+        range-separator="~"
+        start-placeholder="开始日期"
+        end-placeholder="结束日期"
+        class="ap-date-picker"
+      />
     </div>
 
     <!-- ── 首屏骨架（远程加载中不展示本地 Mock）── -->
@@ -99,11 +108,11 @@
           </span>
         </div>
         <div class="cd-title-row__actions">
-          <ElButton type="primary" size="small" plain round @click="goToEdit">
+          <!-- <ElButton type="primary" size="small" plain round @click="goToEdit">
             <el-icon><Edit /></el-icon>
             编辑系列
-          </ElButton>
-          <ElButton
+          </ElButton> -->
+          <!-- <ElButton
             size="small"
             plain
             round
@@ -114,7 +123,7 @@
             暂停
           </ElButton>
           <ElButton size="small" plain round @click="onCampaignAction('copy')">复制</ElButton>
-          <ElButton size="small" plain round @click="onCampaignAction('archive')">归档</ElButton>
+          <ElButton size="small" plain round @click="onCampaignAction('archive')">归档</ElButton> -->
         </div>
       </div>
 
@@ -132,7 +141,9 @@
           <CampaignAdList
             :rows="data.adRows"
             :campaign-id="String(route.query.id ?? '')"
+            :status="adListStatus"
             @refresh-ad-list="reloadAdList"
+            @change-status="onChangeAdListStatus"
           />
         </div>
         <div class="cd-col cd-col--right">
@@ -145,17 +156,24 @@
 </template>
 
 <script setup lang="ts">
-  import { onMounted, reactive, ref } from 'vue'
+  import { computed, onMounted, reactive, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { ElMessage } from 'element-plus'
-  import { ArrowLeft, SuccessFilled, Edit, VideoPause } from '@element-plus/icons-vue'
+  import {
+    ArrowLeft,
+    SuccessFilled
+    // Edit
+    // VideoPause
+  } from '@element-plus/icons-vue'
   import {
     fetchCampaignDetailAdList,
     fetchCampaignDetailAiInsights,
-    fetchCampaignDetailCampaignAction,
+    // fetchCampaignDetailCampaignAction,
     fetchCampaignDetailCreativeTop5,
     fetchCampaignDetailOverview
   } from '@/api/user-growth/ad-performance'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
+  import { getAppTodayYYYYMMDD } from '@/utils/app-now'
   import CampaignInfoCards from './modules/campaign-info-cards.vue'
   import CampaignCoreTrend from './modules/campaign-core-trend.vue'
   import CampaignAdList from './modules/campaign-ad-list.vue'
@@ -164,7 +182,7 @@
   import {
     createEmptyCampaignDetail,
     normalizeCampaignDetailFromApi,
-    type CampaignDetailCampaignActionType,
+    // type CampaignDetailCampaignActionType,
     type CampaignDetailData,
     type CampaignStatus
   } from './types'
@@ -175,17 +193,35 @@
   const route = useRoute()
   const loading = ref(true)
   const data = reactive<CampaignDetailData>(createEmptyCampaignDetail())
+  const adListStatus = ref<'all' | 'active' | 'paused' | 'completed'>('all')
+  const queryStartDate = String(route.query.startDate ?? '').trim()
+  const queryEndDate = String(route.query.endDate ?? '').trim()
+  const filterStartDate = ref(queryStartDate || getAppTodayYYYYMMDD())
+  const filterEndDate = ref(queryEndDate || getAppTodayYYYYMMDD())
 
-  function goToEdit() {
-    router.push({
-      path: '/campaign-detail/ad-edit',
-      query: {
-        campaignId: String(route.query.id ?? ''),
-        appId: String(route.query.appId ?? ''),
-        appName: String(route.query.appName ?? '')
-      }
-    })
-  }
+  const dateRangeValue = computed<[string, string]>({
+    get() {
+      return [filterStartDate.value, filterEndDate.value]
+    },
+    set(v) {
+      const nextStart = String(v?.[0] ?? '').trim()
+      const nextEnd = String(v?.[1] ?? '').trim()
+      if (!nextStart || !nextEnd) return
+      filterStartDate.value = nextStart
+      filterEndDate.value = nextEnd
+    }
+  })
+
+  // function goToEdit() {
+  //   router.push({
+  //     path: '/campaign-detail/ad-edit',
+  //     query: {
+  //       campaignId: String(route.query.id ?? ''),
+  //       appId: String(route.query.appId ?? ''),
+  //       appName: String(route.query.appName ?? '')
+  //     }
+  //   })
+  // }
 
   async function loadCampaignDetail() {
     const campaignId = String(route.query.id ?? '')
@@ -193,11 +229,15 @@
       ElMessage.error('缺少广告系列 ID')
       return
     }
+    const dateFilter = {
+      startDate: filterStartDate.value,
+      endDate: filterEndDate.value
+    }
     const [o, ads, cr, ai] = await Promise.all([
-      fetchCampaignDetailOverview({ campaignId }),
-      fetchCampaignDetailAdList({ campaignId, status: 'all' }),
-      fetchCampaignDetailCreativeTop5({ campaignId }),
-      fetchCampaignDetailAiInsights({ campaignId })
+      fetchCampaignDetailOverview({ campaignId, ...dateFilter }),
+      fetchCampaignDetailAdList({ campaignId, status: adListStatus.value, ...dateFilter }),
+      fetchCampaignDetailCreativeTop5({ campaignId, ...dateFilter }),
+      fetchCampaignDetailAiInsights({ campaignId, ...dateFilter })
     ])
     Object.assign(data, normalizeCampaignDetailFromApi(o, ads, cr, ai))
   }
@@ -206,31 +246,52 @@
     const campaignId = String(route.query.id ?? '')
     if (!campaignId) return
     try {
-      const ads = await fetchCampaignDetailAdList({ campaignId, status: 'all' })
+      const adListBody = {
+        campaignId,
+        status: adListStatus.value,
+        startDate: filterStartDate.value,
+        endDate: filterEndDate.value
+      }
+      const ads = await fetchCampaignDetailAdList(adListBody)
       data.adRows = Array.isArray(ads?.rows) ? ads.rows : []
     } catch {
       ElMessage.error('刷新广告列表失败')
     }
   }
 
-  async function onCampaignAction(actionType: CampaignDetailCampaignActionType) {
-    const campaignId = String(route.query.id ?? '')
-    if (!campaignId) {
-      ElMessage.error('缺少广告系列 ID')
-      return
-    }
+  async function onChangeAdListStatus(v: 'all' | 'active' | 'paused' | 'completed') {
+    adListStatus.value = v
+    await reloadAdList()
+  }
+
+  watch([filterStartDate, filterEndDate], async ([nextStart, nextEnd], [prevStart, prevEnd]) => {
+    if (!nextStart || !nextEnd) return
+    if (nextStart === prevStart && nextEnd === prevEnd) return
     try {
-      const res = await fetchCampaignDetailCampaignAction({ campaignId, actionType })
-      if (res.message) ElMessage.success(res.message)
-      else ElMessage.success('操作成功')
-      if (actionType === 'copy' && res.newCampaignId) {
-        ElMessage.info(`新系列 ID：${res.newCampaignId}`)
-      }
       await loadCampaignDetail()
     } catch {
-      ElMessage.error('操作失败')
+      ElMessage.error('按日期刷新系列详情失败')
     }
-  }
+  })
+
+  // async function onCampaignAction(actionType: CampaignDetailCampaignActionType) {
+  //   const campaignId = String(route.query.id ?? '')
+  //   if (!campaignId) {
+  //     ElMessage.error('缺少广告系列 ID')
+  //     return
+  //   }
+  //   try {
+  //     const res = await fetchCampaignDetailCampaignAction({ campaignId, actionType })
+  //     if (res.message) ElMessage.success(res.message)
+  //     else ElMessage.success('操作成功')
+  //     if (actionType === 'copy' && res.newCampaignId) {
+  //       ElMessage.info(`新系列 ID：${res.newCampaignId}`)
+  //     }
+  //     await loadCampaignDetail()
+  //   } catch {
+  //     ElMessage.error('操作失败')
+  //   }
+  // }
 
   function statusText(s: CampaignStatus): string {
     const map: Record<CampaignStatus, string> = {
@@ -341,8 +402,9 @@
   // ── 顶部导航栏 ──────────────────────────────────────────────
   .cd-topbar {
     display: flex;
-    flex-shrink: 0;
+    // flex-shrink: 0;
     align-items: center;
+    justify-content: space-between;
     animation: cd-slide-down 0.45s var(--ease-out) both;
   }
 
@@ -582,6 +644,34 @@
 
     .cd-back-btn {
       transition: none;
+    }
+  }
+
+  .ap-date-picker {
+    flex: 0 0 250px;
+    width: 250px;
+    min-width: 250px;
+    max-width: 250px;
+
+    @media (width <=768px) {
+      flex: 1 1 100%;
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+    }
+  }
+
+  .campaign-detail-filters :deep(.ap-date-picker.el-date-editor.el-date-editor--daterange) {
+    flex: 0 0 250px !important;
+    width: 250px !important;
+    min-width: 250px !important;
+    max-width: 250px !important;
+
+    @media (width <=768px) {
+      flex: 1 1 100% !important;
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: 100% !important;
     }
   }
 </style>

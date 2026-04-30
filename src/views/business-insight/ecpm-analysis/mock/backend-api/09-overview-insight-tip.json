@@ -5,7 +5,11 @@
       "t_start_date": { "type": "string", "required": true, "description": "开始日 YYYY-MM-DD。" },
       "t_end_date": { "type": "string", "required": true, "description": "结束日 YYYY-MM-DD。" },
       "platform": { "type": "string", "required": true, "description": "终端平台。" },
-      "s_app_id": { "type": "string", "required": false, "description": "应用 ID。" }
+      "appIds": {
+        "type": "string[]",
+        "required": true,
+        "description": "应用筛选；不限为 []，单选为 [\"应用ID\"]。"
+      }
     },
     "response": {
       "message": {
@@ -19,7 +23,7 @@
     "t_start_date": "2024-05-01",
     "t_end_date": "2024-05-31",
     "platform": "all",
-    "s_app_id": ""
+    "appIds": []
   },
   "sampleResponse": {
     "message": "插屏式广告位普遍ECPM较高，建议优先保障展示频次"

@@ -24,20 +24,29 @@
       <!-- 广告系列名称 -->
       <template #cell:name="{ row }">
         <div class="ad-performance-table__dim">
-          <span class="ad-performance-table__dim-main" :title="row.name">{{ row.name }}</span>
+          <span class="ad-performance-table__dim-main" :title="isNestedRow(row) ? '-' : row.name">
+            {{ isNestedRow(row) ? '-' : row.name }}
+          </span>
+        </div>
+      </template>
+
+      <!-- 广告组名称 -->
+      <template #cell:adGroupName="{ row }">
+        <div class="ad-performance-table__dim">
+          <span
+            class="ad-performance-table__dim-main"
+            :title="isNestedRow(row) ? row.adGroupName || '-' : '-'"
+          >
+            {{ isNestedRow(row) ? row.adGroupName || '-' : '-' }}
+          </span>
         </div>
       </template>
 
       <!-- 广告平台 -->
       <template #cell:channel="{ row }">
         <span v-if="isNestedRow(row)" class="ad-performance-table__muted">-</span>
-        <span
-          v-else
-          class="ad-performance-table__channel-icon"
-          :class="`ad-performance-table__channel-icon--${row.channel}`"
-          aria-hidden="true"
-        >
-          {{ channelShort(row.channel) }}
+        <span v-else class="ad-performance-table__dim-main" :title="row.channel">
+          {{ row.channel }}
         </span>
       </template>
 
@@ -83,8 +92,17 @@
 
       <!-- 预估利润 -->
       <template #cell:estimatedProfit="{ row }">
-        <span :class="profitClass(row.estimatedProfit)">
-          {{ row.estimatedProfit >= 0 ? '+' : '' }}{{ formatMoney(row.estimatedProfit, 0) }}
+        <span class="ap-profit">
+          <span
+            class="ap-profit__tip"
+            :class="[profitClass(row.estimatedProfit), trendClass(row.estimatedProfit)]"
+            aria-hidden="true"
+          >
+            <span class="ap-profit__arrow"></span>
+          </span>
+          <span class="ap-profit__value" :class="profitClass(row.estimatedProfit)">
+            {{ row.estimatedProfit >= 0 ? '+' : '' }}{{ formatMoney(row.estimatedProfit, 0) }}
+          </span>
         </span>
       </template>
 
@@ -132,11 +150,11 @@
   import type { AdPerformanceCampaignRow, CampaignRowStatus } from '../../types'
   import { useTabColumnVisibility } from '../../composables/useTabColumnVisibility'
   import {
-    channelShort,
     countryFlag,
     formatMoney,
     roiClass,
     profitClass,
+    trendClass,
     accentColor
   } from '../../utils/tab-utils'
 
@@ -157,6 +175,7 @@
   const ALL_COLUMNS = [
     { key: 'appName', label: '应用', required: true },
     { key: 'name', label: '广告系列名称', required: true },
+    { key: 'adGroupName', label: '广告组名称', required: true },
     { key: 'channel', label: '广告平台' },
     { key: 'country', label: '国家' },
     { key: 'status', label: '状态' },
@@ -185,8 +204,25 @@
   const visibleColumns = computed<ArtVirtualTableColumn[]>(() => {
     const cols: ArtVirtualTableColumn[] = []
     cols.push({ key: 'appName', title: '应用', width: 120 })
-    cols.push({ key: 'name', title: '广告系列名称', width: 200, flexGrow: 1 })
-    if (isVisible('channel')) cols.push({ key: 'channel', title: '广告平台', width: 100 })
+    cols.push({
+      key: 'name',
+      title: '广告系列名称',
+      width: 120,
+      showOverflowTooltip: true
+    })
+    cols.push({
+      key: 'adGroupName',
+      title: '广告组名称',
+      width: 120,
+      showOverflowTooltip: true
+    })
+    if (isVisible('channel'))
+      cols.push({
+        key: 'channel',
+        title: '广告平台',
+        width: 130,
+        showOverflowTooltip: true
+      })
     if (isVisible('country')) cols.push({ key: 'country', title: '国家', width: 80 })
     if (isVisible('status')) cols.push({ key: 'status', title: '状态', width: 100 })
     if (isVisible('spendBudget')) cols.push({ key: 'spendBudget', title: '花费/预算', width: 160 })
@@ -227,6 +263,8 @@
   }
 
   function isNestedRow(row: AdPerformanceCampaignRow): boolean {
+    const adGroupName = String(row.adGroupName ?? '').trim()
+    if (adGroupName !== '') return true
     return String(row.id ?? '').includes('-') || String(row.name ?? '').startsWith('AdGroup_')
   }
 
@@ -244,6 +282,9 @@
           const match =
             row.appName.toLowerCase().includes(kw) ||
             row.name.toLowerCase().includes(kw) ||
+            String((row as unknown as Record<string, unknown>).adGroupName ?? '')
+              .toLowerCase()
+              .includes(kw) ||
             row.channel.toLowerCase().includes(kw) ||
             row.country.toLowerCase().includes(kw)
           if (match) return row
@@ -309,5 +350,57 @@
     max-height: 360px;
     padding-right: 4px;
     overflow: auto;
+  }
+
+  /* 预估利润颜色：该 Tab 为子组件，需显式定义避免 scoped 作用域导致颜色丢失 */
+  .ad-performance-table__profit--up {
+    color: var(--art-success);
+  }
+
+  .ad-performance-table__profit--down {
+    color: var(--art-danger);
+  }
+
+  .ap-profit {
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+    justify-content: flex-end;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .ap-profit__tip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 18px;
+    padding: 0 6px;
+    background: color-mix(in srgb, currentcolor 10%, transparent);
+    border: 1px solid color-mix(in srgb, currentcolor 28%, transparent);
+    border-radius: 9999px;
+    box-shadow: 0 0 0 1px color-mix(in srgb, currentcolor 8%, transparent) inset;
+  }
+
+  .ap-profit__arrow {
+    width: 0;
+    height: 0;
+    opacity: 0.95;
+  }
+
+  .ap-profit__tip.is-trend-up .ap-profit__arrow {
+    border-right: 5px solid transparent;
+    border-bottom: 7px solid currentcolor;
+    border-left: 5px solid transparent;
+  }
+
+  .ap-profit__tip.is-trend-down .ap-profit__arrow {
+    border-top: 7px solid currentcolor;
+    border-right: 5px solid transparent;
+    border-left: 5px solid transparent;
+  }
+
+  .ap-profit__tip.is-trend-flat {
+    display: none;
   }
 </style>

@@ -35,6 +35,7 @@ export const AccountApiSource: Record<
   | 'exportCredential'
   | 'validateCredentialBatch'
   | 'openAccountTable'
+  | 'openAccountOverviewStats'
   | 'createOpenAccount'
   | 'assignOpenAccountCredential'
   | 'deleteOpenAccount'
@@ -42,6 +43,7 @@ export const AccountApiSource: Record<
   | 'fetchOpenAccountFeishuConfig'
   | 'saveOpenAccountFeishuConfig'
   | 'bcTable'
+  | 'bcOverviewStats'
   | 'createBc'
   | 'updateBc'
   | 'deleteBc'
@@ -49,40 +51,42 @@ export const AccountApiSource: Record<
   UseMock
 > = {
   // ── 广告账户 Tab ─────────────────────────────────────
-  accountTable: true,
-  createAccount: true,
-  updateAccount: true,
-  disableAccount: true,
-  enableAccount: true,
-  rechargeAccount: true,
-  exportAccount: true,
-  importAccount: true,
+  accountTable: false,
+  createAccount: false,
+  updateAccount: false,
+  disableAccount: false,
+  enableAccount: false,
+  rechargeAccount: false,
+  exportAccount: false,
+  importAccount: false,
   // ── 代理商 Tab ───────────────────────────────────────
-  agencyTable: true,
-  createAgency: true,
-  updateAgency: true,
-  deleteAgency: true,
-  exportAgency: true,
+  agencyTable: false,
+  createAgency: false,
+  updateAgency: false,
+  deleteAgency: false,
+  exportAgency: false,
   // ── 凭据 Tab ─────────────────────────────────────────
-  credentialTable: true,
-  createCredential: true,
-  updateCredential: true,
-  validateCredential: true,
-  deleteCredential: true,
-  exportCredential: true,
-  validateCredentialBatch: true,
+  credentialTable: false,
+  createCredential: false,
+  updateCredential: false,
+  validateCredential: false,
+  deleteCredential: false,
+  exportCredential: false,
+  validateCredentialBatch: false,
   // ── 开户 Tab ─────────────────────────────────────────
-  openAccountTable: true,
-  createOpenAccount: true,
-  assignOpenAccountCredential: true,
-  deleteOpenAccount: true,
-  exportOpenAccount: true,
-  fetchOpenAccountFeishuConfig: true,
-  saveOpenAccountFeishuConfig: true,
+  openAccountTable: false,
+  openAccountOverviewStats: false,
+  createOpenAccount: false,
+  assignOpenAccountCredential: false,
+  deleteOpenAccount: false,
+  exportOpenAccount: false,
+  fetchOpenAccountFeishuConfig: false,
+  saveOpenAccountFeishuConfig: false,
   // ── BC/BM（路由 `/account-management/bc-management`）────────────────
-  bcTable: true,
-  createBc: true,
-  updateBc: true,
-  deleteBc: true,
-  exportBc: true
+  bcTable: false,
+  bcOverviewStats: false,
+  createBc: false,
+  updateBc: false,
+  deleteBc: false,
+  exportBc: false
 }

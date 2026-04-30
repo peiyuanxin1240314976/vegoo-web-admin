@@ -1,0 +1,44 @@
+{
+  "_comment": "汇率管理右列同步设置读取接口，对应 SyncConfig。",
+  "fieldDescription": {
+    "request": {},
+    "response": {
+      "frequency": {
+        "type": "string",
+        "required": true,
+        "enum": ["hourly", "every6h", "daily"],
+        "description": "同步频率。"
+      },
+      "alertThreshold": { "type": "number", "required": true, "description": "告警阈值（%）。" },
+      "primarySource": { "type": "string", "required": true, "description": "主数据源。" },
+      "backupSourceEnabled": { "type": "boolean", "required": true, "description": "备用源开关。" }
+    }
+  },
+  "sampleRequest": {},
+  "sampleResponse": {
+    "data": {
+      "frequency": "hourly",
+      "alertThreshold": 2,
+      "primarySource": "openexchange",
+      "backupSourceEnabled": true
+    }
+  },
+  "api": {
+    "url": "POST /api/config-management/exchange-rate/sync-config/detail",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "empty object",
+    "responseBody": "SyncConfig"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "进入页面时读取同步设置并回填右侧设置卡片。",
+        "prerequisite": "`ExchangeRateApiSource.syncConfigDetail`。"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "无"
+  }
+}

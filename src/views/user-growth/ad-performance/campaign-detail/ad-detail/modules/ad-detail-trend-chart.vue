@@ -34,7 +34,7 @@
   type MetricKey = 'spend' | 'cpi' | 'roi'
 
   const METRICS: { key: MetricKey; label: string; color: string }[] = [
-    { key: 'spend', label: 'Spend', color: '#3B82F6' },
+    { key: 'spend', label: '广告支出', color: '#3B82F6' },
     { key: 'cpi', label: 'CPI', color: '#F97316' },
     { key: 'roi', label: 'ROI', color: '#10B981' }
   ]
@@ -43,6 +43,7 @@
 
   const chartEl = ref<HTMLElement | null>(null)
   let chart: echarts.ECharts | null = null
+  let initRetryTimer: number | null = null
 
   /** 读取实际 CSS 变量色值（ECharts canvas 无法识别 var(--xxx)） */
   function cv(name: string): string {
@@ -108,22 +109,55 @@
 
   const ro = new ResizeObserver(() => chart?.resize())
 
+  function clearInitRetryTimer() {
+    if (initRetryTimer != null) {
+      window.clearTimeout(initRetryTimer)
+      initRetryTimer = null
+    }
+  }
+
+  function canInitChart(el: HTMLElement) {
+    return el.clientWidth > 0 && el.clientHeight > 0
+  }
+
+  function scheduleInitRetry() {
+    if (initRetryTimer != null) return
+    initRetryTimer = window.setTimeout(() => {
+      initRetryTimer = null
+      initChartWhenReady()
+    }, 80)
+  }
+
+  function initChartWhenReady() {
+    const el = chartEl.value
+    if (!el) return
+    if (!canInitChart(el)) {
+      scheduleInitRetry()
+      return
+    }
+    clearInitRetryTimer()
+    if (!chart) {
+      chart = echarts.init(el)
+      ro.observe(el)
+    }
+    chart.setOption(buildOption(), { notMerge: true })
+    chart.resize()
+  }
+
   onMounted(async () => {
     await nextTick()
-    if (!chartEl.value) return
-    chart = echarts.init(chartEl.value)
-    chart.setOption(buildOption())
-    ro.observe(chartEl.value)
+    initChartWhenReady()
   })
 
   onBeforeUnmount(() => {
+    clearInitRetryTimer()
     ro.disconnect()
     chart?.dispose()
   })
 
   watch(
     () => props.data,
-    () => chart?.setOption(buildOption(), { notMerge: true }),
+    () => initChartWhenReady(),
     { deep: true }
   )
 </script>

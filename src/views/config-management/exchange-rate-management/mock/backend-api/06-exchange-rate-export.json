@@ -1,22 +1,54 @@
 {
-  "_comment": "导出汇率列表。",
+  "_comment": "导出汇率列表。筛选与 table 一致；响应仅为 HTTP 二进制文件流，无 JSON 业务体。",
   "fieldDescription": {
     "request": {
-      "pair": { "type": "string", "required": false, "description": "货币对筛选。" },
-      "date": { "type": "string", "required": false, "description": "日期筛选。" }
+      "pair": {
+        "type": "string",
+        "required": false,
+        "description": "货币对筛选；空字符串表示全部。"
+      },
+      "date": {
+        "type": "string",
+        "required": false,
+        "description": "日期筛选，格式 YYYY-MM-DD；空字符串表示全部。"
+      }
     },
     "response": {
-      "fileToken": { "type": "string", "required": true, "description": "导出文件令牌。" }
+      "httpBody": {
+        "type": "binary stream",
+        "required": true,
+        "description": "HTTP 响应体为原始文件二进制流（CSV / Excel），不是 JSON。前端使用 `requestBlob` 接收并触发下载。"
+      },
+      "contentType": {
+        "type": "string (response header)",
+        "required": true,
+        "description": "响应头 `Content-Type`，如 `text/csv;charset=utf-8`、`application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`。"
+      },
+      "contentDisposition": {
+        "type": "string (response header)",
+        "required": true,
+        "description": "响应头 `Content-Disposition`：`attachment` + `filename` / `filename*=`，用于默认文件名。"
+      }
     }
   },
   "sampleRequest": { "pair": "", "date": "" },
-  "sampleResponse": { "data": { "fileToken": "exchange-rate-export-20260324" } },
+  "sampleResponse": {
+    "_note": "无 JSON 业务体；联调时以实际 HTTP 响应流为准。",
+    "httpBody": "<binary stream — not representable as JSON object>"
+  },
   "api": {
     "url": "POST /api/config-management/exchange-rate/export",
     "method": "POST",
     "priority": "P1",
     "requestBody": "pair?, date?",
-    "responseBody": "{ fileToken }"
+    "responseBody": "binary file stream (blob); not JSON"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "后端须返回文件流（stream/blob），禁止将该导出接口主响应设计为 JSON token 或 JSON+Base64。",
+      "无匹配数据时仍建议返回至少含表头的合法文件流。",
+      "前端在 `src/api/config-management/exchange-rate-management.ts` 使用 `requestBlob` + `Content-Disposition` 解析文件名。"
+    ]
   },
   "interaction": {
     "triggers": [
@@ -27,6 +59,6 @@
       }
     ],
     "defaultSelection": "与当前筛选一致。",
-    "dedupe": "无"
+    "dedupe": "导出进行中可禁用按钮。"
   }
 }

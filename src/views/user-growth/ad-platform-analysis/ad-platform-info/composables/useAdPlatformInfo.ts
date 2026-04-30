@@ -14,6 +14,7 @@ import type {
   AdPlatformInfoFilterState,
   AdPlatformInfoHeatmapData,
   AdPlatformInfoKpiCard,
+  AdPlatformInfoDateRangePreset,
   AdPlatformInfoPageData
 } from '../types'
 
@@ -51,6 +52,7 @@ export function useAdPlatformInfo() {
   const state = ref<LoadState>('idle')
   const data = ref<AdPlatformInfoPageData | null>(null)
   const errorMsg = ref<string>('')
+  const requestSeq = ref(0)
 
   const isLoading = computed(() => state.value === 'loading')
 
@@ -59,9 +61,19 @@ export function useAdPlatformInfo() {
   }
 
   function buildRequestBody(): Api.UserGrowth.AdPlatformInfoRequestBody {
+    if (Array.isArray(filters.dateRange)) {
+      const [t_start_date, t_end_date] = filters.dateRange
+      return {
+        n_source: nSource.value,
+        t_start_date,
+        t_end_date
+      }
+    }
+
+    const preset: AdPlatformInfoDateRangePreset = filters.dateRange
     const end = getAppNow()
     const start = cloneAppDate(end)
-    const days = filters.dateRange === '7d' ? 7 : filters.dateRange === '90d' ? 90 : 30
+    const days = preset === '7d' ? 7 : preset === '90d' ? 90 : 30
     start.setDate(end.getDate() - (days - 1))
     return {
       n_source: nSource.value,
@@ -80,6 +92,7 @@ export function useAdPlatformInfo() {
       return
     }
 
+    const seq = ++requestSeq.value
     state.value = 'loading'
     errorMsg.value = ''
     try {
@@ -102,6 +115,9 @@ export function useAdPlatformInfo() {
         fetchAdPlatformInfoCampaignTable(body)
       ])
 
+      if (seq !== requestSeq.value) return
+      if (!isAdPlatformInfoRoute.value) return
+
       data.value = {
         summary: platformSummary.summary,
         updatedAtText: String(platformSummary.updatedAtText ?? ''),
@@ -115,6 +131,7 @@ export function useAdPlatformInfo() {
       }
       state.value = 'ready'
     } catch (e: unknown) {
+      if (seq !== requestSeq.value) return
       const err = e as { message?: string }
       errorMsg.value = err?.message || '加载失败'
       state.value = 'error'
@@ -125,7 +142,10 @@ export function useAdPlatformInfo() {
   watch(
     [detailId, isAdPlatformInfoRoute],
     () => {
-      if (!isAdPlatformInfoRoute.value) return
+      if (!isAdPlatformInfoRoute.value) {
+        requestSeq.value++
+        return
+      }
       void load()
     },
     { immediate: true }

@@ -2,12 +2,13 @@
 <template>
   <div class="user-page art-full-height flex">
     <!-- 左侧：统计卡片 + 筛选 + 列表 -->
-    <div class="user-page-left flex-1 min-w-0 flex flex-col">
+    <div class="user-page-left flex-1 min-h-0 min-w-0 flex flex-col">
       <UserLeftPanel
         :stats="userStats"
         :filter-form="filterForm"
         :batch-mode="batchMode"
-        @add-user="showDialog('add')"
+        :role-options="roleOptions"
+        @add-user="openCreateDrawer"
         @search="handleSearch"
         @reset="resetSearchParams"
         @toggle-batch="toggleBatchMode"
@@ -33,23 +34,40 @@
       </UserLeftPanel>
     </div>
 
-    <!-- 右侧：用户详情 -->
-    <div class="user-page-right">
+    <!-- 右侧：抽屉（查看/编辑） -->
+    <ElDrawer
+      v-model="rightDrawerVisible"
+      :title="rightDrawerTitle"
+      size="50%"
+      :append-to-body="true"
+      :close-on-click-modal="false"
+      destroy-on-close
+      @closed="handleRightDrawerClosed"
+    >
       <UserRightPanel
+        :mode="rightPanelMode"
         :user="currentDetailUser"
+        :editing="rightPanelEditing"
+        :role-options="assignRoleOptions"
         @save="handleRightPanelSave"
-        @cancel="currentDetailUser = null"
-        @edit="() => currentDetailUser && showDialog('edit', currentDetailUser)"
+        @cancel="handleRightPanelCancel"
         @disable="handleRightPanelDisable"
       />
-    </div>
+    </ElDrawer>
 
     <!-- 用户弹窗 -->
     <UserDialog
       v-model:visible="dialogVisible"
       :type="dialogType"
       :user-data="currentUserData"
+      :submitting="dialogSubmitting"
       @submit="handleDialogSubmit"
+    />
+
+    <UserAppPermissionsDialog
+      v-model:visible="appPermDialogVisible"
+      :user-id="appPermDialogUserId"
+      @success="refreshData"
     />
   </div>
 </template>
@@ -57,13 +75,23 @@
 <script setup lang="ts">
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import { useTable } from '@/hooks/core/useTable'
-  import { fetchGetUserList } from '@/api/system-manage'
+  import {
+    fetchStats,
+    fetchUserList,
+    createUser,
+    updateUser,
+    disableUser,
+    resetUserPassword
+  } from '@/api/config-management'
   import UserLeftPanel from './modules/user-left-panel.vue'
   import UserRightPanel from './modules/user-right-panel.vue'
   import UserDialog from './modules/user-dialog.vue'
+  import UserAppPermissionsDialog from './modules/user-app-permissions-dialog.vue'
   import { ElTag, ElMessageBox, ElImage, ElMessage } from 'element-plus'
   import { DialogType } from '@/types'
-  import type { UserStats, UserFilterForm } from './modules/user-left-panel.vue'
+  import type { UserFilterForm } from './modules/user-left-panel.vue'
+  import type { UserStats } from './types'
+  import { useConfigRoleListStore } from '@/store/modules/config-role-list'
 
   defineOptions({ name: 'User' })
 
@@ -77,12 +105,27 @@
   const dialogType = ref<DialogType>('add')
   const dialogVisible = ref(false)
   const currentUserData = ref<Partial<UserListItem>>({})
+  const dialogSubmitting = ref(false)
+
+  const appPermDialogVisible = ref(false)
+  const appPermDialogUserId = ref(0)
 
   // 选中行
   const selectedRows = ref<UserListItem[]>([])
 
   // 右侧详情当前选中的用户（点击表格行时设置）
   const currentDetailUser = ref<UserListItem | null>(null)
+  const rightPanelEditing = ref(false)
+  const rightDrawerVisible = ref(false)
+  const rightPanelMode = ref<'edit' | 'create'>('edit')
+
+  const rightDrawerTitle = computed(() => {
+    if (rightPanelMode.value === 'create') return '新建用户'
+    const u = currentDetailUser.value
+    if (!u) return '用户详情'
+    const name = String(u.userName ?? '').trim()
+    return name ? `用户：${name}` : '用户详情'
+  })
 
   // 批量选择模式：为 true 时表格显示勾选列，可批量选择
   const batchMode = ref(false)
@@ -92,6 +135,26 @@
     userName: undefined,
     role: undefined,
     status: undefined
+  })
+
+  const roleListStore = useConfigRoleListStore()
+  const roleOptions = computed(() => [
+    { label: '所有角色', value: '' as const },
+    ...roleListStore.items.map((r) => ({ label: r.roleName, value: r.roleId }))
+  ])
+
+  // 右侧「分配角色」用 roleId 作为 value，用于回显 userRoles[0]（来自 user/table）
+  const assignRoleOptions = computed(() =>
+    roleListStore.items
+      .filter((r) => typeof r.roleId === 'number' && !Number.isNaN(r.roleId))
+      .map((r) => ({ label: r.roleName, value: r.roleId }))
+  )
+
+  const roleIdNameMap = computed<Record<string, string>>(() => {
+    const pairs = roleListStore.items
+      .map((r) => [String(r.roleId ?? ''), String(r.roleName ?? '')] as const)
+      .filter(([id, name]) => id.trim() !== '' && name.trim() !== '')
+    return Object.fromEntries(pairs)
   })
 
   /** 列表状态标签（与 Api.SystemManage.UserListItem.status 约定一致） */
@@ -150,7 +213,7 @@
   } = useTable({
     // 核心配置
     core: {
-      apiFn: fetchGetUserList,
+      apiFn: fetchUserList,
       apiParams: {
         current: 1,
         size: USER_LIST_MAX_PAGE_SIZE,
@@ -193,6 +256,20 @@
           formatter: (row) => row.nickName || '—'
         },
         {
+          prop: 'userRoles',
+          label: '角色',
+          width: 140,
+          showOverflowTooltip: true,
+          formatter: (row) => {
+            const ids = (row.userRoles ?? []).map((v) => String(v).trim()).filter(Boolean)
+            if (!ids.length) return '—'
+            const names = ids
+              .map((id) => roleIdNameMap.value[id])
+              .filter((name) => String(name ?? '').trim() !== '')
+            return names.length ? names.join('，') : ids.join('，')
+          }
+        },
+        {
           prop: 'userGender',
           label: '性别',
           sortable: true,
@@ -215,18 +292,31 @@
         {
           prop: 'operation',
           label: '操作',
-          width: 120,
+          width: 150,
           fixed: 'right', // 固定列
           formatter: (row) =>
             h('div', [
               h(ArtButtonTable, {
                 type: 'edit',
-                onClick: () => showDialog('edit', row)
+                onClick: () => {
+                  currentDetailUser.value = row
+                  rightPanelEditing.value = true
+                  rightDrawerVisible.value = true
+                }
+              }),
+              h(ArtButtonTable, {
+                icon: 'ri:lock-password-line',
+                iconClass: 'bg-warning/12 text-warning',
+                onClick: () => resetPassword(row)
               }),
               h(ArtButtonTable, {
                 type: 'delete',
                 onClick: () => deleteUser(row)
               })
+              // h(ArtButtonTable, {
+              //   type: 'view',
+              //   onClick: () => userRoleList(row)
+              // })
             ])
         }
       ]
@@ -234,18 +324,30 @@
   })
 
   /**
-   * 用户统计：total 为服务端分页总数；其余三项为「当前页」条数（与接口未返回全局分布时对齐）
+   * 用户统计：来自独立接口
    */
-  const userStats = computed<UserStats>(() => {
-    const list = data?.value ?? []
-    const totalCount = pagination?.total ?? 0
-    return {
-      total: totalCount,
-      active: list.filter((r: UserListItem) => r.status === '1').length,
-      disabled: list.filter((r: UserListItem) => r.status === '4').length,
-      pending: list.filter((r: UserListItem) => r.status === '2' || r.status === '3').length
+  const userStats = ref<UserStats>({ total: 0, active: 0, disabled: 0, pending: 0 })
+
+  /** 加载统计卡片 */
+  const loadStats = async () => {
+    try {
+      const res = await fetchStats()
+      userStats.value = res
+    } catch {
+      // 统计接口失败不影响主流程
     }
+  }
+
+  /** 初始化 */
+  onMounted(() => {
+    loadStats()
+    roleListStore.loadRoleList({ force: false })
   })
+
+  // const userRoleList = (row: UserListItem) => {
+  //   appPermDialogUserId.value = row.id
+  //   appPermDialogVisible.value = true
+  // }
 
   /**
    * 搜索处理
@@ -275,40 +377,94 @@
   }
 
   /**
-   * 显示用户弹窗
-   */
-  const showDialog = (type: DialogType, row?: UserListItem): void => {
-    console.log('打开弹窗:', { type, row })
-    dialogType.value = type
-    currentUserData.value = row || {}
-    nextTick(() => {
-      dialogVisible.value = true
-    })
-  }
-
-  /**
-   * 删除用户
+   * 删除用户（禁用）
    */
   const deleteUser = (row: UserListItem): void => {
-    console.log('删除用户:', row)
+    console.log('禁用用户:', row)
     ElMessageBox.confirm(`确定要禁用该用户吗？`, '禁用用户', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'error'
-    }).then(() => {
+    }).then(async () => {
+      await disableUser({ id: row.id, operator: 'current_user' })
       ElMessage.success('已禁用')
+      if (currentDetailUser.value?.id === row.id) {
+        currentDetailUser.value = null
+      }
+      refreshData()
+      loadStats()
+    })
+  }
+
+  const resetPassword = (row: UserListItem): void => {
+    ElMessageBox.confirm(`确定要重置用户「${row.userName}」的密码吗？`, '重置密码', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    }).then(async () => {
+      await resetUserPassword({ id: row.id, operator: 'current_user' })
+      ElMessage.success('重置成功')
     })
   }
 
   /**
    * 处理弹窗提交事件
    */
-  const handleDialogSubmit = async () => {
+  const handleDialogSubmit = async (formData: Record<string, unknown>) => {
+    if (dialogSubmitting.value) return
     try {
+      dialogSubmitting.value = true
+      const userRoles = (Array.isArray(formData.role) ? formData.role : [])
+        .map((id) => Number(id))
+        .filter((id) => !Number.isNaN(id))
+      const payload = {
+        userName: String(formData.username),
+        userPhone: String(formData.phone),
+        userGender: String(formData.gender),
+        userRoles
+      }
+      if (dialogType.value === 'add') {
+        const res = await createUser(payload as any)
+        // 兼容两种常见返回：
+        // 1) 直返业务体：{ id, ... }
+        // 2) 包一层：{ code: 200, data: { id, ... }, message? }
+        const wrappedCode = (res as any)?.code
+        const wrappedData = (res as any)?.data
+        const created = wrappedData ?? res
+
+        if (wrappedCode != null && Number(wrappedCode) !== 200) {
+          throw new Error(String((res as any)?.message || '创建用户失败'))
+        }
+        // 兼容 id 为 string/number：只要有值即可视为创建成功
+        const createdId = (created as any)?.id
+        if (createdId == null || String(createdId).trim() === '') {
+          throw new Error('创建用户失败：接口未返回 id')
+        }
+        ElMessage.success('创建成功')
+      } else {
+        const res = await updateUser({ id: Number(currentUserData.value?.id), ...payload })
+        // 兼容两种常见返回：
+        // 1) 直返：{ success: true, updatedUser: {...} }
+        // 2) 包一层：{ code: 200, data: {...}, message? }
+        const wrappedCode = (res as any)?.code
+        if (wrappedCode != null) {
+          if (Number(wrappedCode) !== 200) {
+            throw new Error(String((res as any)?.message || '更新用户失败'))
+          }
+        } else if (!(res as any)?.success) {
+          throw new Error('更新用户失败：接口未返回 success=true')
+        }
+        ElMessage.success('更新成功')
+      }
       dialogVisible.value = false
       currentUserData.value = {}
+      refreshData()
+      loadStats()
     } catch (error) {
       console.error('提交失败:', error)
+      ElMessage.error('提交失败，请确认接口返回或稍后重试')
+    } finally {
+      dialogSubmitting.value = false
     }
   }
 
@@ -334,12 +490,122 @@
   /** 点击表格行：在右侧展示该用户详情 */
   const handleTableRowClick = (row: UserListItem) => {
     currentDetailUser.value = row
+    rightPanelEditing.value = true
+    rightPanelMode.value = 'edit'
+    rightDrawerVisible.value = true
   }
 
-  /** 右侧面板保存（角色、可访问应用、备注） */
-  const handleRightPanelSave = (payload: { role: string; apps: string[]; remark: string }) => {
-    console.log('保存用户详情:', currentDetailUser.value?.id, payload)
-    ElMessage.success('保存成功')
+  const openCreateDrawer = () => {
+    currentDetailUser.value = null
+    rightPanelEditing.value = true
+    rightPanelMode.value = 'create'
+    rightDrawerVisible.value = true
+  }
+
+  /** 右侧面板取消：关闭抽屉 */
+  const handleRightPanelCancel = () => {
+    rightDrawerVisible.value = false
+  }
+
+  const handleRightDrawerClosed = () => {
+    rightPanelEditing.value = false
+    currentDetailUser.value = null
+    rightPanelMode.value = 'edit'
+  }
+
+  /** 右侧面板保存（基础信息 + 权限） */
+  const handleRightPanelSave = async (payload: {
+    nickName: string
+    userName: string
+    userPhone: string
+    userGender: string
+    roleId: number | ''
+    accessibleApps: string[]
+    remark: string
+  }) => {
+    try {
+      const nextUserRoles =
+        payload.roleId !== '' ? [Number(payload.roleId)].filter((n) => Number.isFinite(n)) : []
+
+      const name = String(payload.nickName ?? '').trim()
+      const userName = String(payload.userName ?? '').trim()
+      const userPhone = String(payload.userPhone ?? '').trim()
+      const userGender = String(payload.userGender ?? '').trim()
+
+      const hasChinese = /[\u4e00-\u9fa5]/.test(userName)
+      const hasSpace = /\s/.test(userName)
+      if (hasChinese || hasSpace) {
+        ElMessage.warning('用户名仅支持英文/数字/下划线，且不能包含中文或空格')
+        return
+      }
+
+      if (!name) {
+        ElMessage.warning('请填写姓名')
+        return
+      }
+      if (!userName) {
+        ElMessage.warning('请填写用户名')
+        return
+      }
+      if (!userPhone) {
+        ElMessage.warning('请填写手机号')
+        return
+      }
+      if (payload.roleId === '' || !nextUserRoles.length) {
+        ElMessage.warning('请选择角色')
+        return
+      }
+
+      if (rightPanelMode.value === 'create') {
+        await createUser({
+          // 以你说的 table 字段为准：name 对应姓名
+          name,
+          // 兼容旧字段：后端若仍用 nickName 也可接
+          nickName: name,
+          userName,
+          userPhone,
+          userGender,
+          userRoles: nextUserRoles,
+          accessibleApps: payload.accessibleApps,
+          remark: payload.remark
+        } as any)
+        ElMessage.success('创建成功')
+        rightDrawerVisible.value = false
+      } else {
+        if (!currentDetailUser.value) return
+        // 仅走 updateUser：将角色/可访问应用/备注一并提交
+        const updatePayload = {
+          id: currentDetailUser.value.id,
+          name,
+          nickName: name,
+          userName,
+          userPhone,
+          userGender,
+          userRoles: nextUserRoles,
+          accessibleApps: payload.accessibleApps,
+          remark: payload.remark
+        } as any
+        await updateUser(updatePayload)
+        currentDetailUser.value = {
+          ...currentDetailUser.value,
+          nickName: name,
+          userName,
+          userPhone,
+          userGender,
+          accessibleApps: [...payload.accessibleApps],
+          remark: payload.remark,
+          userRoles: nextUserRoles.length
+            ? [String(nextUserRoles[0])]
+            : [...(currentDetailUser.value.userRoles ?? [])]
+        }
+        ElMessage.success('保存成功')
+        rightPanelEditing.value = false
+      }
+      refreshData()
+      loadStats()
+    } catch (error) {
+      console.error('保存失败:', error)
+    }
   }
 
   /** 右侧面板禁用当前用户 */
@@ -349,9 +615,14 @@
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning'
-    }).then(() => {
+    }).then(async () => {
+      await disableUser({ id: currentDetailUser.value!.id, operator: 'current_user' })
       ElMessage.success('已禁用')
       currentDetailUser.value = null
+      rightPanelEditing.value = false
+      rightDrawerVisible.value = false
+      refreshData()
+      loadStats()
     })
   }
 </script>
@@ -363,30 +634,19 @@
     gap: 16px;
     width: 100%;
     min-width: 0;
+
+    /* 首帧 --art-full-height 可能尚未写入，避免 height 失效导致整页随内容被撑高 */
+    height: var(--art-full-height, calc(100vh - 120px));
+    min-height: 0;
+    max-height: var(--art-full-height, calc(100vh - 120px));
     overflow: hidden;
   }
 
   .user-page-left {
     flex: 1;
     min-width: 0;
+    min-height: 0;
     overflow: hidden;
-  }
-
-  .user-page-right {
-    flex-shrink: 0;
-    width: 360px;
-    min-width: 320px;
-    max-width: 420px;
-    overflow: auto;
-  }
-
-  /* 中等屏：右侧略收窄 */
-  @media (width <= 1280px) {
-    .user-page-right {
-      width: 320px;
-      min-width: 280px;
-      max-width: 360px;
-    }
   }
 
   /* 小屏：改为上下布局，右侧占满宽 */
@@ -400,20 +660,14 @@
       flex: none;
       min-height: 400px;
     }
-
-    .user-page-right {
-      flex-shrink: 0;
-      width: 100%;
-      min-width: 0;
-      max-width: none;
-      min-height: 360px;
-    }
   }
 
-  /* 超小屏：整体紧凑 */
+  /* 超小屏：与全局 .art-full-height 一致改为自然高度，避免 max-height 限制可滚动内容 */
   @media (width <= 640px) {
     .user-page {
       gap: 12px;
+      height: auto;
+      max-height: none;
     }
   }
 </style>

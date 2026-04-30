@@ -97,7 +97,7 @@ export interface AccountTableQuery {
   source?: string
   accountType?: string
   status?: string
-  app?: string
+  appId?: string
 }
 
 /** 广告平台配置 */
@@ -335,13 +335,13 @@ export interface OpenAccountTableQuery {
   source?: string
   status?: string
   agency?: string
-  app?: string
+  appIds?: string[]
 }
 
 // ─── BC / BM 管理 ──────────────────────────────────────────
 
 export type BcStatus = '健康' | '可用' | '不再使用' | '封禁' | '其他'
-export type BcOwnerType = '企业户' | '个人户' | '小额广告户'
+export type BcOwnerType = '企业户' | '个人户' | '小额广告户' | (string & {})
 export type BcBanRecord = '无' | '有'
 
 export interface BcItem {
@@ -406,12 +406,60 @@ export interface BcTableQuery {
 // ─── 广告平台配置 ───────────────────────────────────────────
 
 export const PLATFORM_CONFIGS: PlatformConfig[] = [
-  { value: 'Google Ads', label: 'Google Ads', shortLabel: 'G', color: '#4285f4', bg: 'rgb(66 133 244 / 12%)' },
-  { value: 'Meta Ads', label: 'Meta Ads', shortLabel: 'f', color: '#1877f2', bg: 'rgb(24 119 242 / 12%)' },
-  { value: 'TikTok Ads', label: 'TikTok Ads', shortLabel: 'TikTok', color: '#fe2c55', bg: 'rgb(254 44 85 / 12%)' },
-  { value: 'Mintegral', label: 'Mintegral', shortLabel: 'M', color: '#ff6b35', bg: 'rgb(255 107 53 / 12%)' },
-  { value: 'Apple Search', label: 'Apple Search', shortLabel: 'Apple', color: '#a2aaad', bg: 'rgb(162 170 173 / 12%)' },
-  { value: 'Unity Ads', label: 'Unity Ads', shortLabel: 'Unity', color: '#222c37', bg: 'rgb(34 44 55 / 20%)' },
-  { value: 'Snapchat Ads', label: 'Snapchat Ads', shortLabel: 'Snap', color: '#fffc00', bg: 'rgb(255 252 0 / 10%)' },
-  { value: 'Kwai Ads', label: 'Kwai Ads', shortLabel: 'Kwai', color: '#ff5200', bg: 'rgb(255 82 0 / 12%)' }
+  {
+    value: 'Google Ads',
+    label: 'Google Ads',
+    shortLabel: 'G',
+    color: '#4285f4',
+    bg: 'rgb(66 133 244 / 12%)'
+  },
+  {
+    value: 'Meta Ads',
+    label: 'Meta Ads',
+    shortLabel: 'f',
+    color: '#1877f2',
+    bg: 'rgb(24 119 242 / 12%)'
+  },
+  {
+    value: 'TikTok Ads',
+    label: 'TikTok Ads',
+    shortLabel: 'TikTok',
+    color: '#fe2c55',
+    bg: 'rgb(254 44 85 / 12%)'
+  },
+  {
+    value: 'Mintegral',
+    label: 'Mintegral',
+    shortLabel: 'M',
+    color: '#ff6b35',
+    bg: 'rgb(255 107 53 / 12%)'
+  },
+  {
+    value: 'Apple Search',
+    label: 'Apple Search',
+    shortLabel: 'Apple',
+    color: '#a2aaad',
+    bg: 'rgb(162 170 173 / 12%)'
+  },
+  {
+    value: 'Unity Ads',
+    label: 'Unity Ads',
+    shortLabel: 'Unity',
+    color: '#222c37',
+    bg: 'rgb(34 44 55 / 20%)'
+  },
+  {
+    value: 'Snapchat Ads',
+    label: 'Snapchat Ads',
+    shortLabel: 'Snap',
+    color: '#fffc00',
+    bg: 'rgb(255 252 0 / 10%)'
+  },
+  {
+    value: 'Kwai Ads',
+    label: 'Kwai Ads',
+    shortLabel: 'Kwai',
+    color: '#ff5200',
+    bg: 'rgb(255 82 0 / 12%)'
+  }
 ]

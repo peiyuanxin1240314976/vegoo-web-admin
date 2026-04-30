@@ -52,12 +52,21 @@
 
   const chartRef = ref<HTMLElement | null>(null)
   let chart: ReturnType<typeof echarts.init> | null = null
+  let initRetryTimer: number | null = null
 
   function formatXLabel(date: string): string {
     if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       return `${date.slice(5, 7)}/${date.slice(8, 10)}`
     }
     return date
+  }
+
+  function calcYAxisMax(values: number[]): number {
+    const nums = values.map((v) => Number(v)).filter((n) => Number.isFinite(n))
+    const rawMax = nums.length ? Math.max(...nums) : 100
+    if (rawMax <= 100) return 110
+    // 向上取整到 10 的倍数并留出一点顶部空间，避免线条顶到图例区域
+    return Math.ceil((rawMax * 1.08) / 10) * 10
   }
 
   function buildOption(): EChartsOption {
@@ -69,6 +78,7 @@
     const yTarget = hasTarget
       ? props.points.map((p) => (p.targetRoi != null ? p.targetRoi : 0))
       : []
+    const yAxisMax = calcYAxisMax([...y, ...yTarget])
 
     const series: EChartsOption['series'] = [
       {
@@ -76,6 +86,7 @@
         type: 'line',
         data: y,
         smooth: true,
+        smoothMonotone: 'x',
         symbolSize: 8,
         emphasis: {
           focus: 'series',
@@ -120,6 +131,7 @@
         type: 'line',
         data: yTarget,
         smooth: true,
+        smoothMonotone: 'x',
         symbolSize: 4,
         lineStyle: {
           width: 2,
@@ -131,7 +143,7 @@
     }
 
     return {
-      grid: { top: hasTarget ? 38 : 22, right: 16, bottom: 26, left: 38 },
+      grid: { top: hasTarget ? 46 : 24, right: 16, bottom: 26, left: 38 },
       legend: hasTarget
         ? {
             top: 0,
@@ -149,7 +161,7 @@
       yAxis: {
         type: 'value',
         min: 0,
-        max: 100,
+        max: yAxisMax,
         splitLine: { lineStyle: { color: 'rgba(148,163,184,0.12)' } },
         axisLabel: { color: 'rgba(161,161,170,0.9)', formatter: '{value}%' }
       },
@@ -157,8 +169,33 @@
     }
   }
 
+  function clearInitRetryTimer() {
+    if (initRetryTimer != null) {
+      window.clearTimeout(initRetryTimer)
+      initRetryTimer = null
+    }
+  }
+
+  function canInitChart(el: HTMLElement) {
+    return el.clientWidth > 0 && el.clientHeight > 0
+  }
+
+  function scheduleSyncChartRetry() {
+    if (initRetryTimer != null) return
+    initRetryTimer = window.setTimeout(() => {
+      initRetryTimer = null
+      syncChart()
+    }, 80)
+  }
+
   function syncChart() {
     if (props.loading || !chartRef.value) return
+    if (!canInitChart(chartRef.value)) {
+      // 容器尺寸为 0 时跳过本次初始化，延迟重试可避免 ECharts 0 宽高告警
+      scheduleSyncChartRetry()
+      return
+    }
+    clearInitRetryTimer()
     if (!chart) chart = echarts.init(chartRef.value)
     chart.setOption(buildOption())
     chart.resize()
@@ -191,6 +228,7 @@
     () => props.loading,
     async (ld) => {
       if (ld) {
+        clearInitRetryTimer()
         chart?.dispose()
         chart = null
         return
@@ -210,6 +248,7 @@
   )
 
   onBeforeUnmount(() => {
+    clearInitRetryTimer()
     window.removeEventListener('resize', resize)
     chart?.dispose()
     chart = null
@@ -319,15 +358,12 @@
     width: 100%;
     height: 216px;
     filter: drop-shadow(0 4px 20px rgb(34 211 238 / 8%));
-    transition:
-      transform 0.5s var(--ease-out),
-      filter 0.5s var(--ease-out);
+    transition: filter 0.5s var(--ease-out);
     transform-origin: center center;
   }
 
   .panel:hover .chart {
     filter: drop-shadow(0 10px 36px rgb(34 211 238 / 18%)) brightness(1.06);
-    transform: scale(1.03) translateY(-2px);
   }
 
   @media (prefers-reduced-motion: reduce) {

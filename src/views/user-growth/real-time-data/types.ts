@@ -1,9 +1,26 @@
+/**
+ * 实时数据接口通用筛选（契约 01～04）。
+ * 筛选项下拉请读 `useCockpitMetaFilterStore().data`（`@/store/modules/cockpit-meta-filter`，`ensureLoaded`），
+ * 形态见 `CockpitMetaFilterOptionsData`（`@/types/cockpit-meta-filter`）。
+ *
+ * 「全部应用」等：请求入参用空数组 `[]`，勿传字面量 `all`。
+ * 与公用 cockpit 及应用筛选统一约定对齐：应用维度请求键名为 **`appIds`**（`string[]`）。
+ */
+export interface RealtimeDataQueryParams {
+  /** 应用筛选；不限 []，单选 ['appId'] */
+  appIds: string[]
+  /** 广告平台（筛选维度键名统一为 source）；`''` 表示不限；一律 string（如 `1`、`7`），勿用 JSON number */
+  source: string
+}
+
 export interface ChannelData {
   name: string
   iconColor: string
   spend: number
   cpi: number
   roi: number
+  /** 广告平台枚举，string（如 `1`），与请求入参 `source` 一致 */
+  n_source?: string
 }
 
 export interface AppDetailData {
@@ -28,10 +45,10 @@ export interface AppDetailData {
   hourlyRoi: number[]
 }
 
-/** 看板应用卡片列表项（不含详情；详情见 app-detail 接口）。对应 mock/backend-api/03-table-app-cards.json */
+/** 看板应用卡片列表项（不含详情；详情见 app-detail 接口）。对应 mock/backend-api/02-table-app-cards.json */
 export type RealtimeAppCardRow = Omit<AppCard, 'detail'>
 
-/** 底部小时消耗对比（推荐接口形态）。对应 mock/backend-api/05-overview-hourly-spend-comparison.json */
+/** 底部小时消耗对比（推荐接口形态）。对应 mock/backend-api/04-overview-hourly-spend-comparison.json */
 export interface RealtimeHourlyBarSeriesItem {
   s_app_id: string
   name: string
@@ -86,7 +103,23 @@ export interface RealtimeKpiSummary {
   warningApps: number
 }
 
-/** 底部「实时小时消耗对比」柱状序列（含 ROI 折线） */
+/** 契约 02-table-app-cards 响应体 */
+export interface RealtimeAppCardsTableBody {
+  items: RealtimeAppCardRow[]
+}
+
+/** 详情弹窗：目标应用为 `appId`；`source` 与列表筛选一致（`''` 为不限）。勿把列表「应用筛选」与当前卡片 id 混在一个字段里重复覆盖。 */
+export interface RealtimeAppDetailRequestBody {
+  appId: string
+  source: string
+}
+
+/** 契约 03-app-detail 响应体 */
+export interface RealtimeAppDetailBody {
+  detail: AppDetailData
+}
+
+/** 底部「实时小时消耗对比」柱状序列（含 ROI 折线；旧版图表数据结构，接入 04 后推荐映射自 RealtimeHourlySpendComparison） */
 export interface RealtimeBottomSeries {
   weather5: number[]
   phonetracker: number[]

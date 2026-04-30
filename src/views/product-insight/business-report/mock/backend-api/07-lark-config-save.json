@@ -6,6 +6,18 @@
     "priority": "P2",
     "requestBody": "LarkPushConfig（与 06 的 sampleResponse 结构一致）"
   },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "飞书推送弹窗点击“保存配置”",
+        "detail": "保存当前配置，不触发即时推送。"
+      },
+      {
+        "moment": "保存成功后",
+        "detail": "页面提示成功并保留当前弹窗状态（由前端控制是否关闭）。"
+      }
+    ]
+  },
   "fieldDescription": {
     "request": {
       "groups": {
@@ -14,6 +26,16 @@
         "description": "推送群组列表，见 06-lark-config-get.json LarkTarget"
       },
       "persons": { "type": "LarkTarget[]", "required": true, "description": "推送人员列表" },
+      "lastPushAt": {
+        "type": "string",
+        "required": false,
+        "description": "可选：最近一次推送时间。保存配置时可忽略，由后端维护"
+      },
+      "lastPushTarget": {
+        "type": "string",
+        "required": false,
+        "description": "可选：最近一次推送目标群。保存配置时可忽略，由后端维护"
+      },
       "daily": {
         "type": "object",
         "required": true,
@@ -36,14 +58,12 @@
       }
     },
     "response": {
-      "code": { "type": "number", "required": true, "description": "0 = 保存成功，非 0 = 错误" },
+      "success": { "type": "boolean", "required": true, "description": "保存是否成功" },
       "message": {
         "type": "string",
         "required": true,
-        "description": "错误信息，成功时为 success"
-      },
-      "data": { "type": "null", "required": true, "description": "固定为 null" },
-      "timestamp": { "type": "number", "required": true, "description": "Unix 时间戳（ms）" }
+        "description": "结果文案，成功时可返回 success"
+      }
     }
   },
   "sampleRequest": {
@@ -52,6 +72,8 @@
       { "id": "oc_group_weekly_002", "name": "管理层周报群" }
     ],
     "persons": [{ "id": "ou_person_001", "name": "王总" }],
+    "lastPushAt": "2026-04-09T08:30:00+08:00",
+    "lastPushTarget": "经营日报群",
     "daily": { "enabled": true, "day": "每天", "time": "09:00", "workdayOnly": true },
     "weekly": { "enabled": true, "day": "每周一", "time": "09:00", "showChange": true },
     "monthly": { "enabled": true, "day": "每月 1 日", "time": "09:00", "showFee": true },
@@ -64,9 +86,14 @@
     }
   },
   "sampleResponse": {
-    "code": 0,
+    "success": true,
     "message": "success",
-    "data": null,
-    "timestamp": 1742688000000
+    "_comment": "网关可额外包裹 code/message/data/timestamp；本示例表示 data 业务体。"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "建议后端幂等保存：相同配置重复提交应返回成功。",
+      "lastPushAt / lastPushTarget 为可选入参，后端可忽略并以服务端状态为准。"
+    ]
   }
 }

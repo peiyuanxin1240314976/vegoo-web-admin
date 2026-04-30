@@ -2,7 +2,11 @@
   "_comment": "评论与评分监控 - 明细列表 Tab。对应 api/reviewMonitor.ts: ReviewListData。",
   "fieldDescription": {
     "request": {
-      "appId": { "type": "string", "required": false, "description": "应用 ID；空表示全部。" },
+      "appIds": {
+        "type": "string[]",
+        "required": true,
+        "description": "顶栏应用范围；`[]` 不限，单选时最多一项。"
+      },
       "platform": {
         "type": "string",
         "required": false,
@@ -67,7 +71,10 @@
       },
       "appName": { "type": "string", "description": "应用名称。" },
       "appVersion": { "type": "string", "description": "应用版本。" },
-      "countryCode": { "type": "string", "description": "国家代码 ISO 3166-1 alpha-2。" },
+      "countryCode": {
+        "type": "string",
+        "description": "国家代码 ISO 3166-1 alpha-2，契约与请求统一小写（如 cn、us）。"
+      },
       "language": { "type": "string", "description": "语言代码。" },
       "sentiment": {
         "type": "string",
@@ -81,7 +88,7 @@
     }
   },
   "sampleRequest": {
-    "appId": "",
+    "appIds": [],
     "platform": "",
     "startDate": "2026-02-28",
     "endDate": "2026-03-06",
@@ -109,12 +116,45 @@
         "platform": "google_play",
         "appName": "ClapFinder",
         "appVersion": "2.0.8",
-        "countryCode": "CN",
+        "countryCode": "cn",
         "language": "zh",
         "sentiment": "negative",
         "replied": true,
         "autoReplied": false,
         "replyContent": "感谢您的反馈，我们正在修复中。"
+      },
+      {
+        "id": "6",
+        "userId": "u6",
+        "userName": "Alex T.",
+        "starRating": 5,
+        "content": "Great app! Works perfectly after the update.",
+        "date": "2026-03-04",
+        "platform": "app_store",
+        "appName": "ClapFinder",
+        "appVersion": "2.0.8",
+        "countryCode": "us",
+        "language": "en",
+        "sentiment": "positive",
+        "replied": true,
+        "autoReplied": true,
+        "replyContent": "Thank you for your support!"
+      },
+      {
+        "id": "9",
+        "userId": "u9",
+        "userName": "Lee",
+        "starRating": 3,
+        "content": "还可以，无功无过，期待后续优化",
+        "date": "2026-03-03",
+        "platform": "google_play",
+        "appName": "Weather5",
+        "appVersion": "1.2.0",
+        "countryCode": "es",
+        "language": "zh",
+        "sentiment": "neutral",
+        "replied": false,
+        "autoReplied": false
       }
     ]
   },
@@ -122,10 +162,13 @@
     "url": "POST /api/product-operations/reviews-ratings-monitor/table/list",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "appId?, platform?, startDate?, endDate?, language?, starRating?, reviewType?, replied?, autoReplied?, keyword?, sortBy?, page, pageSize",
+    "requestBody": "appIds[], platform?, startDate?, endDate?, language?, starRating?, reviewType?, replied?, autoReplied?, keyword?, sortBy?, page, pageSize",
     "responseBody": "ReviewListData"
   },
   "apiSuggestion": {
-    "notes": ["分页从 1 开始；keyword 支持模糊匹配评论 content。"]
+    "notes": [
+      "分页从 1 开始；keyword 支持模糊匹配评论 content。",
+      "筛选 reviewType 与行内展示字段的映射由后端约定；示例 list 中 sentiment 覆盖 positive / negative / neutral，platform 覆盖 google_play 与 app_store。"
+    ]
   }
 }

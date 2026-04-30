@@ -3,15 +3,15 @@
     <!-- ── 标题卡 ─────────────────────────────────────────── -->
     <div class="summary-title-card">
       <div class="stc-left">
-        <span class="stc-app">{{ appName }}</span>
-        <span class="stc-app">{{ platformName }}</span>
-        <span class="stc-badge">日报</span>
-        <span class="stc-date">{{ fullDate }} {{ weekday }}</span>
+        <span class="stc-app">{{ props.appName }}</span>
+        <span class="stc-app">{{ props.platformName }}</span>
+        <span class="stc-badge">{{ reportLabel }}</span>
+        <span class="stc-date">{{ fullDateText }}</span>
       </div>
       <div class="stc-right">
         <div class="stc-top-row">
-          <span class="stc-update">数据更新时间：{{ updateTime }}</span>
-          <button class="stc-refresh-btn">
+          <span class="stc-update">数据更新时间：{{ updateTimeText }}</span>
+          <button class="stc-refresh-btn" :disabled="ctx?.loading.value" @click="refreshNow">
             <span class="stc-refresh-icon">↺</span>
             刷新
           </button>
@@ -21,7 +21,7 @@
 
     <!-- ── 右下角推送 ─────────────────────────────────────── -->
     <div class="ds-push-bar">
-      <span class="ds-push-last">上次推送：{{ updateTime }} 飞书群《经营日报》</span>
+      <span class="ds-push-last">{{ pushText }}</span>
       <button class="ds-push-btn" @click="openPushModal()">立即推送</button>
     </div>
 
@@ -45,8 +45,8 @@
             <thead>
               <tr>
                 <th>指标</th>
-                <th>今日 {{ dateLabel }}</th>
-                <th>昨日 {{ prevDateLabel }}</th>
+                <th>{{ currentPeriodLabel }} {{ dateLabelText }}</th>
+                <th>{{ previousPeriodLabel }} {{ prevDateLabelText }}</th>
                 <th>环比</th>
               </tr>
             </thead>
@@ -97,8 +97,8 @@
             <thead>
               <tr>
                 <th>ROI 类型</th>
-                <th>今日 {{ dateLabel }}</th>
-                <th>昨日 {{ prevDateLabel }}</th>
+                <th>{{ currentPeriodLabel }} {{ dateLabelText }}</th>
+                <th>{{ previousPeriodLabel }} {{ prevDateLabelText }}</th>
                 <th>环比</th>
               </tr>
             </thead>
@@ -149,6 +149,7 @@
   import { computed, inject } from 'vue'
   import KpiCard from './KpiCard.vue'
   import { businessReportContextKey } from '../composables/business-report-context'
+  import type { KpiMetric } from '../types'
   import {
     dailyKpis,
     dailyUserMetrics,
@@ -157,7 +158,7 @@
     dailyRevenueMetrics
   } from '../mockData'
 
-  withDefaults(
+  const props = withDefaults(
     defineProps<{
       dateLabel?: string
       prevDateLabel?: string
@@ -168,24 +169,99 @@
       updateTime?: string
     }>(),
     {
-      dateLabel: '3/13',
-      prevDateLabel: '3/12',
+      dateLabel: '--',
+      prevDateLabel: '--',
       appName: '整体',
       platformName: '全部平台',
-      fullDate: '2026年3月13日',
-      weekday: '周四',
-      updateTime: '今日 08:30'
+      fullDate: '--',
+      weekday: '',
+      updateTime: '--'
     }
   )
 
   const openPushModal = inject<() => void>('openPushModal', () => {})
   const ctx = inject(businessReportContextKey)
 
-  const kpis = computed(() => ctx?.summary.value?.kpis ?? dailyKpis)
+  const KPI_FALLBACK_THEME: Array<Pick<KpiMetric, 'color' | 'bg'>> = [
+    {
+      color: '#00D4A1',
+      bg: 'linear-gradient(135deg, rgba(0,212,161,0.22), rgba(0,212,161,0.08))'
+    },
+    {
+      color: '#22C55E',
+      bg: 'linear-gradient(135deg, rgba(34,197,94,0.22), rgba(34,197,94,0.08))'
+    },
+    {
+      color: '#3B82F6',
+      bg: 'linear-gradient(135deg, rgba(59,130,246,0.22), rgba(59,130,246,0.08))'
+    },
+    {
+      color: '#F59E0B',
+      bg: 'linear-gradient(135deg, rgba(245,158,11,0.22), rgba(245,158,11,0.08))'
+    },
+    {
+      color: '#8B5CF6',
+      bg: 'linear-gradient(135deg, rgba(139,92,246,0.22), rgba(139,92,246,0.08))'
+    }
+  ]
+
+  const kpis = computed<KpiMetric[]>(() => {
+    const source = ctx?.summary.value?.kpis ?? dailyKpis
+    return source.map((metric, index) => {
+      const theme = KPI_FALLBACK_THEME[index % KPI_FALLBACK_THEME.length]
+      return {
+        ...metric,
+        color: metric.color || theme.color,
+        bg: metric.bg || theme.bg,
+        sparkline: metric.sparkline ?? [],
+        changeLabel:
+          metric.changeLabel ||
+          `${metric.change >= 0 ? '环比昨日 ↑ ' : '环比昨日 ↓ '}${Math.abs(metric.change)}%`
+      }
+    })
+  })
   const userMetrics = computed(() => ctx?.summary.value?.userMetrics ?? dailyUserMetrics)
   const roiRows = computed(() => ctx?.summary.value?.roiMetrics ?? roiMetrics)
   const retention = computed(() => ctx?.summary.value?.retentionMetrics ?? retentionMetrics)
   const revenueMetrics = computed(() => ctx?.summary.value?.revenueMetrics ?? dailyRevenueMetrics)
+  const reportLabel = computed(() => {
+    if (ctx?.period.value === 'weekly') return '周报'
+    if (ctx?.period.value === 'monthly') return '月报'
+    return '日报'
+  })
+  const currentPeriodLabel = computed(() => (ctx?.period.value === 'daily' ? '今日' : '本期'))
+  const previousPeriodLabel = computed(() => (ctx?.period.value === 'daily' ? '昨日' : '上期'))
+  function shiftDay(ymd: string, offset: number): string {
+    const [y, m, d] = ymd.split('-').map(Number)
+    const date = new Date(y, m - 1, d)
+    date.setDate(date.getDate() + offset)
+    const yy = date.getFullYear()
+    const mm = String(date.getMonth() + 1).padStart(2, '0')
+    const dd = String(date.getDate()).padStart(2, '0')
+    return `${yy}-${mm}-${dd}`
+  }
+  const dateLabelText = computed(() => ctx?.reportRange.value?.startDate ?? props.dateLabel)
+  const prevDateLabelText = computed(() => {
+    const cur = ctx?.reportRange.value?.startDate
+    if (!cur) return props.prevDateLabel
+    return shiftDay(cur, -1)
+  })
+  const fullDateText = computed(() => {
+    const range = ctx?.reportRange.value
+    if (!range) return `${props.fullDate} ${props.weekday}`
+    if (ctx?.period.value === 'weekly') return `${range.startDate} - ${range.endDate}`
+    if (ctx?.period.value === 'monthly') return range.startDate.slice(0, 7)
+    return range.startDate
+  })
+  const updateTimeText = computed(() => props.updateTime)
+  const pushText = computed(
+    () =>
+      ctx?.getLastPushText?.(ctx?.period.value ?? 'daily') ??
+      `上次推送：-- 飞书群《经营${reportLabel.value}》`
+  )
+  async function refreshNow() {
+    await ctx?.refreshReport()
+  }
 </script>
 
 <style scoped>

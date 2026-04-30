@@ -33,9 +33,6 @@
         transparent 58%
       );
     mask-image: linear-gradient(to bottom, black 0%, black 28%, transparent 58%);
-    animation:
-      cm-aurora-drift 14s ease-in-out infinite alternate,
-      cm-bg-flow 22s ease-in-out infinite alternate;
   }
 
   &::after {
@@ -81,46 +78,6 @@
   );
   opacity: 0.6;
   mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 85%);
-  animation: cm-fx-spin 52s linear infinite;
-  will-change: transform;
-}
-
-@keyframes cm-aurora-drift {
-  0% {
-    filter: hue-rotate(0deg);
-    opacity: 0.72;
-    transform: scale(1) translate(0, 0);
-  }
-
-  50% {
-    filter: hue-rotate(18deg);
-    opacity: 1;
-    transform: scale(1.06) translate(1.2%, -1.2%);
-  }
-
-  100% {
-    filter: hue-rotate(-12deg);
-    opacity: 0.82;
-    transform: scale(1) translate(-1.2%, 1.2%);
-  }
-}
-
-@keyframes cm-bg-flow {
-  0% {
-    opacity: 0.7;
-    transform: scaleY(1) skewX(0deg);
-  }
-
-  100% {
-    opacity: 1;
-    transform: scaleY(1.08) skewX(1deg);
-  }
-}
-
-@keyframes cm-fx-spin {
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 .cm-entry-1 {

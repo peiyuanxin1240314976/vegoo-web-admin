@@ -1,0 +1,96 @@
+{
+  "_comment": "实时数据 - 顶部 KPI 四卡。对应 types.ts: RealtimeKpiSummary。",
+  "fieldDescription": {
+    "request": {
+      "appId": {
+        "type": "string",
+        "required": true,
+        "description": "应用 ID；与 cockpit GET meta-filter-options 的 appOptions[].value 同源；空字符串表示「全部应用」；勿传字面量 all。"
+      },
+      "source": {
+        "type": "string",
+        "required": true,
+        "description": "广告平台枚举字符串（如 1、7）；与 sourceOptions[].value 同源；空字符串表示不限；勿用 JSON number。"
+      }
+    },
+    "response": {
+      "onlineApps": {
+        "type": "number",
+        "required": true,
+        "description": "在线应用数（展示用整数）。"
+      },
+      "totalApps": {
+        "type": "number",
+        "required": true,
+        "description": "应用总数。"
+      },
+      "todaySpend": {
+        "type": "number",
+        "required": true,
+        "description": "全应用（或筛选范围内）今日花费，单位 USD；与数据字典 cost 语义一致。"
+      },
+      "spendChange": {
+        "type": "string",
+        "required": true,
+        "description": "周环比展示文案，如 +8.3%（已含符号，前端可直接展示）。"
+      },
+      "roiAvg": {
+        "type": "number",
+        "required": true,
+        "description": "实时 ROI 均值，百分比数值（如 97 表示 97%）。"
+      },
+      "roiTarget": {
+        "type": "number",
+        "required": true,
+        "description": "达标线 ROI，同左，百分比数值。"
+      },
+      "warningApps": {
+        "type": "number",
+        "required": true,
+        "description": "处于预警状态的应用数量（如超预算、低活跃等）。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "appId": "",
+    "source": ""
+  },
+  "sampleResponse": {
+    "onlineApps": 8,
+    "totalApps": 12,
+    "todaySpend": 34858,
+    "spendChange": "+8.3%",
+    "roiAvg": 97,
+    "roiTarget": 85,
+    "warningApps": 2
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "`RealtimeDataDashboard` 挂载后与 02/04 并行请求；入参来自当前筛选（应用、广告平台）。筛选项来自公用 `.../comprehensive-analysis/meta-filter-options`。",
+        "prerequisite": "无"
+      },
+      {
+        "moment": "用户调整筛选或刷新",
+        "detail": "筛选变更、手动刷新或倒计时自动刷新时携带相同维度重新请求。",
+        "prerequisite": "无"
+      }
+    ],
+    "defaultSelection": "应用为「全部」时 appId 传 \"\"；广告平台不限时 source 传 \"\"；与付费分析等 cockpit 同构接口一致。",
+    "dedupe": "可与 02 共参数快照，避免参数漂移。"
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/user-growth/real-time-data/overview-kpi-summary",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "appId, source",
+    "responseBody": "RealtimeKpiSummary"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "与 03 使用相同筛选维度，便于并行请求后一次性渲染首屏。",
+      "若后端字段名为 cost_today，请在 Api 层映射为前端 todaySpend 或统一改类型命名。"
+    ]
+  }
+}

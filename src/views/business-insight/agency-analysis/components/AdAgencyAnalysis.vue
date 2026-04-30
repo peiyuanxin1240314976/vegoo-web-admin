@@ -1,73 +1,52 @@
 <script setup lang="ts">
   import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
-  import { useRouter } from 'vue-router'
-  import { ElMessage } from 'element-plus'
-  import * as echarts from 'echarts'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
+  import { echarts } from '@/plugins/echarts'
   import ScreenshotModal from './ScreenshotModal.vue'
-  import { formatYYYYMMDD, getAppTodayYYYYMMDD } from '@/utils/app-now'
+  import AgencySubTabPerformanceMock from './AgencySubTabPerformanceMock.vue'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import {
+    fetchAgencyAnalysisAvailableSources,
     fetchAgencyAnalysisMetaFilterOptions,
     fetchAgencyAnalysisOverview,
-    fetchAgencyAnalysisAgencySummary,
-    fetchAgencyAnalysisCampaignTable,
-    fetchAgencyAnalysisDailyComparison,
     fetchAgencyAnalysisDonutSpendShare,
     fetchAgencyAnalysisChannelDistribution,
     fetchAgencyAnalysisCountryTop8,
-    fetchAgencyAnalysisSpendTrend30d
+    fetchAgencyAnalysisSpendTrend30d,
+    fetchAgencySubTabKpiLast7,
+    fetchAgencySubTabRecentSummary,
+    fetchAgencySubTabAccountSummary
   } from '@/api/agency-analysis'
   import type {
+    AgencyAnalysisAvailableSourceItem,
     AgencyAnalysisCharts,
-    AgencyAnalysisFilterOption,
-    AgencyExpandData,
-    AgencyRow,
-    CampaignDetail,
-    CampaignRow,
-    DailyRow,
-    KpiCardItem,
-    AgencyStatus
+    KpiCardItem
   } from '../types'
 
   defineOptions({ name: 'AdAgencyAnalysis' })
 
-  function ymdToLocalDate(ymd: string): Date {
-    const [y, m, d] = ymd.split('-').map((x) => parseInt(x, 10))
-    return new Date(y, m - 1, d)
+  type AgencyTabItem = {
+    label: string
+    key: string
+    isSummary: boolean
   }
 
-  function addDaysYmd(ymd: string, delta: number): string {
-    const d = ymdToLocalDate(ymd)
-    d.setDate(d.getDate() + delta)
-    return formatYYYYMMDD(d)
-  }
-
-  function last7Range(endYmd: string) {
-    return { t_start_date: addDaysYmd(endYmd, -6), t_end_date: endYmd }
-  }
-
-  function last30Range(endYmd: string) {
-    return { t_start_date: addDaysYmd(endYmd, -29), t_end_date: endYmd }
-  }
+  const SUMMARY_TAB: AgencyTabItem = { label: '汇总', key: 'summary', isSummary: true }
+  const FALLBACK_NON_SUMMARY_TABS: AgencyTabItem[] = [
+    { label: 'GatherOne', key: 'gatherone', isSummary: false },
+    { label: '快鸟', key: 'kuainiao', isSummary: false },
+    { label: '出海者', key: 'chuhai', isSummary: false }
+  ]
 
   // ─────────────────── KPI Cards ───────────────────
   const kpiCards = ref<KpiCardItem[]>([])
-  const pageLoading = ref(true)
-  const agencySkeletonRows = 5
-  const campaignSkeletonRows = 6
-  const dailySkeletonRows = 8
+  /** 首屏 meta 成功后自动拉一次；之后仅点击「查询」再请求 */
+  const pageLoading = ref(false)
+  /** 是否已至少成功发起过一次汇总数据加载（用于首屏占位）；变更筛选项后仍保留为 true */
+  const hasSummaryQueried = ref(false)
   const kpiSkeletonCount = 6
 
-  // ─────────────────── Agency Table Data ───────────────────
-  const agencies = ref<AgencyRow[]>([])
-
-  // ─────────────────── Expand Detail Data ───────────────────
-  const agencyDetailMap = ref<Record<string, AgencyExpandData>>({})
-
-  // ─────────────────── Campaign Detail Table ───────────────────
-  const campaigns = ref<CampaignRow[]>([])
-
-  // ─────────────────── Daily Comparison ───────────────────
-  const dailyRows = ref<DailyRow[]>([])
   const charts = ref<AgencyAnalysisCharts>({
     donut: [],
     channelDistribution: { categories: [], series: [] },
@@ -75,102 +54,46 @@
     spendTrend30d: { dates: [], series: [] }
   })
 
-  // ─────────────────── Expand State ───────────────────
-  const expandedSet = ref<Set<string>>(new Set())
-
-  const toggleExpand = (id: string) => {
-    if (expandedSet.value.has(id)) {
-      expandedSet.value.delete(id)
-    } else {
-      expandedSet.value.add(id)
-    }
-    expandedSet.value = new Set(expandedSet.value) // trigger reactivity
-  }
-
-  const isExpanded = (id: string) => expandedSet.value.has(id)
-
-  function expandFirstAgency() {
-    const firstId = String(agencies.value?.[0]?.id ?? '').trim()
-    expandedSet.value = firstId ? new Set([firstId]) : new Set()
-  }
-
   // ─────────────────── Screenshot Modal ───────────────────
   const showScreenshot = ref(false)
-  const router = useRouter()
-
-  /** 截图报告：优先取当前展开的代投方，否则「当前代投方」模式无账户/ROI 明细 */
-  const focusedAgencyIdForScreenshot = computed(() => {
-    for (const id of expandedSet.value) return id
-    return null
-  })
-
-  const screenshotTitleName = computed(() => {
-    const id = focusedAgencyIdForScreenshot.value
-    if (id) {
-      const row = agencies.value.find((a) => a.id === id)
-      return row?.name ?? '代投方'
-    }
-    return '全部代投方'
-  })
 
   const openScreenshot = () => {
     showScreenshot.value = true
   }
 
-  /** 契约 02/03：跳转携带广告系列 id + appId + appName（详情页 API 使用 query.id 作为 campaignId） */
-  function goCampaignDetail(payload: {
-    id: string
-    appId?: string
-    appName?: string
-    name?: string
-  }) {
-    const seriesId = String(payload.id ?? '').trim()
-    if (!seriesId) {
-      ElMessage.warning('缺少广告系列 ID，无法打开详情')
-      return
-    }
-    const appId = String(payload.appId ?? '').trim()
-    const appName = String(payload.appName ?? payload.name ?? '').trim()
-    if (!appId || !appName) {
-      ElMessage.warning('缺少应用 ID 或应用名称，无法打开详情')
-      return
-    }
-    router.push({
-      path: '/campaign-detail',
-      query: {
-        id: seriesId,
-        appId,
-        appName
-      }
-    })
-  }
-
-  function goCampaignDetailFromRow(row: CampaignRow) {
-    goCampaignDetail({
-      id: row.id,
-      appId: row.appId,
-      appName: row.appName ?? row.name
-    })
-  }
-
-  function goCampaignDetailFromExpand(cp: CampaignDetail) {
-    goCampaignDetail({
-      id: String(cp.id ?? '').trim(),
-      appId: cp.appId,
-      appName: cp.appName ?? cp.name
-    })
-  }
-
   // ─────────────────── Charts ───────────────────
+  const chartsHostRef = ref<HTMLElement | null>(null)
   const donutRef = ref<HTMLElement | null>(null)
   const barRef = ref<HTMLElement | null>(null)
   const countryRef = ref<HTMLElement | null>(null)
   const trendRef = ref<HTMLElement | null>(null)
-  let chartInstances: echarts.ECharts[] = []
+  let chartInstances: Array<ReturnType<typeof echarts.init>> = []
+  let chartsResizeObserver: ResizeObserver | null = null
 
   const disposeCharts = () => {
     chartInstances.forEach((c) => c.dispose())
     chartInstances = []
+  }
+
+  function resizeCharts() {
+    chartInstances.forEach((c) => {
+      try {
+        c.resize()
+      } catch {
+        /* ignore */
+      }
+    })
+  }
+
+  function bindChartsResizeObserver() {
+    chartsResizeObserver?.disconnect()
+    chartsResizeObserver = null
+    const el = chartsHostRef.value
+    if (!el || typeof ResizeObserver === 'undefined') return
+    chartsResizeObserver = new ResizeObserver(() => {
+      resizeCharts()
+    })
+    chartsResizeObserver.observe(el)
   }
 
   const initCharts = () => {
@@ -216,8 +139,8 @@
         series: [
           {
             type: 'pie',
-            radius: ['28%', '42%'],
-            center: ['50%', '40%'],
+            radius: ['30%', '52%'],
+            center: ['50%', '44%'],
             avoidLabelOverlap: true,
             itemStyle: { borderColor: '#0d1829', borderWidth: 2 },
             label: {
@@ -264,7 +187,7 @@
           textStyle: { color: '#94a3b8', fontSize: 9 },
           data: charts.value.channelDistribution.series.map((item) => item.name)
         },
-        grid: { top: 30, right: 8, bottom: 24, left: 48 },
+        grid: { top: '10%', right: '3%', bottom: '18%', left: 52, containLabel: false },
         xAxis: {
           type: 'category',
           data: charts.value.channelDistribution.categories,
@@ -302,7 +225,7 @@
           borderColor: '#1e3a5f',
           textStyle: { color: '#e2e8f0', fontSize: 11 }
         },
-        grid: { top: 4, right: 80, bottom: 4, left: 28 },
+        grid: { top: '2%', right: 72, bottom: '2%', left: '4%', containLabel: false },
         xAxis: { type: 'value', show: false },
         yAxis: {
           type: 'category',
@@ -348,7 +271,7 @@
           itemHeight: 8,
           textStyle: { color: '#94a3b8', fontSize: 9 }
         },
-        grid: { top: 12, right: 12, bottom: 36, left: 46 },
+        grid: { top: '8%', right: '3%', bottom: '14%', left: '4%', containLabel: false },
         xAxis: {
           type: 'category',
           data: dates,
@@ -387,27 +310,94 @@
       })
       chartInstances.push(c)
     }
+
+    resizeCharts()
+    requestAnimationFrame(() => resizeCharts())
   }
 
-  const filterDate = ref(getAppTodayYYYYMMDD())
-  const filterAppId = ref('all')
-  const filterAgencyId = ref('all')
-  const filterSource = ref('all')
+  const DEFAULT_START_DATE = '2026-04-18'
+  const DEFAULT_END_DATE = '2026-04-24'
+  /** 汇总专用：日期选择器绑定（点「查询」后才写入 applied 并请求） */
+  const summaryDateDraft = ref<[string, string]>([DEFAULT_START_DATE, DEFAULT_END_DATE])
+  /** 最近一次查询使用的日期区间 */
+  const summaryDateApplied = ref<[string, string] | null>(null)
+  const cockpitMetaFilterStore = useCockpitMetaFilterStore()
+  const tabsLoading = ref(true)
+  const availableTabs = ref<AgencyTabItem[]>([SUMMARY_TAB, ...FALLBACK_NON_SUMMARY_TABS])
+  const agencyTabIndex = ref(0)
+  let tabsRequestToken = 0
+
+  const activeTab = computed(() => availableTabs.value[agencyTabIndex.value] ?? SUMMARY_TAB)
+  const activeAgencyTabKey = computed(() => activeTab.value.key)
+  const isSummaryTabActive = computed(() => activeAgencyTabKey.value === SUMMARY_TAB.key)
+
+  const subTabLoading = ref(false)
+  const subTabError = ref(false)
+  const subTabKpiLast7 = ref<
+    import('@/views/business-insight/agency-analysis/types').AgencySubTabKpiPayload | null
+  >(null)
+  const subTabRecentSummary = ref<
+    import('@/views/business-insight/agency-analysis/types').AgencySubTabRecentSummaryPayload | null
+  >(null)
+  const subTabAccountSummary = ref<
+    | import('@/views/business-insight/agency-analysis/types').AgencySubTabAccountSummaryPayload
+    | null
+  >(null)
+
+  function selectAgencyTab(index: number) {
+    if (tabsLoading.value) return
+    agencyTabIndex.value = index
+  }
+
+  function syncSummaryAppliedRangeFromDraft() {
+    summaryDateApplied.value = [summaryDateDraft.value[0], summaryDateDraft.value[1]]
+  }
 
   function handleSearch() {
-    if (!metaReady.value) return
-    void loadPageData()
+    if (!metaReady.value || tabsLoading.value) return
+    syncSummaryAppliedRangeFromDraft()
+    void loadTabsThenActiveContent({ resetToSummary: true, loadSummaryAfterTabs: true })
   }
 
-  const appOptions = ref<AgencyAnalysisFilterOption[]>([])
-  const agencyOptions = ref<AgencyAnalysisFilterOption[]>([])
-  const sourceOptions = ref<AgencyAnalysisFilterOption[]>([])
+  /** meta 就绪后的默认/刷新拉数：与当前草稿日期、应用一致（渠道固定为全部） */
+  async function loadDefaultSummaryData() {
+    syncSummaryAppliedRangeFromDraft()
+    hasSummaryQueried.value = true
+    await loadTabsThenActiveContent({ resetToSummary: true, loadSummaryAfterTabs: true })
+  }
+
+  const screenshotDataDateLabel = computed(() => {
+    const r = summaryDateApplied.value ?? summaryDateDraft.value
+    return `${r[0]} ~ ${r[1]}`
+  })
+
+  const screenshotAgencyLabel = computed(() =>
+    isSummaryTabActive.value ? '' : activeTab.value.label
+  )
+
+  function formatMonthDayLabel(ymd: string) {
+    const m = Number(ymd.slice(5, 7))
+    const d = Number(ymd.slice(8, 10))
+    if (!Number.isFinite(m) || !Number.isFinite(d)) return ymd
+    return `${m}月${d}日`
+  }
+
+  const queriedDateRangeCNLabel = computed(() => {
+    const range = summaryDateApplied.value ?? summaryDateDraft.value
+    return `${formatMonthDayLabel(range[0])}~${formatMonthDayLabel(range[1])}`
+  })
 
   /** 筛选项拉取中（须优先于业务数据完成） */
   const metaLoading = ref(true)
   const metaLoadError = ref(false)
   /** meta 请求结束后为 true，避免 watch 在首屏抢跑业务请求 */
   const metaReady = ref(false)
+
+  /** 汇总：meta 已就绪、从未拉取过数据且非加载中，提示点击查询 */
+  const showSummaryAwaitQuery = computed(
+    () =>
+      !metaLoading.value && !metaLoadError.value && !hasSummaryQueried.value && !pageLoading.value
+  )
 
   const hasDonutChartData = computed(() => charts.value.donut.length > 0)
   const hasBarChartData = computed(
@@ -425,111 +415,177 @@
     metaLoading.value = true
     metaLoadError.value = false
     try {
-      const opts = await fetchAgencyAnalysisMetaFilterOptions()
-      appOptions.value = opts.appOptions ?? []
-      agencyOptions.value = opts.agencyOptions ?? []
-      sourceOptions.value = opts.sourceOptions ?? []
+      await fetchAgencyAnalysisMetaFilterOptions()
     } catch {
       metaLoadError.value = true
-      appOptions.value = []
-      agencyOptions.value = []
-      sourceOptions.value = []
+      agencyTabIndex.value = 0
     } finally {
       metaLoading.value = false
       metaReady.value = true
     }
   }
 
+  function mapAvailableSourceToTab(
+    source: AgencyAnalysisAvailableSourceItem
+  ): AgencyTabItem | null {
+    const rawValue = source.value?.trim()
+    if (!rawValue || rawValue === 'all') return null
+    const normalizedKey = rawValue.startsWith('agency_') ? rawValue.slice(7) : rawValue
+    if (!normalizedKey || normalizedKey === SUMMARY_TAB.key) return null
+    return {
+      label: source.label?.trim() || normalizedKey,
+      key: normalizedKey,
+      isSummary: false
+    }
+  }
+
+  function buildTabsFromAvailableSources(
+    sources: AgencyAnalysisAvailableSourceItem[] | null | undefined
+  ): AgencyTabItem[] {
+    const mapped = (sources ?? [])
+      .map((item) => mapAvailableSourceToTab(item))
+      .filter((item): item is AgencyTabItem => item !== null)
+    const unique = mapped.filter(
+      (item, idx, list) => list.findIndex((x) => x.key === item.key) === idx
+    )
+    if (!unique.length) return [SUMMARY_TAB, ...FALLBACK_NON_SUMMARY_TABS]
+    return [SUMMARY_TAB, ...unique]
+  }
+
+  async function loadAvailableTabs(resetToSummary: boolean) {
+    if (!metaReady.value) return
+    tabsLoading.value = true
+    const currentToken = ++tabsRequestToken
+    const q = filterQuery()
+    if (resetToSummary) agencyTabIndex.value = 0
+    try {
+      const sources = await fetchAgencyAnalysisAvailableSources(q)
+      if (currentToken !== tabsRequestToken) return
+      availableTabs.value = buildTabsFromAvailableSources(sources)
+    } catch {
+      if (currentToken !== tabsRequestToken) return
+      availableTabs.value = [SUMMARY_TAB, ...FALLBACK_NON_SUMMARY_TABS]
+    } finally {
+      if (currentToken === tabsRequestToken) {
+        tabsLoading.value = false
+        if (agencyTabIndex.value >= availableTabs.value.length) {
+          agencyTabIndex.value = 0
+        }
+      }
+    }
+  }
+
+  async function loadTabsThenActiveContent(options: {
+    resetToSummary: boolean
+    loadSummaryAfterTabs: boolean
+  }) {
+    await loadAvailableTabs(options.resetToSummary)
+    if (!metaReady.value || tabsLoading.value) return
+    if (options.loadSummaryAfterTabs || isSummaryTabActive.value) {
+      hasSummaryQueried.value = true
+      await loadPageData()
+      return
+    }
+    await loadSubTabData()
+  }
+
   async function retryMetaOptions() {
     metaReady.value = false
     await loadMetaOptions()
-    if (!metaLoadError.value) await loadPageData()
+    if (!metaLoadError.value) await loadDefaultSummaryData()
   }
 
-  const filterQuery = () => ({
-    t_date: filterDate.value,
-    s_app_id: filterAppId.value,
-    agency_id: filterAgencyId.value,
-    source: filterSource.value
-  })
-
-  const agencyTotals = computed(() => {
-    const rows = agencies.value
-    if (!rows.length) {
-      return {
-        appCount: 0,
-        channelCount: 0,
-        spend: 0,
-        installs: 0,
-        cpi: 0,
-        cpa: 0,
-        roi: 0,
-        budgetRate: 0
-      }
+  const filterQuery = () => {
+    const range = summaryDateApplied.value
+    if (!range) {
+      throw new Error('summaryDateApplied is unset before filterQuery')
     }
-    const spend = rows.reduce((s, r) => s + r.spend, 0)
-    const installs = rows.reduce((s, r) => s + r.installs, 0)
-    const appCount = rows.reduce((s, r) => s + r.appCount, 0)
-    const channelCount = rows.reduce((s, r) => s + r.channelCount, 0)
-    const cpi = installs > 0 ? spend / installs : 0
-    const cpa = installs > 0 ? rows.reduce((s, r) => s + r.cpa * r.installs, 0) / installs : 0
-    const roi = rows.reduce((s, r) => s + r.roi, 0) / rows.length
-    const budgetRate = rows.reduce((s, r) => s + r.budgetRate, 0) / rows.length
-    return { appCount, channelCount, spend, installs, cpi, cpa, roi, budgetRate }
-  })
+    return {
+      startDate: range[0],
+      endDate: range[1],
+      agency_id: 'all',
+      source: 'all'
+    }
+  }
+
+  async function loadSubTabData() {
+    if (!metaReady.value || tabsLoading.value) return
+    if (isSummaryTabActive.value) return
+    const range = summaryDateApplied.value ?? summaryDateDraft.value
+    subTabLoading.value = true
+    subTabError.value = false
+    try {
+      const qBase = {
+        startDate: range[0],
+        endDate: range[1],
+        source: 'all',
+        agencyTab: activeAgencyTabKey.value
+      }
+      const [k7, recent, acct] = await Promise.all([
+        fetchAgencySubTabKpiLast7(qBase),
+        fetchAgencySubTabRecentSummary(qBase),
+        fetchAgencySubTabAccountSummary(qBase)
+      ])
+      subTabKpiLast7.value = k7
+      subTabRecentSummary.value = recent
+      subTabAccountSummary.value = acct
+    } catch {
+      subTabError.value = true
+      subTabKpiLast7.value = null
+      subTabRecentSummary.value = null
+      subTabAccountSummary.value = null
+    } finally {
+      subTabLoading.value = false
+    }
+  }
+
+  async function handleAccountSummarySearch(payload: { startDate: string; endDate: string }) {
+    if (!metaReady.value || tabsLoading.value) return
+    if (isSummaryTabActive.value) return
+    subTabError.value = false
+    try {
+      const data = await fetchAgencySubTabAccountSummary({
+        startDate: payload.startDate,
+        endDate: payload.endDate,
+        source: 'all',
+        agencyTab: activeAgencyTabKey.value
+      })
+      subTabAccountSummary.value = data
+    } catch {
+      subTabError.value = true
+      subTabAccountSummary.value = null
+    }
+  }
 
   function clearDashboardData() {
     kpiCards.value = []
-    agencies.value = []
-    agencyDetailMap.value = {}
-    campaigns.value = []
-    dailyRows.value = []
     charts.value = {
       donut: [],
       channelDistribution: { categories: [], series: [] },
       countryTop8: [],
       spendTrend30d: { dates: [], series: [] }
     }
-    expandedSet.value = new Set()
   }
 
   /**
    * 业务数据：须在筛选项 meta 成功返回之后再发起（由 onMounted / watch 顺序保证）。
-   * 8 个接口并行异步请求，互不阻塞。
+   * 5 个接口并行异步请求，互不阻塞。
    */
   const loadPageData = async () => {
     disposeCharts()
     pageLoading.value = true
     try {
       const q = filterQuery()
-      const d7 = last7Range(q.t_date)
-      const d30 = last30Range(q.t_date)
 
-      const [
-        overview,
-        agencySummary,
-        campaignRes,
-        dailyRes,
-        donutRes,
-        channelRes,
-        countryRes,
-        trendRes
-      ] = await Promise.all([
+      const [overview, donutRes, channelRes, countryRes, trendRes] = await Promise.all([
         fetchAgencyAnalysisOverview(q),
-        fetchAgencyAnalysisAgencySummary(q),
-        fetchAgencyAnalysisCampaignTable(q),
-        fetchAgencyAnalysisDailyComparison({ ...q, ...d7 }),
-        fetchAgencyAnalysisDonutSpendShare({ t_date: q.t_date }),
-        fetchAgencyAnalysisChannelDistribution({ t_date: q.t_date }),
-        fetchAgencyAnalysisCountryTop8({ t_date: q.t_date }),
-        fetchAgencyAnalysisSpendTrend30d(d30)
+        fetchAgencyAnalysisDonutSpendShare(q),
+        fetchAgencyAnalysisChannelDistribution(q),
+        fetchAgencyAnalysisCountryTop8(q),
+        fetchAgencyAnalysisSpendTrend30d(q)
       ])
 
       kpiCards.value = overview.kpiCards ?? []
-      agencies.value = agencySummary.agencies ?? []
-      agencyDetailMap.value = agencySummary.agencyDetailMap ?? {}
-      campaigns.value = campaignRes.campaigns ?? []
-      dailyRows.value = dailyRes.dailyRows ?? []
       charts.value = {
         donut: donutRes.donut ?? [],
         channelDistribution: {
@@ -539,86 +595,71 @@
         countryTop8: countryRes.countryTop8 ?? [],
         spendTrend30d: trendRes ?? { dates: [], series: [] }
       }
-
-      // 代投方汇总：默认展开第一条
-      expandFirstAgency()
     } catch {
       clearDashboardData()
     } finally {
       pageLoading.value = false
       await nextTick()
       initCharts()
+      bindChartsResizeObserver()
+      resizeCharts()
+      requestAnimationFrame(() => resizeCharts())
     }
   }
 
+  /** 离开「汇总」时图表 DOM 被卸载，须 dispose；回到「汇总」后等 DOM 挂载再 init，否则 ECharts 不渲染 */
   watch(
-    [filterDate, filterAppId, filterAgencyId, filterSource],
-    () => {
-      if (!metaReady.value) return
+    agencyTabIndex,
+    async () => {
+      if (!isSummaryTabActive.value) {
+        chartsResizeObserver?.disconnect()
+        chartsResizeObserver = null
+        disposeCharts()
+        await loadSubTabData()
+        return
+      }
+      await nextTick()
+      initCharts()
+      bindChartsResizeObserver()
+      resizeCharts()
+      requestAnimationFrame(() => resizeCharts())
     },
     { flush: 'post' }
   )
 
   onMounted(async () => {
-    await loadMetaOptions()
+    await Promise.all([cockpitMetaFilterStore.ensureLoaded(), loadMetaOptions()])
     if (metaLoadError.value) {
       disposeCharts()
       clearDashboardData()
       pageLoading.value = false
       return
     }
-    await loadPageData()
+    await loadDefaultSummaryData()
   })
-  onBeforeUnmount(disposeCharts)
 
-  // ─────────────────── Helpers ───────────────────
-  const fmtM = (v: number) => `$${v.toLocaleString()}`
-
-  const statusInfo = (s: AgencyStatus) => {
-    if (s === 'normal') return { label: '正常', dot: '#10b981', text: '#10b981' }
-    if (s === 'low') return { label: '偏低', dot: '#f59e0b', text: '#f59e0b' }
-    return { label: '暂停', dot: '#ef4444', text: '#ef4444' }
-  }
-
-  const roiClass = (v: number) => {
-    if (v >= 100) return 'teal'
-    if (v >= 90) return 'yellow'
-    return 'red'
-  }
-
-  const roiBadgeClass = (v: number | null) => {
-    if (v === null) return ''
-    if (v >= 110) return 'roi-green'
-    if (v >= 95) return 'roi-teal'
-    if (v >= 85) return 'roi-yellow'
-    return 'roi-red'
-  }
-
-  const changeClass = (v: number | null) => (v === null ? '' : v >= 0 ? 'change-up' : 'change-down')
-  const changeTxt = (v: number | null) =>
-    v === null ? '--' : `${v >= 0 ? '↑' : '↓'}${Math.abs(v)}%`
-
-  const trendPath = (t: string) => {
-    if (t === 'up') return 'M2,12 L6,8 L10,9 L14,5'
-    if (t === 'down') return 'M2,5 L6,8 L10,7 L14,12'
-    return 'M2,8 L6,8 L10,8 L14,8'
-  }
-  const trendColor = (t: string) => (t === 'up' ? '#00d4b4' : t === 'down' ? '#ef4444' : '#64748b')
+  onBeforeUnmount(() => {
+    chartsResizeObserver?.disconnect()
+    chartsResizeObserver = null
+    disposeCharts()
+  })
 </script>
 
 <template>
   <div class="agency-analysis-page page-wrap page-wrap--ap-fx flex flex-col min-h-0">
     <div class="aa-page-fx" aria-hidden="true"></div>
-    <!-- 与广告成效一致：筛选区随页面滚动，非 sticky 顶栏 -->
-    <div class="agency-analysis-page__section agency-analysis-page__section--filters aa-entry-1">
-      <div class="aa-filter-panel">
-        <template v-if="metaLoading">
-          <div class="filter-skel filter-skel--date" />
-          <div class="filter-skel filter-skel--select" />
+    <!-- 顶栏：meta 状态 / Tab + 筛选 + 截图（原独立筛选区已合并） -->
+    <div
+      class="agency-analysis-page__section agency-analysis-page__section--agency-tabs aa-entry-1"
+    >
+      <template v-if="metaLoading">
+        <div class="aa-meta-strip aa-meta-strip--loading" aria-busy="true">
           <div class="filter-skel filter-skel--select" />
           <div class="filter-skel filter-skel--select-wide" />
-        </template>
-        <template v-else-if="metaLoadError">
+        </div>
+      </template>
+      <template v-else-if="metaLoadError">
+        <div class="aa-meta-strip aa-meta-strip--error">
           <ElEmpty description="筛选项加载失败" :image-size="52" class="top-meta-empty" />
           <ElButton
             round
@@ -629,842 +670,272 @@
           >
             重试
           </ElButton>
-        </template>
-        <template v-else>
-          <el-date-picker
-            v-model="filterDate"
-            type="date"
-            format="YYYY-MM-DD"
-            value-format="YYYY-MM-DD"
-            size="default"
-            class="filter-date"
-            popper-class="aa-agency-filter-popper"
-            prefix-icon=""
-          >
-            <template #prefix>
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="margin-right: 2px">
-                <rect
-                  x="1"
-                  y="2"
-                  width="12"
-                  height="11"
-                  rx="2"
-                  stroke="#64748b"
-                  stroke-width="1.2"
-                />
-                <path
-                  d="M1 5h12M4 1v2M10 1v2"
-                  stroke="#64748b"
-                  stroke-width="1.2"
-                  stroke-linecap="round"
-                />
-              </svg>
-            </template>
-          </el-date-picker>
-
-          <el-select
-            v-model="filterAppId"
-            size="default"
-            class="filter-select"
-            popper-class="aa-agency-filter-popper"
-            style="width: 140px"
-          >
-            <el-option
-              v-for="opt in appOptions"
-              :key="`app-${opt.value}`"
-              :label="opt.label"
-              :value="opt.value"
-            />
-          </el-select>
-
-          <el-select
-            v-model="filterAgencyId"
-            size="default"
-            class="filter-select"
-            popper-class="aa-agency-filter-popper"
-            style="width: 140px"
-          >
-            <el-option
-              v-for="opt in agencyOptions"
-              :key="`agency-${opt.value}`"
-              :label="opt.label"
-              :value="opt.value"
-            />
-          </el-select>
-
-          <el-select
-            v-model="filterSource"
-            size="default"
-            class="filter-select"
-            popper-class="aa-agency-filter-popper"
-            style="width: 160px"
-          >
-            <el-option
-              v-for="opt in sourceOptions"
-              :key="`src-${opt.value}`"
-              :label="opt.label"
-              :value="opt.value"
-            />
-          </el-select>
-
-          <ElButton type="primary" plain round @click="handleSearch" v-ripple> 查询 </ElButton>
-        </template>
-
-        <button type="button" class="btn-screenshot" @click="openScreenshot()">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="margin-right: 6px">
-            <rect
-              x="1"
-              y="2"
-              width="12"
-              height="10"
-              rx="2"
-              stroke="currentColor"
-              stroke-width="1.2"
-            />
-            <circle cx="7" cy="7" r="2.5" stroke="currentColor" stroke-width="1.2" />
-          </svg>
-          一键截图复制
-        </button>
-      </div>
-    </div>
-
-    <!-- ── KPI Cards ── -->
-    <div class="kpi-row aa-entry-2">
-      <template v-if="pageLoading">
-        <div
-          v-for="i in kpiSkeletonCount"
-          :key="`kpi-sk-${i}`"
-          class="kpi-card kpi-card--skeleton kpi-card--skeleton-fx"
-          :style="{ '--kpi-sk-stagger': `${(i - 1) * 55}ms` }"
-        >
-          <div class="kpi-sk-line kpi-sk-line--label" />
-          <div class="kpi-sk-line kpi-sk-line--value" />
-          <div class="kpi-sk-line kpi-sk-line--meta" />
-        </div>
-      </template>
-      <template v-else-if="!kpiCards.length">
-        <div class="kpi-full-empty">
-          <ElEmpty description="暂无数据" :image-size="72" class="block-empty" />
         </div>
       </template>
       <template v-else>
-        <div
-          v-for="(card, i) in kpiCards"
-          :key="i"
-          class="kpi-card"
-          :class="{ highlighted: card.highlighted }"
-        >
-          <div class="kpi-head">
-            <div class="kpi-label">{{ card.label }}</div>
-            <div v-if="card.changeText" class="kpi-change" :class="card.changeUp ? 'up' : 'down'">
-              {{ card.changeText }}
+        <div class="aa-tab-bar-row">
+          <div class="aa-agency-tabs" role="tablist" aria-label="代投范围">
+            <template v-if="tabsLoading">
+              <span
+                v-for="i in 4"
+                :key="`tab-sk-${i}`"
+                class="aa-agency-tab aa-agency-tab--skeleton"
+                aria-hidden="true"
+              />
+            </template>
+            <template v-else>
+              <button
+                v-for="(tab, i) in availableTabs"
+                :key="tab.key"
+                type="button"
+                class="aa-agency-tab"
+                role="tab"
+                :class="{ 'aa-agency-tab--active': agencyTabIndex === i }"
+                :aria-selected="agencyTabIndex === i"
+                :disabled="tabsLoading"
+                @click="selectAgencyTab(i)"
+              >
+                {{ tab.label }}
+              </button>
+            </template>
+          </div>
+          <div class="aa-tab-bar-filters" aria-label="筛选与查询">
+            <div class="filter-date-wrap filter-date-wrap--tab-inline">
+              <AppDatePicker
+                v-model="summaryDateDraft"
+                :shortcuts="dateRangeShortcuts"
+                type="daterange"
+                format="YYYY-MM-DD"
+                value-format="YYYY-MM-DD"
+                range-separator="~"
+                start-placeholder="开始日期"
+                end-placeholder="结束日期"
+                size="default"
+                class="filter-date"
+                popper-class="aa-agency-filter-popper"
+                unlink-panels
+              />
+            </div>
+            <div class="aa-tab-bar-filters__actions">
+              <ElButton
+                type="primary"
+                plain
+                round
+                :loading="tabsLoading"
+                :disabled="tabsLoading"
+                @click="handleSearch"
+                v-ripple
+              >
+                查询
+              </ElButton>
+              <ElButton
+                v-if="!isSummaryTabActive"
+                type="primary"
+                plain
+                round
+                :disabled="tabsLoading"
+                @click="openScreenshot()"
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 14 14"
+                  fill="none"
+                  style="margin-right: 6px"
+                >
+                  <rect
+                    x="1"
+                    y="2"
+                    width="12"
+                    height="10"
+                    rx="2"
+                    stroke="currentColor"
+                    stroke-width="1.2"
+                  />
+                  <circle cx="7" cy="7" r="2.5" stroke="currentColor" stroke-width="1.2" />
+                </svg>
+                一键截图复制
+              </ElButton>
             </div>
           </div>
-          <div class="kpi-value">{{ card.value }}</div>
-          <svg
-            v-if="card.sparkPoints"
-            class="kpi-spark"
-            viewBox="0 0 96 36"
-            fill="none"
-            preserveAspectRatio="none"
-          >
-            <polyline
-              :points="card.sparkPoints"
-              :stroke="card.sparkColor"
-              stroke-width="1.5"
-              fill="none"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
-          <div v-if="card.highlighted" class="kpi-idx">{{ i + 1 }}</div>
         </div>
       </template>
     </div>
 
-    <!-- ── Main layout ── -->
-    <div class="main-layout aa-entry-3">
-      <!-- Left content -->
-      <div class="main-left">
-        <!-- ① Agency Summary Table -->
-        <div class="section-block">
-          <div class="section-header">
-            <div class="section-title">
-              <span class="section-num">1</span>
-              代投方汇总
+    <template v-if="isSummaryTabActive">
+      <!-- ── KPI Cards ── -->
+      <div class="kpi-row aa-entry-2">
+        <template v-if="pageLoading">
+          <div
+            v-for="i in kpiSkeletonCount"
+            :key="`kpi-sk-${i}`"
+            class="kpi-card kpi-card--skeleton kpi-card--skeleton-fx"
+            :style="{ '--kpi-sk-stagger': `${(i - 1) * 55}ms` }"
+          >
+            <div class="kpi-sk-line kpi-sk-line--label" />
+            <div class="kpi-sk-line kpi-sk-line--value" />
+            <div class="kpi-sk-line kpi-sk-line--meta" />
+          </div>
+        </template>
+        <template v-else-if="showSummaryAwaitQuery">
+          <div class="kpi-full-empty">
+            <ElEmpty
+              description="请选择时间范围后，点击顶部「查询」加载数据"
+              :image-size="72"
+              class="block-empty"
+            />
+          </div>
+        </template>
+        <template v-else-if="!kpiCards.length">
+          <div class="kpi-full-empty">
+            <ElEmpty description="暂无数据" :image-size="72" class="block-empty" />
+          </div>
+        </template>
+        <template v-else>
+          <div
+            v-for="(card, i) in kpiCards"
+            :key="i"
+            class="kpi-card"
+            :class="{ highlighted: card.highlighted }"
+          >
+            <div class="kpi-head">
+              <div class="kpi-label">{{ card.label }}</div>
+              <div v-if="card.changeText" class="kpi-change" :class="card.changeUp ? 'up' : 'down'">
+                {{ card.changeText }}
+              </div>
             </div>
-            <div class="section-actions">
-              <span class="data-date">数据日期: {{ filterDate }}</span>
-              <button class="btn-small-outline">导出</button>
+            <div class="kpi-value">{{ card.value }}</div>
+            <svg
+              v-if="card.sparkPoints"
+              class="kpi-spark"
+              viewBox="0 0 96 36"
+              fill="none"
+              preserveAspectRatio="none"
+            >
+              <polyline
+                :points="card.sparkPoints"
+                :stroke="card.sparkColor"
+                stroke-width="1.5"
+                fill="none"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <div v-if="card.highlighted" class="kpi-idx">{{ i + 1 }}</div>
+          </div>
+        </template>
+      </div>
+
+      <!-- ── Main layout：KPI 下仅图表区 ── -->
+      <div class="main-layout aa-entry-3">
+        <div ref="chartsHostRef" class="sidebar-right sidebar-right--solo">
+          <!-- Bar chart（左） / Donut（右） -->
+          <div class="chart-block">
+            <div class="chart-title">渠道分布分析</div>
+            <div v-if="pageLoading" class="chart-skeleton chart-skeleton--bars">
+              <span v-for="b in 6" :key="`bar-sk-${b}`" class="chart-skeleton-bar" />
             </div>
+            <div v-else-if="showSummaryAwaitQuery" class="chart-empty-wrap chart-empty-wrap--short">
+              <ElEmpty
+                description="点击顶部「查询」加载图表"
+                :image-size="56"
+                class="block-empty"
+              />
+            </div>
+            <div v-else-if="!hasBarChartData" class="chart-empty-wrap chart-empty-wrap--short">
+              <ElEmpty description="暂无数据" :image-size="56" class="block-empty" />
+            </div>
+            <div v-else ref="barRef" class="chart-area chart-area--fill" />
           </div>
 
-          <div class="table-scroll">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th class="th-expand"></th>
-                  <th>代投方</th>
-                  <th class="text-right">应用数</th>
-                  <th class="text-right">广告平台数</th>
-                  <th class="text-right">消耗($)</th>
-                  <th class="text-right">安装数</th>
-                  <th class="text-right">CPI($)</th>
-                  <th class="text-right">CPA($)</th>
-                  <th class="text-right">首日ROI</th>
-                  <th>预算执行率</th>
-                  <th>状态</th>
-                  <th>操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                <template v-if="pageLoading">
-                  <tr
-                    v-for="idx in agencySkeletonRows"
-                    :key="`agency-skeleton-${idx}`"
-                    class="skeleton-data-tr"
-                    :style="{ '--sk-stagger': `${(idx - 1) * 48}ms` }"
-                  >
-                    <td class="td-expand skeleton-td">
-                      <span class="sk-brick sk-brick--sq" />
-                    </td>
-                    <td class="skeleton-td"><span class="sk-brick sk-brick--name" /></td>
-                    <td class="skeleton-td text-right"><span class="sk-brick sk-brick--num" /></td>
-                    <td class="skeleton-td text-right"><span class="sk-brick sk-brick--num" /></td>
-                    <td class="skeleton-td text-right"
-                      ><span class="sk-brick sk-brick--num-wide"
-                    /></td>
-                    <td class="skeleton-td text-right"><span class="sk-brick sk-brick--num" /></td>
-                    <td class="skeleton-td text-right"><span class="sk-brick sk-brick--num" /></td>
-                    <td class="skeleton-td text-right"><span class="sk-brick sk-brick--num" /></td>
-                    <td class="skeleton-td text-right"><span class="sk-brick sk-brick--num" /></td>
-                    <td class="skeleton-td"><span class="sk-brick sk-brick--bar" /></td>
-                    <td class="skeleton-td"><span class="sk-brick sk-brick--sm" /></td>
-                    <td class="skeleton-td"><span class="sk-brick sk-brick--action" /></td>
-                  </tr>
-                </template>
-                <template v-else-if="!agencies.length">
-                  <tr>
-                    <td colspan="12" class="table-empty-cell">
-                      <ElEmpty description="暂无数据" :image-size="64" class="block-empty" />
-                    </td>
-                  </tr>
-                </template>
-                <template v-else>
-                  <template v-for="ag in agencies" :key="ag.id">
-                    <!-- Main row -->
-                    <tr class="agency-row" :class="{ expanded: isExpanded(ag.id) }">
-                      <td class="td-expand">
-                        <button
-                          class="expand-arrow"
-                          :class="{ open: isExpanded(ag.id) }"
-                          @click="toggleExpand(ag.id)"
-                        >
-                          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                            <path
-                              d="M2 3.5L5 6.5L8 3.5"
-                              stroke="currentColor"
-                              stroke-width="1.5"
-                              stroke-linecap="round"
-                            />
-                          </svg>
-                        </button>
-                      </td>
-                      <td>
-                        <div class="agency-name-cell">
-                          <span :style="{ color: ag.nameColor || '#e2e8f0' }">{{ ag.name }}</span>
-                          <span v-if="ag.hasWarning" class="warn-icon">⚠</span>
-                        </div>
-                      </td>
-                      <td class="text-right">{{ ag.appCount }}</td>
-                      <td class="text-right">{{ ag.channelCount }}</td>
-                      <td class="text-right fw-600">{{ fmtM(ag.spend) }}</td>
-                      <td class="text-right">{{ ag.installs.toLocaleString() }}</td>
-                      <td class="text-right">${{ ag.cpi.toFixed(2) }}</td>
-                      <td class="text-right">${{ ag.cpa.toFixed(2) }}</td>
-                      <td class="text-right" :class="roiClass(ag.roi)">
-                        <span :class="[`roi-text-${roiClass(ag.roi)}`]">{{ ag.roi }}%</span>
-                      </td>
-                      <td>
-                        <div class="budget-bar-wrap">
-                          <div class="budget-bar-track">
-                            <div
-                              class="budget-bar-fill"
-                              :style="{
-                                width: `${ag.budgetRate}%`,
-                                background:
-                                  ag.budgetRate >= 90
-                                    ? '#00d4b4'
-                                    : ag.budgetRate >= 80
-                                      ? '#3b82f6'
-                                      : '#f59e0b'
-                              }"
-                            />
-                          </div>
-                          <span class="budget-pct">{{ ag.budgetRate }}%</span>
-                        </div>
-                      </td>
-                      <td>
-                        <div class="status-cell">
-                          <span
-                            class="status-dot"
-                            :style="{ background: statusInfo(ag.status).dot }"
-                          />
-                          <span :style="{ color: statusInfo(ag.status).text }">{{
-                            statusInfo(ag.status).label
-                          }}</span>
-                        </div>
-                      </td>
-                      <td>
-                        <button class="btn-expand-text" @click="toggleExpand(ag.id)">
-                          {{ isExpanded(ag.id) ? '收起 ∧' : '展开 ∨' }}
-                        </button>
-                      </td>
-                    </tr>
-
-                    <!-- Expanded row -->
-                    <tr v-if="isExpanded(ag.id)" class="expand-row">
-                      <td colspan="12" class="expand-td">
-                        <div class="expand-panel">
-                          <!-- Expand header -->
-                          <div class="exp-hd">
-                            <div class="exp-hd-left">
-                              <span class="exp-device-icon">📱</span>
-                              <span
-                                class="exp-name"
-                                :style="{ color: ag.nameColor || '#e2e8f0' }"
-                                >{{ ag.name }}</span
-                              >
-                              <span class="exp-badge active">ACTIVE</span>
-                              <span class="exp-meta">广告投放代理商</span>
-                              <span class="exp-meta">数据日期: {{ filterDate }}</span>
-                            </div>
-                            <div class="exp-hd-right">
-                              <!-- <button class="btn-sm-teal">展开全部</button>
-                          <button class="btn-sm-ghost">自定义列</button> -->
-                              <button class="btn-sm-ghost">↓ 导出</button>
-                              <button class="btn-sm-ghost" @click="toggleExpand(ag.id)"
-                                >收起 ∧</button
-                              >
-                            </div>
-                          </div>
-
-                          <!-- Summary metrics -->
-                          <div class="exp-metrics">
-                            <div class="exp-metric">
-                              <div class="exp-metric-label">应用数</div>
-                              <div class="exp-metric-value">{{
-                                agencyDetailMap[ag.id].appCount
-                              }}</div>
-                            </div>
-                            <div class="exp-metric">
-                              <div class="exp-metric-label">广告平台</div>
-                              <div class="exp-metric-value">{{
-                                agencyDetailMap[ag.id].channelCount
-                              }}</div>
-                            </div>
-                            <div class="exp-metric">
-                              <div class="exp-metric-label">总消耗</div>
-                              <div class="exp-metric-value teal">{{
-                                fmtM(agencyDetailMap[ag.id].totalSpend)
-                              }}</div>
-                            </div>
-                            <div class="exp-metric">
-                              <div class="exp-metric-label">总安装</div>
-                              <div class="exp-metric-value">{{
-                                agencyDetailMap[ag.id].totalInstalls.toLocaleString()
-                              }}</div>
-                            </div>
-                            <div class="exp-metric">
-                              <div class="exp-metric-label">平均首日ROI</div>
-                              <div class="exp-metric-value-roi">
-                                <span :class="`roi-text-${roiClass(agencyDetailMap[ag.id].roi)}`">
-                                  {{ agencyDetailMap[ag.id].roi }}%
-                                </span>
-                                <span
-                                  class="roi-tag"
-                                  :class="
-                                    agencyDetailMap[ag.id].roi >= agencyDetailMap[ag.id].roiTarget
-                                      ? 'roi-tag-meet'
-                                      : 'roi-tag-miss'
-                                  "
-                                >
-                                  {{
-                                    agencyDetailMap[ag.id].roi >= agencyDetailMap[ag.id].roiTarget
-                                      ? '达标'
-                                      : '未达'
-                                  }}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <!-- Weekly summary -->
-                          <div class="exp-weekly">
-                            <span class="weekly-lbl">近7天汇总</span>
-                            <span class="weekly-item"
-                              >广告支出:
-                              <strong
-                                >${{ agencyDetailMap[ag.id].weeklySpend.toLocaleString() }}</strong
-                              ></span
-                            >
-                            <span class="weekly-sep">|</span>
-                            <span class="weekly-item"
-                              >首日ROI:
-                              <strong class="teal"
-                                >{{ agencyDetailMap[ag.id].weeklyRoi }}%</strong
-                              ></span
-                            >
-                            <span class="weekly-sep">|</span>
-                            <span class="weekly-item">CPA: <strong>--</strong></span>
-                            <span class="weekly-sep">|</span>
-                            <span class="weekly-item"
-                              >安装数:
-                              <strong>{{
-                                agencyDetailMap[ag.id].weeklyInstalls.toLocaleString()
-                              }}</strong></span
-                            >
-                            <span class="weekly-sep">|</span>
-                            <span class="weekly-item"
-                              >在投应用:
-                              <strong>{{ agencyDetailMap[ag.id].weeklyApps }}</strong></span
-                            >
-                            <span class="weekly-sep">|</span>
-                            <span class="weekly-item"
-                              >广告账户:
-                              <strong>{{ agencyDetailMap[ag.id].weeklyAccounts }}</strong></span
-                            >
-                            <span class="weekly-sep">|</span>
-                            <span class="weekly-item"
-                              >广告系列:
-                              <strong>{{ agencyDetailMap[ag.id].weeklyCampaigns }}</strong></span
-                            >
-                            <span class="weekly-sep">|</span>
-                            <span class="weekly-item"
-                              >投放国家:
-                              <strong>{{ agencyDetailMap[ag.id].weeklyCountries }}</strong></span
-                            >
-                            <span class="weekly-sep">|</span>
-                            <span class="weekly-item"
-                              >投放天数:
-                              <strong>{{ agencyDetailMap[ag.id].weeklyDays }}</strong></span
-                            >
-                          </div>
-
-                          <!-- Account summary sub-table -->
-                          <div class="exp-sub-section">
-                            <div class="exp-sub-title">账户汇总</div>
-                            <table class="sub-table">
-                              <thead>
-                                <tr>
-                                  <th>应用</th>
-                                  <th>平台</th>
-                                  <th>广告平台</th>
-                                  <th>账户ID</th>
-                                  <th>账户名称</th>
-                                  <th>广告支出</th>
-                                  <th>首日ROI</th>
-                                  <th>CPA</th>
-                                  <th>CPI</th>
-                                  <th>安装数</th>
-                                  <th>操作</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                <tr v-for="(acc, ai) in agencyDetailMap[ag.id].accounts" :key="ai">
-                                  <td>{{ acc.app }}</td>
-                                  <td>{{ acc.platform }}</td>
-                                  <td>{{ acc.adPlatform }}</td>
-                                  <td class="account-id">{{ acc.accountId }}</td>
-                                  <td>{{ acc.accountName }}</td>
-                                  <td>{{ acc.spend }}</td>
-                                  <td :class="`roi-text-${roiClass(acc.roi)}`">{{ acc.roi }}%</td>
-                                  <td>{{ acc.cpa }}</td>
-                                  <td>{{ acc.cpi }}</td>
-                                  <td>{{ acc.installs.toLocaleString() }}</td>
-                                  <td><span class="link-action">详情</span></td>
-                                </tr>
-                              </tbody>
-                            </table>
-                          </div>
-
-                          <!-- Campaign detail sub-table -->
-                          <div class="exp-sub-section">
-                            <div class="exp-sub-title">近期明细</div>
-                            <table class="sub-table">
-                              <thead>
-                                <tr>
-                                  <th>广告系列名称</th>
-                                  <th>预算</th>
-                                  <th>广告支出</th>
-                                  <th>CPA</th>
-                                  <th>CPI</th>
-                                  <th>安装数</th>
-                                  <th class="roi-date-head">3/4</th>
-                                  <th class="roi-date-head">3/3</th>
-                                  <th class="roi-date-head">3/2</th>
-                                  <th>明细</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                <tr
-                                  v-for="(cp, ci) in agencyDetailMap[ag.id].campaigns"
-                                  :key="ci"
-                                  :class="{ 'row-red-tint': cp.isRed }"
-                                >
-                                  <td :class="{ 'text-danger': cp.isRed }">
-                                    {{ cp.appName || cp.name || '--' }}
-                                  </td>
-                                  <td>${{ cp.budget }}</td>
-                                  <td>{{ cp.spend }}</td>
-                                  <td>{{ cp.cpa }}</td>
-                                  <td>{{ cp.cpi }}</td>
-                                  <td>{{ cp.installs }}</td>
-                                  <td>
-                                    <span
-                                      v-if="cp.roi34 !== null"
-                                      class="roi-badge"
-                                      :class="roiBadgeClass(cp.roi34)"
-                                      >{{ cp.roi34 }}%</span
-                                    >
-                                    <span v-else class="dim">--</span>
-                                  </td>
-                                  <td>
-                                    <span
-                                      v-if="cp.roi33 !== null"
-                                      class="roi-badge"
-                                      :class="roiBadgeClass(cp.roi33)"
-                                      >{{ cp.roi33 }}%</span
-                                    >
-                                    <span v-else class="dim">--</span>
-                                  </td>
-                                  <td>
-                                    <span
-                                      v-if="cp.roi32 !== null"
-                                      class="roi-badge"
-                                      :class="roiBadgeClass(cp.roi32)"
-                                      >{{ cp.roi32 }}%</span
-                                    >
-                                    <span v-else class="dim">--</span>
-                                  </td>
-                                  <td>
-                                    <span
-                                      class="link-action"
-                                      @click="goCampaignDetailFromExpand(cp)"
-                                    >
-                                      查看
-                                    </span>
-                                  </td>
-                                </tr>
-                              </tbody>
-                            </table>
-                            <div class="sub-footnote"
-                              >注: 时区 PST(UTC-8), 货币 USD; ROI计算包含广告收入及付费收入。</div
-                            >
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  </template>
-                </template>
-
-                <!-- Total row -->
-                <tr v-if="!pageLoading && agencies.length" class="total-row">
-                  <td></td>
-                  <td>小计</td>
-                  <td class="text-right">{{ agencyTotals.appCount }}</td>
-                  <td class="text-right">{{ agencyTotals.channelCount }}</td>
-                  <td class="text-right fw-600"
-                    >${{ agencyTotals.spend.toLocaleString('en-US') }}</td
-                  >
-                  <td class="text-right">{{ agencyTotals.installs.toLocaleString('en-US') }}</td>
-                  <td class="text-right">${{ agencyTotals.cpi.toFixed(2) }}</td>
-                  <td class="text-right">${{ agencyTotals.cpa.toFixed(2) }}</td>
-                  <td class="text-right">{{ Math.round(agencyTotals.roi) }}%</td>
-                  <td>
-                    <div class="budget-bar-wrap">
-                      <div class="budget-bar-track">
-                        <div
-                          class="budget-bar-fill"
-                          :style="{
-                            width: `${Math.min(100, Math.round(agencyTotals.budgetRate))}%`,
-                            background: '#94a3b8'
-                          }"
-                        />
-                      </div>
-                      <span class="budget-pct">{{ Math.round(agencyTotals.budgetRate) }}%</span>
-                    </div>
-                  </td>
-                  <td>--</td>
-                  <td>--</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- ② Campaign Detail Table -->
-        <div class="section-block">
-          <div class="section-header">
-            <div class="section-title">
-              <span class="section-num">2</span>
-              代投广告系列明细
+          <div class="chart-block donut-chart-block">
+            <div class="chart-title">代投方消耗占比</div>
+            <div v-if="pageLoading" class="chart-skeleton chart-skeleton--donut" />
+            <div v-else-if="showSummaryAwaitQuery" class="chart-empty-wrap">
+              <ElEmpty
+                description="点击顶部「查询」加载图表"
+                :image-size="56"
+                class="block-empty"
+              />
             </div>
-            <div class="section-actions">
-              <button class="btn-small-outline">自定义列</button>
-              <button class="btn-small-outline">导出</button>
+            <div v-else-if="!hasDonutChartData" class="chart-empty-wrap">
+              <ElEmpty description="暂无数据" :image-size="56" class="block-empty" />
             </div>
+            <div v-else ref="donutRef" class="chart-area chart-area--fill" />
           </div>
 
-          <div class="table-scroll">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>代投方</th>
-                  <th>广告系列名称</th>
-                  <th>广告平台</th>
-                  <th>应用</th>
-                  <th class="text-right">消耗($)</th>
-                  <th class="text-right">安装数</th>
-                  <th class="text-right">CPI($)</th>
-                  <th class="text-right">CTR(%)</th>
-                  <th class="text-right">CVR(%)</th>
-                  <th class="text-right">IPM</th>
-                  <th class="text-right">预算($)</th>
-                  <th class="text-right">执行率</th>
-                  <th>7日趋势</th>
-                  <th>操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                <template v-if="pageLoading">
-                  <tr
-                    v-for="idx in campaignSkeletonRows"
-                    :key="`campaign-skeleton-${idx}`"
-                    class="skeleton-data-tr"
-                    :style="{ '--sk-stagger': `${(idx - 1) * 48}ms` }"
-                  >
-                    <td class="skeleton-td"><span class="sk-brick sk-brick--sm-name" /></td>
-                    <td class="skeleton-td"><span class="sk-brick sk-brick--name-lg" /></td>
-                    <td class="skeleton-td"><span class="sk-brick sk-brick--sm" /></td>
-                    <td class="skeleton-td"><span class="sk-brick sk-brick--sm" /></td>
-                    <td class="skeleton-td text-right"
-                      ><span class="sk-brick sk-brick--num-wide"
-                    /></td>
-                    <td class="skeleton-td text-right"><span class="sk-brick sk-brick--num" /></td>
-                    <td class="skeleton-td text-right"><span class="sk-brick sk-brick--num" /></td>
-                    <td class="skeleton-td text-right"
-                      ><span class="sk-brick sk-brick--num-tiny"
-                    /></td>
-                    <td class="skeleton-td text-right"
-                      ><span class="sk-brick sk-brick--num-tiny"
-                    /></td>
-                    <td class="skeleton-td text-right"
-                      ><span class="sk-brick sk-brick--num-tiny"
-                    /></td>
-                    <td class="skeleton-td text-right"><span class="sk-brick sk-brick--num" /></td>
-                    <td class="skeleton-td text-right"
-                      ><span class="sk-brick sk-brick--num-tiny"
-                    /></td>
-                    <td class="skeleton-td"><span class="sk-brick sk-brick--trend" /></td>
-                    <td class="skeleton-td"><span class="sk-brick sk-brick--action" /></td>
-                  </tr>
-                </template>
-                <template v-else-if="!campaigns.length">
-                  <tr>
-                    <td colspan="14" class="table-empty-cell">
-                      <ElEmpty description="暂无数据" :image-size="64" class="block-empty" />
-                    </td>
-                  </tr>
-                </template>
-                <template v-else>
-                  <tr v-for="(cp, i) in campaigns" :key="i" class="data-row">
-                    <td :style="{ color: cp.agencyColor || '#e2e8f0' }">{{ cp.agency }}</td>
-                    <td class="name-cell">{{ cp.appName || cp.name || '--' }}</td>
-                    <td>{{ cp.channel }}</td>
-                    <td>{{ cp.app }}</td>
-                    <td class="text-right">${{ cp.spend.toLocaleString() }}</td>
-                    <td class="text-right">{{ cp.installs.toLocaleString() }}</td>
-                    <td class="text-right">${{ cp.cpi.toFixed(2) }}</td>
-                    <td class="text-right">{{ cp.ctr }}%</td>
-                    <td class="text-right">{{ cp.cvr }}%</td>
-                    <td class="text-right">{{ cp.ipm }}</td>
-                    <td class="text-right">${{ cp.budget.toLocaleString() }}</td>
-                    <td class="text-right">{{ cp.execRate }}%</td>
-                    <td>
-                      <div class="trend-cell-inner">
-                        <svg
-                          class="trend-spark-svg"
-                          width="40"
-                          height="18"
-                          viewBox="0 0 16 14"
-                          fill="none"
-                        >
-                          <path
-                            :d="trendPath(cp.trend)"
-                            :stroke="trendColor(cp.trend)"
-                            stroke-width="1.5"
-                            stroke-linecap="round"
-                            fill="none"
-                          />
-                          <path
-                            :d="trendPath(cp.trend) + ' V14 H2 Z'"
-                            :fill="trendColor(cp.trend)"
-                            fill-opacity="0.15"
-                          />
-                        </svg>
-                        <span class="trend-arrow" :style="{ color: trendColor(cp.trend) }">
-                          {{ cp.trend === 'up' ? '↑' : cp.trend === 'down' ? '↓' : '→' }}
-                        </span>
-                      </div>
-                    </td>
-                    <td>
-                      <span class="link-action" @click="goCampaignDetailFromRow(cp)">详情 ›</span>
-                    </td>
-                  </tr>
-                </template>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- ③ Daily Comparison -->
-        <div class="section-block">
-          <div class="section-header">
-            <div class="section-title">
-              <span class="section-num">3</span>
-              逐日对比分析（近7天）
+          <!-- Country horizontal bar -->
+          <div class="chart-block">
+            <div class="chart-title">国家消耗分布 Top 8</div>
+            <div v-if="pageLoading" class="chart-skeleton chart-skeleton--country">
+              <span v-for="r in 8" :key="`ct-sk-${r}`" class="chart-skeleton-hrow" />
             </div>
+            <div
+              v-else-if="showSummaryAwaitQuery"
+              class="chart-empty-wrap chart-empty-wrap--country"
+            >
+              <ElEmpty
+                description="点击顶部「查询」加载图表"
+                :image-size="56"
+                class="block-empty"
+              />
+            </div>
+            <div
+              v-else-if="!hasCountryChartData"
+              class="chart-empty-wrap chart-empty-wrap--country"
+            >
+              <ElEmpty description="暂无数据" :image-size="56" class="block-empty" />
+            </div>
+            <div v-else ref="countryRef" class="chart-area chart-area--fill" />
           </div>
 
-          <div class="table-scroll">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>日期</th>
-                  <th>代投方</th>
-                  <th class="text-right">消耗($)</th>
-                  <th class="text-right">安装数</th>
-                  <th class="text-right">CPI($)</th>
-                  <th class="text-right">CPA($)</th>
-                  <th class="text-right">消耗环比</th>
-                  <th class="text-right">安装环比</th>
-                </tr>
-              </thead>
-              <tbody>
-                <template v-if="pageLoading">
-                  <tr
-                    v-for="idx in dailySkeletonRows"
-                    :key="`daily-skeleton-${idx}`"
-                    class="skeleton-data-tr"
-                    :style="{ '--sk-stagger': `${(idx - 1) * 48}ms` }"
-                  >
-                    <td class="skeleton-td"><span class="sk-brick sk-brick--date" /></td>
-                    <td class="skeleton-td"><span class="sk-brick sk-brick--sm-name" /></td>
-                    <td class="skeleton-td text-right"
-                      ><span class="sk-brick sk-brick--num-wide"
-                    /></td>
-                    <td class="skeleton-td text-right"><span class="sk-brick sk-brick--num" /></td>
-                    <td class="skeleton-td text-right"><span class="sk-brick sk-brick--num" /></td>
-                    <td class="skeleton-td text-right"><span class="sk-brick sk-brick--num" /></td>
-                    <td class="skeleton-td text-right"><span class="sk-brick sk-brick--pct" /></td>
-                    <td class="skeleton-td text-right"><span class="sk-brick sk-brick--pct" /></td>
-                  </tr>
-                </template>
-                <template v-else-if="!dailyRows.length">
-                  <tr>
-                    <td colspan="8" class="table-empty-cell">
-                      <ElEmpty description="暂无数据" :image-size="64" class="block-empty" />
-                    </td>
-                  </tr>
-                </template>
-                <template v-else>
-                  <tr v-for="(row, i) in dailyRows" :key="i" class="data-row">
-                    <td>{{ row.date }}</td>
-                    <td :style="{ color: row.agencyColor || '#e2e8f0' }">{{ row.agency }}</td>
-                    <td class="text-right">${{ row.spend.toLocaleString() }}</td>
-                    <td class="text-right">{{ row.installs.toLocaleString() }}</td>
-                    <td class="text-right">${{ row.cpi.toFixed(2) }}</td>
-                    <td class="text-right">${{ row.cpa.toFixed(2) }}</td>
-                    <td class="text-right" :class="changeClass(row.spendChange)">
-                      {{ changeTxt(row.spendChange) }}
-                    </td>
-                    <td class="text-right" :class="changeClass(row.installsChange)">
-                      {{ changeTxt(row.installsChange) }}
-                    </td>
-                  </tr>
-                </template>
-              </tbody>
-            </table>
+          <!-- Trend area -->
+          <div class="chart-block">
+            <div class="chart-title">代投消耗趋势（近30天）</div>
+            <div v-if="pageLoading" class="chart-skeleton chart-skeleton--trend" />
+            <div v-else-if="showSummaryAwaitQuery" class="chart-empty-wrap chart-empty-wrap--trend">
+              <ElEmpty
+                description="点击顶部「查询」加载图表"
+                :image-size="56"
+                class="block-empty"
+              />
+            </div>
+            <div v-else-if="!hasTrendChartData" class="chart-empty-wrap chart-empty-wrap--trend">
+              <ElEmpty description="暂无数据" :image-size="56" class="block-empty" />
+            </div>
+            <div v-else ref="trendRef" class="chart-area chart-area--fill" />
           </div>
         </div>
       </div>
+    </template>
 
-      <!-- Right sidebar -->
-      <div class="sidebar-right">
-        <!-- Donut chart -->
-        <div class="chart-block donut-chart-block">
-          <div class="chart-title">代投方消耗占比</div>
-          <div v-if="pageLoading" class="chart-skeleton chart-skeleton--donut" />
-          <div v-else-if="!hasDonutChartData" class="chart-empty-wrap">
-            <ElEmpty description="暂无数据" :image-size="56" class="block-empty" />
-          </div>
-          <div v-else ref="donutRef" class="chart-area" style="height: 220px" />
-        </div>
-
-        <!-- Bar chart -->
-        <div class="chart-block">
-          <div class="chart-title">广告平台分布分析</div>
-          <div v-if="pageLoading" class="chart-skeleton chart-skeleton--bars">
-            <span v-for="b in 6" :key="`bar-sk-${b}`" class="chart-skeleton-bar" />
-          </div>
-          <div v-else-if="!hasBarChartData" class="chart-empty-wrap chart-empty-wrap--short">
-            <ElEmpty description="暂无数据" :image-size="56" class="block-empty" />
-          </div>
-          <div v-else ref="barRef" class="chart-area" style="height: 160px" />
-        </div>
-
-        <!-- Country horizontal bar -->
-        <div class="chart-block">
-          <div class="chart-title">国家消耗分布 Top 8</div>
-          <div v-if="pageLoading" class="chart-skeleton chart-skeleton--country">
-            <span v-for="r in 8" :key="`ct-sk-${r}`" class="chart-skeleton-hrow" />
-          </div>
-          <div v-else-if="!hasCountryChartData" class="chart-empty-wrap chart-empty-wrap--country">
-            <ElEmpty description="暂无数据" :image-size="56" class="block-empty" />
-          </div>
-          <div v-else ref="countryRef" class="chart-area" style="height: 210px" />
-        </div>
-
-        <!-- Trend area -->
-        <div class="chart-block">
-          <div class="chart-title">代投消耗趋势（近30天）</div>
-          <div v-if="pageLoading" class="chart-skeleton chart-skeleton--trend" />
-          <div v-else-if="!hasTrendChartData" class="chart-empty-wrap chart-empty-wrap--trend">
-            <ElEmpty description="暂无数据" :image-size="56" class="block-empty" />
-          </div>
-          <div v-else ref="trendRef" class="chart-area" style="height: 180px" />
-        </div>
-      </div>
+    <div
+      v-else
+      class="agency-analysis-page__section agency-analysis-page__section--agency-sub-mock aa-entry-sub"
+    >
+      <AgencySubTabPerformanceMock
+        :loading="subTabLoading"
+        :error="subTabError"
+        :current-day-label="queriedDateRangeCNLabel"
+        :agency-tab="activeAgencyTabKey"
+        :default-account-range="summaryDateDraft"
+        :kpi-last7="subTabKpiLast7"
+        :recent-summary="subTabRecentSummary"
+        :account-summary="subTabAccountSummary"
+        @account-summary-search="handleAccountSummarySearch"
+      />
     </div>
 
     <!-- Screenshot Modal -->
     <ScreenshotModal
       v-model="showScreenshot"
-      :agency-name="screenshotTitleName"
-      :data-date="filterDate"
-      :page-loading="pageLoading"
-      :kpi-cards="kpiCards"
-      :agencies="agencies"
-      :agency-detail-map="agencyDetailMap"
-      :campaigns="campaigns"
-      :daily-rows="dailyRows"
-      :donut="charts.donut"
-      :channel-distribution="charts.channelDistribution"
-      :country-top8="charts.countryTop8"
-      :focused-agency-id="focusedAgencyIdForScreenshot"
-      @download="() => {}"
-      @copy="() => {}"
+      report-title="代投分析"
+      :agency-label="screenshotAgencyLabel"
+      :data-date="screenshotDataDateLabel"
+      :page-loading="subTabLoading"
+      :kpi-last7="subTabKpiLast7"
+      :recent-summary="subTabRecentSummary"
+      :account-summary="subTabAccountSummary"
     />
   </div>
 </template>
@@ -1490,6 +961,8 @@
   // ─── Page（对齐广告成效：整页 padding + 筛选区非固定） ───
   .agency-analysis-page.page-wrap {
     box-sizing: border-box;
+    flex: 1 1 auto;
+    min-height: 0;
     padding: 20px 24px 28px;
   }
 
@@ -1512,8 +985,185 @@
     }
   }
 
-  .agency-analysis-page__section--filters {
-    margin-bottom: 20px;
+  .agency-analysis-page__section--agency-tabs {
+    margin-bottom: 14px;
+  }
+
+  .aa-meta-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 12px;
+    align-items: center;
+    min-width: 0;
+    padding: 14px 18px;
+    background: rgb(10 10 14 / 82%);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgb(96 165 250 / 20%);
+    border-radius: 16px;
+    box-shadow:
+      0 8px 32px rgb(0 0 0 / 40%),
+      inset 0 1px 0 rgb(186 230 253 / 10%),
+      0 0 40px rgb(59 130 246 / 8%);
+  }
+
+  .aa-meta-strip--error {
+    justify-content: space-between;
+  }
+
+  .aa-tab-bar-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 16px;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .aa-tab-bar-filters {
+    display: flex;
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    gap: 10px 12px;
+    align-items: center;
+    justify-content: flex-end;
+    min-width: 0;
+  }
+
+  .aa-tab-bar-filters__actions {
+    display: inline-flex;
+    flex-shrink: 0;
+    flex-wrap: nowrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .aa-tab-bar-filters .btn-screenshot--tab {
+    box-sizing: border-box;
+    flex-shrink: 0;
+    height: 36px;
+    min-height: 36px;
+    padding: 0 14px;
+    margin-left: 0;
+    line-height: 1;
+  }
+
+  .filter-date-wrap--tab-inline {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    width: 250px;
+    max-width: min(250px, 100%);
+  }
+
+  .aa-tab-bar-filters .filter-date :deep(.el-input__wrapper) {
+    box-sizing: border-box;
+    height: 36px;
+    min-height: 36px !important;
+  }
+
+  .aa-tab-bar-filters .filter-select :deep(.el-select__wrapper) {
+    box-sizing: border-box;
+    height: 36px;
+    min-height: 36px !important;
+  }
+
+  .btn-search--tab {
+    flex-shrink: 0;
+    align-self: center;
+  }
+
+  .agency-analysis-page__section--agency-sub-mock {
+    min-width: 0;
+    padding: 18px 20px 24px;
+    margin-bottom: 16px;
+    background: rgb(10 10 14 / 72%);
+    border: 1px solid rgb(96 165 250 / 22%);
+    border-radius: 16px;
+    box-shadow:
+      0 8px 32px rgb(0 0 0 / 35%),
+      inset 0 1px 0 rgb(186 230 253 / 6%);
+  }
+
+  .aa-filter-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .aa-agency-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .aa-agency-tab {
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 500;
+    color: $text-secondary;
+    cursor: pointer;
+    background: rgb(10 10 14 / 72%);
+    border: 1px solid rgb(96 165 250 / 22%);
+    border-radius: 9999px;
+    transition:
+      color 0.2s ease,
+      border-color 0.2s ease,
+      background 0.2s ease,
+      box-shadow 0.2s ease;
+
+    &:hover {
+      color: $text-primary;
+      border-color: rgb(96 165 250 / 42%);
+    }
+
+    &:focus-visible {
+      outline: 2px solid rgb(52 211 153 / 65%);
+      outline-offset: 2px;
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+  }
+
+  .aa-agency-tab--active {
+    color: #e2e8f0;
+    background: rgb(0 212 180 / 10%);
+    border-color: rgb(0 212 180 / 45%);
+    box-shadow:
+      0 0 0 1px rgb(0 212 180 / 12%),
+      0 4px 18px rgb(0 0 0 / 35%);
+  }
+
+  .aa-agency-tab--skeleton {
+    width: 94px;
+    height: 34px;
+    pointer-events: none;
+    cursor: default;
+    background: linear-gradient(
+      90deg,
+      rgb(148 163 184 / 14%) 0%,
+      rgb(148 163 184 / 26%) 50%,
+      rgb(148 163 184 / 14%) 100%
+    );
+    border-color: rgb(148 163 184 / 16%);
+    animation: aa-tab-skeleton-pulse 1.2s ease-in-out infinite;
+  }
+
+  @keyframes aa-tab-skeleton-pulse {
+    0%,
+    100% {
+      opacity: 0.72;
+    }
+
+    50% {
+      opacity: 1;
+    }
   }
 
   @media (width <= 768px) {
@@ -1668,39 +1318,14 @@
     animation-delay: 0.16s;
   }
 
+  .aa-entry-sub {
+    animation: aa-slide-up 0.55s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)) both;
+    animation-delay: 0.14s;
+  }
+
   .aa-entry-3 {
     animation: aa-slide-up 0.55s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)) both;
     animation-delay: 0.26s;
-  }
-
-  .aa-filter-panel {
-    display: flex;
-    flex: 1;
-    flex-wrap: wrap;
-    gap: 10px 12px;
-    align-items: center;
-    min-width: 0;
-    padding: 18px 20px;
-    background: rgb(10 10 14 / 82%);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgb(96 165 250 / 20%);
-    border-radius: 16px;
-    box-shadow:
-      0 8px 32px rgb(0 0 0 / 40%),
-      inset 0 1px 0 rgb(186 230 253 / 10%),
-      0 0 40px rgb(59 130 246 / 8%);
-    transition:
-      box-shadow 0.35s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
-      border-color 0.3s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
-
-    &:hover {
-      border-color: rgb(96 165 250 / 48%);
-      box-shadow:
-        0 12px 40px rgb(0 0 0 / 44%),
-        0 0 0 1px rgb(96 165 250 / 22%),
-        inset 0 1px 0 rgb(186 230 253 / 16%),
-        0 0 48px rgb(59 130 246 / 14%);
-    }
   }
 
   .filter-skel {
@@ -1742,28 +1367,45 @@
   }
 
   .btn-search {
-    --el-button-size: 40px;
+    --el-button-size: 36px;
+    --el-button-bg-color: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    );
+    --el-button-text-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-button-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-button-hover-bg-color: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 8%,
+      transparent
+    );
+    --el-button-hover-text-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-button-hover-border-color: var(--theme-color, var(--art-primary, #3b82f6));
 
     flex-shrink: 0;
-    height: 40px;
+    height: 36px;
     padding: 0 16px;
     font-size: 13px;
-    background: linear-gradient(135deg, #059669 0%, #10b981 48%, #34d399 100%);
-    border: 1px solid rgb(16 185 129 / 45%);
-    border-radius: 9999px;
-    box-shadow:
-      0 0 18px rgb(16 185 129 / 30%),
-      inset 0 1px 0 rgb(255 255 255 / 12%);
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: 0 0 18px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 20%, transparent);
     transition:
       box-shadow 0.22s ease,
       transform 0.18s ease,
-      filter 0.22s ease;
+      background 0.22s ease;
 
     &:hover {
-      filter: brightness(1.06);
-      box-shadow:
-        0 0 28px rgb(16 185 129 / 42%),
-        inset 0 1px 0 rgb(255 255 255 / 16%);
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 8%,
+        transparent
+      );
+      box-shadow: 0 0 28px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 28%, transparent);
       transform: translateY(-1px);
     }
 
@@ -1793,24 +1435,19 @@
 
   .chart-empty-wrap {
     display: flex;
+    flex: 1 1 auto;
     align-items: center;
     justify-content: center;
-    min-height: 220px;
+    min-height: 160px;
     background: #0a1422;
     border: 1px solid rgb(30 58 95 / 35%);
     border-radius: 6px;
   }
 
-  .chart-empty-wrap--short {
-    min-height: 160px;
-  }
-
-  .chart-empty-wrap--country {
-    min-height: 210px;
-  }
-
+  .chart-empty-wrap--short,
+  .chart-empty-wrap--country,
   .chart-empty-wrap--trend {
-    min-height: 180px;
+    min-height: 160px;
   }
 
   .block-empty :deep(.el-empty__description) {
@@ -1823,15 +1460,63 @@
     opacity: 0.85;
   }
 
-  .filter-date {
-    width: 130px !important;
+  .filter-date-wrap {
+    flex: none;
+    width: 250px;
 
+    :deep(.el-date-editor) {
+      width: 100% !important;
+      min-width: 0 !important;
+    }
+  }
+
+  :deep(.filter-date.el-date-editor),
+  :deep(.filter-date.el-date-editor--daterange) {
+    flex: none !important;
+    width: 250px !important;
+
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-input-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-date-editor-width: 250px;
+    --el-date-editor-daterange-width: 250px;
+
+    min-height: 36px;
+    padding: 0 12px;
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    border-radius: var(--el-border-radius-base, 4px) !important;
+    box-shadow: none !important;
+    transition:
+      border-color 0.22s ease,
+      box-shadow 0.22s ease,
+      background 0.22s ease;
+  }
+
+  :deep(.filter-date.el-date-editor--daterange) {
+    width: 250px !important;
+    min-width: 250px !important;
+    max-width: 250px !important;
+  }
+
+  .filter-date {
+    :deep(.el-date-editor),
+    :deep(.el-range-editor),
+    :deep(.el-date-editor.el-input__wrapper),
+    :deep(.el-range-editor.el-input__wrapper),
     :deep(.el-input__wrapper) {
-      min-height: 40px;
+      min-height: 36px;
       padding: 0 12px;
-      background: rgb(16 185 129 / 6%) !important;
-      border: 1px solid rgb(16 185 129 / 28%) !important;
-      border-radius: 9999px !important;
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+        transparent
+      ) !important;
+      border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+      border-radius: var(--el-border-radius-base, 4px) !important;
       box-shadow: none !important;
       transition:
         border-color 0.22s ease,
@@ -1839,36 +1524,77 @@
         background 0.22s ease;
     }
 
+    :deep(.el-date-editor:hover),
+    :deep(.el-range-editor:hover),
     :deep(.el-input__wrapper:hover) {
-      border-color: rgb(16 185 129 / 55%) !important;
-      box-shadow: 0 0 12px rgb(16 185 129 / 18%) !important;
+      border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+      box-shadow: 0 0 0 1px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
     }
 
+    :deep(.el-date-editor.is-active),
+    :deep(.el-range-editor.is-active),
+    :deep(.el-date-editor.el-input__wrapper.is-focus),
     :deep(.el-input__wrapper.is-focus) {
-      background: rgb(16 185 129 / 10%) !important;
-      border-color: #10b981 !important;
-      box-shadow: 0 0 0 2px rgb(16 185 129 / 20%) !important;
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+        transparent
+      ) !important;
+      border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+      box-shadow: 0 0 0 2px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
     }
 
+    :deep(.el-range-input),
     :deep(.el-input__inner) {
       font-size: 12px;
       color: $text-primary !important;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
     }
 
-    :deep(.el-input__prefix-inner) {
-      color: #10b981;
+    :deep(.el-input__prefix-inner),
+    :deep(.el-range__icon),
+    :deep(.el-range__close-icon) {
+      color: var(--theme-color, var(--art-primary, #3b82f6));
     }
+  }
+
+  :deep(.filter-date.el-date-editor:hover),
+  :deep(.filter-date.el-date-editor--daterange:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
+  }
+
+  :deep(.filter-date.el-date-editor.is-active),
+  :deep(.filter-date.el-date-editor--daterange.is-active) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
   }
 
   .filter-select {
     width: 130px !important;
 
+    :deep(.el-select__wrapper),
     :deep(.el-input__wrapper) {
-      min-height: 40px;
+      min-height: 36px;
       padding: 0 12px;
-      background: rgb(16 185 129 / 6%) !important;
-      border: 1px solid rgb(16 185 129 / 28%) !important;
-      border-radius: 9999px !important;
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+        transparent
+      ) !important;
+      border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+      border-radius: var(--el-border-radius-base, 4px) !important;
       box-shadow: none !important;
       transition:
         border-color 0.22s ease,
@@ -1876,15 +1602,23 @@
         background 0.22s ease;
     }
 
+    :deep(.el-select__wrapper:hover),
     :deep(.el-input__wrapper:hover) {
-      border-color: rgb(16 185 129 / 55%) !important;
-      box-shadow: 0 0 12px rgb(16 185 129 / 18%) !important;
+      border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+      box-shadow: 0 0 0 1px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
     }
 
+    :deep(.el-select__wrapper.is-focused),
     :deep(.el-input__wrapper.is-focus) {
-      background: rgb(16 185 129 / 10%) !important;
-      border-color: #10b981 !important;
-      box-shadow: 0 0 0 2px rgb(16 185 129 / 20%) !important;
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+        transparent
+      ) !important;
+      border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+      box-shadow: 0 0 0 2px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
     }
 
     :deep(.el-input__inner) {
@@ -1894,7 +1628,7 @@
 
     :deep(.el-select__suffix),
     :deep(.el-select__caret) {
-      color: #10b981 !important;
+      color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
     }
   }
 
@@ -1905,25 +1639,27 @@
     margin-left: auto;
     font-size: 12px;
     font-weight: 600;
-    color: #ecfdf5;
+    color: var(--theme-color, var(--art-primary, #3b82f6));
     white-space: nowrap;
     cursor: pointer;
-    background: linear-gradient(135deg, #059669 0%, #10b981 48%, #34d399 100%);
-    border: 1px solid rgb(16 185 129 / 45%);
-    border-radius: 9999px;
-    box-shadow:
-      0 0 18px rgb(16 185 129 / 35%),
-      inset 0 1px 0 rgb(255 255 255 / 12%);
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: 0 0 18px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 20%, transparent);
     transition:
       box-shadow 0.22s ease,
       transform 0.18s ease,
-      filter 0.22s ease;
+      background 0.22s ease;
 
     &:hover {
-      filter: brightness(1.06);
-      box-shadow:
-        0 0 28px rgb(16 185 129 / 45%),
-        inset 0 1px 0 rgb(255 255 255 / 16%);
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 8%,
+        transparent
+      );
+      box-shadow: 0 0 28px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 28%, transparent);
       transform: translateY(-1px);
     }
 
@@ -1968,26 +1704,30 @@
     position: relative;
     flex: 1;
     min-width: 0;
-    padding: 22px;
+    padding: 16px 18px 18px;
     overflow: hidden;
-    border-radius: 12px;
+    border-radius: 14px;
 
     &:not(.kpi-card--skeleton) {
       --kpi-accent: var(--art-primary);
 
-      @include ap-neon-bg;
-      @include ap-card-mesh;
-      @include ap-panel-hover;
-
+      background-color: color-mix(in srgb, rgb(15 23 42) 58%, rgb(8 12 22 / 92%));
+      background-image: linear-gradient(
+        165deg,
+        rgb(255 255 255 / 5%) 0%,
+        transparent 44%,
+        transparent 100%
+      );
       isolation: isolate;
-      border-color: color-mix(in srgb, var(--kpi-accent) 46%, transparent);
-      border-radius: 12px;
+      backdrop-filter: blur(16px);
+      border: 1px solid color-mix(in srgb, var(--kpi-accent) 22%, rgb(255 255 255 / 8%));
       box-shadow:
-        0 12px 48px rgb(0 0 0 / 48%),
-        0 0 0 1px color-mix(in srgb, var(--kpi-accent) 22%, transparent),
-        inset 0 1px 0 color-mix(in srgb, var(--kpi-accent) 16%, transparent),
-        inset 0 -12px 32px rgb(0 0 0 / 30%),
-        0 0 52px color-mix(in srgb, var(--kpi-accent) 22%, transparent);
+        0 6px 28px rgb(0 0 0 / 42%),
+        inset 0 1px 0 rgb(255 255 255 / 7%);
+      transition:
+        border-color 0.28s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
+        box-shadow 0.32s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
+        transform 0.28s var(--ease-out, cubic-bezier(0, 0, 0.2, 1));
 
       &::before {
         position: absolute;
@@ -1995,29 +1735,27 @@
         z-index: 0;
         pointer-events: none;
         content: '';
-        background:
-          radial-gradient(
-            ellipse 118% 78% at 104% -18%,
-            color-mix(in srgb, var(--kpi-accent) 44%, transparent) 0%,
-            transparent 58%
-          ),
-          radial-gradient(
-            ellipse 82% 62% at -12% 108%,
-            color-mix(in srgb, var(--kpi-accent) 30%, transparent) 0%,
-            transparent 58%
-          );
+        background: radial-gradient(
+          ellipse 78% 52% at 4% 96%,
+          color-mix(in srgb, var(--kpi-accent) 32%, transparent) 0%,
+          transparent 62%
+        );
         border-radius: inherit;
+        opacity: 0.95;
       }
 
       &:hover {
-        border-color: color-mix(in srgb, var(--kpi-accent) 58%, transparent);
+        border-color: color-mix(in srgb, var(--kpi-accent) 38%, rgb(255 255 255 / 12%));
         box-shadow:
-          0 24px 72px rgb(0 0 0 / 52%),
-          0 0 0 1px color-mix(in srgb, var(--kpi-accent) 32%, transparent),
-          inset 0 1px 0 color-mix(in srgb, var(--kpi-accent) 22%, transparent),
-          inset 0 -12px 32px rgb(0 0 0 / 32%),
-          0 0 72px color-mix(in srgb, var(--kpi-accent) 32%, transparent),
-          0 0 120px color-mix(in srgb, var(--kpi-accent) 14%, transparent);
+          0 10px 36px rgb(0 0 0 / 48%),
+          inset 0 1px 0 rgb(255 255 255 / 9%),
+          0 0 36px color-mix(in srgb, var(--kpi-accent) 14%, transparent);
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transition-duration: 0.12s;
+        transform: translateY(0);
       }
     }
   }
@@ -2025,23 +1763,26 @@
   .kpi-row > .kpi-card:not(.kpi-card--skeleton).highlighted {
     --kpi-accent: var(--art-success);
 
-    border-color: color-mix(in srgb, var(--art-success) 58%, transparent);
+    border-color: color-mix(in srgb, var(--art-success) 36%, rgb(255 255 255 / 10%));
     box-shadow:
-      0 12px 48px rgb(0 0 0 / 48%),
-      0 0 0 1px color-mix(in srgb, var(--art-success) 32%, transparent),
-      inset 0 1px 0 color-mix(in srgb, var(--art-success) 22%, transparent),
-      inset 0 -12px 32px rgb(0 0 0 / 30%),
-      0 0 56px color-mix(in srgb, var(--art-success) 28%, transparent);
+      0 6px 28px rgb(0 0 0 / 42%),
+      inset 0 1px 0 color-mix(in srgb, var(--art-success) 14%, rgb(255 255 255 / 6%)),
+      0 0 44px color-mix(in srgb, var(--art-success) 16%, transparent);
+
+    &::before {
+      background: radial-gradient(
+        ellipse 82% 56% at 2% 98%,
+        color-mix(in srgb, var(--art-success) 34%, transparent) 0%,
+        transparent 64%
+      );
+    }
 
     &:hover {
-      border-color: color-mix(in srgb, var(--art-success) 68%, transparent);
+      border-color: color-mix(in srgb, var(--art-success) 48%, rgb(255 255 255 / 12%));
       box-shadow:
-        0 24px 72px rgb(0 0 0 / 52%),
-        0 0 0 1px color-mix(in srgb, var(--art-success) 40%, transparent),
-        inset 0 1px 0 color-mix(in srgb, var(--art-success) 26%, transparent),
-        inset 0 -12px 32px rgb(0 0 0 / 32%),
-        0 0 80px color-mix(in srgb, var(--art-success) 38%, transparent),
-        0 0 120px color-mix(in srgb, var(--art-success) 16%, transparent);
+        0 10px 36px rgb(0 0 0 / 48%),
+        inset 0 1px 0 color-mix(in srgb, var(--art-success) 18%, rgb(255 255 255 / 8%)),
+        0 0 52px color-mix(in srgb, var(--art-success) 22%, transparent);
     }
   }
 
@@ -2069,44 +1810,48 @@
     gap: 10px;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
   }
 
   .kpi-label {
     font-size: 13px;
-    font-weight: 600;
-    color: $text-muted;
+    font-weight: 500;
+    line-height: 1.25;
+    color: $text-secondary;
+    letter-spacing: 0.02em;
   }
 
   .kpi-value {
     position: relative;
     z-index: 1;
-    margin-bottom: 6px;
-    font-size: 26px;
+    margin-bottom: 4px;
+    font-size: 28px;
     font-weight: 700;
-    line-height: 1;
+    line-height: 1.05;
     color: $text-primary;
+    letter-spacing: -0.03em;
   }
 
   .kpi-change {
     flex-shrink: 0;
-    padding: 2px 8px;
-    font-size: 12px;
-    font-weight: 600;
-    line-height: 1.2;
-    background: rgb(148 163 184 / 10%);
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.35;
     border-radius: 9999px;
 
     &.up {
-      color: $teal;
-      background: rgb(0 212 180 / 10%);
-      border: 1px solid rgb(0 212 180 / 22%);
+      color: color-mix(in srgb, var(--art-success) 92%, white);
+      background: color-mix(in srgb, rgb(0 0 0 / 52%) 70%, var(--art-success) 30%);
+      border: 1px solid color-mix(in srgb, var(--art-success) 42%, transparent);
+      box-shadow: inset 0 1px 0 rgb(255 255 255 / 8%);
     }
 
     &.down {
-      color: $red;
-      background: rgb(239 68 68 / 10%);
-      border: 1px solid rgb(239 68 68 / 22%);
+      color: color-mix(in srgb, var(--art-danger) 88%, white);
+      background: color-mix(in srgb, rgb(0 0 0 / 55%) 72%, var(--art-danger) 28%);
+      border: 1px solid color-mix(in srgb, var(--art-danger) 48%, transparent);
+      box-shadow: inset 0 1px 0 rgb(255 255 255 / 6%);
     }
   }
 
@@ -2123,16 +1868,10 @@
   // ─── Main layout ───
   .main-layout {
     display: flex;
+    flex: 1 1 auto;
     gap: 12px;
+    min-height: 0;
     padding: 0 0 20px;
-  }
-
-  .main-left {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    gap: 12px;
-    min-width: 0;
   }
 
   .sidebar-right {
@@ -2143,8 +1882,24 @@
     width: 360px;
   }
 
+  .sidebar-right--solo {
+    flex: 1 1 auto;
+    flex-flow: row wrap;
+    gap: 12px;
+    align-content: stretch;
+    width: 100%;
+    max-width: none;
+    min-height: 0;
+  }
+
+  .sidebar-right--solo .chart-block {
+    flex: 1 1 calc(50% - 6px);
+    min-width: min(360px, 100%);
+    min-height: clamp(260px, 36vh, 480px);
+  }
+
   @media (width <= 1366px) {
-    .sidebar-right {
+    .sidebar-right:not(.sidebar-right--solo) {
       width: 300px;
     }
   }
@@ -2476,7 +2231,7 @@
     overflow: visible;
     background: rgb(10 10 14 / 90%);
     border: 1px solid rgb(96 165 250 / 22%);
-    border-radius: 12px;
+    border-radius: 14px;
     box-shadow:
       0 0 24px rgb(59 130 246 / 12%),
       inset 0 0 0 1px rgb(186 230 253 / 8%);
@@ -2530,15 +2285,19 @@
   }
 
   .chart-skeleton--donut {
-    height: 220px;
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 200px;
   }
 
   .chart-skeleton--bars {
     display: flex;
+    flex: 1 1 auto;
     gap: 8px;
     align-items: flex-end;
     justify-content: center;
-    height: 160px;
+    height: auto;
+    min-height: 160px;
     padding: 12px 10px 10px;
     background-color: #0a1422;
     background-image: none;
@@ -2563,10 +2322,12 @@
 
   .chart-skeleton--country {
     display: flex;
+    flex: 1 1 auto;
     flex-direction: column;
     gap: 10px;
     justify-content: center;
-    height: 210px;
+    height: auto;
+    min-height: 200px;
     padding: 10px 12px;
     background-color: #0a1422;
     background-image: none;
@@ -2590,7 +2351,9 @@
   }
 
   .chart-skeleton--trend {
-    height: 180px;
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 180px;
   }
 
   // ─── Agency row ───
@@ -3069,6 +2832,8 @@
   // ─── Sidebar charts ───
   .chart-block {
     position: relative;
+    display: flex;
+    flex-direction: column;
     padding: 14px 14px 12px;
     overflow: hidden;
     isolation: isolate;
@@ -3091,6 +2856,7 @@
   }
 
   .chart-title {
+    flex-shrink: 0;
     margin-bottom: 4px;
     font-size: 13px;
     font-weight: 600;
@@ -3099,6 +2865,13 @@
 
   .chart-area {
     width: 100%;
+  }
+
+  .chart-area--fill {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 160px;
   }
 
   .donut-chart-block {
@@ -3114,6 +2887,7 @@
 
     .aa-entry-1,
     .aa-entry-2,
+    .aa-entry-sub,
     .aa-entry-3 {
       opacity: 1;
       transform: none;
@@ -3123,13 +2897,20 @@
     .kpi-card--skeleton-fx::before {
       animation: none;
     }
+
+    .kpi-card:not(.kpi-card--skeleton) {
+      transition:
+        border-color 0.16s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
+        box-shadow 0.16s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
+      transform: none !important;
+    }
   }
 </style>
 
 <style lang="scss">
   /* 挂载在 body，须非 scoped；与广告成效筛选下拉视觉对齐 */
   .aa-agency-filter-popper.el-popper {
-    background: rgb(10 10 14 / 96%) !important;
+    // background: rgb(10 10 14 / 96%) !important;
     border: 1px solid rgb(96 165 250 / 28%) !important;
     border-radius: 12px !important;
     box-shadow:

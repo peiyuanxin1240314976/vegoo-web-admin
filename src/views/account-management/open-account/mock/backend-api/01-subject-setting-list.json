@@ -1,0 +1,223 @@
+{
+  "_comment": "开户主体配置-分页列表查询。仅返回列表，不包含顶部卡片统计。",
+  "interaction": {
+    "entry": "页面进入后自动加载；筛选栏与分页参数变化后重新请求。",
+    "uiBinding": [
+      "index.vue -> loadList()",
+      "modules/subject-setting-toolbar.vue -> 4 个筛选项",
+      "列表分页器 -> current / size"
+    ],
+    "emptyState": "返回 records=[] 时展示表格空态，不阻塞新建主体。"
+  },
+  "fieldDescription": {
+    "request": {
+      "keyword": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "关键字，匹配 subjectId 或 subjectName；空字符串表示不过滤。"
+      },
+      "platformStatus": {
+        "type": "string",
+        "required": false,
+        "enum": ["all", "facebook", "tiktok", "both", "none"],
+        "default": "all",
+        "description": "平台状态筛选：all 全部、facebook 仅 Facebook 可用、tiktok 仅 TikTok 可用、both 双平台可用、none 双平台均不可用。"
+      },
+      "hasBusinessLicense": {
+        "type": "string",
+        "required": false,
+        "enum": ["all", "yes", "no"],
+        "default": "all",
+        "description": "营业执照筛选：all 全部、yes 有执照、no 无执照。"
+      },
+      "sortOrder": {
+        "type": "string",
+        "required": false,
+        "enum": ["updated_desc", "updated_asc"],
+        "default": "updated_desc",
+        "description": "按更新时间排序：updated_desc 最近更新优先，updated_asc 最早更新优先。"
+      },
+      "current": {
+        "type": "number",
+        "required": false,
+        "default": 1,
+        "description": "当前页码，从 1 开始。"
+      },
+      "size": {
+        "type": "number",
+        "required": false,
+        "default": 10,
+        "description": "每页条数。"
+      }
+    },
+    "response": {
+      "records": {
+        "type": "SubjectSettingItem[]",
+        "required": true,
+        "description": "主体配置列表。无数据时返回空数组 []。"
+      },
+      "current": {
+        "type": "number",
+        "required": true,
+        "description": "当前页码。"
+      },
+      "size": {
+        "type": "number",
+        "required": true,
+        "description": "每页条数。"
+      },
+      "total": {
+        "type": "number",
+        "required": true,
+        "description": "总条数。"
+      }
+    },
+    "SubjectSettingItem": {
+      "subjectId": {
+        "type": "string",
+        "required": true,
+        "description": "主体唯一标识。"
+      },
+      "subjectName": {
+        "type": "string",
+        "required": true,
+        "description": "主体名称。"
+      },
+      "businessLicense": {
+        "type": "string",
+        "required": true,
+        "description": "营业执照地址或文件标识；空字符串表示未上传。"
+      },
+      "facebookEnabled": {
+        "type": "boolean",
+        "required": true,
+        "description": "Facebook 是否可用。"
+      },
+      "facebookRemark": {
+        "type": "string",
+        "required": true,
+        "description": "Facebook 备注。"
+      },
+      "tiktokEnabled": {
+        "type": "boolean",
+        "required": true,
+        "description": "TikTok 是否可用。"
+      },
+      "tiktokRemark": {
+        "type": "string",
+        "required": true,
+        "description": "TikTok 备注。"
+      },
+      "inputTime": {
+        "type": "string",
+        "required": true,
+        "description": "录入时间，格式 YYYY-MM-DD HH:mm:ss。"
+      },
+      "creatorId": {
+        "type": "number | null",
+        "required": true,
+        "description": "创建人 ID。"
+      },
+      "createTime": {
+        "type": "string",
+        "required": true,
+        "description": "创建时间，格式 YYYY-MM-DD HH:mm:ss。"
+      },
+      "updaterId": {
+        "type": "number | null",
+        "required": true,
+        "description": "更新人 ID。"
+      },
+      "updateTime": {
+        "type": "string",
+        "required": true,
+        "description": "更新时间，格式 YYYY-MM-DD HH:mm:ss。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "keyword": "",
+    "platformStatus": "all",
+    "hasBusinessLicense": "all",
+    "sortOrder": "updated_desc",
+    "current": 1,
+    "size": 10
+  },
+  "sampleResponse": {
+    "records": [
+      {
+        "subjectId": "SUBJ-HK-001",
+        "subjectName": "Vegoo Hong Kong Limited",
+        "businessLicense": "oss://licenses/vegoo-hk-001.pdf",
+        "facebookEnabled": true,
+        "facebookRemark": "香港主体可直接用于 Meta 开户，优先投放港澳台地区。",
+        "tiktokEnabled": true,
+        "tiktokRemark": "TikTok 可开户，需提前确认结算主体一致。",
+        "inputTime": "2026-04-12 10:00:00",
+        "creatorId": 1001,
+        "createTime": "2026-04-12 10:00:00",
+        "updaterId": 1003,
+        "updateTime": "2026-04-17 09:24:00"
+      },
+      {
+        "subjectId": "SUBJ-US-002",
+        "subjectName": "Vegoo Media LLC",
+        "businessLicense": "oss://licenses/vegoo-us-002.pdf",
+        "facebookEnabled": true,
+        "facebookRemark": "美国主体适合做主投账户，历史稳定性较好。",
+        "tiktokEnabled": false,
+        "tiktokRemark": "暂未开放，等待补充税务文件。",
+        "inputTime": "2026-04-10 14:30:00",
+        "creatorId": 1002,
+        "createTime": "2026-04-10 14:30:00",
+        "updaterId": 1002,
+        "updateTime": "2026-04-16 18:20:00"
+      },
+      {
+        "subjectId": "SUBJ-SG-003",
+        "subjectName": "Vegoo Growth SG Pte. Ltd.",
+        "businessLicense": "",
+        "facebookEnabled": false,
+        "facebookRemark": "执照待补充，目前不建议发起开户。",
+        "tiktokEnabled": true,
+        "tiktokRemark": "新加坡主体适配东南亚投放，可优先申请 TikTok。",
+        "inputTime": "2026-04-08 11:15:00",
+        "creatorId": 1004,
+        "createTime": "2026-04-08 11:15:00",
+        "updaterId": 1005,
+        "updateTime": "2026-04-15 13:40:00"
+      },
+      {
+        "subjectId": "SUBJ-AE-004",
+        "subjectName": "Vegoo Digital FZ-LLC",
+        "businessLicense": "",
+        "facebookEnabled": false,
+        "facebookRemark": "",
+        "tiktokEnabled": false,
+        "tiktokRemark": "",
+        "inputTime": "2026-04-05 16:20:00",
+        "creatorId": 1006,
+        "createTime": "2026-04-05 16:20:00",
+        "updaterId": 1006,
+        "updateTime": "2026-04-14 17:05:00"
+      }
+    ],
+    "current": 1,
+    "size": 10,
+    "total": 24
+  },
+  "api": {
+    "url": "POST /api/account-management/open-account/subject-settings/list",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "keyword?, platformStatus?, hasBusinessLicense?, sortOrder?, current?, size?",
+    "responseBody": "records: SubjectSettingItem[], current, size, total"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "后端按 updateTime 排序并返回稳定结构；空数据仍返回 records: []。",
+      "keyword 建议同时支持 subjectId/subjectName 模糊匹配，大小写不敏感。"
+    ]
+  }
+}

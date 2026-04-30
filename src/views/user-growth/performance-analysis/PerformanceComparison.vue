@@ -15,17 +15,34 @@
       </div>
       <div class="header-right">
         <button class="btn-back" @click="goBack">← 返回列表</button>
-        <ElDatePicker
-          v-model="selectedDateRange"
+        <AppDatePicker
+          v-model="selectedDateRangeDraft"
           class="date-range-picker"
+          :shortcuts="dateRangeShortcuts"
           type="daterange"
           range-separator="~"
           start-placeholder="开始日期"
           end-placeholder="结束日期"
           value-format="YYYY-MM-DD"
           format="YYYY-MM-DD"
+          popper-class="pa-or-filter-popper"
         />
-        <button class="btn-export">↑ 导出</button>
+        <ElButton
+          round
+          type="primary"
+          class="btn-query"
+          :loading="
+            overviewLoading ||
+            chartsLoading ||
+            rankingsLoading ||
+            scoreDetailLoading ||
+            alertsLoading
+          "
+          @click="onQuery"
+        >
+          查询
+        </ElButton>
+        <!-- <button class="btn-export">↑ 导出</button> -->
       </div>
     </div>
 
@@ -47,27 +64,63 @@
     <!-- ─── KPI Row ───────────────────────────────── -->
     <div class="kpi-row pa-entry-2">
       <div class="kpi-card pa-neon-lift-card">
-        <div class="kpi-title">广告支出合计</div>
-        <div class="kpi-value">${{ fmt(kpis.totalAd) }}</div>
-        <div class="kpi-sub pos-text">周环比 +8%</div>
+        <ElSkeleton :loading="overviewLoading" animated>
+          <template #template>
+            <ElSkeletonItem variant="text" class="sk sk-w-40" />
+            <ElSkeletonItem variant="h1" class="sk sk-w-56 sk-mt-10" />
+            <ElSkeletonItem variant="text" class="sk sk-w-28 sk-mt-10" />
+          </template>
+          <template #default>
+            <div class="kpi-title">广告支出合计</div>
+            <div class="kpi-value">${{ fmt(kpis.totalAd) }}</div>
+            <div class="kpi-sub pos-text">周环比 +8%</div>
+          </template>
+        </ElSkeleton>
       </div>
       <div class="kpi-card pa-neon-lift-card">
-        <div class="kpi-title">首日ROI均值</div>
-        <div class="kpi-value gold-text">{{ kpis.avgRoi }}%</div>
-        <div class="kpi-row-inline">
-          <span class="kpi-hint">达标线 85%</span>
-          <span class="badge-pass">达标</span>
-        </div>
+        <ElSkeleton :loading="overviewLoading" animated>
+          <template #template>
+            <ElSkeletonItem variant="text" class="sk sk-w-44" />
+            <ElSkeletonItem variant="h1" class="sk sk-w-40 sk-mt-10" />
+            <ElSkeletonItem variant="text" class="sk sk-w-32 sk-mt-10" />
+          </template>
+          <template #default>
+            <div class="kpi-title">首日ROI均值</div>
+            <div class="kpi-value gold-text">{{ kpis.avgRoi }}%</div>
+            <div class="kpi-row-inline">
+              <span class="kpi-hint">达标线 85%</span>
+              <span class="badge-pass">达标</span>
+            </div>
+          </template>
+        </ElSkeleton>
       </div>
       <div class="kpi-card pa-neon-lift-card">
-        <div class="kpi-title">预估利润合计</div>
-        <div class="kpi-value pos-text">+${{ fmt(kpis.totalProfit) }}</div>
-        <div class="kpi-sub pos-text">周环比 +12%</div>
+        <ElSkeleton :loading="overviewLoading" animated>
+          <template #template>
+            <ElSkeletonItem variant="text" class="sk sk-w-46" />
+            <ElSkeletonItem variant="h1" class="sk sk-w-56 sk-mt-10" />
+            <ElSkeletonItem variant="text" class="sk sk-w-30 sk-mt-10" />
+          </template>
+          <template #default>
+            <div class="kpi-title">预估利润合计</div>
+            <div class="kpi-value pos-text">+${{ fmt(kpis.totalProfit) }}</div>
+            <div class="kpi-sub pos-text">周环比 +12%</div>
+          </template>
+        </ElSkeleton>
       </div>
       <div class="kpi-card pa-neon-lift-card kpi-alert">
-        <div class="kpi-title">未达标人员</div>
-        <div class="kpi-value red-text">{{ kpis.failCount }} 人</div>
-        <div class="kpi-fail-name red-text">{{ kpis.failName }}</div>
+        <ElSkeleton :loading="overviewLoading" animated>
+          <template #template>
+            <ElSkeletonItem variant="text" class="sk sk-w-38" />
+            <ElSkeletonItem variant="h1" class="sk sk-w-28 sk-mt-10" />
+            <ElSkeletonItem variant="text" class="sk sk-w-70 sk-mt-10" />
+          </template>
+          <template #default>
+            <div class="kpi-title">未达标人员</div>
+            <div class="kpi-value red-text">{{ kpis.failCount }} 人</div>
+            <div class="kpi-fail-name red-text">{{ kpis.failName }}</div>
+          </template>
+        </ElSkeleton>
       </div>
     </div>
 
@@ -78,25 +131,61 @@
         <!-- ROI 趋势 -->
         <div class="chart-card pa-neon-panel">
           <div class="chart-title">首日ROI 趋势对比</div>
-          <div ref="roiChartRef" class="chart-body"></div>
+          <div class="chart-shell">
+            <div v-if="!chartsReady" class="chart-text-skeleton" aria-label="图表加载中">
+              <div class="sk-line sk-w-46"></div>
+              <div class="sk-line sk-w-62"></div>
+              <div class="sk-line sk-w-54"></div>
+              <div class="sk-line sk-w-70"></div>
+              <div class="sk-hint">正在加载趋势数据…</div>
+            </div>
+            <div v-else ref="roiChartRef" class="chart-body"></div>
+          </div>
         </div>
 
         <!-- Radar -->
         <div class="chart-card pa-neon-panel">
           <div class="chart-title">综合效能雷达图</div>
-          <div ref="radarChartRef" class="chart-body"></div>
+          <div class="chart-shell">
+            <div v-if="!chartsReady" class="chart-text-skeleton" aria-label="图表加载中">
+              <div class="sk-line sk-w-40"></div>
+              <div class="sk-line sk-w-58"></div>
+              <div class="sk-line sk-w-52"></div>
+              <div class="sk-line sk-w-66"></div>
+              <div class="sk-hint">正在加载雷达指标…</div>
+            </div>
+            <div v-else ref="radarChartRef" class="chart-body"></div>
+          </div>
         </div>
 
         <!-- 广告支出趋势 -->
         <div class="chart-card pa-neon-panel">
           <div class="chart-title">广告支出 趋势对比</div>
-          <div ref="adChartRef" class="chart-body"></div>
+          <div class="chart-shell">
+            <div v-if="!chartsReady" class="chart-text-skeleton" aria-label="图表加载中">
+              <div class="sk-line sk-w-44"></div>
+              <div class="sk-line sk-w-60"></div>
+              <div class="sk-line sk-w-48"></div>
+              <div class="sk-line sk-w-72"></div>
+              <div class="sk-hint">正在加载花费数据…</div>
+            </div>
+            <div v-else ref="adChartRef" class="chart-body"></div>
+          </div>
         </div>
 
         <!-- 利润对比 -->
         <div class="chart-card pa-neon-panel">
           <div class="chart-title">预估利润对比</div>
-          <div ref="profitChartRef" class="chart-body"></div>
+          <div class="chart-shell">
+            <div v-if="!chartsReady" class="chart-text-skeleton" aria-label="图表加载中">
+              <div class="sk-line sk-w-42"></div>
+              <div class="sk-line sk-w-56"></div>
+              <div class="sk-line sk-w-50"></div>
+              <div class="sk-line sk-w-68"></div>
+              <div class="sk-hint">正在加载利润对比…</div>
+            </div>
+            <div v-else ref="profitChartRef" class="chart-body"></div>
+          </div>
         </div>
       </div>
 
@@ -105,65 +194,92 @@
         <!-- 指标排名 -->
         <div class="panel-card pa-neon-panel">
           <div class="panel-title">指标排名</div>
-          <table class="rank-table">
-            <thead>
-              <tr>
-                <th>指标</th>
-                <th class="rank-1">🏆 第1</th>
-                <th class="rank-2">🥈 第2</th>
-                <th class="rank-3">🥉 第3</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="r in rankData" :key="r.metric">
-                <td class="metric-name">{{ r.metric }}</td>
-                <td class="rank-1">{{ r.r1 }}</td>
-                <td class="rank-2">{{ r.r2 }}</td>
-                <td class="rank-3">{{ r.r3 }}</td>
-              </tr>
-            </tbody>
-          </table>
+          <ElSkeleton :loading="rankingsLoading" animated>
+            <template #template>
+              <div class="pa-skeleton-block">
+                <ElSkeletonItem variant="rect" style="width: 100%; height: 160px" />
+              </div>
+            </template>
+            <template #default>
+              <table class="rank-table">
+                <thead>
+                  <tr>
+                    <th>指标</th>
+                    <th class="rank-1">🏆 第1</th>
+                    <th class="rank-2">🥈 第2</th>
+                    <th class="rank-3">🥉 第3</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="r in rankData" :key="r.metric">
+                    <td class="metric-name">{{ r.metric }}</td>
+                    <td class="rank-1">{{ r.r1 }}</td>
+                    <td class="rank-2">{{ r.r2 }}</td>
+                    <td class="rank-3">{{ r.r3 }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </template>
+          </ElSkeleton>
         </div>
 
         <!-- 绩效得分明细 -->
-        <div class="panel-card pa-neon-panel">
+        <!-- <div class="panel-card pa-neon-panel">
           <div class="panel-title">绩效得分明细</div>
-          <table class="score-table">
-            <thead>
-              <tr>
-                <th>人员</th>
-                <th>花费分</th>
-                <th>ROI分</th>
-                <th>CPI分</th>
-                <th>利润分</th>
-                <th>综合得分</th>
-                <th>状态</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="s in scoreDetail" :key="s.name">
-                <td :style="{ color: s.color }" class="score-name">{{ s.name }}</td>
-                <td>{{ s.spend }}</td>
-                <td>{{ s.roi }}</td>
-                <td>{{ s.cpi }}</td>
-                <td>{{ s.profit }}</td>
-                <td :style="{ color: s.color }" class="total-score">{{ s.total }}分</td>
-                <td>
-                  <span :class="['s-badge', `sb-${s.statusClass}`]">{{ s.status }}</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+          <ElSkeleton :loading="scoreDetailLoading" animated>
+            <template #template>
+              <div class="pa-skeleton-block">
+                <ElSkeletonItem variant="rect" style="width: 100%; height: 200px" />
+              </div>
+            </template>
+            <template #default>
+              <table class="score-table">
+                <thead>
+                  <tr>
+                    <th>人员</th>
+                    <th>花费分</th>
+                    <th>ROI分</th>
+                    <th>CPI分</th>
+                    <th>利润分</th>
+                    <th>综合得分</th>
+                    <th>状态</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="s in scoreDetail" :key="s.name">
+                    <td :style="{ color: s.color }" class="score-name">{{ s.name }}</td>
+                    <td>{{ s.spend }}</td>
+                    <td>{{ s.roi }}</td>
+                    <td>{{ s.cpi }}</td>
+                    <td>{{ s.profit }}</td>
+                    <td :style="{ color: s.color }" class="total-score">{{ s.total }}分</td>
+                    <td>
+                      <span :class="['s-badge', `sb-${s.statusClass}`]">{{ s.status }}</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </template>
+          </ElSkeleton>
+        </div> -->
 
         <!-- 异常预警 -->
         <div class="panel-card pa-neon-panel alert-panel">
           <div class="panel-title warning-title">⚠ 异常预警</div>
-          <div class="alert-item" v-for="a in alerts" :key="a.id">
-            <span :class="['alert-icon', a.level]">{{ a.level === 'warn' ? '△' : '▲' }}</span>
-            <span class="alert-text">{{ a.text }}</span>
-            <button class="alert-link" @click="viewAlertDetail(a.id)">查看详情</button>
-          </div>
+          <ElSkeleton :loading="alertsLoading" animated>
+            <template #template>
+              <div class="pa-skeleton-block">
+                <ElSkeletonItem variant="rect" style="width: 100%; height: 120px" />
+              </div>
+            </template>
+            <template #default>
+              <div class="alert-item" v-for="a in alerts" :key="a.id">
+                <span :class="['alert-icon', a.level]">{{ a.level === 'warn' ? '△' : '▲' }}</span>
+                <span class="alert-text">{{ a.text }}</span>
+                <button class="alert-link" @click="viewAlertDetail(a.id)">查看详情</button>
+              </div>
+            </template>
+          </ElSkeleton>
         </div>
       </div>
     </div>
@@ -198,12 +314,25 @@
 
 <script setup lang="ts">
   import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { useRouter, useRoute } from 'vue-router'
   import { ElMessage } from 'element-plus'
-  import * as echarts from 'echarts'
+  import { echarts, type EChartsOption } from '@/plugins/echarts'
   import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import {
     fetchPerformanceCompareCandidates,
+    fetchPerformanceComparisonAlerts,
+    fetchPerformanceComparisonCharts,
+    fetchPerformanceComparisonOverview,
+    fetchPerformanceComparisonRankings,
+    fetchPerformanceComparisonScoreDetail,
+    type ComparisonStaffRequest,
+    type PerformanceComparisonAlertsResponse,
+    type PerformanceComparisonChartsResponse,
+    type PerformanceComparisonOverviewResponse,
+    type PerformanceComparisonRankingsResponse,
+    type PerformanceComparisonScoreDetailResponse,
     type PerformanceCompareCandidatesItem
   } from '@/api/user-growth/performance-analysis'
 
@@ -329,30 +458,31 @@
     }
   }
 
-  const SCORE_DETAIL_DATA: Record<
-    string,
-    { spend: number; roi: number; cpi: number; profit: number; total: number }
-  > = {
-    zhao6: { spend: 28, roi: 30, cpi: 20, profit: 18, total: 96 },
-    zhang3: { spend: 25, roi: 30, cpi: 20, profit: 19, total: 94 },
-    li4: { spend: 22, roi: 28, cpi: 20, profit: 18, total: 88 },
-    wang5: { spend: 15, roi: 18, cpi: 16, profit: 23, total: 72 },
-    liu7: { spend: 23, roi: 29, cpi: 20, profit: 18, total: 90 },
-    chen8: { spend: 21, roi: 26, cpi: 19, profit: 17, total: 83 },
-    zhou9: { spend: 20, roi: 25, cpi: 18, profit: 17, total: 80 },
-    wu10: { spend: 19, roi: 24, cpi: 18, profit: 17, total: 78 }
-  }
-
   // ─── Router ───────────────────────────────────────────────
   const router = useRouter()
   const route = useRoute()
 
   // ─── State ────────────────────────────────────────────────
   const showAddModal = ref(false)
-  const selectedDateRange = ref<[string, string]>(buildDefaultDateRange())
+  /** 日期范围（草稿）：仅用于选择器展示，不自动触发请求 */
+  const selectedDateRangeDraft = ref<[string, string]>(buildDefaultDateRange())
+  /** 日期范围（已查询）：用于实际请求；进入页面/加人/删人会按它自动拉取 */
+  const selectedDateRangeApplied = ref<[string, string]>([...selectedDateRangeDraft.value])
   const compareCandidatesLoading = ref(false)
   const compareCandidates = ref<PerformanceCompareCandidatesItem[]>([])
   const pendingAddIds = ref<string[]>([])
+  const overviewLoading = ref(false)
+  const chartsLoading = ref(false)
+  const chartsReady = ref(false)
+  const rankingsLoading = ref(false)
+  const scoreDetailLoading = ref(false)
+  const alertsLoading = ref(false)
+  let loadSeq = 0
+  const comparisonOverview = ref<PerformanceComparisonOverviewResponse | null>(null)
+  const comparisonCharts = ref<PerformanceComparisonChartsResponse | null>(null)
+  const comparisonRankings = ref<PerformanceComparisonRankingsResponse | null>(null)
+  const comparisonScoreDetail = ref<PerformanceComparisonScoreDetailResponse | null>(null)
+  const comparisonAlerts = ref<PerformanceComparisonAlertsResponse | null>(null)
 
   // Parse IDs from route query
   const selectedStaff = ref<StaffSummary[]>([])
@@ -366,7 +496,8 @@
     const startDate = route.query.startDate as string | undefined
     const endDate = route.query.endDate as string | undefined
     if (startDate && endDate) {
-      selectedDateRange.value = [startDate, endDate]
+      selectedDateRangeDraft.value = [startDate, endDate]
+      selectedDateRangeApplied.value = [startDate, endDate]
     }
   }
   initFromRoute()
@@ -380,6 +511,7 @@
 
   // ─── Computed KPIs ────────────────────────────────────────
   const kpis = computed(() => {
+    if (comparisonOverview.value) return comparisonOverview.value
     const ids = selectedStaff.value.map((s) => s.id)
     const totalAd = ids.reduce((acc, id) => acc + (ALL_STAFF[id]?.adSpend ?? 0), 0)
     const avgRoi = 89
@@ -394,65 +526,11 @@
     }
   })
 
-  const rankData = computed(() => [
-    {
-      metric: '广告支出',
-      r1: `赵六 $52,100`,
-      r2: `张三 $49,279`,
-      r3: `李四 $37,838`
-    },
-    {
-      metric: '首日ROI',
-      r1: `赵六 96%`,
-      r2: `张三 93%`,
-      r3: `李四 88%`
-    },
-    {
-      metric: '预估利润',
-      r1: `赵六 +$15,600`,
-      r2: `张三 +$12,400`,
-      r3: `李四 +$6,800`
-    },
-    {
-      metric: '最低利润',
-      r1: `赵六 +$9,800`,
-      r2: `张三 +$8,200`,
-      r3: `李四 +$3,200`
-    },
-    {
-      metric: '绩效得分',
-      r1: `赵六 96分`,
-      r2: `张三 94分`,
-      r3: `李四 88分`
-    }
-  ])
+  const rankData = computed(() => comparisonRankings.value?.rows ?? [])
 
-  function buildScoreDetailById(id: string) {
-    const scoreData = SCORE_DETAIL_DATA[id]
-    if (scoreData) return scoreData
+  // const scoreDetail = computed(() => comparisonScoreDetail.value?.list ?? [])
 
-    const total = ALL_STAFF[id]?.score ?? 80
-    const spend = Math.round(total * 0.26)
-    const roi = Math.round(total * 0.31)
-    const cpi = Math.round(total * 0.21)
-    const profit = Math.max(0, total - spend - roi - cpi)
-    return { spend, roi, cpi, profit, total }
-  }
-
-  const scoreDetail = computed(() =>
-    selectedStaff.value.map((s) => ({
-      name: s.name,
-      color: ALL_STAFF[s.id]?.color ?? '#fff',
-      ...buildScoreDetailById(s.id),
-      status: ALL_STAFF[s.id]?.status ?? '',
-      statusClass: ALL_STAFF[s.id]?.statusClass ?? ''
-    }))
-  )
-
-  const alerts = ref([
-    { id: 1, level: 'warn', text: '王五 连续7日首日ROI低于80%达标线，建议尽快安排读师会议' },
-    { id: 2, level: 'error', text: '王五 预估利润连续为负，建议调整投放策略' }
-  ])
+  const alerts = computed(() => comparisonAlerts.value?.list ?? [])
 
   // ─── Chart refs ────────────────────────────────────────────
   const roiChartRef = ref<HTMLDivElement | null>(null)
@@ -460,23 +538,29 @@
   const adChartRef = ref<HTMLDivElement | null>(null)
   const profitChartRef = ref<HTMLDivElement | null>(null)
 
-  let roiChart: echarts.ECharts | null = null
-  let radarChart: echarts.ECharts | null = null
-  let adChart: echarts.ECharts | null = null
-  let profitChart: echarts.ECharts | null = null
+  let roiChart: ReturnType<typeof echarts.init> | null = null
+  let radarChart: ReturnType<typeof echarts.init> | null = null
+  let adChart: ReturnType<typeof echarts.init> | null = null
+  let profitChart: ReturnType<typeof echarts.init> | null = null
 
   // ─── Chart options ─────────────────────────────────────────
-  function buildRoiOption(): echarts.EChartsOption {
+  function buildRoiOption(): EChartsOption {
+    const c = comparisonCharts.value
     const ids = selectedStaff.value.map((s) => s.id)
-    const series = ids.map((id, i) => ({
-      name: ALL_STAFF[id]?.name ?? id,
+    const dates = c?.dates?.length ? c.dates : DATES
+    const roiTrend = c?.roiTrend?.length
+      ? c.roiTrend
+      : ids.map((id) => ({ id, name: ALL_STAFF[id]?.name ?? id, values: ROI_TRENDS[id] ?? [] }))
+
+    const series = roiTrend.map((s, i) => ({
+      name: s.name,
       type: 'line' as const,
       smooth: true,
       symbol: 'circle',
       symbolSize: 5,
       lineStyle: { width: 2, color: COLORS[i] },
       itemStyle: { color: COLORS[i] },
-      data: ROI_TRENDS[id] ?? [],
+      data: s.values ?? [],
       areaStyle: {
         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
           { offset: 0, color: COLORS[i] + '30' },
@@ -510,7 +594,7 @@
       },
       xAxis: {
         type: 'category',
-        data: DATES,
+        data: dates,
         axisLine: { lineStyle: { color: '#1f2d47' } },
         axisTick: { show: false },
         axisLabel: { color: '#64748b', fontSize: 11 }
@@ -527,7 +611,7 @@
         {
           name: '达标线',
           type: 'line' as const,
-          data: Array(7).fill(85),
+          data: Array(dates.length).fill(85),
           lineStyle: { color: '#ef4444', type: 'dashed', width: 1 },
           itemStyle: { color: '#ef4444' },
           symbol: 'none',
@@ -537,7 +621,7 @@
         {
           name: '最低要求',
           type: 'line' as const,
-          data: Array(7).fill(80),
+          data: Array(dates.length).fill(80),
           lineStyle: { color: '#f97316', type: 'dashed', width: 1 },
           itemStyle: { color: '#f97316' },
           symbol: 'none',
@@ -547,7 +631,8 @@
     }
   }
 
-  function buildRadarOption(): echarts.EChartsOption {
+  function buildRadarOption(): EChartsOption {
+    const c = comparisonCharts.value
     const ids = selectedStaff.value.map((s) => s.id)
     const radarValues: Record<string, number[]> = {
       zhao6: [28, 30, 20, 18, 96],
@@ -576,13 +661,15 @@
       radar: {
         center: ['50%', '48%'],
         radius: '58%',
-        indicator: [
-          { name: '花费达成', max: 30 },
-          { name: '首日ROI', max: 30 },
-          { name: 'CPI控制', max: 20 },
-          { name: '利润达成', max: 25 },
-          { name: '绩效得分', max: 100 }
-        ],
+        indicator: c?.radarIndicators?.length
+          ? c.radarIndicators
+          : [
+              { name: '花费达成', max: 30 },
+              { name: '首日ROI', max: 30 },
+              { name: 'CPI控制', max: 20 },
+              { name: '利润达成', max: 25 },
+              { name: '绩效得分', max: 100 }
+            ],
         axisLine: { lineStyle: { color: '#1f2d47' } },
         splitLine: { lineStyle: { color: '#1f2d47' } },
         splitArea: { areaStyle: { color: ['rgba(31,45,71,0.3)', 'rgba(31,45,71,0.1)'] } },
@@ -591,9 +678,16 @@
       series: [
         {
           type: 'radar' as const,
-          data: ids.map((id, i) => ({
-            name: ALL_STAFF[id]?.name ?? id,
-            value: radarValues[id] ?? [0, 0, 0, 0, 0],
+          data: (c?.radarSeries?.length
+            ? c.radarSeries
+            : ids.map((id) => ({
+                id,
+                name: ALL_STAFF[id]?.name ?? id,
+                values: radarValues[id] ?? [0, 0, 0, 0, 0]
+              }))
+          ).map((s, i) => ({
+            name: s.name,
+            value: (s as any).values ?? (s as any).value ?? [],
             lineStyle: { color: COLORS[i], width: 2 },
             itemStyle: { color: COLORS[i] },
             areaStyle: { color: COLORS[i] + '25' },
@@ -605,8 +699,13 @@
     }
   }
 
-  function buildAdOption(): echarts.EChartsOption {
+  function buildAdOption(): EChartsOption {
+    const c = comparisonCharts.value
     const ids = selectedStaff.value.map((s) => s.id)
+    const dates = c?.dates?.length ? c.dates : DATES
+    const series = c?.adSpendTrend?.length
+      ? c.adSpendTrend
+      : ids.map((id) => ({ id, name: ALL_STAFF[id]?.name ?? id, values: AD_TRENDS[id] ?? [] }))
     return {
       backgroundColor: 'transparent',
       grid: { left: 40, right: 16, top: 40, bottom: 36 },
@@ -625,7 +724,7 @@
       },
       xAxis: {
         type: 'category',
-        data: DATES,
+        data: dates,
         axisLine: { lineStyle: { color: '#1f2d47' } },
         axisTick: { show: false },
         axisLabel: { color: '#64748b', fontSize: 11 }
@@ -639,21 +738,29 @@
           formatter: (v: number) => (v >= 1000 ? `$${v / 1000}K` : `$${v}`)
         }
       },
-      series: ids.map((id, i) => ({
-        name: ALL_STAFF[id]?.name ?? id,
+      series: series.map((s, i) => ({
+        name: s.name,
         type: 'bar' as const,
         barMaxWidth: 16,
         barGap: '15%',
         itemStyle: { color: COLORS[i], borderRadius: [3, 3, 0, 0] },
-        data: AD_TRENDS[id] ?? []
+        data: s.values ?? []
       }))
     }
   }
 
-  function buildProfitOption(): echarts.EChartsOption {
+  function buildProfitOption(): EChartsOption {
+    const c = comparisonCharts.value
     const ids = selectedStaff.value.map((s) => s.id)
+    const bars = c?.profitBars?.length
+      ? c.profitBars
+      : ids.map((id) => ({
+          id,
+          name: ALL_STAFF[id]?.name ?? id,
+          value: ALL_STAFF[id]?.estProfit ?? 0
+        }))
     const avgProfit = Math.round(
-      ids.reduce((a, id) => a + (ALL_STAFF[id]?.estProfit ?? 0), 0) / ids.length
+      bars.reduce((a, b) => a + (b.value ?? 0), 0) / Math.max(1, bars.length)
     )
 
     return {
@@ -677,7 +784,7 @@
       },
       yAxis: {
         type: 'category',
-        data: ids.map((id) => ALL_STAFF[id]?.name ?? id),
+        data: bars.map((b) => b.name),
         axisLine: { show: false },
         axisTick: { show: false },
         axisLabel: { color: '#94a3b8', fontSize: 12 }
@@ -699,11 +806,11 @@
           itemStyle: {
             borderRadius: [0, 4, 4, 0],
             color: (params: any) => {
-              const id = ids[params.dataIndex]
-              return ALL_STAFF[id]?.estProfit >= 0 ? COLORS[params.dataIndex] : '#ef4444'
+              const row = bars[params.dataIndex]
+              return (row?.value ?? 0) >= 0 ? COLORS[params.dataIndex] : '#ef4444'
             }
           },
-          data: ids.map((id) => ALL_STAFF[id]?.estProfit ?? 0),
+          data: bars.map((b) => b.value ?? 0),
           markLine: {
             silent: true,
             symbol: 'none',
@@ -717,32 +824,53 @@
   }
 
   // ─── Lifecycle ────────────────────────────────────────────
-  function initCharts() {
-    nextTick(() => {
-      if (roiChartRef.value) {
-        roiChart = echarts.init(roiChartRef.value, 'dark')
-        roiChart.setOption(buildRoiOption())
-      }
-      if (radarChartRef.value) {
-        radarChart = echarts.init(radarChartRef.value, 'dark')
-        radarChart.setOption(buildRadarOption())
-      }
-      if (adChartRef.value) {
-        adChart = echarts.init(adChartRef.value, 'dark')
-        adChart.setOption(buildAdOption())
-      }
-      if (profitChartRef.value) {
-        profitChart = echarts.init(profitChartRef.value, 'dark')
-        profitChart.setOption(buildProfitOption())
-      }
-    })
+  async function initCharts() {
+    await nextTick()
+    await ensureChartsInited()
+    refreshAllCharts()
   }
 
-  function disposeCharts() {
+  function disposeChartsHard() {
     roiChart?.dispose()
     radarChart?.dispose()
     adChart?.dispose()
     profitChart?.dispose()
+    roiChart = null
+    radarChart = null
+    adChart = null
+    profitChart = null
+  }
+
+  async function ensureChartsInited() {
+    await nextTick()
+
+    // v-if 会重建 DOM；若实例绑定旧 DOM，则销毁重建
+    if (roiChart && roiChartRef.value && roiChart.getDom() !== roiChartRef.value) {
+      roiChart.dispose()
+      roiChart = null
+    }
+    if (radarChart && radarChartRef.value && radarChart.getDom() !== radarChartRef.value) {
+      radarChart.dispose()
+      radarChart = null
+    }
+    if (adChart && adChartRef.value && adChart.getDom() !== adChartRef.value) {
+      adChart.dispose()
+      adChart = null
+    }
+    if (profitChart && profitChartRef.value && profitChart.getDom() !== profitChartRef.value) {
+      profitChart.dispose()
+      profitChart = null
+    }
+
+    if (!roiChart && roiChartRef.value) roiChart = echarts.init(roiChartRef.value, 'dark')
+    if (!radarChart && radarChartRef.value) radarChart = echarts.init(radarChartRef.value, 'dark')
+    if (!adChart && adChartRef.value) adChart = echarts.init(adChartRef.value, 'dark')
+    if (!profitChart && profitChartRef.value)
+      profitChart = echarts.init(profitChartRef.value, 'dark')
+  }
+
+  function disposeCharts() {
+    disposeChartsHard()
   }
 
   function resizeCharts() {
@@ -755,6 +883,7 @@
   onMounted(() => {
     initCharts()
     window.addEventListener('resize', resizeCharts)
+    loadComparisonAll()
   })
 
   onUnmounted(() => {
@@ -781,7 +910,7 @@
   }
 
   async function loadCompareCandidates() {
-    const [startDate, endDate] = selectedDateRange.value
+    const [startDate, endDate] = selectedDateRangeApplied.value
     compareCandidatesLoading.value = true
     try {
       const filters = resolveCompareRequestFilters()
@@ -805,12 +934,126 @@
   }
 
   function refreshAllCharts() {
-    nextTick(() => {
-      roiChart?.setOption(buildRoiOption(), true)
-      radarChart?.setOption(buildRadarOption(), true)
-      adChart?.setOption(buildAdOption(), true)
-      profitChart?.setOption(buildProfitOption(), true)
-    })
+    roiChart?.setOption(buildRoiOption(), true)
+    radarChart?.setOption(buildRadarOption(), true)
+    adChart?.setOption(buildAdOption(), true)
+    profitChart?.setOption(buildProfitOption(), true)
+    resizeCharts()
+  }
+
+  function buildComparisonBody(): ComparisonStaffRequest {
+    const [startDate, endDate] = selectedDateRangeApplied.value
+    return {
+      startDate,
+      endDate,
+      staffIds: selectedStaff.value.map((s) => s.id)
+    }
+  }
+
+  function onQuery() {
+    selectedDateRangeApplied.value = [...selectedDateRangeDraft.value] as [string, string]
+    loadComparisonAll()
+  }
+
+  function resetComparisonForReload() {
+    comparisonOverview.value = null
+    comparisonCharts.value = null
+    comparisonRankings.value = null
+    comparisonScoreDetail.value = null
+    comparisonAlerts.value = null
+    chartsReady.value = false
+    disposeChartsHard()
+  }
+
+  function syncSelectedStaffNamesFromScoreDetail(seq: number) {
+    if (seq !== loadSeq) return
+    const list = comparisonScoreDetail.value?.list ?? []
+    if (list.length === 0) return
+    const nameMap = new Map(list.map((x) => [x.id, x.name]))
+    selectedStaff.value = selectedStaff.value.map((x) => ({
+      id: x.id,
+      name: nameMap.get(x.id) ?? x.name
+    }))
+  }
+
+  async function loadComparisonOverview(seq: number, body: ComparisonStaffRequest) {
+    overviewLoading.value = true
+    try {
+      const o = await fetchPerformanceComparisonOverview(body)
+      if (seq !== loadSeq) return
+      comparisonOverview.value = o
+    } finally {
+      if (seq === loadSeq) overviewLoading.value = false
+    }
+  }
+
+  async function loadComparisonCharts(seq: number, body: ComparisonStaffRequest) {
+    const startedAt = performance.now()
+    chartsLoading.value = true
+    // 确保骨架层先进入 DOM（避免接口过快导致“看不到”加载态）
+    await nextTick()
+    try {
+      const c = await fetchPerformanceComparisonCharts(body)
+      if (seq !== loadSeq) return
+      comparisonCharts.value = c
+      chartsReady.value = true
+      await nextTick()
+      await ensureChartsInited()
+      refreshAllCharts()
+    } finally {
+      const elapsed = performance.now() - startedAt
+      const minMs = 300
+      if (elapsed < minMs) {
+        await new Promise((r) => setTimeout(r, minMs - elapsed))
+      }
+      if (seq === loadSeq) chartsLoading.value = false
+    }
+  }
+
+  async function loadComparisonRankings(seq: number, body: ComparisonStaffRequest) {
+    rankingsLoading.value = true
+    try {
+      const r = await fetchPerformanceComparisonRankings(body)
+      if (seq !== loadSeq) return
+      comparisonRankings.value = r
+    } finally {
+      if (seq === loadSeq) rankingsLoading.value = false
+    }
+  }
+
+  async function loadComparisonScoreDetail(seq: number, body: ComparisonStaffRequest) {
+    scoreDetailLoading.value = true
+    try {
+      const s = await fetchPerformanceComparisonScoreDetail(body)
+      if (seq !== loadSeq) return
+      comparisonScoreDetail.value = s
+      syncSelectedStaffNamesFromScoreDetail(seq)
+    } finally {
+      if (seq === loadSeq) scoreDetailLoading.value = false
+    }
+  }
+
+  async function loadComparisonAlerts(seq: number, body: ComparisonStaffRequest) {
+    alertsLoading.value = true
+    try {
+      const a = await fetchPerformanceComparisonAlerts(body)
+      if (seq !== loadSeq) return
+      comparisonAlerts.value = a
+    } finally {
+      if (seq === loadSeq) alertsLoading.value = false
+    }
+  }
+
+  function loadComparisonAll() {
+    if (selectedStaff.value.length === 0) return
+    const seq = ++loadSeq
+    resetComparisonForReload()
+    const body = buildComparisonBody()
+    void loadComparisonOverview(seq, body)
+    void loadComparisonCharts(seq, body)
+    void loadComparisonRankings(seq, body)
+    void loadComparisonScoreDetail(seq, body)
+    void loadComparisonAlerts(seq, body)
   }
 
   function confirmAddCompare() {
@@ -824,15 +1067,15 @@
       .map((id) => ({ id, name: ALL_STAFF[id]?.name ?? id }))
     selectedStaff.value = [...selectedStaff.value, ...appendList]
     closeAddCompareModal()
-    refreshAllCharts()
+    loadComparisonAll()
   }
 
   function removeStaff(id: string) {
     selectedStaff.value = selectedStaff.value.filter((s) => s.id !== id)
-    refreshAllCharts()
+    loadComparisonAll()
   }
 
-  function viewAlertDetail(id: number) {
+  function viewAlertDetail(id: string) {
     void id
     // Navigate to alert detail or open modal
   }
@@ -842,10 +1085,22 @@
     pendingAddIds.value = []
     void loadCompareCandidates()
   })
+
+  // 不监听日期草稿变化；日期变更需点「查询」
+
+  watch(
+    () => chartsLoading.value,
+    (loading) => {
+      if (loading) return
+      if (!chartsReady.value) return
+      void initCharts()
+    }
+  )
 </script>
 
 <style scoped lang="scss">
   @use './styles/pa-performance-fx.scss' as *;
+  @use './styles/pa-filters-or-align.scss' as *;
 
   $bg: #0d1117;
   $bg-card: #161c2d;
@@ -873,21 +1128,6 @@
     font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
     font-size: 13px;
     color: var(--text-primary);
-  }
-
-  // ─── Header ──────────────────────────────────────────────
-  .comp-header {
-    display: flex;
-    flex-shrink: 0;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 24px;
-    background: color-mix(in srgb, var(--default-box-color) 78%, transparent);
-    border-bottom: 1px solid color-mix(in srgb, var(--art-primary) 24%, transparent);
-    border-radius: 14px;
-    box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--art-primary) 8%, transparent),
-      inset 0 1px 0 color-mix(in srgb, var(--art-gray-900) 8%, transparent);
   }
 
   .breadcrumb {
@@ -925,59 +1165,8 @@
     align-items: center;
   }
 
-  .btn-back {
-    padding: 5px 14px;
-    font-size: 12px;
-    color: $text-secondary;
-    cursor: pointer;
-    background: $bg-card;
-    border: 1px solid $border-light;
-    border-radius: 9999px;
-    transition:
-      color 0.15s var(--ease-default),
-      border-color 0.15s var(--ease-default);
-
-    &:hover {
-      color: $text-primary;
-      border-color: $cyan;
-    }
-  }
-
-  .date-range-picker {
-    width: 260px;
-  }
-
-  :deep(.date-range-picker .el-input__wrapper) {
-    padding: 5px 10px;
-    background: rgba($cyan, 0.1);
-    border: 1px solid $cyan;
-    border-radius: 6px;
-    box-shadow: none;
-  }
-
-  :deep(.date-range-picker .el-range-separator),
-  :deep(.date-range-picker .el-range-input) {
-    font-size: 12px;
-    font-weight: 600;
-    color: $cyan;
-    background: transparent;
-  }
-
-  .btn-export {
-    padding: 5px 14px;
-    font-size: 12px;
-    color: $text-secondary;
-    cursor: pointer;
-    background: $bg-card;
-    border: 1px solid $border-light;
-    border-radius: 9999px;
-    transition:
-      color 0.15s var(--ease-default),
-      border-color 0.15s var(--ease-default);
-
-    &:hover {
-      color: $text-primary;
-    }
+  .btn-query {
+    font-weight: 700;
   }
 
   .add-compare-body {
@@ -1005,33 +1194,12 @@
     max-height: 260px;
     padding: 10px;
     overflow: auto;
-    border: 1px solid $border;
-    border-radius: 8px;
   }
 
   .candidate-empty {
     font-size: 12px;
     color: $text-secondary;
     text-align: center;
-  }
-
-  // ─── Selected Row ────────────────────────────────────────
-  .selected-row {
-    display: flex;
-    flex-shrink: 0;
-    flex-wrap: wrap;
-    gap: 8px;
-    align-items: center;
-    padding: 10px 16px;
-    margin-top: 12px;
-    background: color-mix(in srgb, var(--default-box-color) 65%, transparent);
-    border: 1px solid color-mix(in srgb, var(--art-primary) 18%, transparent);
-    border-radius: 14px;
-  }
-
-  .selected-label {
-    font-size: 12px;
-    color: $text-secondary;
   }
 
   .person-tag {
@@ -1059,27 +1227,14 @@
   .add-btn {
     padding: 3px 12px;
     font-size: 12px;
-    color: $text-secondary;
     cursor: pointer;
     background: transparent;
-    border: 1px dashed $border-light;
-    border-radius: 20px;
-    transition:
-      color 0.15s var(--ease-default),
-      border-color 0.15s var(--ease-default);
-
-    &:hover {
-      color: $cyan;
-      border-color: $cyan;
-    }
   }
 
   // ─── KPI Row ─────────────────────────────────────────────
   .kpi-row {
     display: flex;
     flex-shrink: 0;
-    gap: 12px;
-    padding: 12px 0 0;
   }
 
   .kpi-card {
@@ -1122,32 +1277,11 @@
     }
   }
 
-  .kpi-card.kpi-alert {
-    border-color: color-mix(in srgb, var(--art-danger) 38%, transparent) !important;
-    box-shadow:
-      0 12px 48px rgb(0 0 0 / 48%),
-      0 0 0 1px color-mix(in srgb, var(--art-danger) 22%, transparent),
-      inset 0 1px 0 rgb(186 230 253 / 10%),
-      inset 0 -12px 32px rgb(0 0 0 / 30%);
-  }
-
-  .badge-pass {
-    display: inline-block;
-    padding: 2px 8px;
-    font-size: 11px;
-    color: $cyan;
-    background: rgba($cyan, 0.12);
-    border: 1px solid rgba($cyan, 0.3);
-    border-radius: 4px;
-  }
-
   // ─── Content Area ────────────────────────────────────────
   .content-area {
     display: flex;
     flex: 1;
-    gap: 12px;
     min-height: 0;
-    padding: 12px 0 0;
     overflow: hidden;
   }
 
@@ -1157,7 +1291,6 @@
     flex: 1;
     grid-template-rows: 1fr 1fr;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
     min-height: 0;
     overflow: hidden;
   }
@@ -1182,32 +1315,142 @@
       position: relative;
       z-index: 1;
       flex: 1;
-      min-height: 0;
+      width: 100%;
+      min-width: 0;
+      min-height: 140px;
       padding: 4px;
     }
   }
 
-  // ─── Right Panel ─────────────────────────────────────────
-  .right-panel {
+  .chart-shell {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .chart-shell .chart-body {
+    height: 100%;
+  }
+
+  .chart-text-skeleton {
     display: flex;
     flex-direction: column;
+    gap: 10px;
+    height: 100%;
+    padding: 14px 14px 12px;
+  }
+
+  .sk-line {
+    height: 10px;
+    background: color-mix(in srgb, var(--art-primary) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 14%, transparent);
+    border-radius: 9999px;
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 4%);
+  }
+
+  .sk-hint {
+    margin-top: auto;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .pa-skeleton-block {
+    padding: 6px 0;
+  }
+
+  .sk {
+    height: 12px;
+    border-radius: 9999px;
+  }
+
+  .sk-mt-10 {
+    margin-top: 10px;
+  }
+
+  .sk-w-28 {
+    width: 28%;
+  }
+
+  .sk-w-30 {
+    width: 30%;
+  }
+
+  .sk-w-32 {
+    width: 32%;
+  }
+
+  .sk-w-38 {
+    width: 38%;
+  }
+
+  .sk-w-40 {
+    width: 40%;
+  }
+
+  .sk-w-42 {
+    width: 42%;
+  }
+
+  .sk-w-44 {
+    width: 44%;
+  }
+
+  .sk-w-46 {
+    width: 46%;
+  }
+
+  .sk-w-48 {
+    width: 48%;
+  }
+
+  .sk-w-50 {
+    width: 50%;
+  }
+
+  .sk-w-52 {
+    width: 52%;
+  }
+
+  .sk-w-54 {
+    width: 54%;
+  }
+
+  .sk-w-56 {
+    width: 56%;
+  }
+
+  .sk-w-58 {
+    width: 58%;
+  }
+
+  .sk-w-60 {
+    width: 60%;
+  }
+
+  .sk-w-62 {
+    width: 62%;
+  }
+
+  .sk-w-66 {
+    width: 66%;
+  }
+
+  .sk-w-68 {
+    width: 68%;
+  }
+
+  .sk-w-70 {
+    width: 70%;
+  }
+
+  .sk-w-72 {
+    width: 72%;
+  }
+
+  // ─── Right Panel ─────────────────────────────────────────
+  .right-panel {
     flex-shrink: 0;
-    gap: 12px;
     width: 360px;
-    overflow-y: auto;
-
-    &::-webkit-scrollbar {
-      width: 4px;
-    }
-
-    &::-webkit-scrollbar-track {
-      background: $bg;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background: $border-light;
-      border-radius: 2px;
-    }
   }
 
   .panel-card {
@@ -1322,11 +1565,6 @@
       background: rgba($green, 0.15);
     }
 
-    &.sb-pass {
-      color: $cyan;
-      background: rgba($cyan, 0.12);
-    }
-
     &.sb-near {
       color: $orange;
       background: rgba($orange, 0.12);
@@ -1338,22 +1576,11 @@
     }
   }
 
-  // ─── Alert Panel ─────────────────────────────────────────
-  .panel-card.alert-panel {
-    border-color: color-mix(in srgb, var(--art-warning) 35%, transparent) !important;
-    box-shadow:
-      0 16px 56px rgb(0 0 0 / 44%),
-      0 0 0 1px color-mix(in srgb, var(--art-warning) 24%, transparent),
-      inset 0 1px 0 rgb(186 230 253 / 12%),
-      inset 0 -12px 32px rgb(0 0 0 / 28%);
-  }
-
   .alert-item {
     display: flex;
     gap: 8px;
     align-items: flex-start;
     padding: 8px 0;
-    border-bottom: 1px solid rgba($border, 0.5);
 
     &:last-child {
       padding-bottom: 0;
@@ -1385,7 +1612,6 @@
       flex-shrink: 0;
       padding: 0;
       font-size: 11px;
-      color: $cyan;
       white-space: nowrap;
       cursor: pointer;
       background: none;
@@ -1408,5 +1634,24 @@
 
   .gold-text {
     color: $gold;
+  }
+</style>
+
+<style lang="scss">
+  /* 日期范围挂载在 body；颜色随主题变量 */
+  .pa-or-filter-popper.el-popper {
+    z-index: var(--z-dropdown) !important;
+    background: color-mix(in srgb, var(--default-box-color) 96%, transparent) !important;
+    border: 1px solid color-mix(in srgb, var(--art-primary) 28%, transparent) !important;
+    border-radius: 12px !important;
+    box-shadow:
+      var(--shadow-xl),
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 14%, transparent),
+      0 0 32px color-mix(in srgb, var(--art-primary) 15%, transparent) !important;
+  }
+
+  .pa-or-filter-popper .el-popper__arrow::before {
+    background: color-mix(in srgb, var(--default-box-color) 96%, transparent) !important;
+    border: 1px solid color-mix(in srgb, var(--art-primary) 25%, transparent) !important;
   }
 </style>

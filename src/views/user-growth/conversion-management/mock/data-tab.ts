@@ -1,6 +1,7 @@
 /**
  * 转化管理 - 转化数据（Data Tab）Mock 数据
- * 返回：顶部 KPI、三层树表、右侧面板（类型占比/Top10/30天趋势/账户占比）
+ * 对齐契约：`mock/backend-api/data-tab/01-overview-kpi`、`02-table-rows`、`03-side-panels`（三接口并行）。
+ * 本地合并为一次 `fetchConversionDataMock`，联调可拆为三个 `request.post`。
  */
 
 import type {
@@ -172,7 +173,7 @@ function buildTrendPoints(seed: number, count: number) {
 
 function buildTableRows(seed: number): ConversionDataRow[] {
   const r = pseudoRand(seed + 101)
-  const appPackages = ['com.locate.phone.track', 'com.example.shop', 'com.other.app']
+  const appIds = ['10001', '10002', '10003']
 
   const groups: ConversionDataRow[] = []
   const trendLen = 14
@@ -214,7 +215,7 @@ function buildTableRows(seed: number): ConversionDataRow[] {
           level: 'conversion',
           accountGroupName: group.name,
           accountName,
-          appPackage: appPackages[(gi + ai + ci) % appPackages.length],
+          appId: appIds[(gi + ai + ci) % appIds.length],
           conversionName:
             ci === 0
               ? `${accountName} | ${type} | main`
@@ -252,16 +253,35 @@ export function fetchConversionDataMock(
 ): Promise<ConversionDataResponse> {
   const seed = seedFromParams(params)
 
-  const kpi = buildKpi(seed)
-  const tableRows = buildTableRows(seed)
-  const typeDistribution = buildTypeDistribution(seed)
-  const top10 = buildTop10(seed)
-  const valueTrend30d = buildValueTrend30d(seed)
-  const accountShare = buildAccountShare(seed)
-
-  return Promise.resolve({
+  return Promise.all([
+    Promise.resolve(buildKpi(seed)),
+    Promise.resolve(buildTableRows(seed)),
+    Promise.resolve({
+      typeDistribution: buildTypeDistribution(seed),
+      top10: buildTop10(seed),
+      valueTrend30d: buildValueTrend30d(seed),
+      accountShare: buildAccountShare(seed)
+    })
+  ]).then(([kpi, tableRows, side]) => ({
     kpi,
     tableRows,
-    sidePanels: { typeDistribution, top10, valueTrend30d, accountShare }
+    sidePanels: side
+  }))
+}
+
+/** 契约 08-meta-conversion-type-options — 页面独有转化类型筛选项 */
+export function mockFetchConversionMetaConversionTypeOptions(): Promise<{
+  conversionTypeOptions: { label: string; value: string }[]
+}> {
+  return Promise.resolve({
+    conversionTypeOptions: [
+      { label: '全部', value: '' },
+      { label: 'PHONE_CALL_LEAD', value: 'PHONE_CALL_LEAD' },
+      { label: 'DOWNLOAD', value: 'DOWNLOAD' },
+      { label: 'PURCHASE', value: 'PURCHASE' },
+      { label: 'ADD_TO_CART', value: 'ADD_TO_CART' },
+      { label: 'PAGE_VIEW', value: 'PAGE_VIEW' },
+      { label: 'BEGIN_CHECKOUT', value: 'BEGIN_CHECKOUT' }
+    ]
   })
 }

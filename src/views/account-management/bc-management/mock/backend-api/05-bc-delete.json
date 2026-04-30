@@ -1,0 +1,25 @@
+{
+  "_comment": "BC 管理页面 - 删除 BC。",
+  "fieldDescription": {
+    "request": {
+      "id": { "type": "string", "required": true, "description": "待删除的 BC 记录 ID。" }
+    },
+    "response": {
+      "success": { "type": "boolean", "required": true, "description": "删除是否成功。" }
+    }
+  },
+  "sampleRequest": { "id": "BM-105" },
+  "sampleResponse": { "code": 200, "message": "success", "data": { "success": true } },
+  "api": {
+    "url": "POST /api/account-management/bc-management/delete",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "{ id }",
+    "responseBody": "{ success }"
+  },
+  "interaction": {
+    "triggers": [{ "moment": "用户操作", "detail": "删除确认后调用。" }],
+    "defaultSelection": "无",
+    "dedupe": "后端幂等。"
+  }
+}

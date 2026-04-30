@@ -1,0 +1,349 @@
+{
+  "_comment": "实时数据 - 应用卡片列表（不含详情）。对应 types.ts: RealtimeAppCardRow[]。sampleResponse.items 需覆盖列表形态：多应用、可选环比字段缺失、roiGood=false、actionTagType 四枚举；前 7 条与 mock/data.ts 卡片行一致，riskdemo 为 red 联调样例。",
+  "fieldDescription": {
+    "request": {
+      "appId": {
+        "type": "string",
+        "required": true,
+        "description": "应用 ID；与 cockpit appOptions[].value 同源；空字符串表示「全部应用」；勿传字面量 all。"
+      },
+      "source": {
+        "type": "string",
+        "required": true,
+        "description": "广告平台枚举字符串；与 sourceOptions[].value 同源；空字符串表示不限；勿用 JSON number。"
+      }
+    },
+    "response": {
+      "items": {
+        "type": "RealtimeAppCardRow[]",
+        "required": true,
+        "description": "卡片行列表，顺序即展示顺序。"
+      }
+    },
+    "RealtimeAppCardRow": {
+      "id": {
+        "type": "string",
+        "required": true,
+        "description": "应用标识（与 appId 筛选、详情 appId 及响应体 series[].s_app_id 同值语义；前端卡片 key）。"
+      },
+      "name": { "type": "string", "required": true, "description": "应用名称。" },
+      "iconText": {
+        "type": "string",
+        "required": true,
+        "description": "图标区展示字符（如 emoji）；纯前端展示，非接口国旗资源。"
+      },
+      "iconBg": {
+        "type": "string",
+        "required": true,
+        "description": "图标背景色（CSS 颜色字符串）。"
+      },
+      "isLive": {
+        "type": "boolean",
+        "required": true,
+        "description": "是否实时刷新状态（影响角标样式）。"
+      },
+      "hasWarning": {
+        "type": "boolean",
+        "required": true,
+        "description": "是否存在预警。"
+      },
+      "warningBadge": {
+        "type": "string",
+        "required": false,
+        "description": "预警文案，如超额、低活跃。"
+      },
+      "launchLabel": {
+        "type": "string",
+        "required": true,
+        "description": "状态区文案，如「实时」「展开明细」。"
+      },
+      "spend": {
+        "type": "number",
+        "required": true,
+        "description": "今日花费 USD；与 cost 同语义。"
+      },
+      "spendChange": {
+        "type": "string",
+        "required": false,
+        "description": "花费环比展示，如 8.5%。"
+      },
+      "spendUp": {
+        "type": "boolean",
+        "required": false,
+        "description": "花费环比是否上升。"
+      },
+      "installs": {
+        "type": "number",
+        "required": true,
+        "description": "今日安装量 installs。"
+      },
+      "cpi": {
+        "type": "number",
+        "required": true,
+        "description": "实时 CPI，USD。"
+      },
+      "cpiChange": {
+        "type": "string",
+        "required": false,
+        "description": "CPI 环比展示。"
+      },
+      "cpiUp": {
+        "type": "boolean",
+        "required": false,
+        "description": "CPI 环比是否上升。"
+      },
+      "activeSeries": {
+        "type": "number",
+        "required": true,
+        "description": "活跃广告系列数量。"
+      },
+      "roi": {
+        "type": "number",
+        "required": true,
+        "description": "当前 ROI 百分比数值（如 94）。"
+      },
+      "roiGood": {
+        "type": "boolean",
+        "required": true,
+        "description": "是否高于业务阈值（用于样式）。"
+      },
+      "roiColor": {
+        "type": "string",
+        "required": true,
+        "description": "ROI 数字展示色。"
+      },
+      "chartData": {
+        "type": "number[]",
+        "required": true,
+        "description": "火花图序列；可为今日按固定间隔点的花费或得分，长度由产品约定。"
+      },
+      "chartColor": {
+        "type": "string",
+        "required": true,
+        "description": "火花图主色。"
+      },
+      "actionTag": {
+        "type": "string",
+        "required": false,
+        "description": "右下角标签文案。"
+      },
+      "actionTagType": {
+        "type": "string",
+        "required": false,
+        "enum": ["cyan", "orange", "gray", "red"],
+        "description": "标签配色类型。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "appId": "",
+    "source": ""
+  },
+  "sampleResponse": {
+    "items": [
+      {
+        "id": "weather5",
+        "name": "Weather5",
+        "iconText": "⛅",
+        "iconBg": "#0d3d5a",
+        "isLive": false,
+        "hasWarning": false,
+        "launchLabel": "展开明细",
+        "spend": 8372,
+        "spendChange": "8.5%",
+        "spendUp": true,
+        "installs": 3518,
+        "cpi": 2.38,
+        "cpiChange": "3.2%",
+        "cpiUp": false,
+        "activeSeries": 185,
+        "roi": 94,
+        "roiGood": true,
+        "roiColor": "#00cfc0",
+        "chartData": [120, 160, 200, 280, 360, 520, 640, 720, 780, 760],
+        "chartColor": "#00cfc0",
+        "actionTag": "选择",
+        "actionTagType": "cyan"
+      },
+      {
+        "id": "phonetracker",
+        "name": "PhoneTracker",
+        "iconText": "📱",
+        "iconBg": "#3d2800",
+        "isLive": true,
+        "hasWarning": true,
+        "warningBadge": "超额",
+        "launchLabel": "实时",
+        "spend": 2886,
+        "installs": 1013,
+        "cpi": 2.85,
+        "cpiChange": "3.2%",
+        "cpiUp": true,
+        "activeSeries": 98,
+        "roi": 108,
+        "roiGood": true,
+        "roiColor": "#00cfc0",
+        "chartData": [40, 70, 110, 170, 240, 360, 490, 540, 590, 630],
+        "chartColor": "#ffa040",
+        "actionTag": "鼠标",
+        "actionTagType": "orange"
+      },
+      {
+        "id": "bloodsugar2",
+        "name": "BloodSugar2",
+        "iconText": "🩸",
+        "iconBg": "#5a0010",
+        "isLive": false,
+        "hasWarning": false,
+        "launchLabel": "展开明细",
+        "spend": 10438,
+        "installs": 4468,
+        "cpi": 2.38,
+        "activeSeries": 142,
+        "roi": 97,
+        "roiGood": true,
+        "roiColor": "#00cfc0",
+        "chartData": [280, 310, 400, 470, 530, 620, 660, 690, 720, 700],
+        "chartColor": "#4d9eff",
+        "actionTag": "选择",
+        "actionTagType": "cyan"
+      },
+      {
+        "id": "phonetracker2",
+        "name": "PhoneTracker2",
+        "iconText": "📲",
+        "iconBg": "#22006b",
+        "isLive": true,
+        "hasWarning": false,
+        "launchLabel": "实时",
+        "spend": 89.68,
+        "installs": 415,
+        "cpi": 0.22,
+        "activeSeries": 5,
+        "roi": 101,
+        "roiGood": true,
+        "roiColor": "#00cfc0",
+        "chartData": [55, 68, 74, 62, 52, 48, 44, 46, 50, 48],
+        "chartColor": "#a855f7",
+        "actionTag": "选择",
+        "actionTagType": "cyan"
+      },
+      {
+        "id": "faceme",
+        "name": "FaceMe",
+        "iconText": "😊",
+        "iconBg": "#5a1010",
+        "isLive": false,
+        "hasWarning": true,
+        "warningBadge": "低活跃",
+        "launchLabel": "展开明细",
+        "spend": 1926,
+        "installs": 812,
+        "cpi": 2.37,
+        "activeSeries": 54,
+        "roi": 64,
+        "roiGood": false,
+        "roiColor": "#ff4d6a",
+        "chartData": [420, 390, 350, 300, 270, 240, 210, 180, 145, 115],
+        "chartColor": "#ff4d6a",
+        "actionTag": "没文标",
+        "actionTagType": "gray"
+      },
+      {
+        "id": "dramavue",
+        "name": "DramaVue",
+        "iconText": "🎬",
+        "iconBg": "#0a0a4a",
+        "isLive": false,
+        "hasWarning": false,
+        "launchLabel": "展开明细",
+        "spend": 1220,
+        "installs": 2389,
+        "cpi": 0.51,
+        "activeSeries": 12,
+        "roi": 95,
+        "roiGood": true,
+        "roiColor": "#00cfc0",
+        "chartData": [180, 320, 460, 530, 500, 460, 400, 360, 330, 320],
+        "chartColor": "#00cfc0",
+        "actionTag": "金额",
+        "actionTagType": "orange"
+      },
+      {
+        "id": "healthtracker",
+        "name": "HealthTracker",
+        "iconText": "💚",
+        "iconBg": "#0a3a1a",
+        "isLive": true,
+        "hasWarning": false,
+        "launchLabel": "实时",
+        "spend": 920,
+        "installs": 1240,
+        "cpi": 0.74,
+        "activeSeries": 18,
+        "roi": 88,
+        "roiGood": true,
+        "roiColor": "#f0b429",
+        "chartData": [150, 160, 170, 180, 182, 178, 172, 168, 165, 162],
+        "chartColor": "#00d68f",
+        "actionTag": "选择",
+        "actionTagType": "cyan"
+      },
+      {
+        "id": "riskdemo",
+        "name": "RiskDemo",
+        "iconText": "⚠",
+        "iconBg": "#3f0a12",
+        "isLive": false,
+        "hasWarning": true,
+        "warningBadge": "停投",
+        "launchLabel": "展开明细",
+        "spend": 1200,
+        "spendChange": "-5.2%",
+        "spendUp": false,
+        "installs": 400,
+        "cpi": 3,
+        "cpiChange": "2.1%",
+        "cpiUp": true,
+        "activeSeries": 6,
+        "roi": 40,
+        "roiGood": false,
+        "roiColor": "#ef4444",
+        "chartData": [90, 82, 74, 65, 55, 48, 42, 38, 35, 32],
+        "chartColor": "#ef4444",
+        "actionTag": "紧急",
+        "actionTagType": "red"
+      }
+    ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "加载应用卡片栅格（火花图数据在 items[].chartData）；与 01 同筛选项。",
+        "prerequisite": "无"
+      },
+      {
+        "moment": "筛选或刷新",
+        "detail": "用户变更应用/广告平台或触发整页刷新时重拉；切换卡片内展示维度若仅前端本地切换则不触发（本页火花图为接口字段，非多 Tab 另请求）。",
+        "prerequisite": "无"
+      }
+    ],
+    "defaultSelection": "与 01-overview-kpi-summary 使用相同默认筛选。",
+    "dedupe": "打开详情 03 不重复拉取列表；列表不含弹窗大字段。"
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/user-growth/real-time-data/table/app-cards",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "appId, source",
+    "responseBody": "items: RealtimeAppCardRow[]"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "禁止在本接口返回弹窗级大字段（小时序列、分广告平台明细）；请走 03-app-detail。",
+      "若后端统一使用 cost 命名字段，可在映射层写入 spend 以兼容当前 UI。",
+      "`sampleResponse.items` 前 7 条与 `mock/data.ts` 导出的卡片行一致；最后一条 `riskdemo` 仅用于联调覆盖 `actionTagType: \"red\"`，生产可不返回。"
+    ]
+  }
+}

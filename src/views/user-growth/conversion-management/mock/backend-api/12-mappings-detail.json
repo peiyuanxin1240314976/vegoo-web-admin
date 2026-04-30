@@ -1,11 +1,11 @@
 {
   "_comment": "转化管理（name Tab）- 映射详情（可选但强烈建议）。用于编辑弹窗回显完整字段（列表行通常不包含 remarks/source/conversionDisplayType 等）。",
   "fieldDescription": {
-    "pathParam": {
+    "request": {
       "id": {
         "type": "string",
         "required": true,
-        "description": "映射记录 ID。"
+        "description": "映射记录 ID（POST JSON body）。"
       }
     },
     "response": {
@@ -36,10 +36,10 @@
         "required": true,
         "description": "MCC 账号。"
       },
-      "appPackage": {
+      "appId": {
         "type": "string",
         "required": true,
-        "description": "应用包名。"
+        "description": "自有应用 ID（与列表、创建契约一致）。"
       },
       "conversionName": {
         "type": "string",
@@ -99,12 +99,15 @@
       "description": "原因：列表接口为性能通常只返回表格所需字段；编辑弹窗需要回显更完整的表单字段（例如 remarks、conversionDisplayType、source）。若后端保证列表 records 已包含这些字段，则可不提供该接口。"
     }
   },
+  "sampleRequest": {
+    "id": "2"
+  },
   "sampleResponse": {
     "id": "2",
     "platform": "android",
     "source": "google",
     "mccAccount": "560-369-9741",
-    "appPackage": "com.locate.phone.track",
+    "appId": "10001",
     "conversionName": "Phone Tracker install",
     "conversionId": "7217482985",
     "platformConversionType": "DOWNLOAD",
@@ -117,16 +120,27 @@
     "updatedAt": "2026-03-17T09:30:00Z"
   },
   "api": {
-    "url": "POST /api/user-growth/conversion-management/mappings-detail",
+    "url": "POST /api/v1/datacenter/analysis/user-growth/conversion-management/mappings-detail",
     "method": "POST",
     "priority": "P0",
     "requestBody": "id (必填)",
-    "responseBody": "单条映射完整对象：id, platform, source, mccAccount, appPackage, conversionName, conversionId, platformConversionType, systemDisplayName, conversionDisplayType?, billingType, status, remarks?, createdAt?, updatedAt?"
+    "responseBody": "单条映射完整对象：id, platform, source, mccAccount, appId, conversionName, conversionId, platformConversionType, systemDisplayName, conversionDisplayType?, billingType, status, remarks?, createdAt?, updatedAt?"
   },
   "apiSuggestion": {
     "notes": [
       "如果你们接口网关统一包裹 code/message/data，请将 sampleResponse 放到 data 内。",
       "conversionId 必须返回 string。"
     ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "打开编辑弹窗（待接）",
+        "detail": "点击表格「编辑」后，若行数据字段不足以回显，应先 POST 本接口再填充 `conversion-mapping-dialog`；当前使用行内字段。",
+        "prerequisite": "id 来自列表行。"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "同一 id 短窗口内可缓存详情避免重复请求。"
   }
 }

@@ -1,105 +1,127 @@
 {
-  "_comment": "账户成效页 - 应用/账户 tab 占位表（对应 modules/app-performance-placeholder.vue）。",
+  "_comment": "账户成效页 - 应用/账户 tab 占位表（对应 modules/app-performance-placeholder.vue）。广告账户维度指标集中在 adAccount 对象内，与 UI「广告账户」多级表头分组一致；筛选入参见 fieldDescription.request。sampleResponse 为节选页示例。",
   "fieldDescription": {
     "request": {
-      "dateRangeStart": {
+      "currentPage": {
+        "type": "number",
+        "required": true,
+        "description": "当前页码（从 1 开始，与前端 ElPagination 一致）。"
+      },
+      "pageSize": {
+        "type": "number",
+        "required": true,
+        "description": "每页条数；若为 0 则由后端按约定使用默认条数（与前端分页组件联动时以实际约定为准）。"
+      },
+      "dateStart": {
         "type": "string",
         "required": true,
         "description": "开始日期（YYYY-MM-DD）。"
       },
-      "dateRangeEnd": {
+      "dateEnd": {
         "type": "string",
         "required": true,
         "description": "结束日期（YYYY-MM-DD）。"
+      },
+      "keys": {
+        "type": "string",
+        "required": false,
+        "description": "关键词搜索。应用层级关键词过滤。"
+      },
+      "kw": {
+        "type": "string",
+        "required": false,
+        "description": "关键词搜索。空字符串表示不按关键词过滤。"
+      },
+      "ownerId": {
+        "type": "string",
+        "required": false,
+        "description": "负责人 ID。空字符串表示全部。"
+      },
+      "appIds": {
+        "type": "string[]",
+        "required": false,
+        "description": "应用 ID 列表（包名/业务 ID 等，与顶栏应用筛选一致）。空数组表示不按应用过滤；非空表示仅查询所选应用下账户。"
       },
       "source": {
         "type": "string",
         "required": false,
         "description": "广告平台筛选。空字符串表示全部。"
-      },
-      "app": {
-        "type": "string",
-        "required": false,
-        "description": "应用筛选。空字符串表示全部。"
-      },
-      "owner": {
-        "type": "string",
-        "required": false,
-        "description": "负责人筛选。空字符串表示全部。"
       }
     },
     "response": {
+      "code": {
+        "type": "number",
+        "required": true,
+        "description": "业务状态码，成功为 200。"
+      },
+      "message": {
+        "type": "string | null",
+        "required": false,
+        "description": "提示信息，成功时可为 null。"
+      },
+      "data": {
+        "type": "AppPerformanceTableData",
+        "required": true,
+        "description": "表格分页数据。"
+      }
+    },
+    "AppPerformanceTableData": {
       "total": {
         "type": "number",
         "required": true,
-        "description": "广告账户总数（用于分页/底部文案）。"
+        "description": "符合条件的广告账户总数（用于分页/底部文案，不必等于当前页条数）。"
       },
       "accounts": {
         "type": "AppPerformanceAccountRow[]",
         "required": true,
-        "description": "表格账户行数据。"
+        "description": "当前页表格账户行数据。"
       }
     },
     "AppPerformanceAccountRow": {
-      "id": {
+      "appId": {
         "type": "string",
         "required": true,
-        "description": "表格行唯一标识（前端仅用于 key）。"
+        "description": "应用 ID（与顶栏/应用维度一致）。"
       },
-      "name": {
+      "appName": {
         "type": "string",
         "required": true,
-        "description": "账户名称（用于展示）。"
-      },
-      "accountId": {
-        "type": "string",
-        "required": true,
-        "description": "账户 ID（展示在名称后缀，允许空字符串）。"
+        "description": "应用名称（展示用）。"
       },
       "platform": {
         "type": "string",
         "required": true,
-        "description": "广告平台名称（TikTok/Facebook/Google/Mintegral/Kwai/NewsBreak）。"
+        "description": "终端/系统平台展示文案（如 安卓、iOS），仅列表行字段；非请求筛选字段，亦非广告渠道名。"
       },
-      "spend": {
-        "type": "number",
+      "source": {
+        "type": "string",
         "required": true,
-        "description": "广告支出花费（数值）。"
+        "description": "广告平台/渠道（如 Facebook、Google、TikTok），与请求体 source 筛选语义一致。"
       },
-      "budget": {
-        "type": "number",
+      "adAccount": {
+        "type": "AppPerformanceAdAccountMetrics",
         "required": true,
-        "description": "预算（数值）。"
+        "description": "广告账户分组：与 UI「广告账户」多级表头下子列一一对应（ID、名称、支出、预算、CPA、CPI、安装数）。"
       },
       "usageRate": {
         "type": "number",
         "required": true,
-        "description": "预算使用率百分比（0-100）。"
+        "description": "预算使用率（百分比数值，通常 0–100，极端可大于 100）；一般可由 spend/budget 推导；无预算时可为 0。"
       },
-      "cpi": {
-        "type": "number",
+      "firstThreeDayRoi": {
+        "type": "FirstThreeDayRoi",
         "required": true,
-        "description": "CPI（展示到 2 位小数）。"
-      },
-      "installs": {
-        "type": "number",
-        "required": true,
-        "description": "安装数。"
-      },
-      "roi1": {
-        "type": "number",
-        "required": true,
-        "description": "首日 ROI（百分比数值，例如 95 表示 95%）。"
+        "description": "近三日每日一条 ROI：dates[i] 与 data[i] 一一对应；表头由前端对 date 做本地化（可与「广告账户」并列作为另一组多级表头）。"
       },
       "roi3": {
         "type": "number",
         "required": true,
-        "description": "3 日 ROI（百分比数值）。"
+        "description": "3 日 ROI 汇总指标（可与 firstThreeDayRoi 折线并存；口径由后端定义）。"
       },
       "roi7": {
         "type": "number",
         "required": true,
-        "description": "7 日 ROI（百分比数值）。"
+        "description": "7 日 ROI 汇总指标（口径由后端定义）。"
       },
       "status": {
         "type": "string",
@@ -107,496 +129,365 @@
         "enum": ["normal", "warning", "roi_low"],
         "description": "账户状态：normal=正常，warning=注意，roi_low=ROI 偏低。"
       }
+    },
+    "AppPerformanceAdAccountMetrics": {
+      "id": {
+        "type": "string",
+        "required": true,
+        "description": "广告账户 ID（与 accountId 通常相同；前端 row-key 建议使用 adAccount.id）。"
+      },
+      "name": {
+        "type": "string | null",
+        "required": false,
+        "description": "广告账户名称；无名称时可为 null，前端可回退展示 id。"
+      },
+      "accountId": {
+        "type": "string",
+        "required": true,
+        "description": "广告账户 ID 展示用（可与 id 相同；允许空字符串）。"
+      },
+      "spend": {
+        "type": "number",
+        "required": true,
+        "description": "广告支出花费（数值）。"
+      },
+      "budget": {
+        "type": "number | null",
+        "required": false,
+        "description": "预算（数值）；无预算或未配置时可为 null。"
+      },
+      "cpa": {
+        "type": "number | null",
+        "required": false,
+        "description": "CPA；无数据或未接入时可为 null。"
+      },
+      "cpi": {
+        "type": "number",
+        "required": true,
+        "description": "CPI（展示到合适小数位）。"
+      },
+      "installs": {
+        "type": "number",
+        "required": true,
+        "description": "安装数。"
+      }
+    },
+    "FirstThreeDayRoi": {
+      "dates": {
+        "type": "string[]",
+        "required": true,
+        "description": "近 N 日横轴（通常为 3 日），YYYY-MM-DD；与 data 等长、按下标对齐；顺序由产品决定（如新→旧）。"
+      },
+      "data": {
+        "type": "(number | null)[]",
+        "required": true,
+        "description": "与 dates 等长；第 i 项为 dates[i] 当日 ROI（百分比数值，如 94 表示 94%）；缺数或未统计用 null（如展示「-」）。"
+      }
     }
   },
   "sampleRequest": {
-    "dateRangeStart": "2026-02-26",
-    "dateRangeEnd": "2026-03-04",
-    "source": "",
-    "app": "",
-    "owner": ""
+    "currentPage": 1,
+    "dateEnd": "2026-02-10",
+    "dateStart": "2026-02-10",
+    "kw": "",
+    "keys": "",
+    "ownerId": "",
+    "pageSize": 0,
+    "appIds": ["com.photo.ai.art.agecam.fx"],
+    "source": ""
   },
   "sampleResponse": {
-    "total": 31,
-    "accounts": [
-      {
-        "id": "a01",
-        "name": "BV_TT_Vegoo_VD_09",
-        "accountId": "7589...",
-        "platform": "TikTok",
-        "spend": 502,
-        "budget": 3200,
-        "usageRate": 15.7,
-        "cpi": 0.08,
-        "installs": 2122,
-        "roi1": 115,
-        "roi3": 108,
-        "roi7": 110,
-        "status": "normal"
-      },
-      {
-        "id": "a02",
-        "name": "panda-VEGOO-PT-02",
-        "accountId": "7513...",
-        "platform": "TikTok",
-        "spend": 502,
-        "budget": 3200,
-        "usageRate": 15.7,
-        "cpi": 0.19,
-        "installs": 2649,
-        "roi1": 104,
-        "roi3": 109,
-        "roi7": 96,
-        "status": "normal"
-      },
-      {
-        "id": "a03",
-        "name": "BV_ZL_TT_PT_06",
-        "accountId": "758952...",
-        "platform": "TikTok",
-        "spend": 502,
-        "budget": 3200,
-        "usageRate": 15.7,
-        "cpi": 0.15,
-        "installs": 1290,
-        "roi1": 104,
-        "roi3": 109,
-        "roi7": 96,
-        "status": "normal"
-      },
-      {
-        "id": "a04",
-        "name": "BV_TT_Vegoo_W8_01",
-        "accountId": "",
-        "platform": "TikTok",
-        "spend": 502,
-        "budget": 3200,
-        "usageRate": 5.5,
-        "cpi": 0.15,
-        "installs": 1290,
-        "roi1": 104,
-        "roi3": 109,
-        "roi7": 96,
-        "status": "normal"
-      },
-      {
-        "id": "a05",
-        "name": "BV_TT_Vegoo_W8_01",
-        "accountId": "",
-        "platform": "TikTok",
-        "spend": 371,
-        "budget": 2950,
-        "usageRate": 7.8,
-        "cpi": 0.06,
-        "installs": 5168,
-        "roi1": 106,
-        "roi3": 91,
-        "roi7": 96,
-        "status": "normal"
-      },
-      {
-        "id": "a06",
-        "name": "BV_ZL_PT_04",
-        "accountId": "",
-        "platform": "TikTok",
-        "spend": 500,
-        "budget": 3200,
-        "usageRate": 15.7,
-        "cpi": 0.14,
-        "installs": 2649,
-        "roi1": 74,
-        "roi3": 74,
-        "roi7": 94,
-        "status": "normal"
-      },
-      {
-        "id": "a07",
-        "name": "GIMC-TT-Vegoo_VD_07",
-        "accountId": "",
-        "platform": "TikTok",
-        "spend": 196,
-        "budget": 3200,
-        "usageRate": 4.9,
-        "cpi": 0.08,
-        "installs": 821,
-        "roi1": 107,
-        "roi3": 104,
-        "roi7": 103,
-        "status": "normal"
-      },
-      {
-        "id": "a08",
-        "name": "OM_TT_Vegoo_PT_02",
-        "accountId": "",
-        "platform": "TikTok",
-        "spend": 166,
-        "budget": 3200,
-        "usageRate": 6.5,
-        "cpi": 0.16,
-        "installs": 879,
-        "roi1": 63,
-        "roi3": 33,
-        "roi7": 62,
-        "status": "normal"
-      },
-      {
-        "id": "a09",
-        "name": "OM_TT_Vegoo_PT_02",
-        "accountId": "",
-        "platform": "TikTok",
-        "spend": 166,
-        "budget": 3200,
-        "usageRate": 3.3,
-        "cpi": 0.18,
-        "installs": 181,
-        "roi1": 57,
-        "roi3": 33,
-        "roi7": 62,
-        "status": "normal"
-      },
-      {
-        "id": "a10",
-        "name": "BV_TT_Vegoo_PT3_03",
-        "accountId": "",
-        "platform": "TikTok",
-        "spend": 68,
-        "budget": 500,
-        "usageRate": 13.6,
-        "cpi": 0.38,
-        "installs": 181,
-        "roi1": 77,
-        "roi3": 91,
-        "roi7": 70,
-        "status": "normal"
-      },
-      {
-        "id": "a11",
-        "name": "BV_ZL-SDV-03",
-        "accountId": "",
-        "platform": "TikTok",
-        "spend": 61,
-        "budget": 340,
-        "usageRate": 17.8,
-        "cpi": 0.07,
-        "installs": 924,
-        "roi1": 96,
-        "roi3": 110,
-        "roi7": 92,
-        "status": "normal"
-      },
-      {
-        "id": "a12",
-        "name": "KN_TT_Vegoo_PT3_01",
-        "accountId": "",
-        "platform": "TikTok",
-        "spend": 19,
-        "budget": 550,
-        "usageRate": 3.5,
-        "cpi": 0.26,
-        "installs": 72,
-        "roi1": 50,
-        "roi3": 46,
-        "roi7": 53,
-        "status": "roi_low"
-      },
-      {
-        "id": "a13",
-        "name": "FB_VD_Vegoo_US_01",
-        "accountId": "",
-        "platform": "Facebook",
-        "spend": 842,
-        "budget": 2000,
-        "usageRate": 42.1,
-        "cpi": 0.21,
-        "installs": 4010,
-        "roi1": 91,
-        "roi3": 88,
-        "roi7": 85,
-        "status": "normal"
-      },
-      {
-        "id": "a14",
-        "name": "FB_PT_Vegoo_US_02",
-        "accountId": "",
-        "platform": "Facebook",
-        "spend": 720,
-        "budget": 1800,
-        "usageRate": 40,
-        "cpi": 0.18,
-        "installs": 4000,
-        "roi1": 94,
-        "roi3": 90,
-        "roi7": 87,
-        "status": "normal"
-      },
-      {
-        "id": "a15",
-        "name": "FB_VD_Vegoo_SEA_03",
-        "accountId": "",
-        "platform": "Facebook",
-        "spend": 611,
-        "budget": 1500,
-        "usageRate": 40.7,
-        "cpi": 0.15,
-        "installs": 4073,
-        "roi1": 95,
-        "roi3": 91,
-        "roi7": 88,
-        "status": "normal"
-      },
-      {
-        "id": "a16",
-        "name": "FB_PT_Vegoo_SEA_04",
-        "accountId": "",
-        "platform": "Facebook",
-        "spend": 540,
-        "budget": 1400,
-        "usageRate": 38.6,
-        "cpi": 0.17,
-        "installs": 3177,
-        "roi1": 93,
-        "roi3": 89,
-        "roi7": 86,
-        "status": "normal"
-      },
-      {
-        "id": "a17",
-        "name": "FB_VD_Vegoo_BR_01",
-        "accountId": "",
-        "platform": "Facebook",
-        "spend": 480,
-        "budget": 1200,
-        "usageRate": 40,
-        "cpi": 0.19,
-        "installs": 2526,
-        "roi1": 92,
-        "roi3": 88,
-        "roi7": 85,
-        "status": "normal"
-      },
-      {
-        "id": "a18",
-        "name": "FB_PT_DramaVue_01",
-        "accountId": "",
-        "platform": "Facebook",
-        "spend": 380,
-        "budget": 1100,
-        "usageRate": 34.5,
-        "cpi": 0.16,
-        "installs": 2375,
-        "roi1": 90,
-        "roi3": 87,
-        "roi7": 84,
-        "status": "normal"
-      },
-      {
-        "id": "a19",
-        "name": "FB_VD_DramaVue_02",
-        "accountId": "",
-        "platform": "Facebook",
-        "spend": 261,
-        "budget": 900,
-        "usageRate": 29,
-        "cpi": 0.22,
-        "installs": 1187,
-        "roi1": 82,
-        "roi3": 78,
-        "roi7": 75,
-        "status": "warning"
-      },
-      {
-        "id": "a20",
-        "name": "GG_VD_Vegoo_US_01",
-        "accountId": "",
-        "platform": "Google",
-        "spend": 521,
-        "budget": 1200,
-        "usageRate": 43.4,
-        "cpi": 0.22,
-        "installs": 2368,
-        "roi1": 89,
-        "roi3": 86,
-        "roi7": 83,
-        "status": "normal"
-      },
-      {
-        "id": "a21",
-        "name": "GG_PT_Vegoo_US_02",
-        "accountId": "",
-        "platform": "Google",
-        "spend": 480,
-        "budget": 1200,
-        "usageRate": 40,
-        "cpi": 0.2,
-        "installs": 2400,
-        "roi1": 87,
-        "roi3": 84,
-        "roi7": 81,
-        "status": "normal"
-      },
-      {
-        "id": "a22",
-        "name": "GG_VD_DramaVue_01",
-        "accountId": "",
-        "platform": "Google",
-        "spend": 360,
-        "budget": 800,
-        "usageRate": 45,
-        "cpi": 0.21,
-        "installs": 1714,
-        "roi1": 85,
-        "roi3": 82,
-        "roi7": 79,
-        "status": "normal"
-      },
-      {
-        "id": "a23",
-        "name": "MTG_VD_Vegoo_US_01",
-        "accountId": "",
-        "platform": "Mintegral",
-        "spend": 451,
-        "budget": 1100,
-        "usageRate": 41,
-        "cpi": 0.19,
-        "installs": 2374,
-        "roi1": 83,
-        "roi3": 77,
-        "roi7": 74,
-        "status": "warning"
-      },
-      {
-        "id": "a24",
-        "name": "MTG_VD_DramaVue_01",
-        "accountId": "",
-        "platform": "Mintegral",
-        "spend": 400,
-        "budget": 1000,
-        "usageRate": 40,
-        "cpi": 0.19,
-        "installs": 2105,
-        "roi1": 80,
-        "roi3": 72,
-        "roi7": 70,
-        "status": "warning"
-      },
-      {
-        "id": "a25",
-        "name": "KW_VD_Vegoo_SEA_01",
-        "accountId": "",
-        "platform": "Kwai",
-        "spend": 511,
-        "budget": 1500,
-        "usageRate": 34.1,
-        "cpi": 0.23,
-        "installs": 3244,
-        "roi1": 79,
-        "roi3": 75,
-        "roi7": 71,
-        "status": "warning"
-      },
-      {
-        "id": "a26",
-        "name": "NB_PT_Vegoo_US_01",
-        "accountId": "",
-        "platform": "NewsBreak",
-        "spend": 178,
-        "budget": 800,
-        "usageRate": 22.3,
-        "cpi": 0.41,
-        "installs": 180,
-        "roi1": 61,
-        "roi3": 55,
-        "roi7": 49,
-        "status": "roi_low"
-      },
-      {
-        "id": "a27",
-        "name": "TT_VD_Vegoo_VD_05",
-        "accountId": "",
-        "platform": "TikTok",
-        "spend": 193,
-        "budget": 3200,
-        "usageRate": 6,
-        "cpi": 0.19,
-        "installs": 1016,
-        "roi1": 65,
-        "roi3": 46,
-        "roi7": 62,
-        "status": "normal"
-      },
-      {
-        "id": "a28",
-        "name": "TT_Vegoo_PT_07",
-        "accountId": "",
-        "platform": "TikTok",
-        "spend": 149,
-        "budget": 3200,
-        "usageRate": 4.7,
-        "cpi": 0.19,
-        "installs": 784,
-        "roi1": 39,
-        "roi3": 46,
-        "roi7": 62,
-        "status": "normal"
-      },
-      {
-        "id": "a29",
-        "name": "BV_TT_Vegoo_SDV_01",
-        "accountId": "",
-        "platform": "TikTok",
-        "spend": 120,
-        "budget": 1000,
-        "usageRate": 12,
-        "cpi": 0.14,
-        "installs": 857,
-        "roi1": 98,
-        "roi3": 95,
-        "roi7": 91,
-        "status": "normal"
-      },
-      {
-        "id": "a30",
-        "name": "BV_TT_PhoneTracker_01",
-        "accountId": "",
-        "platform": "TikTok",
-        "spend": 88,
-        "budget": 600,
-        "usageRate": 14.7,
-        "cpi": 0.12,
-        "installs": 733,
-        "roi1": 101,
-        "roi3": 97,
-        "roi7": 94,
-        "status": "normal"
-      },
-      {
-        "id": "a31",
-        "name": "BV_TT_DramaVue_01",
-        "accountId": "",
-        "platform": "TikTok",
-        "spend": 55,
-        "budget": 400,
-        "usageRate": 13.8,
-        "cpi": 0.2,
-        "installs": 275,
-        "roi1": 72,
-        "roi3": 68,
-        "roi7": 65,
-        "status": "normal"
-      }
-    ]
+    "code": 200,
+    "message": null,
+    "data": {
+      "total": 103,
+      "accounts": [
+        {
+          "appId": "app-phone-tracker",
+          "appName": "PhoneTracker",
+          "platform": "安卓",
+          "source": "Facebook",
+          "adAccount": {
+            "id": "2120987842049790",
+            "name": "GO_FB_PT_LKD_24",
+            "accountId": "2120987842049790",
+            "spend": 899,
+            "budget": 930,
+            "cpa": null,
+            "cpi": 0.17,
+            "installs": 5369
+          },
+          "usageRate": 96.67,
+          "firstThreeDayRoi": {
+            "dates": ["2026-04-09", "2026-04-08", "2026-04-07"],
+            "data": [94, 90, 92]
+          },
+          "roi3": 92,
+          "roi7": 91.5,
+          "status": "normal"
+        },
+        {
+          "appId": "app-phone-tracker",
+          "appName": "PhoneTracker",
+          "platform": "安卓",
+          "source": "Facebook",
+          "adAccount": {
+            "id": "2002274913966343",
+            "name": "GO_FB_PT_LKD_26",
+            "accountId": "2002274913966343",
+            "spend": 114,
+            "budget": 720,
+            "cpa": null,
+            "cpi": 0.19,
+            "installs": 613
+          },
+          "usageRate": 15.83,
+          "firstThreeDayRoi": {
+            "dates": ["2026-04-09", "2026-04-08", "2026-04-07"],
+            "data": [91, 84, 81]
+          },
+          "roi3": 85.33,
+          "roi7": 84,
+          "status": "normal"
+        },
+        {
+          "appId": "app-phone-tracker",
+          "appName": "PhoneTracker",
+          "platform": "安卓",
+          "source": "Facebook",
+          "adAccount": {
+            "id": "1520303086353687",
+            "name": "GO_FB_PT_DLBF_01",
+            "accountId": "1520303086353687",
+            "spend": 110,
+            "budget": 105,
+            "cpa": null,
+            "cpi": 0.23,
+            "installs": 475
+          },
+          "usageRate": 104.76,
+          "firstThreeDayRoi": {
+            "dates": ["2026-04-09", "2026-04-08", "2026-04-07"],
+            "data": [67, 79, 74]
+          },
+          "roi3": 73.33,
+          "roi7": 72,
+          "status": "warning"
+        },
+        {
+          "appId": "app-phone-tracker",
+          "appName": "PhoneTracker",
+          "platform": "安卓",
+          "source": "Facebook",
+          "adAccount": {
+            "id": "810992215185662",
+            "name": "GIMC_FB_PT_LKD_01",
+            "accountId": "810992215185662",
+            "spend": 128,
+            "budget": 80,
+            "cpa": null,
+            "cpi": 0.31,
+            "installs": 418
+          },
+          "usageRate": 160,
+          "firstThreeDayRoi": {
+            "dates": ["2026-04-09", "2026-04-08", "2026-04-07"],
+            "data": [84, 94, 78]
+          },
+          "roi3": 85.33,
+          "roi7": 86,
+          "status": "normal"
+        },
+        {
+          "appId": "app-phone-tracker",
+          "appName": "PhoneTracker",
+          "platform": "安卓",
+          "source": "Facebook",
+          "adAccount": {
+            "id": "2348015038954610",
+            "name": "GO_FB_PT_LKD_19",
+            "accountId": "2348015038954610",
+            "spend": 81.8,
+            "budget": 430,
+            "cpa": null,
+            "cpi": 1.3,
+            "installs": 63
+          },
+          "usageRate": 19.02,
+          "firstThreeDayRoi": {
+            "dates": ["2026-04-09", "2026-04-08", "2026-04-07"],
+            "data": [58, 88, 82]
+          },
+          "roi3": 76,
+          "roi7": 75,
+          "status": "warning"
+        },
+        {
+          "appId": "app-phone-tracker",
+          "appName": "PhoneTracker",
+          "platform": "安卓",
+          "source": "Facebook",
+          "adAccount": {
+            "id": "904153259135506",
+            "name": "GO_FB_PT_LKD_23",
+            "accountId": "904153259135506",
+            "spend": 0.9,
+            "budget": null,
+            "cpa": null,
+            "cpi": 0.3,
+            "installs": 3
+          },
+          "usageRate": 0,
+          "firstThreeDayRoi": {
+            "dates": ["2026-04-09", "2026-04-08", "2026-04-07"],
+            "data": [null, 63, 70]
+          },
+          "roi3": 66.5,
+          "roi7": 68,
+          "status": "normal"
+        },
+        {
+          "appId": "app-phone-tracker-2",
+          "appName": "PhoneTracker2",
+          "platform": "安卓",
+          "source": "Facebook",
+          "adAccount": {
+            "id": "1415127786248229",
+            "name": "GO_FB_PT2_GZYJ_01",
+            "accountId": "1415127786248229",
+            "spend": 866,
+            "budget": 940,
+            "cpa": null,
+            "cpi": 0.38,
+            "installs": 2272
+          },
+          "usageRate": 92.13,
+          "firstThreeDayRoi": {
+            "dates": ["2026-04-09", "2026-04-08", "2026-04-07"],
+            "data": [96, 106, 92]
+          },
+          "roi3": 98,
+          "roi7": 97.5,
+          "status": "normal"
+        },
+        {
+          "appId": "app-phone-tracker-2",
+          "appName": "PhoneTracker2",
+          "platform": "安卓",
+          "source": "Facebook",
+          "adAccount": {
+            "id": "27221597870760415",
+            "name": "GO_FB_PT2_GZYJ_10",
+            "accountId": "27221597870760415",
+            "spend": 202,
+            "budget": 373,
+            "cpa": null,
+            "cpi": 0.13,
+            "installs": 1506
+          },
+          "usageRate": 54.16,
+          "firstThreeDayRoi": {
+            "dates": ["2026-04-09", "2026-04-08", "2026-04-07"],
+            "data": [93, 87, 90]
+          },
+          "roi3": 90,
+          "roi7": 89.5,
+          "status": "normal"
+        },
+        {
+          "appId": "app-phone-tracker-2",
+          "appName": "PhoneTracker2",
+          "platform": "安卓",
+          "source": "Facebook",
+          "adAccount": {
+            "id": "4446301092325872",
+            "name": "GO_FB_PT2_GZYJ_06",
+            "accountId": "4446301092325872",
+            "spend": 315,
+            "budget": 320,
+            "cpa": null,
+            "cpi": 0.12,
+            "installs": 2602
+          },
+          "usageRate": 98.44,
+          "firstThreeDayRoi": {
+            "dates": ["2026-04-09", "2026-04-08", "2026-04-07"],
+            "data": [94, 99, 86]
+          },
+          "roi3": 93,
+          "roi7": 92.5,
+          "status": "normal"
+        },
+        {
+          "appId": "app-phone-tracker-2",
+          "appName": "PhoneTracker2",
+          "platform": "安卓",
+          "source": "Facebook",
+          "adAccount": {
+            "id": "946266401296046",
+            "name": "GO_FB_PT2_GZYJ_09",
+            "accountId": "946266401296046",
+            "spend": 212,
+            "budget": 260,
+            "cpa": null,
+            "cpi": 0.14,
+            "installs": 1487
+          },
+          "usageRate": 81.54,
+          "firstThreeDayRoi": {
+            "dates": ["2026-04-09", "2026-04-08", "2026-04-07"],
+            "data": [95, 97, 82]
+          },
+          "roi3": 91.33,
+          "roi7": 91,
+          "status": "normal"
+        },
+        {
+          "appId": "app-phone-tracker-2",
+          "appName": "PhoneTracker2",
+          "platform": "安卓",
+          "source": "Facebook",
+          "adAccount": {
+            "id": "25809345558748028",
+            "name": "GO_FB_PT2_GZYJ_08",
+            "accountId": "25809345558748028",
+            "spend": 159,
+            "budget": 765,
+            "cpa": null,
+            "cpi": 0.15,
+            "installs": 1069
+          },
+          "usageRate": 20.78,
+          "firstThreeDayRoi": {
+            "dates": ["2026-04-09", "2026-04-08", "2026-04-07"],
+            "data": [103, 99, 93]
+          },
+          "roi3": 98.33,
+          "roi7": 98,
+          "status": "normal"
+        }
+      ]
+    }
   },
   "api": {
-    "url": "POST /api/user-growth/account-performance/app-performance-placeholder-table",
+    "url": "POST /api/v1/datacenter/analysis/account-performance/app-performance-placeholder-table",
     "method": "POST",
     "priority": "P1",
-    "requestBody": "dateRangeStart, dateRangeEnd, source?, app?, owner?",
-    "responseBody": "total, accounts"
+    "requestBody": "currentPage, pageSize, dateStart, dateEnd, kw?, ownerId?, appIds?, source?,  keys?",
+    "responseBody": "code, message, data: { total, accounts[] }；accounts 含 appId, appName, platform, source, adAccount{id,name,accountId,spend,budget?,cpa?,cpi,installs}, usageRate, firstThreeDayRoi, roi3, roi7, status；无 roi1"
   },
   "apiSuggestion": {
     "notes": [
-      "status 枚举建议与前端展示逻辑一致：normal=正常，warning=注意，roi_low=ROI偏低。",
-      "若后端返回真实 accountId，可直接替换 accountId 字段并确保为空值用空字符串（避免 null 处理）。"
+      "列表 UI 建议使用多级表头：顶层为「应用 / 平台 / 广告平台 / 广告账户 / 首日ROI」等分组；其中「广告账户」下再挂 ID、名称、广告支出、预算、CPA、CPI、安装数，与 adAccount 子字段一致；首日 ROI 下再挂三日子列，与 firstThreeDayRoi 一致。ElTable 可用多级 header slot 或列 children 实现。",
+      "一行=一条广告账户记录：应用维度为 appId + appName（同应用多行可重复）；终端 platform、广告渠道 source；账户指标均在 adAccount 内；usageRate、firstThreeDayRoi、roi3、roi7、status 为行级扩展指标。",
+      "sampleResponse.accounts 为节选示例（条数可少于 total）；全量时仅扩充数组元素即可。",
+      "HTTP 层统一包装为 code / message / data；业务字段在 data 内。",
+      "筛选请求体不含 platform：应用维度用 appIds（空数组=全部）；终端仅在 accounts[].platform 展示。",
+      "firstThreeDayRoi 为 dates + data；data[i] 可为 null 表示当日无数据（UI「-」）。",
+      "roi3 / roi7 为后端汇总口径，可与折线并存。",
+      "adAccount.budget 可为 null；无预算时 usageRate 建议返回 0。",
+      "无数据时 data.accounts 返回 []，data.total 为 0；message 可为 null。",
+      "status 枚举：normal=正常，warning=注意，roi_low=ROI偏低。"
     ]
   }
 }

@@ -284,6 +284,8 @@ export function mockFetchCampaignDetailAdGroupAction(
 export function mockFetchAdDetailOverview(_body: {
   adId: string
   campaignId: string
+  startDate?: string
+  endDate?: string
 }): Promise<AdDetailOverviewResponse> {
   void _body
   return Promise.resolve({ ...MOCK_AD_DETAIL })

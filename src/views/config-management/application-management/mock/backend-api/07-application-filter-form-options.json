@@ -1,0 +1,69 @@
+{
+  "_comment": "应用管理 - 筛选与新增/编辑弹窗选项。包含类别、创建人、报表时区。对应 types.ts: ApplicationFilterFormOptions。",
+  "fieldDescription": {
+    "request": {},
+    "response": {
+      "categoryOptions": {
+        "type": "OptionItem[]",
+        "required": true,
+        "description": "类别选项（筛选与弹窗共用）。"
+      },
+      "creatorOptions": {
+        "type": "OptionItem[]",
+        "required": true,
+        "description": "创建人筛选选项。"
+      },
+      "timezoneOptions": {
+        "type": "OptionItem[]",
+        "required": true,
+        "description": "报表时区选项（新增/编辑弹窗使用）。"
+      }
+    },
+    "OptionItem": {
+      "label": { "type": "string", "required": true, "description": "选项展示文案。" },
+      "value": { "type": "string", "required": true, "description": "选项值。" }
+    }
+  },
+  "sampleRequest": {},
+  "sampleResponse": {
+    "categoryOptions": [
+      { "label": "Weather", "value": "Weather" },
+      { "label": "Health", "value": "Health" },
+      { "label": "Finance", "value": "Finance" },
+      { "label": "Travel", "value": "Travel" },
+      { "label": "Shopping", "value": "Shopping" },
+      { "label": "Entertainment", "value": "Entertainment" }
+    ],
+    "creatorOptions": [
+      { "label": "张三", "value": "张三" },
+      { "label": "李四", "value": "李四" },
+      { "label": "王五", "value": "王五" }
+    ],
+    "timezoneOptions": [
+      { "label": "PST", "value": "PST" },
+      { "label": "EST", "value": "EST" },
+      { "label": "CST", "value": "CST" },
+      { "label": "MST", "value": "MST" },
+      { "label": "UTC", "value": "UTC" },
+      { "label": "GMT+8", "value": "GMT+8" }
+    ]
+  },
+  "api": {
+    "url": "POST /api/config-management/application/filter-form-options",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "空对象 {}",
+    "responseBody": "ApplicationFilterFormOptions"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "进入页面时",
+        "detail": "调用 fetchApplicationFilterFormOptions，填充筛选与新增/编辑弹窗下拉。",
+        "prerequisite": "无"
+      }
+    ],
+    "defaultSelection": "选项由后端或 Mock 返回，页面不再硬编码。",
+    "dedupe": "页面初始化只拉取一次，可在新增字段后复用此接口扩展。"
+  }
+}

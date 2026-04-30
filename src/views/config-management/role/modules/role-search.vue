@@ -11,7 +11,6 @@
 </template>
 
 <script setup lang="ts">
-  import { getAppNow, offsetAppNowMs } from '@/utils/app-now'
   interface Props {
     modelValue: Record<string, any>
   }
@@ -94,12 +93,7 @@
         rangeSeparator: '至',
         startPlaceholder: '开始日期',
         endPlaceholder: '结束日期',
-        valueFormat: 'YYYY-MM-DD',
-        shortcuts: [
-          { text: '今日', value: [getAppNow(), getAppNow()] },
-          { text: '最近一周', value: [offsetAppNowMs(-604800000), getAppNow()] },
-          { text: '最近一个月', value: [offsetAppNowMs(-2592000000), getAppNow()] }
-        ]
+        valueFormat: 'YYYY-MM-DD'
       }
     }
   ])

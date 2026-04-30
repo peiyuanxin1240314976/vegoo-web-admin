@@ -17,7 +17,35 @@
       "remark": { "type": "string", "required": false, "description": "备注。" }
     },
     "response": {
-      "id": { "type": "string", "required": true, "description": "新增记录 ID。" }
+      "item": {
+        "type": "CostCoefficientItem",
+        "required": true,
+        "description": "新增后返回完整记录（与 mock 实现一致）。"
+      }
+    },
+    "CostCoefficientItem": {
+      "id": { "type": "string", "required": true, "description": "记录 ID。" },
+      "nSource": { "type": "number", "required": true, "description": "广告平台 n_source。" },
+      "platformName": { "type": "string", "required": true, "description": "广告平台名称。" },
+      "tStart": { "type": "string", "required": true, "description": "生效起始日期 YYYY-MM-DD。" },
+      "dCostRatio": {
+        "type": "number",
+        "required": true,
+        "description": "折算比例 d_cost_ratio。"
+      },
+      "dInstallCost": {
+        "type": "number",
+        "required": true,
+        "description": "安装成本 d_install_cost。"
+      },
+      "updatedAt": {
+        "type": "string",
+        "required": true,
+        "description": "最后修改时间 YYYY-MM-DD HH:mm。"
+      },
+      "updatedBy": { "type": "string", "required": true, "description": "操作人。" },
+      "remark": { "type": "string", "required": true, "description": "备注。" },
+      "isDeleted": { "type": "boolean", "required": true, "description": "逻辑删除标记。" }
     }
   },
   "sampleRequest": {
@@ -27,13 +55,28 @@
     "dInstallCost": 0.34567,
     "remark": "Q2 调整"
   },
-  "sampleResponse": { "data": { "id": "CC-009" } },
+  "sampleResponse": {
+    "data": {
+      "item": {
+        "id": "CC-009",
+        "nSource": 1,
+        "platformName": "Google Ads",
+        "tStart": "2026-03-24",
+        "dCostRatio": 1.125,
+        "dInstallCost": 0.34567,
+        "updatedAt": "2026-03-24 09:30",
+        "updatedBy": "admin",
+        "remark": "Q2 调整",
+        "isDeleted": false
+      }
+    }
+  },
   "api": {
     "url": "POST /api/config-management/cost-coefficient",
     "method": "POST",
     "priority": "P0",
     "requestBody": "CostCoefficientFormModel",
-    "responseBody": "{ id }"
+    "responseBody": "{ item: CostCoefficientItem }"
   },
   "interaction": {
     "triggers": [

@@ -1,0 +1,65 @@
+{
+  "_comment": "周报-汇总。",
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/report/weekly/overview",
+    "method": "POST",
+    "priority": "P0"
+  },
+  "interaction": {
+    "triggers": [{ "moment": "周报 summary 加载", "detail": "首屏与筛选变化触发" }]
+  },
+  "sampleRequest": {
+    "startDate": "2026-04-06",
+    "endDate": "2026-04-12",
+    "appId": "",
+    "appIds": [],
+    "platformList": [],
+    "sourceList": [],
+    "countryCodeList": [],
+    "account": ""
+  },
+  "sampleResponse": {
+    "kpis": [
+      {
+        "key": "revenue",
+        "label": "总收缴",
+        "value": "$1,064,100",
+        "change": 8.4,
+        "changeLabel": "周环比 ↑ 8.4%",
+        "color": "#00D4A1",
+        "bg": "linear-gradient(135deg, rgba(0,168,117,0.35) 0%, rgba(0,100,70,0.2) 100%)",
+        "sparkline": [960, 980, 1000, 1020, 1030, 1050, 1060, 1064]
+      },
+      {
+        "key": "paidRevenue",
+        "label": "付费收缴",
+        "value": "$302,400",
+        "change": 9.1,
+        "changeLabel": "周环比 ↑ 9.1%",
+        "color": "#22C55E",
+        "bg": "linear-gradient(135deg, rgba(34,197,94,0.3) 0%, rgba(20,120,56,0.15) 100%)",
+        "sparkline": [270, 275, 280, 288, 292, 296, 300, 302]
+      },
+      {
+        "key": "dau",
+        "label": "平均DAU",
+        "value": "78.3万",
+        "change": 5.2,
+        "changeLabel": "周环比 ↑ 5.2%",
+        "color": "#3B82F6",
+        "bg": "linear-gradient(135deg, rgba(59,130,246,0.3) 0%, rgba(29,78,216,0.15) 100%)",
+        "sparkline": [70, 72, 73, 74, 75, 76, 77, 78]
+      }
+    ],
+    "userMetrics": [
+      { "name": "新增用户", "current": "31.5万", "previous": "29.8万", "change": "+5.7%" }
+    ],
+    "revenueMetrics": [
+      { "name": "广告收入", "current": "$687,400", "previous": "$642,100", "change": "+7.1%" }
+    ],
+    "roiMetrics": [{ "type": "7日ROI", "current": "93%", "previous": "91%", "change": "+2pp" }],
+    "retentionMetrics": [
+      { "day": "次留", "current": "42.0%", "previous": "41.5%", "change": "+0.5pp" }
+    ]
+  }
+}

@@ -1,0 +1,111 @@
+// 评论与评分监控：与「广告成效」页视觉对齐的霓虹面板（本模块内自用）
+
+@mixin rrm-neon-panel {
+  position: relative;
+  overflow: hidden;
+  background-color: rgb(10 10 14 / 98%);
+  background-image:
+    radial-gradient(
+      ellipse 95% 60% at 100% -8%,
+      rgb(59 130 246 / 38%) 0%,
+      rgb(6 182 212 / 18%) 35%,
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 70% 55% at -5% 108%,
+      color-mix(in srgb, var(--el-color-primary) 32%, transparent) 0%,
+      color-mix(in srgb, var(--el-color-primary-light-3) 16%, transparent) 38%,
+      transparent 55%
+    ),
+    radial-gradient(ellipse 50% 40% at 80% 102%, rgb(168 85 247 / 22%) 0%, transparent 50%),
+    linear-gradient(
+      158deg,
+      rgb(30 30 40 / 90%) 0%,
+      rgb(12 12 18 / 96%) 50%,
+      rgb(8 15 32 / 85%) 100%
+    );
+  isolation: isolate;
+  border: 1px solid rgb(96 165 250 / 28%);
+  border-radius: 16px;
+  box-shadow:
+    0 12px 48px rgb(0 0 0 / 48%),
+    0 0 0 1px rgb(96 165 250 / 10%),
+    inset 0 1px 0 rgb(186 230 253 / 14%),
+    inset 0 -12px 32px rgb(0 0 0 / 30%);
+}
+
+@mixin rrm-card-mesh {
+  &::after {
+    position: absolute;
+    inset: 1px;
+    z-index: 0;
+    pointer-events: none;
+    content: '';
+    background-image:
+      linear-gradient(rgb(186 230 253 / 5%) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(186 230 253 / 5%) 1px, transparent 1px),
+      radial-gradient(ellipse 80% 40% at 50% -5%, rgb(255 255 255 / 6%) 0%, transparent 55%);
+    background-size:
+      20px 20px,
+      20px 20px,
+      100% 100%;
+    border-radius: inherit;
+    opacity: 0.3;
+    mask-image: linear-gradient(180deg, black 0%, rgb(0 0 0 / 50%) 70%, transparent 100%);
+  }
+}
+
+@mixin rrm-panel-hover {
+  transition:
+    box-shadow 0.42s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
+    border-color 0.32s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
+
+  &:hover {
+    border-color: rgb(96 165 250 / 65%);
+    box-shadow:
+      0 24px 72px rgb(0 0 0 / 52%),
+      0 0 0 1px rgb(96 165 250 / 25%),
+      inset 0 1px 0 rgb(186 230 253 / 18%),
+      0 0 72px rgb(59 130 246 / 22%),
+      0 0 120px rgb(6 182 212 / 12%),
+      0 0 160px color-mix(in srgb, var(--el-color-primary) 8%, transparent);
+  }
+}
+
+// ── 卡片标题渐变（随主题主色）──────────────────────────────────
+@mixin rrm-card-title-gradient {
+  display: inline-block;
+  max-width: 100%;
+  font-weight: 700;
+  line-height: 1.35;
+  color: transparent;
+  letter-spacing: 0.02em;
+  vertical-align: middle;
+  background-color: transparent;
+  background-image: linear-gradient(
+    92deg,
+    color-mix(in srgb, var(--el-text-color-primary) 65%, var(--el-color-primary)) 0%,
+    var(--el-color-primary-light-5) 40%,
+    var(--el-color-primary) 75%,
+    var(--el-color-primary-dark-2) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+// ── 卡片副标题弱渐变（与主标题同列展示时）──────────────────────
+@mixin rrm-card-subtitle-gradient {
+  display: inline-block;
+  font-weight: 600;
+  color: transparent;
+  background-color: transparent;
+  background-image: linear-gradient(
+    90deg,
+    var(--el-text-color-secondary) 0%,
+    color-mix(in srgb, var(--el-color-primary) 70%, var(--el-text-color-secondary)) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

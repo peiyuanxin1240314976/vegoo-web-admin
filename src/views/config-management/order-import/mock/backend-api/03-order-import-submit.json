@@ -12,24 +12,30 @@
       "remark": { "type": "string", "required": false, "description": "备注。" }
     },
     "response": {
-      "taskId": { "type": "string", "required": true, "description": "任务 ID。" }
+      "taskId": { "type": "string", "required": true, "description": "任务 ID。" },
+      "status": {
+        "type": "string",
+        "required": true,
+        "enum": ["processing"],
+        "description": "任务初始状态。"
+      }
     }
   },
   "sampleRequest": { "dataSource": "appstore", "remark": "2026-03 月结数据" },
-  "sampleResponse": { "data": { "taskId": "IMP-027" } },
+  "sampleResponse": { "data": { "taskId": "IMP-027", "status": "processing" } },
   "api": {
     "url": "POST /api/config-management/order-import/submit",
     "method": "POST",
     "priority": "P0",
     "requestBody": "multipart/form-data",
-    "responseBody": "{ taskId }"
+    "responseBody": "{ taskId, status }"
   },
   "interaction": {
     "triggers": [
       {
         "moment": "用户操作",
         "detail": "导入弹窗选择文件并提交 `submitOrderImport(FormData)`；成功后跳转报告或刷新列表。",
-        "prerequisite": "`OrderImportApiSource.submitImport`。"
+        "prerequisite": "`OrderImportListApiSource.submitImport`。"
       }
     ],
     "defaultSelection": "dataSource 与文件必选。",

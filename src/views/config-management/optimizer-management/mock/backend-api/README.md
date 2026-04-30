@@ -16,7 +16,7 @@
 | P0 | `03-meta-system-users.json` | `POST .../meta-system-users` | 新建弹窗：关联用户下拉 |
 | P0 | `04-optimizer-create.json` | `POST .../optimizer` | 新增 |
 | P0 | `05-optimizer-update.json` | `POST .../optimizer/update` | 更新（body 含 `id`） |
-| P1 | `06-optimizer-export.json` | `POST .../export` | 导出（默认示例为 `fileToken`） |
+| P1 | `06-optimizer-export.json` | `POST .../export` | 导出（HTTP 文件流，`requestBlob`） |
 
 ## 2. 场景 → 接口
 

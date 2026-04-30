@@ -1,0 +1,57 @@
+{
+  "_comment": "BC 管理页面 - 导出 BC 列表。",
+  "fieldDescription": {
+    "request": {
+      "keyword": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "关键词筛选。"
+      },
+      "source": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "广告平台筛选。"
+      },
+      "status": { "type": "string", "required": false, "default": "", "description": "状态筛选。" },
+      "ownerType": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "开户主体筛选。"
+      },
+      "banRecord": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "封户记录筛选。"
+      }
+    },
+    "response": {
+      "taskId": { "type": "string", "required": true, "description": "导出任务 ID。" },
+      "downloadUrl": { "type": "string", "required": true, "description": "导出文件下载地址。" }
+    }
+  },
+  "sampleRequest": { "keyword": "", "source": "", "status": "", "ownerType": "", "banRecord": "" },
+  "sampleResponse": {
+    "code": 200,
+    "message": "success",
+    "data": {
+      "taskId": "bc_export_20260408_001",
+      "downloadUrl": "https://mock.vegoo.com/export/bc/bc_export_20260408_001.xlsx"
+    }
+  },
+  "api": {
+    "url": "POST /api/account-management/bc-management/export",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "Partial<BcTableQuery>",
+    "responseBody": "{ taskId, downloadUrl }"
+  },
+  "interaction": {
+    "triggers": [{ "moment": "用户操作", "detail": "点击导出按钮调用。" }],
+    "defaultSelection": "按当前筛选导出。",
+    "dedupe": "无"
+  }
+}

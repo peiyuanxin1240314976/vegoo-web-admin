@@ -1,0 +1,42 @@
+{
+  "_comment": "文本审核 - 重新审核，返回按当前文本重新识别的问题词。",
+  "fieldDescription": {
+    "request": {
+      "appContent": { "type": "AppContent", "required": true, "description": "当前主文案内容。" }
+    },
+    "response": {
+      "data": { "type": "AuditRerunResult", "required": true, "description": "重新审核结果。" }
+    },
+    "AuditRerunResult": {
+      "repeatWords": { "type": "string[]", "required": true, "description": "叠词列表。" },
+      "bannedWords": { "type": "string[]", "required": true, "description": "禁用词列表。" },
+      "brandWords": { "type": "string[]", "required": true, "description": "品牌词列表。" }
+    }
+  },
+  "interaction": {
+    "triggers": [
+      { "moment": "文本审核页点击“重新审核”", "detail": "按最新文本重新计算问题词并回写审核面板。" }
+    ]
+  },
+  "sampleRequest": {
+    "appContent": {
+      "appName": "People Search, People Finder",
+      "shortDesc": "AI People Search",
+      "fullDesc": "Find people and search people in Facebook."
+    }
+  },
+  "sampleResponse": {
+    "data": {
+      "repeatWords": ["people", "search"],
+      "bannedWords": [],
+      "brandWords": ["Facebook"]
+    }
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/product-operations/text-management/action/audit-rerun",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "appContent",
+    "responseBody": "AuditRerunResult"
+  }
+}

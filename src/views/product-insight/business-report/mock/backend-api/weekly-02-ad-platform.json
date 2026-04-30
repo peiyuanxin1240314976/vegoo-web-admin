@@ -1,0 +1,65 @@
+{
+  "_comment": "周报-广告平台。",
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/report/weekly/ad-platform",
+    "method": "POST",
+    "priority": "P0"
+  },
+  "interaction": { "triggers": [{ "moment": "切换周报广告平台 Tab", "detail": "按周聚合加载" }] },
+  "sampleRequest": {
+    "startDate": "2026-04-06",
+    "endDate": "2026-04-12",
+    "appId": "",
+    "appIds": [],
+    "platformList": [],
+    "sourceList": [],
+    "countryCodeList": [],
+    "account": ""
+  },
+  "sampleResponse": {
+    "platforms": [
+      {
+        "id": "google",
+        "name": "Google",
+        "adSpend": "$287,600",
+        "adSpendChange": 8.1,
+        "acquisitions": "16.3万",
+        "campaigns": 5,
+        "cpi": "$1.86",
+        "cpm": "$12.50",
+        "cpc": "$0.64",
+        "profit": "$89,700",
+        "roi1d": "38%",
+        "roi7d": "98%"
+      },
+      {
+        "id": "facebook",
+        "name": "Facebook",
+        "adSpend": "$221,300",
+        "adSpendChange": 7.4,
+        "acquisitions": "11.5万",
+        "campaigns": 3,
+        "cpi": "$1.93",
+        "cpm": "$11.80",
+        "cpc": "$0.58",
+        "profit": "$65,900",
+        "roi1d": "35%",
+        "roi7d": "91%"
+      },
+      {
+        "id": "unity",
+        "name": "Unity",
+        "adSpend": "$102,700",
+        "adSpendChange": 6.9,
+        "acquisitions": "5.4万",
+        "campaigns": 2,
+        "cpi": "$1.89",
+        "cpm": "$11.00",
+        "cpc": "$0.55",
+        "profit": "$29,800",
+        "roi1d": "33%",
+        "roi7d": "90%"
+      }
+    ]
+  }
+}

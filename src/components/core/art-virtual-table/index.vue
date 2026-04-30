@@ -1,5 +1,9 @@
 <template>
-  <div ref="containerRef" class="art-virtual-table">
+  <div
+    ref="containerRef"
+    class="art-virtual-table"
+    :class="{ 'art-virtual-table--h-scroll': minTotalWidth != null && minTotalWidth > 0 }"
+  >
     <ElTableV2
       v-if="tableWidth > 0"
       :columns="computedColumns"
@@ -26,11 +30,12 @@
     flexGrow?: number
     fixed?: 'left' | 'right'
     align?: 'left' | 'center' | 'right'
+    showOverflowTooltip?: boolean
   }
 </script>
 
 <script setup lang="ts">
-  import { computed, Fragment, h, onMounted, onUnmounted, ref, useSlots } from 'vue'
+  import { computed, Fragment, h, onMounted, onUnmounted, ref, useSlots, watch } from 'vue'
   import { useWindowSize } from '@vueuse/core'
   import type { CSSProperties } from 'vue'
   import { TableV2FixedDir } from 'element-plus'
@@ -52,6 +57,10 @@
       /** 从 window.innerHeight 减去多少来算表格高度，对应 calc(100vh - N) */
       heightOffset?: number
       minHeight?: number
+      /**
+       * 表格内容最小总宽度（各列宽之和）。大于容器宽度时由外层横向滚动条承载（需在页面侧包一层 overflow-x: auto）。
+       */
+      minTotalWidth?: number
       rowClass?: (params: { rowData: any; rowIndex: number; columns: any[] }) => string
       rowStyle?: (params: { rowData: any; rowIndex: number }) => CSSProperties
     }>(),
@@ -74,17 +83,31 @@
   const containerRef = ref<HTMLElement | null>(null)
   const tableWidth = ref(0)
 
+  function resolveTableWidth(viewportW: number): number {
+    const minW = props.minTotalWidth
+    if (typeof minW === 'number' && minW > 0) return Math.max(viewportW, minW)
+    return viewportW
+  }
+
+  function syncTableWidthFromContainer() {
+    const el = containerRef.value
+    if (!el) return
+    tableWidth.value = resolveTableWidth(el.clientWidth)
+  }
+
   onMounted(() => {
     const el = containerRef.value
     if (!el) return
-    const update = () => {
-      tableWidth.value = el.clientWidth
-    }
-    const ro = new ResizeObserver(update)
+    const ro = new ResizeObserver(() => syncTableWidthFromContainer())
     ro.observe(el)
-    update()
+    syncTableWidthFromContainer()
     onUnmounted(() => ro.disconnect())
   })
+
+  watch(
+    () => props.minTotalWidth,
+    () => syncTableWidthFromContainer()
+  )
 
   // 表格高度：响应 window 尺寸变化，等价于 CSS min(calc(100vh - offset), 60vh)
   const { height: windowHeight } = useWindowSize()
@@ -118,6 +141,7 @@
           : TableV2FixedDir.RIGHT
         : undefined,
       align: col.align ?? 'left',
+      showOverflowTooltip: col.showOverflowTooltip,
       cellRenderer: ({ rowData, rowIndex, cellData, columnIndex }: any) => {
         const slotFn = slots[`cell:${col.key}`]
         if (slotFn) {
@@ -165,6 +189,13 @@
   .art-virtual-table {
     width: 100%;
     overflow: hidden;
+  }
+
+  /** 列总宽大于容器时由页面外层 overflow-x: auto 承担横向滚动 */
+  .art-virtual-table--h-scroll {
+    width: max-content;
+    min-width: 100%;
+    overflow: visible hidden;
   }
 
   .art-virtual-table__inner {

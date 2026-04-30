@@ -1,0 +1,80 @@
+{
+  "_comment": "商业洞察 · 广告平台详情 — 核心指标趋势图（收入、eCPM、填充率）。对应页面 index.vue 图表序列。",
+  "interaction": {
+    "route": "/business-insight/ad-platform-detail",
+    "surface": "核心指标趋势图 + 图例切换",
+    "triggers": ["查询刷新", "切换 revenue/ecpm/fillRate 维度（可与前端本地切换并行）"]
+  },
+  "fieldDescription": {
+    "request": {
+      "startDate": { "type": "string", "required": true, "description": "YYYY-MM-DD。" },
+      "endDate": { "type": "string", "required": true, "description": "YYYY-MM-DD。" },
+      "appId": { "type": "string", "required": true, "description": "应用；空为全部。" },
+      "countryCode": { "type": "string", "required": true, "description": "国家；空为全部。" },
+      "source": {
+        "type": "string",
+        "required": false,
+        "description": "广告平台（与路由 query `source` 一致）。"
+      }
+    },
+    "response": {
+      "categories": {
+        "type": "string[]",
+        "required": true,
+        "description": "横轴标签，与下列各序列等长。"
+      },
+      "revenue": {
+        "type": "number[]",
+        "required": true,
+        "description": "收入序列（USD，与业务口径一致；展示两位小数由前端格式化）。"
+      },
+      "d_ecpm": {
+        "type": "number[]",
+        "required": true,
+        "description": "eCPM 序列（USD）。"
+      },
+      "d_fill_rate": {
+        "type": "number[]",
+        "required": true,
+        "description": "填充率序列，0–100 的百分比数值。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "startDate": "2025-10-01",
+    "endDate": "2025-10-28",
+    "appId": "",
+    "countryCode": "",
+    "source": "Google"
+  },
+  "sampleResponse": {
+    "categories": [
+      "10月1日",
+      "10月4日",
+      "10月7日",
+      "10月10日",
+      "10月13日",
+      "10月15日",
+      "10月18日",
+      "10月21日",
+      "10月24日",
+      "10月28日"
+    ],
+    "revenue": [17000, 19500, 22000, 28000, 35000, 42500, 38000, 36000, 37500, 39000],
+    "d_ecpm": [3.1, 3.2, 3.0, 3.35, 3.45, 3.5, 3.3, 3.25, 3.35, 3.4],
+    "d_fill_rate": [96.5, 95, 95.5, 96, 97, 93, 94, 93.5, 95, 97.5]
+  },
+  "api": {
+    "url": "POST /api/business-insight/ad-platform-detail/overview/trend",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "startDate, endDate, appId, countryCode, source?",
+    "responseBody": "{ categories, revenue, d_ecpm, d_fill_rate }"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "若横轴为纯日期，可改为 ISO 日期 string[]，由前端格式化为「M月D日」。",
+      "填充率轴与收入轴共用类目轴；双 Y 轴由前端 ECharts 配置。"
+    ]
+  }
+}

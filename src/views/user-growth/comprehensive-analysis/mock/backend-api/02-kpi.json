@@ -1,5 +1,10 @@
 {
   "_comment": "综合分析 - 顶部 KPI 卡片。对应 types.ts: KpiCard[]。",
+  "interaction": {
+    "route": "/user-growth/comprehensive-analysis",
+    "surface": "KPI 卡片行（5 列栅格）",
+    "trigger": "筛选后点击「查询」或 onMounted 与 fetchComprehensiveAnalysisData 聚合内并发请求。"
+  },
   "fieldDescription": {
     "request": {
       "date_start": { "type": "string", "required": true, "description": "开始日期 YYYY-MM-DD。" },
@@ -12,7 +17,32 @@
       "data": {
         "type": "KpiCard[]",
         "required": true,
-        "description": "顶部 KPI 卡片列表（id/title/subTitle/primaryValue/trendText/trendUp）。"
+        "description": "顶部 KPI 卡片列表，字段见 KpiCard。"
+      }
+    },
+    "KpiCard": {
+      "id": { "type": "string", "required": true, "description": "卡片唯一标识。" },
+      "title": { "type": "string", "required": true, "description": "KPI 标题。" },
+      "subTitle": {
+        "type": "string",
+        "required": true,
+        "description": "副标题/口径说明（如安装成本）。"
+      },
+      "primaryValue": {
+        "type": "string",
+        "required": true,
+        "description": "主指标预格式化展示文案。"
+      },
+      "trendText": {
+        "type": "string",
+        "required": true,
+        "description": "趋势幅度，不含箭头；百分比建议两位小数。"
+      },
+      "trendUp": { "type": "boolean", "required": true, "description": "true 上升，false 下降。" },
+      "trendCompareLabel": {
+        "type": "string",
+        "required": false,
+        "description": "对比期文案（如 vs昨日）；可选。"
       }
     }
   },
@@ -26,43 +56,44 @@
   "sampleResponse": {
     "data": [
       {
-        "id": "totalInstall",
-        "title": "总安装量",
-        "subTitle": "近7天",
-        "primaryValue": "12,485",
-        "trendText": "+8.5%",
+        "id": "cpiToday",
+        "title": "今日CPI（综合）",
+        "subTitle": "安装成本",
+        "primaryValue": "$2.38",
+        "trendText": "5.20%",
+        "trendUp": true,
+        "trendCompareLabel": "vs昨日"
+      },
+      {
+        "id": "installsToday",
+        "title": "今日安装数",
+        "subTitle": "买量用户",
+        "primaryValue": "42,156",
+        "trendText": "2.30%",
         "trendUp": true
       },
       {
-        "id": "totalSpend",
-        "title": "总花费",
-        "subTitle": "近7天",
-        "primaryValue": "$48.2k",
-        "trendText": "+3.2%",
-        "trendUp": false
-      },
-      {
-        "id": "avgCpi",
-        "title": "平均 CPI",
-        "subTitle": "近7天",
-        "primaryValue": "$2.65",
-        "trendText": "-2.1%",
+        "id": "ecpmKpi",
+        "title": "ECPM",
+        "subTitle": "广告变现效率",
+        "primaryValue": "19.20",
+        "trendText": "5.20%",
         "trendUp": true
       },
       {
-        "id": "roiD1",
-        "title": "ROI D1",
-        "subTitle": "近7天",
-        "primaryValue": "112%",
-        "trendText": "+4.0%",
+        "id": "roiD1Comprehensive",
+        "title": "首日ROI（综合）",
+        "subTitle": "回收率",
+        "primaryValue": "87%",
+        "trendText": "2.10%",
         "trendUp": true
       },
       {
-        "id": "newUsers",
-        "title": "新增用户",
-        "subTitle": "近7天",
-        "primaryValue": "9,820",
-        "trendText": "+6.1%",
+        "id": "estProfit",
+        "title": "预估利润",
+        "subTitle": "今日",
+        "primaryValue": "$3,358",
+        "trendText": "8.40%",
         "trendUp": true
       }
     ]
@@ -73,5 +104,11 @@
     "priority": "P0",
     "requestBody": "date_start, date_end, s_app_id, source, s_country_code",
     "responseBody": "KpiCard[]"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "primaryValue、trendText 为预格式化字符串；度量类百分比建议保留两位小数。",
+      "trendUp 仅表示方向，trendText 不含箭头前缀。"
+    ]
   }
 }
