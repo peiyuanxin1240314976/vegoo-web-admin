@@ -15,7 +15,7 @@
               :class="['fi', `fi-${targeting.geoCode.toLowerCase()}`]"
               class="adtg__flag"
             ></span>
-            {{ targeting.geoCode }} {{ targeting.geoName }}
+            {{ targeting.geoName }}
           </span>
         </div>
       </div>
@@ -34,7 +34,7 @@
         <el-icon class="adtg__icon"><UserFilled /></el-icon>
         <div class="adtg__info">
           <span class="adtg__label">性别</span>
-          <span class="adtg__value">{{ targeting.gender }}</span>
+          <span class="adtg__value">{{ formatGenderDisplay(targeting.gender) }}</span>
         </div>
       </div>
 
@@ -60,6 +60,11 @@
   defineProps<{
     targeting: AdTargeting
   }>()
+
+  function formatGenderDisplay(gender: string) {
+    if (gender.toLowerCase() === 'all') return '全部'
+    return gender
+  }
 </script>
 
 <style scoped lang="scss">

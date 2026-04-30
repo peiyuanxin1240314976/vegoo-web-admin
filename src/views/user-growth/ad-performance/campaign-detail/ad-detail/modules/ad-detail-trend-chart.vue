@@ -34,7 +34,7 @@
   type MetricKey = 'spend' | 'cpi' | 'roi'
 
   const METRICS: { key: MetricKey; label: string; color: string }[] = [
-    { key: 'spend', label: 'Spend', color: '#3B82F6' },
+    { key: 'spend', label: '广告支出', color: '#3B82F6' },
     { key: 'cpi', label: 'CPI', color: '#F97316' },
     { key: 'roi', label: 'ROI', color: '#10B981' }
   ]
