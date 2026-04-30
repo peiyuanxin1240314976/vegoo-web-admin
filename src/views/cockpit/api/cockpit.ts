@@ -384,7 +384,7 @@ export function mapOverallDataToKpiCards(data: CockpitOverallData): CockpitKpiCa
     },
     {
       type: 'dau',
-      label: '新用户',
+      label: '活跃用户',
       valueKey: 'dau',
       format: 'int',
       changeKey: 'dauChange',
@@ -470,7 +470,7 @@ export function mapOverallDataToAlertSummaryMetrics(
   // DNU：取值 now.dnu，null 按 0 展示；变化 dnuChange
   const dnuChange = data.dnuChange
   metrics.push({
-    label: '新用户',
+    label: '活跃用户',
     value: formatInt(now.dnu),
     ...(dnuChange != null && Number.isFinite(dnuChange)
       ? { change: Math.abs(dnuChange), trend: (dnuChange >= 0 ? 'up' : 'down') as 'up' | 'down' }
