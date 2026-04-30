@@ -160,7 +160,7 @@
             <div class="kpi-meta">实际入账</div>
             <div class="kpi-change" :class="kpis.real_change_pct_vs_prev_month >= 0 ? 'up' : 'dn'">
               {{ kpis.real_change_pct_vs_prev_month >= 0 ? '↑' : '↓'
-              }}{{ Math.abs(kpis.real_change_pct_vs_prev_month) }}% vs 上月
+              }}{{ Math.abs(kpis.real_change_pct_vs_prev_month) }}% vs 上周期
             </div>
           </div>
         </el-skeleton>
@@ -208,9 +208,9 @@
               <el-icon class="kpi-icon orange"><Grid /></el-icon>
               最高ECPM广告位
             </div>
-            <div class="kpi-value orange xlarge">{{ kpis.top_ad_slot.s_app_name }}</div>
+            <div class="kpi-value orange xlarge">{{ kpis.top_ad_slot.n_ad_type_label }}</div>
             <div class="kpi-meta orange-dim">
-              ${{ fmt2(kpis.top_ad_slot.d_ecpm) }} {{ kpis.top_ad_slot.n_ad_type_label }}
+              ${{ fmt2(kpis.top_ad_slot.d_ecpm) }} {{ kpis.top_ad_slot.s_app_name }}
             </div>
             <div class="kpi-meta dim">远高于平均水平</div>
           </div>

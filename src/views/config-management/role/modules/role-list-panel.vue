@@ -26,7 +26,7 @@
         </div>
         <div class="role-card__body">
           <div class="role-card__top">
-            <div class="role-card__name">{{ item.roleName }} ({{ getUserCount(item) }}人)</div>
+            <div class="role-card__name">{{ item.roleName }}</div>
             <ElButton
               text
               type="primary"
