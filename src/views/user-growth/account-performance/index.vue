@@ -1549,11 +1549,21 @@
       color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent);
   }
 
-  .ap-filters :deep(.ap-filter-select .el-select__selected-item) {
+  .ap-filters :deep(.ap-filter-select .el-select__selected-item),
+  .ap-filters :deep(.ap-filter-select .el-select__selected-item .el-select__placeholder),
+  .ap-filters :deep(.app-platform-search-select.ap-filter-select .app-platform-search-select__text),
+  .ap-filters :deep(.app-platform-search-select.ap-filter-select .app-platform-search-select__tag),
+  .ap-filters
+    :deep(.app-platform-search-select.ap-filter-select .app-platform-search-select__more) {
     color: var(--el-text-color-primary);
   }
 
-  .ap-filters :deep(.ap-filter-select .el-select__placeholder) {
+  .ap-filters :deep(.ap-filter-select .el-select__placeholder.is-transparent),
+  .ap-filters :deep(.ap-filter-select .el-select__selected-item.is-transparent),
+  .ap-filters
+    :deep(
+      .app-platform-search-select.ap-filter-select .app-platform-search-select__text.is-placeholder
+    ) {
     color: var(--el-text-color-placeholder);
   }
 
@@ -1577,11 +1587,13 @@
   }
 
   .ap-filters :deep(.ap-date-picker.el-date-editor.el-date-editor--daterange .el-range-input),
-  .ap-filters :deep(.ap-date-picker.el-date-editor.el-date-editor--daterange .el-range-separator),
-  .ap-filters :deep(.ap-date-picker.el-date-editor.el-date-editor--daterange .el-range__icon),
-  .ap-filters
-    :deep(.ap-date-picker.el-date-editor.el-date-editor--daterange .el-range__close-icon) {
+  .ap-filters :deep(.ap-date-picker.el-date-editor.el-date-editor--daterange .el-range-separator) {
     color: var(--el-text-color-primary);
+  }
+
+  .ap-filters
+    :deep(.ap-date-picker.el-date-editor.el-date-editor--daterange .el-range-input::placeholder) {
+    color: var(--el-text-color-placeholder);
   }
 
   .ap-filters :deep(.ap-date-picker.el-date-editor.el-date-editor--daterange) {

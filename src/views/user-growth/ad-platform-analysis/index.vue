@@ -6,21 +6,6 @@
       <header class="finance-header aps-entry-1">
         <div class="aps-filter-toolbar">
           <div class="aps-filter-toolbar__row">
-            <div class="header-left">
-              <AppDatePicker
-                v-model="dateRange"
-                type="daterange"
-                range-separator="~"
-                :shortcuts="dateRangeShortcuts"
-                start-placeholder="开始日期"
-                end-placeholder="结束日期"
-                value-format="YYYY-MM-DD"
-                format="YYYY-MM-DD"
-                class="aps-date-picker"
-                :teleported="true"
-                popper-class="aps-filter-popper"
-              />
-            </div>
             <div class="header-filters">
               <AppPlatformSearchSelect
                 v-model="combinedFilterValue"
@@ -35,7 +20,21 @@
                 dropdown-class="aps-filter-popper"
                 @change="onCombinedFilterChange"
               />
-
+            </div>
+            <div class="header-left">
+              <AppDatePicker
+                v-model="dateRange"
+                type="daterange"
+                range-separator="~"
+                :shortcuts="dateRangeShortcuts"
+                start-placeholder="开始日期"
+                end-placeholder="结束日期"
+                value-format="YYYY-MM-DD"
+                format="YYYY-MM-DD"
+                class="aps-date-picker"
+                :teleported="true"
+                popper-class="aps-filter-popper"
+              />
               <!-- <el-select
                 v-model="filters.channelKey"
                 class="aps-filter-select"
