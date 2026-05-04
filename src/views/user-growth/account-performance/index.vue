@@ -1302,7 +1302,7 @@
       padding: 0;
       margin-left: 8px;
       background: color-mix(in srgb, var(--default-box-color) 55%, transparent);
-      border: 1px solid color-mix(in srgb, var(--art-primary) 22%, transparent);
+      border: 1px solid color-mix(in srgb, var(--el-color-primary) 22%, transparent);
       border-radius: 10px;
 
       @media (width <=768px) {
@@ -1318,8 +1318,8 @@
       pointer-events: none;
       background: linear-gradient(
         92deg,
-        color-mix(in srgb, var(--art-primary) 95%, transparent),
-        color-mix(in srgb, var(--art-primary) 88%, transparent)
+        color-mix(in srgb, var(--el-color-primary) 95%, transparent),
+        color-mix(in srgb, var(--el-color-primary) 88%, transparent)
       );
       border-radius: 6px;
       transition: transform var(--duration-normal, 0.25s) var(--ease-out);
@@ -1346,11 +1346,11 @@
       transition: color var(--duration-fast, 0.2s) var(--ease-out);
 
       &:hover {
-        color: var(--art-primary);
+        color: var(--el-color-primary);
       }
 
       &.active {
-        color: #fff;
+        color: var(--el-color-white);
       }
     }
   }
