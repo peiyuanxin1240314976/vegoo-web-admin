@@ -343,7 +343,8 @@
 
 @mixin select-popper($popper-class) {
   :global(.#{$popper-class}.el-popper),
-  :global(.#{$popper-class}.el-select__popper) {
+  :global(.#{$popper-class}.el-select__popper),
+  :global(.#{$popper-class}.el-picker__popper) {
     overflow: hidden;
     background: var(--el-bg-color-overlay) !important;
     border: 1px solid var(--el-border-color-light) !important;
@@ -377,6 +378,78 @@
     font-weight: 600;
     color: var(--el-text-color-primary);
     background: var(--el-fill-color);
+  }
+}
+
+@mixin date-picker-popper($popper-class) {
+  $tc: var(--theme-color, var(--art-primary, #3b82f6));
+
+  :global(.#{$popper-class}.el-picker__popper) {
+    --el-datepicker-active-color: #{$tc};
+    --el-datepicker-hover-text-color: #{$tc};
+  }
+
+  :global(.#{$popper-class}.el-picker-panel),
+  :global(.#{$popper-class} .el-picker-panel) {
+    color: var(--el-text-color-primary);
+    background: transparent;
+    border-color: color-mix(in srgb, #{$tc} 28%, transparent) !important;
+  }
+
+  :global(.#{$popper-class} .el-date-picker__header-label),
+  :global(.#{$popper-class} .el-picker-panel__icon-btn) {
+    color: var(--el-text-color-regular);
+  }
+
+  :global(.#{$popper-class} .el-picker-panel__icon-btn:hover) {
+    color: #{$tc};
+  }
+
+  :global(.#{$popper-class} .el-date-table th) {
+    color: var(--el-text-color-secondary);
+  }
+
+  :global(.#{$popper-class} .el-date-table td.available .el-date-table-cell__text:hover) {
+    color: #{$tc};
+  }
+
+  :global(.#{$popper-class} .el-date-table td.in-range .el-date-table-cell) {
+    background: color-mix(in srgb, #{$tc} 12%, transparent) !important;
+  }
+
+  :global(.#{$popper-class} .el-date-table td.in-range div) {
+    background: color-mix(in srgb, #{$tc} 12%, transparent) !important;
+  }
+
+  :global(
+    .#{$popper-class} .el-date-table td.start-date .el-date-table-cell .el-date-table-cell__text
+  ),
+  :global(
+    .#{$popper-class} .el-date-table td.end-date .el-date-table-cell .el-date-table-cell__text
+  ) {
+    color: #fff !important;
+    background: linear-gradient(135deg, #{$tc}, color-mix(in srgb, #{$tc} 68%, #000)) !important;
+    border-radius: var(--el-border-radius-base, 4px);
+  }
+
+  :global(.#{$popper-class} .el-date-table td.start-date div),
+  :global(.#{$popper-class} .el-date-table td.end-date div) {
+    color: #fff !important;
+    background: linear-gradient(135deg, #{$tc}, color-mix(in srgb, #{$tc} 68%, #000)) !important;
+  }
+
+  :global(.#{$popper-class} .el-date-table td.start-date .el-date-table-cell),
+  :global(.#{$popper-class} .el-date-table td.end-date .el-date-table-cell) {
+    background: transparent !important;
+  }
+
+  :global(.#{$popper-class} .el-date-table td.today .el-date-table-cell__text) {
+    font-weight: 600;
+    color: #{$tc};
+  }
+
+  :global(.#{$popper-class} .el-picker-panel__shortcut:hover) {
+    color: #{$tc};
   }
 }
 
