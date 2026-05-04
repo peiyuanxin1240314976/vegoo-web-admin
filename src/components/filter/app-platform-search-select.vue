@@ -82,7 +82,7 @@
         <template v-if="mode !== 'platform'">
           <span>类别</span>
           <span>{{ mode === 'combined' ? '平台 / APP 名称' : 'APP 名称' }}</span>
-          <span>终端</span>
+          <span>平台</span>
           <span>简称</span>
           <span>商店ID</span>
           <span v-if="isMultiAppMode" aria-hidden="true"></span>
@@ -140,13 +140,16 @@
           <template v-else>
             <span>{{ item.displayName || '--' }}</span>
           </template>
-          <ElIcon
+          <span
             v-if="showAppRowCheck(item)"
             class="app-platform-search-select__check"
             :class="{ 'is-on': isRowActive(item) }"
+            aria-hidden="true"
           >
-            <Check />
-          </ElIcon>
+            <ElIcon v-if="isRowActive(item)">
+              <Check />
+            </ElIcon>
+          </span>
         </button>
 
         <ElEmpty
@@ -901,7 +904,7 @@
     }
 
     &.is-multiple-app-header {
-      grid-template-columns: 90px minmax(0, 1fr) 76px 88px 120px 22px;
+      grid-template-columns: 90px minmax(0, 1fr) 76px 88px 120px 28px;
     }
   }
 
@@ -921,7 +924,7 @@
     border: none;
     border-radius: calc(var(--el-border-radius-base, 4px) + 2px);
 
-    span {
+    span:not(.app-platform-search-select__check) {
       display: block;
       justify-self: start;
       width: 100%;
@@ -942,18 +945,68 @@
     }
 
     &.is-multiple-app-row {
-      grid-template-columns: 90px minmax(0, 1fr) 76px 88px 120px 22px;
+      grid-template-columns: 90px minmax(0, 1fr) 76px 88px 120px 28px;
       align-items: center;
     }
   }
 
   .app-platform-search-select__check {
-    justify-self: end;
-    font-size: 16px;
-    color: var(--el-text-color-placeholder);
+    box-sizing: border-box;
+    display: inline-flex;
+    flex-shrink: 0;
+    place-self: center end;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    max-width: 24px;
+    height: 24px;
+    line-height: 0;
+    background: color-mix(in srgb, var(--el-fill-color-blank) 65%, var(--el-fill-color-light) 35%);
+    border: 1px solid color-mix(in srgb, var(--el-border-color) 72%, transparent);
+    border-radius: calc(var(--el-border-radius-base, 4px) + 2px);
+    transition:
+      color var(--duration-fast) var(--ease-default),
+      transform var(--duration-fast) var(--ease-default),
+      background-color var(--duration-fast) var(--ease-default),
+      border-color var(--duration-fast) var(--ease-default),
+      box-shadow var(--duration-fast) var(--ease-default);
+
+    :deep(svg) {
+      transform-origin: center;
+    }
 
     &.is-on {
-      color: var(--theme-color, var(--art-primary, #3b82f6));
+      font-size: 15px;
+      color: var(--el-color-primary);
+      background: linear-gradient(
+        155deg,
+        color-mix(in srgb, var(--el-color-primary) 28%, transparent) 0%,
+        color-mix(in srgb, var(--el-color-primary) 11%, transparent) 100%
+      );
+      border-color: color-mix(in srgb, var(--el-color-primary) 42%, transparent);
+      box-shadow:
+        0 1px 2px color-mix(in srgb, var(--el-color-primary) 16%, transparent),
+        inset 0 1px 0 color-mix(in srgb, #fff 28%, transparent);
+
+      :deep(> *) {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 1em;
+        height: 1em;
+        margin: 0;
+        line-height: 0;
+      }
+
+      :deep(svg) {
+        display: block;
+        width: 1em;
+        height: 1em;
+        filter: drop-shadow(
+          0 0.5px 0.5px color-mix(in srgb, var(--el-color-primary) 22%, transparent)
+        );
+        transform: scale(1.14);
+      }
     }
   }
 
@@ -1032,6 +1085,23 @@
       var(--theme-color, var(--art-primary, #3b82f6)) 14%,
       transparent
     );
+  }
+
+  :global(html.dark .app-platform-search-select__popper .app-platform-search-select__check) {
+    background: color-mix(in srgb, var(--el-fill-color-dark) 35%, transparent);
+    border-color: color-mix(in srgb, var(--el-border-color) 55%, transparent);
+  }
+
+  :global(html.dark .app-platform-search-select__popper .app-platform-search-select__check.is-on) {
+    background: linear-gradient(
+      155deg,
+      color-mix(in srgb, var(--el-color-primary) 34%, transparent) 0%,
+      color-mix(in srgb, var(--el-color-primary) 14%, transparent) 100%
+    );
+    border-color: color-mix(in srgb, var(--el-color-primary) 52%, transparent);
+    box-shadow:
+      0 1px 4px rgb(0 0 0 / 42%),
+      inset 0 1px 0 color-mix(in srgb, #fff 9%, transparent);
   }
 
   :global(.app-platform-search-select__more-tip.el-popper) {
