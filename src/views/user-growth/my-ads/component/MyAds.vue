@@ -525,8 +525,15 @@
   // }
 
   .filter-staff-select {
-    width: 150px;
-    min-width: 50px;
+    flex: 0 0 auto;
+    width: 240px;
+    min-width: 200px;
+    max-width: 240px;
+
+    @media (width <= 768px) {
+      min-width: 0;
+      max-width: 100%;
+    }
   }
 
   .filter-staff-select :deep(.el-select__wrapper) {
@@ -556,11 +563,16 @@
   }
 
   .filter-staff-select :deep(.el-select__selected-item) {
-    color: var(--text-primary);
+    color: var(--el-text-color-primary);
   }
 
-  .filter-staff-select :deep(.el-select__placeholder) {
-    color: var(--text-secondary);
+  .filter-staff-select :deep(.el-select__selected-item .el-select__placeholder) {
+    color: var(--el-text-color-primary);
+  }
+
+  .filter-staff-select :deep(.el-select__placeholder.is-transparent),
+  .filter-staff-select :deep(.el-select__selected-item.is-transparent) {
+    color: var(--el-text-color-placeholder);
   }
 
   .filter-staff-select :deep(.el-select__caret),
@@ -618,15 +630,22 @@
 
   .date-pill {
     display: flex;
-    gap: 6px;
+    gap: 12px;
     align-items: center;
-    padding: 5px 12px;
-    font-size: 12px;
-    color: var(--text-secondary);
+    width: 100%;
+    padding: 12px 16px;
+    overflow-x: auto;
+    font-size: 14px;
+    color: var(--el-text-color-primary);
     cursor: pointer;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 6px;
+    background: rgb(15 23 42 / 72%);
+    backdrop-filter: blur(12px);
+    border: 1px solid
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent);
+    border-radius: 10px;
+    box-shadow:
+      0 8px 24px rgb(0 0 0 / 18%),
+      inset 0 1px 0 rgb(255 255 255 / 5%);
     transition:
       border-color 0.22s ease,
       box-shadow 0.22s ease,
@@ -634,14 +653,20 @@
   }
 
   .date-pill--range:hover {
-    background: rgb(0 212 170 / 6%);
-    border-color: rgb(0 212 170 / 45%);
-    box-shadow: 0 0 0 1px rgb(0 212 170 / 12%);
+    background: rgb(15 23 42 / 78%);
+    border-color: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 34%,
+      transparent
+    );
+    box-shadow:
+      0 10px 28px rgb(0 0 0 / 22%),
+      inset 0 1px 0 rgb(255 255 255 / 6%);
   }
 
   .date-pill--range {
     flex-shrink: 0;
-    padding: 10px;
+    flex-wrap: nowrap;
     cursor: default;
   }
 
@@ -652,21 +677,28 @@
   }
 
   .filter-date-range {
-    flex: 0 0 220px;
-    width: 220px;
-    min-width: 220px;
-    max-width: 220px;
+    flex: 0 0 250px;
+    width: 250px;
+    min-width: 250px;
+    max-width: 250px;
 
-    --el-date-editor-width: 220px;
-    --el-date-editor-daterange-width: 220px;
+    --el-date-editor-width: 250px;
+    --el-date-editor-daterange-width: 250px;
     --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+
+    @media (width <= 768px) {
+      flex: 1 1 100%;
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+    }
   }
 
   .date-pill--range :deep(.el-date-editor.el-date-editor--daterange) {
-    flex: 0 0 220px;
-    width: 220px !important;
-    min-width: 220px;
-    max-width: 220px;
+    flex: 0 0 250px !important;
+    width: 250px !important;
+    min-width: 250px !important;
+    max-width: 250px !important;
     background: color-mix(
       in srgb,
       var(--theme-color, var(--art-primary, #3b82f6)) 6%,
@@ -676,8 +708,8 @@
     border-radius: var(--el-border-radius-base, 4px) !important;
     box-shadow: none !important;
 
-    --el-date-editor-width: 220px;
-    --el-date-editor-daterange-width: 220px;
+    --el-date-editor-width: 250px;
+    --el-date-editor-daterange-width: 250px;
   }
 
   .date-pill--range :deep(.el-date-editor),
@@ -723,15 +755,19 @@
   }
 
   .date-pill--range :deep(.el-range-input) {
-    font-size: 12px;
-    color: var(--text-secondary);
+    font-size: 14px;
+    color: var(--el-text-color-primary);
+  }
+
+  .date-pill--range :deep(.el-range-input::placeholder) {
+    color: var(--el-text-color-placeholder);
   }
 
   .date-pill--range :deep(.el-range-separator) {
     flex: 0 0 auto;
     padding: 0 4px;
-    font-size: 12px;
-    color: var(--text-secondary);
+    font-size: 14px;
+    color: var(--el-text-color-primary);
   }
 
   .date-pill--range :deep(.el-range__icon) {
