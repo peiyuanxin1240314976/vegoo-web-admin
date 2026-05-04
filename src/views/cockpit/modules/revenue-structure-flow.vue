@@ -65,6 +65,28 @@
     }, 0)
   }
 
+  function getNodeSortValue(
+    nodeName: string,
+    links: { source: string; target: string; value: number }[]
+  ): number {
+    return links.reduce((sum, l) => {
+      if (l.source === nodeName || l.target === nodeName) return sum + l.value
+      return sum
+    }, 0)
+  }
+
+  function sortFlowNodesByRevenue(
+    nodes: CockpitRevenueStructureFlow['nodes'],
+    links: CockpitRevenueStructureFlow['links']
+  ): CockpitRevenueStructureFlow['nodes'] {
+    return [...nodes].sort((a, b) => {
+      const depthA = a.depth ?? 0
+      const depthB = b.depth ?? 0
+      if (depthA !== depthB) return depthA - depthB
+      return getNodeSortValue(b.name, links) - getNodeSortValue(a.name, links)
+    })
+  }
+
   /** 估算单行文字占宽（像素，fontSize 11 约 6.5px/字） */
   const CHAR_WIDTH = 6.5
   /** 单行在节点内占用的近似像素高度（含 lineHeight + 间距） */
@@ -117,7 +139,7 @@
       nameToDisplay[n.name] = n.displayName ?? n.name
     })
 
-    const data = nodes.map((n) => {
+    const data = sortFlowNodesByRevenue(nodes, links).map((n) => {
       const rawDisplayLabel = n.displayName ?? n.name
       const displayLabel = truncateNodeName(rawDisplayLabel)
       const resolvedIconImage = n.iconImage ?? (n.code ? getFlagIconUrl(n.code) : undefined)
@@ -234,7 +256,7 @@
       series: [
         {
           type: 'sankey',
-          layoutIterations: 32,
+          layoutIterations: 0,
           nodeWidth,
           nodeGap,
           left: '2%',

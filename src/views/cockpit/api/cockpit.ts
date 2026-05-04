@@ -1246,14 +1246,19 @@ export function mapIncomeStructureToFlow(
     totalIap += iap
   })
   const total = totalAd + totalIap
-  const countries = [...new Set(Object.keys(byCountryAd).concat(Object.keys(byCountryIap)))]
-  const apps = [...new Set(data.map((r) => (r.app ?? '').trim() || '—'))]
+  const countryRevenueTotal = (country: string) =>
+    (byCountryAd[country] ?? 0) + (byCountryIap[country] ?? 0)
+  const countries = [...new Set(Object.keys(byCountryAd).concat(Object.keys(byCountryIap)))].sort(
+    (a, b) => countryRevenueTotal(b) - countryRevenueTotal(a)
+  )
+  const rawApps = [...new Set(data.map((r) => (r.app ?? '').trim() || '—'))]
   /** 每个 APP 在所有国家的收入总和（APP 节点展示用） */
   const byAppTotal: Record<string, number> = {}
   Object.entries(byCountryApp).forEach(([key, value]) => {
     const appName = key.split('\t')[1]
     byAppTotal[appName] = (byAppTotal[appName] ?? 0) + value
   })
+  const apps = rawApps.sort((a, b) => (byAppTotal[b] ?? 0) - (byAppTotal[a] ?? 0))
   const nodeAd = '广告收入'
   const nodeIap = '付费收入'
   /** 国家节点唯一 id（避免与 app 同名如「其他」导致 ECharts 报 duplicate name） */

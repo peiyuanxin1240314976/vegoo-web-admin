@@ -157,7 +157,7 @@
 </template>
 
 <script setup lang="ts">
-  import AppConfig from '@/config'
+  // import AppConfig from '@/config'
   import loginBrandImg from '@imgs/login/u205.png'
   import loginBrandImgWebp from '@imgs/login/u205.webp'
   import { useUserStore } from '@/store/modules/user'
@@ -191,7 +191,7 @@
   const router = useRouter()
   const route = useRoute()
 
-  const systemName = AppConfig.systemInfo.name
+  // const systemName = AppConfig.systemInfo.name
   const formRef = ref<FormInstance>()
 
   const formData = reactive({
@@ -327,7 +327,8 @@
         type: 'success',
         duration: 2500,
         zIndex: 10000,
-        message: `${t('login.success.message')}, ${systemName}!`
+        // message: `${t('login.success.message')}, ${systemName}!`
+        message: `${t('login.success.message')}, ${'追来科技'}!`
       })
     }, 1000)
   }
