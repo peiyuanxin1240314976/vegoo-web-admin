@@ -5,7 +5,7 @@
   import { ref, computed, onMounted, nextTick, onBeforeUnmount } from 'vue'
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import * as echarts from 'echarts'
-  import { Plus, Download } from '@element-plus/icons-vue'
+  import { Plus, Download, Calendar } from '@element-plus/icons-vue'
   import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
   import { thirdPartyStoresApi } from './api/third-party-stores'
   import type {
@@ -393,17 +393,22 @@
 <template>
   <div class="store-mgmt">
     <!-- ── Filters（对齐广告成效：非固定吸顶，不改功能） ─────────────────────── -->
-    <div class="tps-filters">
+    <div class="tps-filters tps-filter-panel">
       <div class="tps-filters__left">
         <AppDatePicker
           v-model="filters.dateRange"
           type="daterange"
-          size="small"
           range-separator="—"
           format="YYYY-MM-DD"
-          class="date-picker"
+          class="tps-top-filter-date"
+          popper-class="tps-filter__popper"
+          :prefix-icon="Calendar"
         />
-        <el-select v-model="filters.currency" size="small" class="currency-select">
+        <el-select
+          v-model="filters.currency"
+          class="tps-filter-select tps-filter-select--currency"
+          popper-class="tps-filter__popper"
+        >
           <el-option
             v-for="o in currencyOptions"
             :key="o.value"
@@ -413,13 +418,20 @@
         </el-select>
       </div>
       <div class="tps-filters__right">
-        <el-button size="small" type="primary" :loading="loading" plain @click="applyFilters">
+        <el-button
+          round
+          type="primary"
+          plain
+          class="tps-query-btn"
+          :loading="loading"
+          @click="applyFilters"
+        >
           查询
         </el-button>
-        <el-button size="small" type="primary" plain>
+        <el-button round type="primary" plain class="tps-toolbar-btn">
           <el-icon><Plus /></el-icon> 新增平台
         </el-button>
-        <el-button size="small" plain>
+        <el-button round plain class="tps-toolbar-btn tps-toolbar-btn--muted">
           <el-icon><Download /></el-icon> 导出
         </el-button>
       </div>
@@ -537,43 +549,68 @@
     </section>
 
     <!-- ── Filter Bar ─────────────────────────────────────────────────────── -->
-    <div class="filter-bar">
-      <div class="filter-items">
-        <el-select v-model="filters.platform" size="small" placeholder="平台: 全部" clearable>
-          <el-option
-            v-for="o in platformOptions"
-            :key="o.value"
-            :label="o.label"
-            :value="o.value"
-          />
-        </el-select>
-        <el-select v-model="filters.appStore" size="small" placeholder="应用商店: 全部" clearable>
-          <el-option
-            v-for="o in appStoreOptions"
-            :key="o.value"
-            :label="o.label"
-            :value="o.value"
-          />
-        </el-select>
-        <el-select v-model="filters.app" size="small" placeholder="应用: 全部" clearable>
-          <el-option v-for="o in appOptions" :key="o.value" :label="o.label" :value="o.value" />
-        </el-select>
-        <el-select v-model="filters.adPlatform" size="small" placeholder="广告平台: 全部" clearable>
-          <el-option
-            v-for="o in adPlatformOptions"
-            :key="o.value"
-            :label="o.label"
-            :value="o.value"
-          />
-        </el-select>
-        <el-select v-model="filters.channel" size="small" placeholder="渠道: 全部" clearable>
-          <el-option v-for="o in channelOptions" :key="o.value" :label="o.label" :value="o.value" />
-        </el-select>
-        <el-button size="small" type="primary" plain :loading="loading" @click="applyFilters"
-          >查询</el-button
-        >
-        <el-button size="small" plain @click="resetFilters">重置</el-button>
-      </div>
+    <div class="filter-bar tps-filter-panel">
+      <el-select
+        v-model="filters.platform"
+        class="tps-filter-select tps-filter-select--dim"
+        placeholder="平台: 全部"
+        clearable
+        popper-class="tps-filter__popper"
+      >
+        <el-option v-for="o in platformOptions" :key="o.value" :label="o.label" :value="o.value" />
+      </el-select>
+      <el-select
+        v-model="filters.appStore"
+        class="tps-filter-select tps-filter-select--dim"
+        placeholder="应用商店: 全部"
+        clearable
+        popper-class="tps-filter__popper"
+      >
+        <el-option v-for="o in appStoreOptions" :key="o.value" :label="o.label" :value="o.value" />
+      </el-select>
+      <el-select
+        v-model="filters.app"
+        class="tps-filter-select tps-filter-select--dim"
+        placeholder="应用: 全部"
+        clearable
+        popper-class="tps-filter__popper"
+      >
+        <el-option v-for="o in appOptions" :key="o.value" :label="o.label" :value="o.value" />
+      </el-select>
+      <el-select
+        v-model="filters.adPlatform"
+        class="tps-filter-select tps-filter-select--dim"
+        placeholder="广告平台: 全部"
+        clearable
+        popper-class="tps-filter__popper"
+      >
+        <el-option
+          v-for="o in adPlatformOptions"
+          :key="o.value"
+          :label="o.label"
+          :value="o.value"
+        />
+      </el-select>
+      <el-select
+        v-model="filters.channel"
+        class="tps-filter-select tps-filter-select--dim"
+        placeholder="推广渠道: 全部"
+        clearable
+        popper-class="tps-filter__popper"
+      >
+        <el-option v-for="o in channelOptions" :key="o.value" :label="o.label" :value="o.value" />
+      </el-select>
+      <el-button
+        round
+        type="primary"
+        plain
+        class="tps-query-btn"
+        :loading="loading"
+        @click="applyFilters"
+      >
+        查询
+      </el-button>
+      <el-button round plain class="tps-reset-btn" @click="resetFilters">重置</el-button>
     </div>
 
     <!-- ── Summary Metrics ────────────────────────────────────────────────── -->
@@ -869,6 +906,7 @@
 
 <style scoped lang="scss">
   @use '../../user-growth/ad-performance/styles/ap-card-fx.scss' as *;
+  @use '../../user-growth/styles/filter-bar-theme.scss' as filterTheme;
 
   /* 仅调整样式：DOM 结构保持不变 */
   .store-mgmt {
@@ -941,113 +979,161 @@
     z-index: 1;
   }
 
-  /* ── Filters（对齐广告成效）────────────────────────────────────────────── */
-  .tps-filters {
-    position: relative;
+  /* ── Filters（filter-bar-theme，对齐广告成效 / 综合分析筛选）── */
+  .tps-filters.tps-filter-panel {
+    @include filterTheme.filter-panel(14px 16px);
+    @include filterTheme.filter-panel-children;
+
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
     align-items: center;
     justify-content: space-between;
-    padding: 18px 20px;
+    min-width: 0;
     margin: 24px 24px 0;
-    background: color-mix(in srgb, var(--default-box-color) 82%, transparent);
-    border: 1px solid color-mix(in srgb, var(--default-border) 70%, transparent);
-    border-radius: 16px;
-    box-shadow:
-      0 10px 36px rgb(0 0 0 / 22%),
-      inset 0 1px 0 rgb(255 255 255 / 8%);
   }
 
-  .tps-filters__left,
+  .tps-filters__left {
+    @include filterTheme.filter-row;
+
+    flex: 1;
+    min-width: 0;
+  }
+
   .tps-filters__right {
     display: flex;
+    flex-shrink: 0;
     flex-wrap: wrap;
     gap: 10px 12px;
     align-items: center;
   }
 
-  /* 筛选项尺寸统一：40px 高度 + 胶囊；按钮与选择器对齐 */
-  :deep(.tps-filters),
-  :deep(.filter-bar) {
-    --el-component-size: 40px;
+  .tps-filter-select--currency {
+    @include filterTheme.filter-select-size(100px, 90px, 120px);
   }
 
-  :deep(.tps-filters .el-input__wrapper),
-  :deep(.filter-bar .el-input__wrapper) {
-    min-height: 40px;
-    padding: 0 12px;
+  :deep(.tps-top-filter-date) {
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
+    --el-date-editor-width: 250px;
+    --el-date-editor-daterange-width: 250px;
   }
 
-  /* Element Plus Select 在部分版本使用 el-select__wrapper（不是 el-input__wrapper） */
-  :deep(.tps-filters .el-select__wrapper),
-  :deep(.filter-bar .el-select__wrapper) {
-    min-height: 40px;
-    padding: 0 12px;
-    border-radius: 9999px !important;
+  @include filterTheme.date-range-trigger('.tps-top-filter-date', 250px);
+  @include filterTheme.element-select-trigger('.tps-filter-select');
+
+  .filter-bar.tps-filter-panel {
+    @include filterTheme.filter-panel(14px 16px);
+    @include filterTheme.filter-panel-children;
+    @include filterTheme.filter-row;
+
+    min-width: 0;
+    margin: 20px 24px 0;
   }
 
-  :deep(.tps-filters .el-range-editor.el-input__wrapper) {
-    min-height: 40px;
+  .tps-filter-select--dim {
+    @include filterTheme.filter-select-size(130px, 110px, 160px);
   }
 
-  :deep(.tps-filters .el-button--small),
-  :deep(.filter-bar .el-button--small) {
-    height: 40px;
-    padding: 0 16px;
-    font-size: 13px;
-    border-radius: 9999px !important;
+  :deep(.tps-filter-select) {
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
   }
 
-  :deep(.tps-filters .el-button--small .el-icon),
-  :deep(.filter-bar .el-button--small .el-icon) {
+  @include filterTheme.select-popper('tps-filter__popper');
+  @include filterTheme.date-picker-popper('tps-filter__popper');
+
+  :global(.tps-filter__popper.el-popper),
+  :global(.tps-filter__popper.el-select__popper),
+  :global(.tps-filter__popper.el-picker__popper) {
+    z-index: 4000 !important;
+  }
+
+  .tps-filter-panel :deep(.tps-query-btn.el-button) {
+    height: 36px;
+    padding: 0 18px;
+    font-weight: 600;
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: none;
+  }
+
+  .tps-filter-panel :deep(.tps-query-btn.el-button:hover:not(:disabled)) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
+  }
+
+  .tps-filter-panel :deep(.tps-query-btn.el-button:disabled) {
+    cursor: not-allowed;
+    opacity: 0.42;
+  }
+
+  .tps-filter-panel :deep(.tps-toolbar-btn.el-button) {
+    height: 36px;
+    padding: 0 18px;
+    font-weight: 600;
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: none;
+  }
+
+  .tps-filter-panel :deep(.tps-toolbar-btn.el-button:hover:not(:disabled)) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
+  }
+
+  .tps-filter-panel :deep(.tps-toolbar-btn .el-icon) {
     margin-right: 6px;
   }
 
-  :deep(.tps-filters .el-input__wrapper) {
-    background: rgb(255 255 255 / 4%) !important;
-    border: 1px solid rgb(96 165 250 / 18%) !important;
-    border-radius: 9999px !important;
-    box-shadow: none !important;
-  }
-
-  :deep(.tps-filters .el-input__wrapper:hover) {
-    border-color: rgb(96 165 250 / 45%) !important;
-    box-shadow: 0 0 12px rgb(59 130 246 / 14%) !important;
-  }
-
-  :deep(.tps-filters .el-input__wrapper.is-focus) {
-    border-color: var(--art-primary) !important;
-    box-shadow: 0 0 0 2px rgb(59 130 246 / 20%) !important;
-  }
-
-  :deep(.tps-filters .el-button--small) {
-    border-radius: 9999px !important;
-  }
-
-  .date-picker {
-    width: 220px;
-  }
-
-  .currency-select {
-    width: 80px;
-  }
-
-  /* 按项目规范：按钮统一圆角 */
-  .btn-add,
-  .btn-export {
-    border-radius: 9999px;
-  }
-
-  .btn-export {
+  .tps-filter-panel :deep(.tps-toolbar-btn--muted.el-button) {
+    height: 36px;
+    padding: 0 18px;
+    font-weight: 500;
     color: var(--text-secondary);
-    background: rgb(255 255 255 / 6%);
-    border-color: rgb(96 165 250 / 18%);
+    background: color-mix(in srgb, var(--default-box-color) 88%, transparent);
+    border: 1px solid color-mix(in srgb, var(--default-border) 78%, transparent);
+    box-shadow: none;
   }
 
-  .btn-export:hover {
+  .tps-filter-panel :deep(.tps-toolbar-btn--muted.el-button:hover:not(:disabled)) {
     color: var(--text-primary);
-    border-color: rgb(96 165 250 / 45%);
+    border-color: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 45%,
+      transparent
+    );
+  }
+
+  .tps-filter-panel :deep(.tps-reset-btn.el-button) {
+    height: 36px;
+    padding: 0 18px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: color-mix(in srgb, var(--default-box-color) 88%, transparent);
+    border: 1px solid color-mix(in srgb, var(--default-border) 78%, transparent);
+    box-shadow: none;
+  }
+
+  .tps-filter-panel :deep(.tps-reset-btn.el-button:hover:not(:disabled)) {
+    color: var(--text-primary);
+    border-color: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 45%,
+      transparent
+    );
   }
 
   /* ── Section ──────────────────────────────────────────────────────────────── */
@@ -1433,58 +1519,6 @@
   .btn-detail:hover {
     color: var(--text-link);
     border-color: color-mix(in srgb, var(--art-primary) 60%, transparent);
-  }
-
-  /* ── Filter Bar ───────────────────────────────────────────────────────────── */
-  .filter-bar {
-    position: relative;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    align-items: center;
-    padding: 16px 24px;
-    margin: 20px 24px 0;
-    overflow: visible;
-    background: color-mix(in srgb, var(--default-box-color) 82%, transparent);
-    border: 1px solid color-mix(in srgb, var(--default-border) 70%, transparent);
-    border-radius: 16px;
-    box-shadow:
-      0 10px 36px rgb(0 0 0 / 22%),
-      inset 0 1px 0 rgb(255 255 255 / 8%);
-  }
-
-  .filter-items .el-button--small {
-    border-radius: 9999px;
-  }
-
-  :deep(.filter-bar .el-input__wrapper) {
-    background: rgb(255 255 255 / 4%) !important;
-    border: 1px solid rgb(96 165 250 / 18%) !important;
-    border-radius: 9999px !important;
-    box-shadow: none !important;
-  }
-
-  :deep(.filter-bar .el-input__wrapper:hover) {
-    border-color: rgb(96 165 250 / 45%) !important;
-    box-shadow: 0 0 12px rgb(59 130 246 / 14%) !important;
-  }
-
-  :deep(.filter-bar .el-input__wrapper.is-focus) {
-    border-color: var(--art-primary) !important;
-    box-shadow: 0 0 0 2px rgb(59 130 246 / 20%) !important;
-  }
-
-  /* filter-label DOM 已移除 */
-
-  .filter-items {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    align-items: center;
-  }
-
-  .filter-items .el-select {
-    width: 130px;
   }
 
   /* ── Metrics Grid ─────────────────────────────────────────────────────────── */
@@ -1911,38 +1945,6 @@
     height: 220px;
   }
 
-  /* ── Element Plus Overrides ──────────────────────────────────────────────── */
-  :deep(.el-input__wrapper) {
-    background: rgb(255 255 255 / 4%) !important;
-    border-color: rgb(96 165 250 / 18%) !important;
-    border-radius: 9999px;
-    box-shadow: none !important;
-  }
-
-  :deep(.el-input__inner) {
-    font-size: 12px;
-    color: #d1d5db !important;
-  }
-
-  :deep(.el-date-editor .el-range-input) {
-    font-size: 12px;
-    color: #d1d5db;
-  }
-
-  :deep(.el-date-editor .el-range-separator) {
-    color: #6b7280;
-  }
-
-  :deep(.el-select .el-input.is-focus .el-input__wrapper) {
-    border-color: var(--art-primary) !important;
-    box-shadow: 0 0 0 2px rgb(59 130 246 / 20%) !important;
-  }
-
-  :deep(.el-button--small) {
-    padding: 5px 12px;
-    font-size: 12px;
-  }
-
   :deep([v-loading]) {
     min-height: 40px;
   }
@@ -1985,6 +1987,15 @@
   @media (prefers-reduced-motion: reduce) {
     .store-mgmt::before {
       animation: none;
+    }
+
+    .tps-filter-panel {
+      transition: none !important;
+    }
+
+    .tps-filter-panel:hover,
+    .tps-filter-panel:active {
+      transform: none !important;
     }
   }
 </style>
