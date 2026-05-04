@@ -5,7 +5,7 @@
   import { ref, reactive, computed, watch } from 'vue'
   import { storeToRefs } from 'pinia'
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
-  import { Iphone, Reading } from '@element-plus/icons-vue'
+  import { Calendar, Iphone, Reading } from '@element-plus/icons-vue'
   import ReviewMonitorSummary from './components/ReviewMonitorSummary.vue'
   import ReviewMonitorDetail from './components/ReviewMonitorDetail.vue'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
@@ -126,90 +126,57 @@
     <div
       class="reviews-ratings-monitor-page__section reviews-ratings-monitor-page__section--filters rrm-entry-1"
     >
-      <div class="rrm-filters">
-        <div class="rrm-filters__left">
-          <!-- <div class="rrm-filter-chip">
-            <ElIcon class="rrm-filter-chip__icon"><Calendar /></ElIcon>
-            <span class="rrm-filter-chip__label">日期范围</span>
-            <span class="rrm-filter-chip__value">{{ dateRangeDisplay }}</span>
-          </div> -->
+      <div class="rrm-filters rrm-filter-panel">
+        <AppPlatformSearchSelect
+          v-model="draftAppId"
+          mode="app"
+          class="rrm-filter-select rrm-filter-select--app"
+          input-class="rrm-filter-select__input"
+          placeholder="应用"
+          search-placeholder="搜索类别/应用名称/应用简称"
+          all-label="全部应用"
+          :setting-apps="settingAppsForSelect"
+          :height="36"
+          :min-width="200"
+          :max-width="240"
+          dropdown-class="rrm-filter__popper"
+          :show-platform-suffix="true"
+        />
 
-          <AppPlatformSearchSelect
-            v-model="draftAppId"
-            mode="app"
-            class="rrm-filter-app-select-wrap"
-            input-class="rrm-filter-app-select__trigger"
-            placeholder="应用"
-            search-placeholder="搜索类别/应用名称/应用简称"
-            all-label="全部应用"
-            :setting-apps="settingAppsForSelect"
-            :height="40"
-            :width="140"
-            :min-width="110"
-            :max-width="140"
-            radius="9999px"
-            dropdown-class="rrm-filter-popper"
-            :show-platform-suffix="true"
-          />
+        <ElSelect
+          v-model="draftFilters.platform"
+          placeholder="应用商店"
+          class="rrm-filter-select rrm-filter-select--platform"
+          :prefix-icon="Iphone"
+          popper-class="rrm-filter__popper"
+        >
+          <ElOption v-for="o in platformOptions" :key="o.value" :label="o.label" :value="o.value" />
+        </ElSelect>
 
-          <ElSelect
-            v-model="draftFilters.platform"
-            placeholder="应用商店"
-            class="rrm-filter-select rrm-filter-select--platform"
-            :prefix-icon="Iphone"
-            popper-class="rrm-filter-popper"
-          >
-            <ElOption
-              v-for="o in platformOptions"
-              :key="o.value"
-              :label="o.label"
-              :value="o.value"
-            />
-          </ElSelect>
+        <AppDatePicker
+          v-model="dateRange"
+          type="daterange"
+          range-separator="~"
+          start-placeholder="起"
+          end-placeholder="止"
+          value-format="YYYY-MM-DD"
+          class="rrm-filter-date"
+          :shortcuts="dateShortcuts"
+          popper-class="rrm-filter__popper"
+          :prefix-icon="Calendar"
+        />
 
-          <AppDatePicker
-            v-model="dateRange"
-            type="daterange"
-            range-separator="~"
-            start-placeholder="起"
-            end-placeholder="止"
-            value-format="YYYY-MM-DD"
-            class="rrm-filter-date"
-            :shortcuts="dateShortcuts"
-            popper-class="rrm-filter-popper"
-          />
+        <ElSelect
+          v-model="draftFilters.language"
+          placeholder="语言"
+          class="rrm-filter-select rrm-filter-select--lang"
+          :prefix-icon="Reading"
+          popper-class="rrm-filter__popper"
+        >
+          <ElOption v-for="o in languageOptions" :key="o.value" :label="o.label" :value="o.value" />
+        </ElSelect>
 
-          <ElSelect
-            v-model="draftFilters.language"
-            placeholder="语言"
-            class="rrm-filter-select rrm-filter-select--lang"
-            :prefix-icon="Reading"
-            popper-class="rrm-filter-popper"
-          >
-            <ElOption
-              v-for="o in languageOptions"
-              :key="o.value"
-              :label="o.label"
-              :value="o.value"
-            />
-          </ElSelect>
-
-          <ElButton
-            round
-            class="rrm-filter-action-btn rrm-filter-action-btn--query"
-            @click="onQuery"
-          >
-            查询
-          </ElButton>
-
-          <!-- <ElButton
-            round
-            class="rrm-filter-action-btn rrm-filter-action-btn--export"
-            @click="handleExport"
-          >
-            导出
-          </ElButton> -->
-        </div>
+        <ElButton type="primary" plain round class="rrm-query-btn" @click="onQuery">查询</ElButton>
       </div>
     </div>
 
@@ -255,6 +222,9 @@
 </template>
 
 <style scoped lang="scss">
+  @use '../../user-growth/styles/app-platform-select-ad-theme.scss' as apSelect;
+  @use '../../user-growth/styles/filter-bar-theme.scss' as filterTheme;
+
   .reviews-ratings-monitor-page {
     --rrm-accent: var(--theme-color, var(--art-primary, #3b82f6));
 
@@ -421,314 +391,81 @@
     min-height: 0;
   }
 
-  /* ── 筛选栏（对齐 ad-performance-filters）── */
-  .rrm-filters {
-    position: relative;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 14px 16px;
-    align-items: center;
-    justify-content: flex-start;
+  /* ── 筛选栏（filter-bar-theme，对齐广告成效筛选模板）── */
+  .rrm-filters.rrm-filter-panel {
+    @include filterTheme.filter-panel(14px 16px);
+    @include filterTheme.filter-panel-children;
+    @include filterTheme.filter-row;
+
     min-width: 0;
-    padding: 18px 20px;
-    overflow: hidden;
-    background: rgb(10 10 14 / 82%);
-    isolation: isolate;
-    backdrop-filter: blur(12px);
-    border: 1px solid rgb(96 165 250 / 20%);
-    border-radius: 16px;
-    box-shadow:
-      0 8px 32px rgb(0 0 0 / 40%),
-      inset 0 1px 0 rgb(186 230 253 / 10%),
-      0 0 40px rgb(59 130 246 / 8%);
-
-    &::before {
-      position: absolute;
-      top: -35%;
-      right: -12%;
-      width: 44%;
-      height: 170%;
-      pointer-events: none;
-      content: '';
-      background: radial-gradient(
-        ellipse at center,
-        color-mix(in srgb, var(--art-primary) 32%, transparent) 0%,
-        transparent 65%
-      );
-      opacity: 0.65;
-    }
-
-    &::after {
-      position: absolute;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-      content: '';
-      background-image:
-        linear-gradient(
-          color-mix(in srgb, var(--art-primary) 7%, transparent) 1px,
-          transparent 1px
-        ),
-        linear-gradient(
-          90deg,
-          color-mix(in srgb, var(--art-primary) 7%, transparent) 1px,
-          transparent 1px
-        );
-      background-size:
-        28px 28px,
-        28px 28px;
-      opacity: 0.32;
-      mask-image: linear-gradient(to bottom, black 0%, black 72%, transparent 100%);
-    }
-  }
-
-  .rrm-filters__left {
-    display: flex;
-    flex: 0 1 auto;
-    flex-wrap: nowrap;
-    gap: 10px 12px;
-    align-items: center;
-    justify-content: flex-start;
-    min-width: 0;
-    padding: 10px 12px;
-    background: color-mix(in srgb, var(--default-box-color) 72%, transparent);
-    border: 1px solid color-mix(in srgb, var(--art-primary) 22%, transparent);
-    border-radius: 14px;
-    box-shadow:
-      inset 0 1px 0 rgb(255 255 255 / 7%),
-      0 0 18px color-mix(in srgb, var(--art-primary) 12%, transparent);
-  }
-
-  .rrm-filters > * {
-    position: relative;
-    z-index: 1;
-  }
-
-  .rrm-filter-chip {
-    display: inline-flex;
-    gap: 7px;
-    align-items: center;
-    min-height: 40px;
-    padding: 0 14px;
-    font-size: 14px;
-    color: var(--el-text-color-regular);
-    white-space: nowrap;
-    background: color-mix(in srgb, var(--el-color-primary) 8%, transparent);
-    border: 1px solid color-mix(in srgb, var(--el-color-primary) 30%, transparent);
-    border-radius: 9999px;
-    box-shadow: 0 0 16px color-mix(in srgb, var(--el-color-primary) 10%, transparent);
-  }
-
-  .rrm-filter-chip__icon {
-    font-size: 16px;
-    color: var(--el-color-primary);
-    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--el-color-primary) 55%, transparent));
-  }
-
-  .rrm-filter-chip__label {
-    font-size: 13px;
-    color: var(--el-text-color-secondary);
-  }
-
-  .rrm-filter-chip__value {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--el-color-primary);
-    text-shadow: 0 0 10px color-mix(in srgb, var(--el-color-primary) 50%, transparent);
-  }
-
-  .rrm-filter-app-select-wrap {
-    flex: 0 0 auto;
-    width: 140px;
-    min-width: 110px;
-    max-width: 100%;
-  }
-
-  :deep(.rrm-filter-app-select__trigger.app-platform-search-select) {
-    box-sizing: border-box;
-    width: 100% !important;
-    max-width: 100% !important;
-    padding: 0 12px !important;
-    font-size: 14px !important;
-    background: color-mix(in srgb, var(--rrm-accent) 6%, transparent) !important;
-    border: 1px solid color-mix(in srgb, var(--rrm-accent) 28%, transparent) !important;
-    box-shadow: none !important;
-    transition:
-      border-color 0.22s ease,
-      box-shadow 0.22s ease,
-      background 0.22s ease;
-  }
-
-  :deep(.rrm-filter-app-select__trigger .app-platform-search-select__text) {
-    font-size: 14px;
-    color: var(--el-text-color-primary);
-  }
-
-  :deep(.rrm-filter-app-select__trigger .app-platform-search-select__suffix) {
-    color: var(--rrm-accent);
-    filter: drop-shadow(0 0 5px color-mix(in srgb, var(--rrm-accent) 50%, transparent));
-  }
-
-  :deep(.rrm-filter-app-select__trigger:hover),
-  :deep(.rrm-filter-app-select__trigger.is-open) {
-    background: color-mix(in srgb, var(--rrm-accent) 10%, transparent) !important;
-    border-color: color-mix(in srgb, var(--rrm-accent) 60%, transparent) !important;
-    box-shadow: 0 0 12px color-mix(in srgb, var(--rrm-accent) 18%, transparent) !important;
-  }
-
-  .rrm-filter-select {
-    width: 140px;
-    min-width: 110px;
-    max-width: 100%;
   }
 
   .rrm-filter-select--platform {
-    width: 200px;
-    min-width: 160px;
+    @include filterTheme.filter-select-size(200px, 160px, 220px);
   }
 
   .rrm-filter-select--lang {
+    flex: 0 0 130px;
     width: 130px;
-  }
-
-  :deep(.rrm-filter-select) {
-    --el-input-border-color: color-mix(in srgb, var(--rrm-accent) 28%, transparent);
-    --el-input-focus-border-color: var(--rrm-accent);
-    --el-border-color: color-mix(in srgb, var(--rrm-accent) 28%, transparent);
-    --el-border-color-hover: color-mix(in srgb, var(--rrm-accent) 75%, transparent);
-    --el-border-color-focus: var(--rrm-accent);
-    --el-component-size: 40px;
-  }
-
-  :deep(.rrm-filter-select .el-input__wrapper) {
-    padding: 0 12px;
-    background: color-mix(in srgb, var(--rrm-accent) 6%, transparent);
-    border: 1px solid color-mix(in srgb, var(--rrm-accent) 28%, transparent);
-    border-radius: 9999px;
-    box-shadow: none;
-    transition:
-      border-color 0.22s ease,
-      box-shadow 0.22s ease,
-      background 0.22s ease;
-  }
-
-  :deep(.rrm-filter-select .el-input__inner) {
-    font-size: 14px;
-    color: var(--el-text-color-primary);
-    text-overflow: ellipsis;
-  }
-
-  :deep(.rrm-filter-select .el-input__prefix-inner svg) {
-    width: 16px;
-    height: 16px;
-    color: var(--rrm-accent);
-    filter: drop-shadow(0 0 5px color-mix(in srgb, var(--rrm-accent) 50%, transparent));
-  }
-
-  :deep(.rrm-filter-select .el-select__caret) {
-    color: var(--rrm-accent);
-  }
-
-  :deep(.rrm-filter-select .el-input__wrapper.is-focus) {
-    background: color-mix(in srgb, var(--rrm-accent) 10%, transparent) !important;
-    border-color: var(--rrm-accent) !important;
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--rrm-accent) 20%, transparent) !important;
-  }
-
-  :deep(.rrm-filter-select .el-input__wrapper:hover) {
-    border-color: color-mix(in srgb, var(--rrm-accent) 60%, transparent);
-    box-shadow: 0 0 12px color-mix(in srgb, var(--rrm-accent) 18%, transparent);
-  }
-
-  .rrm-filter-date {
-    flex: 0 0 auto;
-    width: 204px;
-    max-width: 100%;
+    min-width: 130px;
+    max-width: 130px;
   }
 
   :deep(.rrm-filter-date) {
-    --el-input-border-color: color-mix(in srgb, var(--rrm-accent) 28%, transparent);
-    --el-input-focus-border-color: var(--rrm-accent);
-    --el-border-color: color-mix(in srgb, var(--rrm-accent) 28%, transparent);
-    --el-border-color-hover: color-mix(in srgb, var(--rrm-accent) 75%, transparent);
-    --el-border-color-focus: var(--rrm-accent);
-    --el-component-size: 40px;
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
+    --el-date-editor-width: 250px;
+    --el-date-editor-daterange-width: 250px;
   }
 
-  :deep(.rrm-filter-date .el-input__wrapper) {
-    min-height: 40px;
-    padding: 0 6px 0 8px;
-    background: color-mix(in srgb, var(--rrm-accent) 6%, transparent);
-    border: 1px solid color-mix(in srgb, var(--rrm-accent) 28%, transparent);
-    border-radius: 9999px;
+  @include filterTheme.date-range-trigger('.rrm-filter-date', 250px);
+  @include filterTheme.element-select-trigger('.rrm-filter-select');
+  @include apSelect.apply-app-platform-select-ad-theme(
+    '.rrm-filters.rrm-filter-panel',
+    'rrm-filter-select__input',
+    'rrm-filter__popper',
+    240px,
+    200px,
+    240px
+  );
+  @include filterTheme.select-popper('rrm-filter__popper');
+  @include filterTheme.app-platform-popper('rrm-filter__popper');
+  @include filterTheme.date-picker-popper('rrm-filter__popper');
+
+  :global(.rrm-filter__popper.el-popper),
+  :global(.rrm-filter__popper.el-select__popper),
+  :global(.rrm-filter__popper.el-picker__popper) {
+    z-index: 4000 !important;
+  }
+
+  :deep(.rrm-filter-select),
+  :deep(.rrm-filter-select__input) {
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
+  }
+
+  .rrm-filter-panel :deep(.rrm-query-btn.el-button) {
+    height: 36px;
+    padding: 0 18px;
+    font-weight: 600;
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
     box-shadow: none;
-    transition:
-      border-color 0.22s ease,
-      box-shadow 0.22s ease,
-      background 0.22s ease;
   }
 
-  :deep(.rrm-filter-date .el-input__wrapper:hover) {
-    border-color: color-mix(in srgb, var(--rrm-accent) 60%, transparent);
-    box-shadow: 0 0 12px color-mix(in srgb, var(--rrm-accent) 18%, transparent);
-  }
-
-  :deep(.rrm-filter-date .el-input__wrapper.is-focus) {
-    background: color-mix(in srgb, var(--rrm-accent) 10%, transparent) !important;
-    border-color: var(--rrm-accent) !important;
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--rrm-accent) 20%, transparent) !important;
-  }
-
-  :deep(.rrm-filter-date .el-range-input) {
-    width: 72px;
-    font-size: 12px;
-    color: var(--el-text-color-primary);
-    text-align: left;
-  }
-
-  :deep(.rrm-filter-date .el-range-separator) {
-    flex-shrink: 0;
-    padding: 0 2px;
-    font-size: 12px;
-    color: var(--el-text-color-secondary);
-  }
-
-  :deep(.rrm-filter-date .el-range__icon) {
-    margin-right: 2px;
-    color: var(--rrm-accent);
-    filter: drop-shadow(0 0 5px color-mix(in srgb, var(--rrm-accent) 50%, transparent));
-  }
-
-  .rrm-filter-action-btn {
-    --el-button-size: 40px;
-    --el-button-bg-color: color-mix(in srgb, var(--el-color-primary) 8%, transparent);
-    --el-button-text-color: var(--el-color-primary);
-    --el-button-border-color: color-mix(in srgb, var(--el-color-primary) 40%, transparent);
-    --el-button-hover-text-color: var(--el-color-primary-light-3);
-    --el-button-hover-border-color: var(--el-color-primary);
-    --el-button-hover-bg-color: color-mix(in srgb, var(--el-color-primary) 16%, transparent);
-
-    font-size: 14px;
-    box-shadow: 0 0 14px color-mix(in srgb, var(--el-color-primary) 12%, transparent);
-    transition: box-shadow 0.22s ease;
-
-    &:hover:not(:disabled) {
-      box-shadow: 0 0 22px color-mix(in srgb, var(--el-color-primary) 28%, transparent);
-    }
-  }
-
-  .rrm-filter-action-btn--query {
-    --el-button-bg-color: color-mix(in srgb, var(--el-color-primary) 24%, transparent);
-    --el-button-text-color: var(--el-color-white);
-    --el-button-border-color: color-mix(in srgb, var(--el-color-primary) 58%, transparent);
-    --el-button-hover-bg-color: color-mix(in srgb, var(--el-color-primary) 34%, transparent);
-    --el-button-hover-text-color: var(--el-color-white);
-    --el-button-hover-border-color: var(--el-color-primary);
-  }
-
-  .rrm-filter-action-btn--query:disabled {
-    cursor: not-allowed;
-    opacity: 0.42;
+  .rrm-filter-panel :deep(.rrm-query-btn.el-button:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
   }
 
   /* ── Tab 滑动条（对齐 ad-performance-date-slider）── */
@@ -844,15 +581,10 @@
       padding: 18px 18px 24px;
     }
 
-    /* 应用选择器不参与 flex-grow，否则会单独占满第一行把其余筛选项挤到下一行 */
-    .rrm-filter-app-select-wrap {
+    .rrm-filter-select--app {
       flex: 0 0 auto;
-      width: 140px;
-      min-width: 110px;
-      max-width: 140px;
     }
 
-    .rrm-filter-select,
     .rrm-filter-select--platform,
     .rrm-filter-select--lang {
       flex: 0 1 auto;
@@ -860,11 +592,11 @@
     }
 
     .rrm-filter-date {
-      flex: 0 1 200px;
-      min-width: 160px;
+      flex: 0 1 220px;
+      min-width: 200px;
     }
 
-    .rrm-filters__left {
+    .rrm-filters.rrm-filter-panel {
       flex-wrap: nowrap;
       overflow-x: auto;
       scrollbar-gutter: stable;
@@ -876,21 +608,12 @@
       padding: 16px 12px 20px;
     }
 
-    .rrm-filters {
-      flex-direction: column;
-      align-items: stretch;
-      padding: 14px;
-    }
-
-    .rrm-filters__left {
+    .rrm-filters.rrm-filter-panel {
       flex-wrap: wrap;
-      justify-content: flex-start;
-      padding: 8px;
       overflow-x: visible;
     }
 
-    .rrm-filter-app-select-wrap,
-    .rrm-filter-select,
+    .rrm-filter-select--app,
     .rrm-filter-select--platform,
     .rrm-filter-select--lang {
       flex: 1 1 calc(50% - 6px);
@@ -919,19 +642,12 @@
       padding: 12px 10px 16px;
     }
 
-    .rrm-filter-chip {
-      flex-wrap: wrap;
-      min-height: 0;
-      padding: 8px 12px;
-    }
-
-    .rrm-filter-action-btn {
+    .rrm-filters.rrm-filter-panel :deep(.rrm-query-btn.el-button) {
       flex: 1 1 auto;
       min-width: 0;
     }
 
-    .rrm-filter-app-select-wrap,
-    .rrm-filter-select,
+    .rrm-filter-select--app,
     .rrm-filter-select--platform,
     .rrm-filter-select--lang {
       flex: 1 1 100%;
@@ -956,54 +672,8 @@
       transition: none;
     }
 
-    .rrm-filters::before,
-    .rrm-filters::after {
-      display: none;
+    .rrm-filters.rrm-filter-panel {
+      transition: none;
     }
-  }
-</style>
-
-<style lang="scss">
-  .rrm-filter-popper.el-select__popper,
-  .rrm-filter-popper.el-picker__popper {
-    --el-bg-color-overlay: rgb(18 20 28 / 96%);
-  }
-
-  .rrm-filter-popper.el-select__popper {
-    border-color: color-mix(in srgb, var(--el-color-primary) 35%, transparent) !important;
-  }
-
-  .rrm-filter-popper .el-select-dropdown__item {
-    color: var(--el-text-color-regular) !important;
-  }
-
-  .rrm-filter-popper .el-select-dropdown__item.is-hovering,
-  .rrm-filter-popper .el-select-dropdown__item:hover {
-    color: var(--el-color-primary) !important;
-    background: color-mix(in srgb, var(--el-color-primary) 12%, transparent) !important;
-  }
-
-  .rrm-filter-popper .el-select-dropdown__item.is-selected {
-    font-weight: 600;
-    color: var(--el-color-primary) !important;
-  }
-
-  .rrm-filter-popper.el-picker-panel,
-  .rrm-filter-popper .el-picker-panel {
-    border-color: color-mix(in srgb, var(--el-color-primary) 35%, transparent) !important;
-  }
-
-  .rrm-filter-popper .el-date-table td.in-range div {
-    background: color-mix(in srgb, var(--el-color-primary) 12%, transparent) !important;
-  }
-
-  .rrm-filter-popper .el-date-table td.start-date div,
-  .rrm-filter-popper .el-date-table td.end-date div {
-    color: #fff !important;
-    background: linear-gradient(
-      135deg,
-      var(--el-color-primary),
-      var(--el-color-primary-dark-2)
-    ) !important;
   }
 </style>
