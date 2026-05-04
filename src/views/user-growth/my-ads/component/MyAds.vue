@@ -179,10 +179,10 @@
     }
   })
 
-  const staffAvatarLetter = computed(() => {
-    const name = staffList.value.find((s) => s.id === selectedStaffId.value)?.name ?? ''
-    return name ? name[0]! : '—'
-  })
+  // const staffAvatarLetter = computed(() => {
+  //   const name = staffList.value.find((s) => s.id === selectedStaffId.value)?.name ?? ''
+  //   return name ? name[0]! : '—'
+  // })
 
   const tabs = [
     { key: 'summary', label: '汇总' },
@@ -212,10 +212,7 @@
             popper-class="my-ads-filter-select-popper"
             :teleported="true"
           >
-            <template #prefix>
-              <span class="pill-avatar">{{ staffAvatarLetter }}</span>
-            </template>
-            <ElOption v-for="s in staffList" :key="s.id" :label="`人员: ${s.name}`" :value="s.id" />
+            <ElOption v-for="s in staffList" :key="s.id" :label="`${s.name}`" :value="s.id" />
           </ElSelect>
           <AppDatePicker
             v-model="dateRange"
@@ -879,7 +876,7 @@
     max-width: 423px;
   }
 
-  /* 与「我的绩效」顶部用户卡 avatar 对齐：渐变圆、外发光、脉冲环 */
+  /* 与「我的绩效」顶部用户卡 avatar 对齐：渐变圆、外发光、静态外圈描边 */
   .user-avatar {
     position: relative;
     display: flex;
@@ -906,22 +903,7 @@
       content: '';
       border: 2px solid rgb(16 185 129 / 30%);
       border-radius: 9999px;
-      animation: ma-avatar-ring-pulse 3s ease-in-out infinite;
-    }
-  }
-
-  @keyframes ma-avatar-ring-pulse {
-    0%,
-    100% {
-      border-color: rgb(16 185 129 / 30%);
       opacity: 0.4;
-      transform: scale(1);
-    }
-
-    50% {
-      border-color: rgb(34 211 238 / 45%);
-      opacity: 0.8;
-      transform: scale(1.08);
     }
   }
 
@@ -1074,10 +1056,6 @@
 
     .user-card:hover .user-avatar {
       transform: none;
-    }
-
-    .user-avatar::after {
-      animation: none;
     }
 
     // .user-pill--select:hover {

@@ -341,25 +341,11 @@
     &::after {
       position: absolute;
       inset: -5px;
+      pointer-events: none;
       content: '';
       border: 2px solid rgb(16 185 129 / 30%);
       border-radius: 9999px;
-      animation: avatar-ring-pulse 3s ease-in-out infinite;
-    }
-  }
-
-  @keyframes avatar-ring-pulse {
-    0%,
-    100% {
-      border-color: rgb(16 185 129 / 30%);
       opacity: 0.4;
-      transform: scale(1);
-    }
-
-    50% {
-      border-color: rgb(34 211 238 / 45%);
-      opacity: 0.8;
-      transform: scale(1.08);
     }
   }
 
@@ -907,7 +893,6 @@
       opacity: 0.1;
     }
 
-    .avatar::after,
     .kpi-dot.is-primary,
     .kpi-dot.is-success,
     .kpi-dot.is-warning {
