@@ -186,6 +186,8 @@
 </script>
 
 <style scoped lang="scss">
+  @use '../../styles/filter-bar-theme.scss' as filterTheme;
+
   .my-performance-header {
     display: flex;
     flex-wrap: wrap;
@@ -283,44 +285,25 @@
   }
 
   .my-performance-header__right {
-    display: flex;
-    flex-wrap: nowrap;
-    gap: 12px;
-    align-items: center;
+    @include filterTheme.filter-panel(12px 16px);
+    @include filterTheme.filter-panel-children;
+    @include filterTheme.filter-row;
+
     justify-content: flex-end;
     max-width: 100%;
-    padding: 12px 16px;
-    overflow-x: auto;
-    background: rgb(15 23 42 / 72%);
-    backdrop-filter: blur(12px);
-    border: 1px solid
-      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent);
-    border-radius: 10px;
-    box-shadow:
-      0 8px 24px rgb(0 0 0 / 18%),
-      inset 0 1px 0 rgb(255 255 255 / 5%);
   }
 
   .field {
+    position: relative;
+    z-index: 1;
     display: inline-flex;
     flex: 0 0 auto;
     gap: 8px;
     align-items: center;
   }
 
-  .label {
-    flex: 0 0 auto;
-    font-size: 14px;
-    line-height: 36px;
-    color: var(--el-text-color-primary);
-    white-space: nowrap;
-  }
-
   .person-select {
-    flex: 0 0 auto;
-    width: 240px;
-    min-width: 200px;
-    max-width: 240px;
+    @include filterTheme.filter-select-size;
 
     @media (width <= 768px) {
       min-width: 0;
@@ -387,12 +370,15 @@
     );
   }
 
+  @include filterTheme.select-popper('my-performance-person-popper');
+
   .export-btn {
     min-width: 120px;
   }
 
   .period-switch {
     position: relative;
+    z-index: 1;
     display: inline-flex;
     flex: 0 0 auto;
     gap: 4px;

@@ -1,0 +1,220 @@
+@use '../ad-performance/styles/ap-card-fx.scss' as ap;
+
+@mixin filter-panel($padding: 14px 16px) {
+  position: relative;
+  padding: $padding;
+  overflow: auto hidden;
+  border-radius: 12px;
+
+  @include ap.ap-neon-bg;
+  @include ap.ap-card-mesh;
+  @include ap.ap-panel-hover;
+
+  &:hover,
+  &:active {
+    transform: none !important;
+  }
+
+  &:active {
+    transition-duration: var(--duration-fast);
+  }
+}
+
+@mixin filter-panel-children {
+  > * {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+@mixin filter-row($gap: 12px) {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: $gap;
+  align-items: center;
+  max-width: 100%;
+  overflow: auto hidden;
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--default-border) 60%, transparent);
+    border-radius: 9999px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  @media (width <= 768px) {
+    gap: 8px;
+  }
+}
+
+@mixin filter-select-size($width: 240px, $min-width: 200px, $max-width: 240px) {
+  flex: 0 0 auto;
+  width: $width;
+  min-width: $min-width;
+  max-width: $max-width;
+
+  @media (width <= 768px) {
+    flex: 0 0 auto;
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+
+@mixin element-select-trigger($selector) {
+  #{$selector} :deep(.el-select__wrapper) {
+    min-height: 36px;
+    padding: 4px 12px;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: none;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      background 0.2s ease;
+  }
+
+  #{$selector} :deep(.el-select__wrapper:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
+  }
+
+  #{$selector} :deep(.el-select__wrapper.is-focused) {
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent);
+  }
+
+  #{$selector} :deep(.el-select__selected-item),
+  #{$selector} :deep(.el-select__selected-item .el-select__placeholder) {
+    color: var(--el-text-color-primary);
+  }
+
+  #{$selector} :deep(.el-select__placeholder.is-transparent),
+  #{$selector} :deep(.el-select__selected-item.is-transparent) {
+    color: var(--el-text-color-placeholder);
+  }
+
+  #{$selector} :deep(.el-select__caret),
+  #{$selector} :deep(.el-select__suffix),
+  #{$selector} :deep(.el-select__icon),
+  #{$selector} :deep(.el-icon.el-select__loading) {
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+  }
+}
+
+@mixin app-platform-trigger($selector) {
+  #{$selector} :deep(.app-platform-search-select) {
+    color: var(--el-text-color-primary);
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: none;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      background 0.2s ease;
+  }
+
+  #{$selector} :deep(.app-platform-search-select:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
+  }
+
+  #{$selector} :deep(.app-platform-search-select.is-open) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent);
+  }
+
+  #{$selector} :deep(.app-platform-search-select__text),
+  #{$selector} :deep(.app-platform-search-select__tag),
+  #{$selector} :deep(.app-platform-search-select__more) {
+    color: var(--el-text-color-primary);
+  }
+
+  #{$selector} :deep(.app-platform-search-select__text.is-placeholder) {
+    color: var(--el-text-color-placeholder);
+  }
+
+  #{$selector} :deep(.app-platform-search-select__suffix) {
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+  }
+}
+
+@mixin select-popper($popper-class) {
+  :global(.#{$popper-class}.el-popper),
+  :global(.#{$popper-class}.el-select__popper) {
+    overflow: hidden;
+    background: var(--el-bg-color-overlay) !important;
+    border: 1px solid var(--el-border-color-light) !important;
+    border-radius: 8px !important;
+    box-shadow: var(--el-box-shadow-light) !important;
+  }
+
+  :global(.#{$popper-class} .el-select-dropdown__list) {
+    padding: 6px;
+  }
+
+  :global(.#{$popper-class} .el-select-dropdown__item) {
+    height: 36px;
+    margin: 2px 0;
+    font-size: 14px;
+    line-height: 36px;
+    color: var(--el-text-color-primary);
+    border-radius: 6px;
+    transition:
+      background 0.15s ease,
+      color 0.15s ease;
+  }
+
+  :global(.#{$popper-class} .el-select-dropdown__item:hover),
+  :global(.#{$popper-class} .el-select-dropdown__item.is-hovering) {
+    color: var(--el-text-color-primary);
+    background: var(--el-fill-color-light);
+  }
+
+  :global(.#{$popper-class} .el-select-dropdown__item.is-selected) {
+    font-weight: 600;
+    color: var(--el-text-color-primary);
+    background: var(--el-fill-color);
+  }
+}
+
+@mixin app-platform-popper($popper-class) {
+  :global(.#{$popper-class} .app-platform-search-select__panel) {
+    color: var(--el-text-color-primary);
+  }
+
+  :global(.#{$popper-class} .app-platform-search-select__header) {
+    color: color-mix(in srgb, var(--el-text-color-regular) 78%, #fff);
+  }
+
+  :global(.#{$popper-class} .app-platform-search-select__row:hover),
+  :global(.#{$popper-class} .app-platform-search-select__row.is-active) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 14%,
+      transparent
+    );
+  }
+}

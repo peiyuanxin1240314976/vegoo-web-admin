@@ -330,6 +330,7 @@
 
 <style scoped lang="scss">
   @use '../styles/my-ads-neon.scss' as ma;
+  @use '../../styles/filter-bar-theme.scss' as filterTheme;
 
   /* ── CSS 变量 ── */
   .my-ads-page {
@@ -629,23 +630,14 @@
   }
 
   .date-pill {
-    display: flex;
-    gap: 12px;
-    align-items: center;
+    @include filterTheme.filter-panel(12px 16px);
+    @include filterTheme.filter-panel-children;
+    @include filterTheme.filter-row;
+
     width: 100%;
-    padding: 12px 16px;
-    overflow-x: auto;
     font-size: 14px;
     color: var(--el-text-color-primary);
     cursor: pointer;
-    background: rgb(15 23 42 / 72%);
-    backdrop-filter: blur(12px);
-    border: 1px solid
-      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent);
-    border-radius: 10px;
-    box-shadow:
-      0 8px 24px rgb(0 0 0 / 18%),
-      inset 0 1px 0 rgb(255 255 255 / 5%);
     transition:
       border-color 0.22s ease,
       box-shadow 0.22s ease,
@@ -653,15 +645,14 @@
   }
 
   .date-pill--range:hover {
-    background: rgb(15 23 42 / 78%);
-    border-color: color-mix(
-      in srgb,
-      var(--theme-color, var(--art-primary, #3b82f6)) 34%,
-      transparent
-    );
+    border-color: rgb(96 165 250 / 65%);
     box-shadow:
-      0 10px 28px rgb(0 0 0 / 22%),
-      inset 0 1px 0 rgb(255 255 255 / 6%);
+      0 24px 72px rgb(0 0 0 / 52%),
+      0 0 0 1px rgb(96 165 250 / 25%),
+      inset 0 1px 0 rgb(186 230 253 / 18%),
+      0 0 72px rgb(59 130 246 / 22%),
+      0 0 120px rgb(6 182 212 / 12%),
+      0 0 160px rgb(16 185 129 / 8%);
   }
 
   .date-pill--range {
@@ -1097,29 +1088,10 @@
 </style>
 
 <style lang="scss">
+  @use '../../styles/filter-bar-theme.scss' as filterTheme;
+
   /* Teleport 到 body 的下拉/面板，与顶部深色条协调 */
-  .my-ads-filter-select-popper.el-popper {
-    background: #0f1929;
-    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
-  }
-
-  .my-ads-filter-select-popper .el-select-dropdown__item {
-    font-size: 12px;
-    color: #e2e8f0;
-  }
-
-  .my-ads-filter-select-popper .el-select-dropdown__item.is-hovering {
-    background: color-mix(
-      in srgb,
-      var(--theme-color, var(--art-primary, #3b82f6)) 12%,
-      transparent
-    );
-  }
-
-  .my-ads-filter-select-popper .el-select-dropdown__item.is-selected {
-    font-weight: 600;
-    color: var(--theme-color, var(--art-primary, #3b82f6));
-  }
+  @include filterTheme.select-popper('my-ads-filter-select-popper');
 
   .my-ads-filter-date-popper.el-popper {
     --el-datepicker-border-color: var(--theme-color, var(--art-primary, #3b82f6));

@@ -404,7 +404,6 @@
     <div class="filter-bar rtd-entry-3">
       <div class="rtd-filter-panel">
         <div class="filter-group rtd-filter-field">
-          <span class="filter-label">{{ t('realtimeDashboard.filters.app') }}</span>
           <AppPlatformSearchSelect
             v-model="filterAppId"
             mode="app"
@@ -412,15 +411,14 @@
             :placeholder="t('realtimeDashboard.filters.allAppsPlaceholder')"
             :search-placeholder="t('realtimeDashboard.filters.searchPlaceholder')"
             :setting-apps="settingApps"
-            :height="38"
+            :height="36"
             :min-width="200"
-            :max-width="248"
+            :max-width="240"
             input-class="rtd-filter-select"
             dropdown-class="rtd-filter-select-popper"
           />
         </div>
         <div class="filter-group rtd-filter-field">
-          <span class="filter-label">{{ t('realtimeDashboard.filters.adPlatform') }}</span>
           <ElSelect
             v-model="filterSourceUi"
             class="rtd-filter-select"
@@ -668,6 +666,7 @@
 
 <style scoped lang="scss">
   @use '../../ad-performance/styles/ap-card-fx.scss' as ap;
+  @use '../../styles/filter-bar-theme.scss' as filterTheme;
 
   /* ===== Root（极光 + 网格，对齐广告成效底氛围） ===== */
   .dashboard--ap-fx {
@@ -959,94 +958,27 @@
   /* ===== Filters（与顶栏霓虹面板一致：主色描边 + 胶囊选择器） ===== */
   .filter-bar {
     padding: 12px 24px 18px;
-    background: linear-gradient(180deg, rgb(59 130 246 / 5%) 0%, rgb(59 130 246 / 0%) 100%);
-    border-bottom: 1px solid rgb(96 165 250 / 12%);
   }
 
   .rtd-filter-panel {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 14px 8px;
-    align-items: stretch;
-    padding: 14px 20px;
-    overflow: hidden;
-    border: 1px solid rgb(96 165 250 / 18%);
-    border-radius: 16px;
-
-    @include ap.ap-neon-bg;
-    @include ap.ap-card-mesh;
-
-    transition:
-      border-color var(--duration-normal, 250ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
-      box-shadow var(--duration-normal, 250ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
-
-    &:hover {
-      border-color: rgb(96 165 250 / 42%);
-      box-shadow:
-        0 12px 40px rgb(0 0 0 / 44%),
-        0 0 0 1px rgb(96 165 250 / 22%),
-        inset 0 1px 0 rgb(186 230 253 / 14%),
-        0 0 40px rgb(59 130 246 / 12%);
-    }
-
-    .filter-group {
-      position: relative;
-      z-index: 1;
-    }
+    @include filterTheme.filter-panel(12px 16px);
+    @include filterTheme.filter-panel-children;
+    @include filterTheme.filter-row;
   }
 
   .filter-group {
+    position: relative;
+    z-index: 1;
     display: flex;
+    flex: 0 0 auto;
     gap: 8px;
     align-items: center;
   }
 
   .rtd-filter-field {
-    gap: 12px;
+    gap: 8px;
     align-items: center;
-    min-height: 40px;
-
-    & + .rtd-filter-field {
-      padding-left: 22px;
-      margin-left: 6px;
-      border-left: 1px solid rgb(96 165 250 / 14%);
-    }
-
-    @media (width <= 640px) {
-      & + .rtd-filter-field {
-        padding-left: 0;
-        margin-left: 0;
-        border-left: none;
-      }
-    }
-  }
-
-  .filter-label {
-    position: relative;
-    flex-shrink: 0;
-    padding-left: 11px;
-    font-size: 12px;
-    font-weight: 600;
-    line-height: 1.3;
-    color: var(--text-secondary, #94a3b8);
-    letter-spacing: 0.02em;
-
-    &::before {
-      position: absolute;
-      top: 50%;
-      left: 0;
-      width: 3px;
-      height: 14px;
-      content: '';
-      background: linear-gradient(
-        180deg,
-        var(--art-primary, #3b82f6) 0%,
-        rgb(34 211 238 / 88%) 100%
-      );
-      border-radius: 2px;
-      box-shadow: 0 0 10px rgb(59 130 246 / 45%);
-      transform: translateY(-50%);
-    }
+    min-height: 36px;
   }
 
   .filter-btn {
@@ -1074,115 +1006,43 @@
   }
 
   .rtd-filter-select {
-    flex: 1;
-    width: min(248px, 100%);
-    min-width: min(200px, 100%);
+    @include filterTheme.filter-select-size;
+    @include filterTheme.app-platform-trigger('&');
+    @include filterTheme.element-select-trigger('&');
 
     :deep(.app-platform-search-select) {
-      color: var(--text-primary, #e2e8f0);
-      background: color-mix(
-        in srgb,
-        var(--theme-color, var(--art-primary, #3b82f6)) 6%,
-        transparent
-      ) !important;
-      border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
-      border-radius: var(--el-border-radius-base, 4px);
-      box-shadow: none;
       transition:
         border-color var(--duration-fast, 150ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
         box-shadow var(--duration-fast, 150ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
         background var(--duration-fast, 150ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
-    }
-
-    :deep(.app-platform-search-select:hover) {
-      border-color: var(--theme-color, var(--art-primary, #3b82f6));
-      box-shadow: 0 0 0 1px
-        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
-    }
-
-    :deep(.app-platform-search-select.is-open) {
-      background: color-mix(
-        in srgb,
-        var(--theme-color, var(--art-primary, #3b82f6)) 6%,
-        transparent
-      ) !important;
-      border-color: var(--theme-color, var(--art-primary, #3b82f6));
-      box-shadow: 0 0 0 2px
-        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent);
     }
 
     :deep(.app-platform-search-select__text) {
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--text-primary, #e2e8f0);
-    }
-
-    :deep(.app-platform-search-select__text.is-placeholder) {
-      color: var(--text-tertiary, #64748b);
-    }
-
-    :deep(.app-platform-search-select__suffix) {
-      color: var(--theme-color, var(--art-primary, #3b82f6));
+      font-size: 14px;
+      font-weight: 400;
     }
 
     :deep(.el-select__wrapper) {
-      min-height: 38px;
-      padding: 5px 14px 5px 16px;
-      background: color-mix(
-        in srgb,
-        var(--theme-color, var(--art-primary, #3b82f6)) 6%,
-        transparent
-      );
-      border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
-      border-radius: var(--el-border-radius-base, 4px);
-      box-shadow: none;
       transition:
         border-color var(--duration-fast, 150ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
         box-shadow var(--duration-fast, 150ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
         background var(--duration-fast, 150ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
     }
 
-    :deep(.el-select__wrapper:hover) {
-      border-color: var(--theme-color, var(--art-primary, #3b82f6));
-      box-shadow: 0 0 0 1px
-        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
-    }
-
-    :deep(.el-select__wrapper.is-focused) {
-      background: color-mix(
-        in srgb,
-        var(--theme-color, var(--art-primary, #3b82f6)) 6%,
-        transparent
-      );
-      border-color: var(--theme-color, var(--art-primary, #3b82f6));
-      box-shadow: 0 0 0 2px
-        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent);
-    }
-
     :deep(.el-select__placeholder) {
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--text-tertiary, #64748b);
+      font-size: 14px;
+      font-weight: 400;
     }
 
-    :deep(.el-select__selected-item) {
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--text-primary, #e2e8f0);
-    }
-
-    :deep(.el-select__caret) {
-      color: var(--theme-color, var(--art-primary, #3b82f6));
-    }
-
-    :deep(.el-select__suffix) {
-      color: var(--theme-color, var(--art-primary, #3b82f6));
-    }
-
-    :deep(.el-icon.el-select__loading) {
-      color: var(--theme-color, var(--art-primary, #3b82f6));
+    :deep(.el-select__selected-item),
+    :deep(.el-select__selected-item .el-select__placeholder) {
+      font-size: 14px;
+      font-weight: 400;
     }
   }
+
+  @include filterTheme.select-popper('rtd-filter-select-popper');
+  @include filterTheme.app-platform-popper('rtd-filter-select-popper');
 
   .view-toggle {
     display: flex;
@@ -1692,69 +1552,3 @@
 </style>
 
 <!-- 下拉挂到 body，须单独块（与实时数据筛选视觉一致） -->
-<style lang="scss">
-  .rtd-filter-select-popper.el-select__popper {
-    overflow: hidden;
-    background: rgb(15 23 42 / 96%) !important;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgb(96 165 250 / 28%) !important;
-    border-radius: 14px !important;
-    box-shadow:
-      0 20px 50px rgb(0 0 0 / 48%),
-      0 0 0 1px rgb(96 165 250 / 12%),
-      inset 0 1px 0 rgb(255 255 255 / 5%) !important;
-  }
-
-  .rtd-filter-select-popper .el-select-dropdown__list {
-    padding: 6px;
-  }
-
-  .rtd-filter-select-popper .el-select-dropdown__item {
-    margin: 2px 0;
-    font-size: 13px;
-    line-height: 1.4;
-    color: #cbd5e1;
-    border-radius: 10px;
-    transition:
-      background 0.15s ease,
-      color 0.15s ease;
-  }
-
-  .rtd-filter-select-popper .el-select-dropdown__item:hover {
-    color: #f1f5f9;
-    background: rgb(59 130 246 / 14%);
-  }
-
-  .rtd-filter-select-popper .el-select-dropdown__item.is-selected {
-    font-weight: 600;
-    color: #fff;
-    background: rgb(59 130 246 / 22%);
-  }
-
-  .rtd-filter-select-popper .el-select-dropdown__item.is-hovering {
-    background: rgb(59 130 246 / 12%);
-  }
-
-  .rtd-filter-select-popper .app-platform-search-select__panel {
-    color: #cbd5e1;
-  }
-
-  .rtd-filter-select-popper .app-platform-search-select__header {
-    color: #6b7a99;
-  }
-
-  .rtd-filter-select-popper .app-platform-search-select__row:hover,
-  .rtd-filter-select-popper .app-platform-search-select__row.is-active {
-    background: color-mix(
-      in srgb,
-      var(--theme-color, var(--art-primary, #3b82f6)) 14%,
-      transparent
-    );
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .rtd-filter-select-popper .el-select-dropdown__item {
-      transition: none;
-    }
-  }
-</style>

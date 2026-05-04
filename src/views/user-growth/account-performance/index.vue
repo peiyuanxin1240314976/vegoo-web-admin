@@ -20,7 +20,12 @@
             dropdown-class="ap-filter-popper"
           />
 
-          <ElSelect v-model="draftSource" placeholder="广告平台" class="ap-filter-select">
+          <ElSelect
+            v-model="draftSource"
+            placeholder="广告平台"
+            class="ap-filter-select"
+            popper-class="ap-filter-popper"
+          >
             <ElOption
               v-for="opt in metaAdPlatformOptions"
               :key="opt.value"
@@ -29,7 +34,12 @@
             />
           </ElSelect>
 
-          <ElSelect v-model="draftFilterOwner" placeholder="负责人" class="ap-filter-select">
+          <ElSelect
+            v-model="draftFilterOwner"
+            placeholder="负责人"
+            class="ap-filter-select"
+            popper-class="ap-filter-popper"
+          >
             <ElOption
               v-for="opt in ownerOptions"
               :key="opt.value"
@@ -1206,6 +1216,7 @@
 <style scoped lang="scss">
   @use '../ad-performance/styles/ap-card-fx.scss' as *;
   @use '../styles/app-platform-select-ad-theme.scss' as apSelect;
+  @use '../styles/filter-bar-theme.scss' as filterTheme;
 
   .account-performance-page {
     position: relative;
@@ -1446,23 +1457,7 @@
   }
 
   .ac-perf-filter-panel {
-    position: relative;
-    padding: 14px 16px;
-    overflow: hidden;
-    border-radius: 12px;
-
-    @include ap-neon-bg;
-    @include ap-card-mesh;
-    @include ap-panel-hover;
-
-    &:hover,
-    &:active {
-      transform: none !important;
-    }
-
-    &:active {
-      transition-duration: var(--duration-fast);
-    }
+    @include filterTheme.filter-panel;
 
     .ap-filters {
       position: relative;
@@ -1475,43 +1470,11 @@
   }
 
   .ap-filters {
-    display: flex;
-    flex-wrap: nowrap;
-    gap: 12px;
-    align-items: center;
-    max-width: 100%;
-    overflow: auto hidden;
-    -webkit-overflow-scrolling: touch;
-
-    &::-webkit-scrollbar {
-      height: 6px;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background: color-mix(in srgb, var(--default-border) 60%, transparent);
-      border-radius: 9999px;
-    }
-
-    &::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    @media (width <=768px) {
-      gap: 8px;
-    }
+    @include filterTheme.filter-row;
   }
 
   .ap-filter-select {
-    flex: 0 0 auto;
-    width: 240px;
-    min-width: 200px;
-    max-width: 240px;
-
-    @media (width <=768px) {
-      flex: 0 0 auto;
-      min-width: 0;
-      max-width: 100%;
-    }
+    @include filterTheme.filter-select-size;
   }
 
   @include apSelect.apply-app-platform-select-ad-theme(
@@ -1572,6 +1535,9 @@
   .ap-filters :deep(.ap-filter-select .el-select__icon) {
     color: var(--theme-color, var(--art-primary, #3b82f6));
   }
+
+  @include filterTheme.select-popper('ap-filter-popper');
+  @include filterTheme.app-platform-popper('ap-filter-popper');
 
   .ap-date-picker {
     flex: 0 0 200px;
