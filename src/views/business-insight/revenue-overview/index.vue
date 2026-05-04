@@ -22,7 +22,7 @@
               :setting-apps="metaSettingApps"
               :height="36"
               :min-width="200"
-              :max-width="320"
+              :max-width="240"
               input-class="rev-app-platform-select"
               dropdown-class="rev-select__popper"
             />
@@ -2787,7 +2787,17 @@
     --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
     --el-component-size: 36px;
 
+    box-sizing: border-box;
+    width: 250px;
+    min-width: 250px;
+    max-width: 100%;
     height: 36px;
+
+    @media (width <=768px) {
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+    }
   }
 
   .rev-filter-panel :deep(.rev-date .el-range-input) {
@@ -2890,6 +2900,20 @@
 
   :global(html:not(.dark) .rev-filter-panel) :deep(.rev-query-btn.el-button:hover) {
     filter: brightness(1.06);
+  }
+
+  /* 日期在 .rev-pill 内：flex 子项是 pill，宽度写在外层（原 .rev-date-picker 未挂到 DOM） */
+  .rev-filter-panel.rev-header__filters > .rev-pill:has(.rev-date) {
+    flex: 0 0 200px;
+    width: 250px;
+    min-width: 250px;
+    max-width: 100%;
+
+    @media (width <=768px) {
+      flex: 1 1 100%;
+      width: 100%;
+      min-width: 0;
+    }
   }
 
   .rev-pill {
@@ -3050,8 +3074,17 @@
   }
 
   .rev-date {
-    width: min(100%, 280px);
-    min-width: 240px;
+    box-sizing: border-box;
+    width: 250px;
+    min-width: 250px;
+    max-width: 100%;
+  }
+
+  @media (width <=768px) {
+    .rev-date {
+      width: 100%;
+      min-width: 0;
+    }
   }
 
   :deep(.rev-select .el-select__wrapper) {
