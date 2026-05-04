@@ -137,6 +137,7 @@
             <ElButton
               size="small"
               class="or-detail-btn or-detail-btn--search"
+              :icon="Search"
               @click="onDetailSearch"
             >
               检索
@@ -239,7 +240,7 @@
   import type { OverallRecoveryFilterState, OverallTabData } from '../types'
   import { useOverallRecoveryFilters } from '../composables/useOverallRecoveryFilters'
   import { fetchOverallTabData, fetchOverallTabDetailRecords } from '@/api/user-growth'
-  import { Top, Bottom } from '@element-plus/icons-vue'
+  import { Bottom, Search, Top } from '@element-plus/icons-vue'
 
   defineOptions({ name: 'OrTabOverall' })
 

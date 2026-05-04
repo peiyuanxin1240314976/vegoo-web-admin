@@ -5,6 +5,7 @@
   import { computed, h, ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
   import { storeToRefs } from 'pinia'
   import { ElTableV2 } from 'element-plus'
+  import { Search } from '@element-plus/icons-vue'
   import { echarts } from '@/plugins/echarts'
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
@@ -983,6 +984,7 @@
           plain
           round
           class="bi-query-btn"
+          :icon="Search"
           :disabled="pendingMeta"
           @click="reloadDashboard"
         >

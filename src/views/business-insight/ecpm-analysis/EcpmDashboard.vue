@@ -99,6 +99,7 @@
           type="primary"
           plain
           round
+          :icon="Search"
           :loading="querying"
           :disabled="querying"
           @click="handleQuery"
@@ -462,6 +463,7 @@
     Calendar,
     // TrendCharts, // 与「预估 ECPM」卡片一并恢复
     Money,
+    Search,
     Location,
     Grid,
     Warning

@@ -64,7 +64,14 @@
           </ElSelect>
         </div>
 
-        <ElButton type="primary" plain round class="iap-query-btn" @click="loadDashboard">
+        <ElButton
+          type="primary"
+          plain
+          round
+          class="iap-query-btn"
+          :icon="Search"
+          @click="loadDashboard"
+        >
           查询
         </ElButton>
         <ElButton type="primary" plain round @click="loadDashboard">
@@ -342,6 +349,7 @@
     Calendar,
     Download,
     Refresh,
+    Search,
     Top,
     Bottom,
     Warning,

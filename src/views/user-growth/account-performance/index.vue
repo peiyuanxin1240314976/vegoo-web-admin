@@ -57,7 +57,7 @@
             value-format="YYYY-MM-DD"
             class="ap-date-picker"
           />
-          <ElButton round type="primary" plain @click="onQuery">查询</ElButton>
+          <ElButton round type="primary" :icon="Search" plain @click="onQuery">查询</ElButton>
           <!-- <ElButton round type="primary" plain @click="onExport">导出</ElButton> -->
         </div>
       </div>
@@ -286,6 +286,7 @@
   import { useSettingStore } from '@/store/modules/setting'
   import request from '@/utils/http'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
+  import { Search } from '@element-plus/icons-vue'
   import { formatYYYYMMDD, getAppNow } from '@/utils/app-now'
   import { buildAppSelectionRequestBody } from '@/utils/app-id-request'
   import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'

@@ -52,7 +52,9 @@
           />
         </div>
 
-        <ElButton type="primary" plain round class="iaa-query-btn" @click="onQuery">查询</ElButton>
+        <ElButton type="primary" plain round class="iaa-query-btn" :icon="Search" @click="onQuery">
+          查询
+        </ElButton>
       </div>
     </header>
 
@@ -119,7 +121,7 @@
 <script setup lang="ts">
   import { ref, computed, reactive, watch } from 'vue'
   import { storeToRefs } from 'pinia'
-  import { Calendar } from '@element-plus/icons-vue'
+  import { Calendar, Search } from '@element-plus/icons-vue'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'

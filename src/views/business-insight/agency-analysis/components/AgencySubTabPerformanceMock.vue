@@ -10,6 +10,7 @@
   import { computed, ref, watch } from 'vue'
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { ElAlert, ElSkeleton } from 'element-plus'
+  import { Search } from '@element-plus/icons-vue'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import { formatYYYYMMDD, getAppTodayYYYYMMDD } from '@/utils/app-now'
 
@@ -446,6 +447,7 @@
             plain
             size="small"
             class="aa-sub-mock__acct-query"
+            :icon="Search"
             :loading="accountSummaryQuerying"
             @click="handleAccountSummaryQuery"
           >

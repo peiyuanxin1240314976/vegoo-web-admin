@@ -5,7 +5,7 @@
   import { ref, reactive, computed, watch } from 'vue'
   import { storeToRefs } from 'pinia'
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
-  import { Calendar, Iphone, Reading } from '@element-plus/icons-vue'
+  import { Calendar, Iphone, Reading, Search } from '@element-plus/icons-vue'
   import ReviewMonitorSummary from './components/ReviewMonitorSummary.vue'
   import ReviewMonitorDetail from './components/ReviewMonitorDetail.vue'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
@@ -176,7 +176,9 @@
           <ElOption v-for="o in languageOptions" :key="o.value" :label="o.label" :value="o.value" />
         </ElSelect>
 
-        <ElButton type="primary" plain round class="rrm-query-btn" @click="onQuery">查询</ElButton>
+        <ElButton type="primary" plain round class="rrm-query-btn" :icon="Search" @click="onQuery">
+          查询
+        </ElButton>
       </div>
     </div>
 

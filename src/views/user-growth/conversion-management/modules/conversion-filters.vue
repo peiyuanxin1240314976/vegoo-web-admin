@@ -53,7 +53,7 @@
             <ElIcon><Search /></ElIcon>
           </template>
         </ElInput>
-        <ElButton type="primary" plain round @click="doSearch" v-ripple>
+        <ElButton type="primary" plain round :icon="Search" @click="doSearch" v-ripple>
           {{ $t('conversionManagement.dataFilterSearch') }}
         </ElButton>
         <ElButton type="primary" plain round @click="$emit('add-mapping')" v-ripple>

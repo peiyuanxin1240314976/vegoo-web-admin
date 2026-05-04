@@ -4,6 +4,7 @@
   import { echarts } from '@/plugins/echarts'
   import ScreenshotModal from './ScreenshotModal.vue'
   import AgencySubTabPerformanceMock from './AgencySubTabPerformanceMock.vue'
+  import { Search } from '@element-plus/icons-vue'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import {
@@ -721,6 +722,7 @@
                 type="primary"
                 plain
                 round
+                :icon="Search"
                 :loading="tabsLoading"
                 :disabled="tabsLoading"
                 @click="handleSearch"

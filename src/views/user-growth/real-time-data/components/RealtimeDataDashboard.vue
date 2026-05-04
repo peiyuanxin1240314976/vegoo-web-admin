@@ -13,6 +13,7 @@
     REALTIME_AUTO_REFRESH_MIN_MINUTES,
     REALTIME_AUTO_REFRESH_MAX_MINUTES
   } from '../utils/auto-refresh-storage'
+  import { Search } from '@element-plus/icons-vue'
 
   defineOptions({ name: 'RealtimeDataDashboard' })
 
@@ -426,7 +427,7 @@
             />
           </ElSelect>
         </div>
-        <el-button type="primary" plain round @click="onQuery">{{
+        <el-button type="primary" plain round :icon="Search" @click="onQuery">{{
           t('realtimeDashboard.filters.query')
         }}</el-button>
       </div>

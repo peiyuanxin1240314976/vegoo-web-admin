@@ -45,7 +45,9 @@
             />
           </ElSelect>
           <div class="iap-filter-actions">
-            <ElButton type="primary" plain round @click="handleSearch">搜索</ElButton>
+            <ElButton type="primary" plain round :icon="Search" @click="handleSearch">
+              搜索
+            </ElButton>
             <!-- <ElButton type="primary" plain round @click="onExportClick">导出</ElButton> -->
           </div>
         </div>
@@ -119,6 +121,7 @@
 </template>
 
 <script setup lang="ts">
+  import { Search } from '@element-plus/icons-vue'
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { storeToRefs } from 'pinia'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'

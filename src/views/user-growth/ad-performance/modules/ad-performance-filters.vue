@@ -75,7 +75,7 @@
         />
       </ElSelect>
 
-      <ElButton type="primary" plain round @click="onQuery">
+      <ElButton type="primary" plain round :icon="Search" @click="onQuery">
         {{ tr('adPerformance.query', '查询') }}
       </ElButton>
       <!-- <ElButton type="primary" plain round @click="$emit('export')">
@@ -94,7 +94,7 @@
 </template>
 
 <script setup lang="ts">
-  import { Calendar, RefreshRight } from '@element-plus/icons-vue'
+  import { Calendar, RefreshRight, Search } from '@element-plus/icons-vue'
   import { computed, ref, watch } from 'vue'
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { useI18n } from 'vue-i18n'

@@ -81,9 +81,16 @@
             />
           </div>
 
-          <ElButton type="primary" plain round class="rev-query-btn" @click="onQuery"
-            >查询</ElButton
+          <ElButton
+            type="primary"
+            plain
+            round
+            class="rev-query-btn"
+            :icon="Search"
+            @click="onQuery"
           >
+            查询
+          </ElButton>
         </div>
 
         <!-- <button type="button" class="rev-export" @click="onExport">Export</button> -->
@@ -697,7 +704,7 @@
     watch,
     type CSSProperties
   } from 'vue'
-  import { Calendar } from '@element-plus/icons-vue'
+  import { Calendar, Search } from '@element-plus/icons-vue'
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { useRouter } from 'vue-router'
   import { storeToRefs } from 'pinia'

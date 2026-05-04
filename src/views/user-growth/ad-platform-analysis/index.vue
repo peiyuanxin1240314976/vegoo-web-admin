@@ -53,7 +53,9 @@
                 />
               </el-select> -->
             </div>
-            <el-button type="primary" plain round @click="runDashboardQuery">查询</el-button>
+            <el-button type="primary" plain round :icon="Search" @click="runDashboardQuery">
+              查询
+            </el-button>
             <!-- <el-button type="primary" plain round @click="runDashboardQuery">导出报表</el-button> -->
           </div>
         </div>
@@ -182,6 +184,7 @@
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { useRouter } from 'vue-router'
   import { ElMessage } from 'element-plus'
+  import { Search } from '@element-plus/icons-vue'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import { useChart } from '@/hooks/core/useChart'
   import { graphic, type EChartsOption } from '@/plugins/echarts'

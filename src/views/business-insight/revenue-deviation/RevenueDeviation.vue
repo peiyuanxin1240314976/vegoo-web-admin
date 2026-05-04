@@ -53,6 +53,7 @@
           type="primary"
           plain
           round
+          :icon="Search"
           :loading="querying"
           :disabled="querying"
           @click="handleQuery"
@@ -404,7 +405,7 @@
   } from 'vue'
   import { storeToRefs } from 'pinia'
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
-  import { TopRight } from '@element-plus/icons-vue'
+  import { Search, TopRight } from '@element-plus/icons-vue'
   import { echarts } from '@/plugins/echarts'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'

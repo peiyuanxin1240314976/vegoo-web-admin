@@ -118,6 +118,7 @@
             round
             size="default"
             class="order-search-btn"
+            :icon="Search"
             @click="handleOrderSearch"
             >搜索</ElButton
           >

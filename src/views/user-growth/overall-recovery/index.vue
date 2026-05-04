@@ -63,7 +63,9 @@
             />
           </ElSelect>
           <div class="or-filter-actions">
-            <ElButton type="primary" plain round @click="handleSearch">查询</ElButton>
+            <ElButton type="primary" plain round :icon="Search" @click="handleSearch">
+              查询
+            </ElButton>
           </div>
         </div>
       </div>
@@ -101,7 +103,7 @@
 
 <script setup lang="ts">
   import type { Component } from 'vue'
-  import { Calendar, Flag, Promotion } from '@element-plus/icons-vue'
+  import { Calendar, Flag, Promotion, Search } from '@element-plus/icons-vue'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import type { CockpitMetaOptionItem, CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'

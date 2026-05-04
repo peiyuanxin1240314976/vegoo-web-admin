@@ -8,6 +8,7 @@
   import { formatNumberWithWan } from '@/utils'
   import { cloneAppDate, formatYYYYMMDD, getAppNow, getAppTodayYYYYMMDD } from '@/utils/app-now'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
+  import { Search } from '@element-plus/icons-vue'
   import type { MyAdsStaffOption, MyAdsUserCardMock, MyAdsMetricStripItem } from '../types'
 
   defineOptions({ name: 'MyAdsPageContent' })
@@ -229,7 +230,9 @@
             :clearable="false"
           />
 
-          <el-button type="primary" plain round @click="commitFiltersAndRefresh">查询</el-button>
+          <el-button type="primary" plain round :icon="Search" @click="commitFiltersAndRefresh">
+            查询
+          </el-button>
           <!-- <el-button type="primary" plain round @click="commitFiltersAndRefresh"
             >导出报表</el-button
           > -->

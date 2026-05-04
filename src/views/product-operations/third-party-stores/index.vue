@@ -5,7 +5,7 @@
   import { ref, computed, onMounted, nextTick, onBeforeUnmount } from 'vue'
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import * as echarts from 'echarts'
-  import { Plus, Download, Calendar } from '@element-plus/icons-vue'
+  import { Calendar, Download, Plus, Search } from '@element-plus/icons-vue'
   import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
   import { thirdPartyStoresApi } from './api/third-party-stores'
   import type {
@@ -423,6 +423,7 @@
           type="primary"
           plain
           class="tps-query-btn"
+          :icon="Search"
           :loading="loading"
           @click="applyFilters"
         >
@@ -605,6 +606,7 @@
         type="primary"
         plain
         class="tps-query-btn"
+        :icon="Search"
         :loading="loading"
         @click="applyFilters"
       >

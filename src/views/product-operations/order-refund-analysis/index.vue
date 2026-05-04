@@ -75,6 +75,7 @@
           plain
           round
           class="ora-query-btn"
+          :icon="Search"
           :disabled="!isDirty"
           @click="onQuery"
         >
@@ -218,7 +219,7 @@
 </template>
 
 <script setup lang="ts">
-  import { Calendar, Flag, Money, RefreshRight, TrendCharts } from '@element-plus/icons-vue'
+  import { Calendar, Flag, Money, RefreshRight, Search, TrendCharts } from '@element-plus/icons-vue'
   import { ref, reactive, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
   import { storeToRefs } from 'pinia'
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'

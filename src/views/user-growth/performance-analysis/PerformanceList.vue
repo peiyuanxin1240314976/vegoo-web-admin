@@ -27,6 +27,7 @@
             round
             type="primary"
             class="perf-header__btn perf-header__btn--query"
+            :icon="Search"
             :loading="listLoading || overviewLoading"
             @click="onQuery"
           >
@@ -377,7 +378,7 @@
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { useRouter } from 'vue-router'
   import { ElMessage } from 'element-plus'
-  import { ArrowLeftBold, ArrowRightBold } from '@element-plus/icons-vue'
+  import { ArrowLeftBold, ArrowRightBold, Search } from '@element-plus/icons-vue'
   import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import {

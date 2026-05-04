@@ -31,6 +31,7 @@
           round
           type="primary"
           class="btn-query"
+          :icon="Search"
           :loading="
             overviewLoading ||
             chartsLoading ||
@@ -317,6 +318,7 @@
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { useRouter, useRoute } from 'vue-router'
   import { ElMessage } from 'element-plus'
+  import { Search } from '@element-plus/icons-vue'
   import { echarts, type EChartsOption } from '@/plugins/echarts'
   import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'

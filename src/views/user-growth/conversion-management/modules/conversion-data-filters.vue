@@ -43,7 +43,7 @@
             :value="opt.value"
           />
         </ElSelect>
-        <ElButton type="primary" plain round @click="doSearch" v-ripple>
+        <ElButton type="primary" plain round :icon="Search" @click="doSearch" v-ripple>
           {{ $t('conversionManagement.dataFilterSearch') }}
         </ElButton>
       </div>
@@ -52,6 +52,7 @@
 </template>
 
 <script setup lang="ts">
+  import { Search } from '@element-plus/icons-vue'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import { useCockpitMetaFilterOptions } from '@/composables/use-cockpit-meta-filter'
   import type { CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
