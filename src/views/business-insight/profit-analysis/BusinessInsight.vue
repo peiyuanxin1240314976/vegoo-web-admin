@@ -6,7 +6,9 @@
   import { storeToRefs } from 'pinia'
   import { ElTableV2 } from 'element-plus'
   import { echarts } from '@/plugins/echarts'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import type { CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
   import type { ProfitCountryRow, ProfitKpiCard, ProfitAppProfitTreeNode } from './types'
@@ -25,7 +27,6 @@
     filterOptions,
     pendingMeta,
     dateRangePicker,
-    dateShortcuts,
     kpiCards,
     appProfitRoot,
     countryRows,
@@ -911,48 +912,22 @@
       </div> -->
       <div class="bi-filters bi-filter-panel">
         <div class="bi-filter-field">
-          <span class="bi-filter-label">{{
-            $t('menus.businessInsight.profitAnalysisFilters.dateRange')
-          }}</span>
-          <ElDatePicker
-            v-model="dateRangePicker"
-            type="daterange"
-            unlink-panels
-            range-separator="～"
-            :start-placeholder="$t('menus.businessInsight.profitAnalysisFilters.startDate')"
-            :end-placeholder="$t('menus.businessInsight.profitAnalysisFilters.endDate')"
-            value-format="YYYY-MM-DD"
-            format="YYYY-MM-DD"
-            :shortcuts="dateShortcuts"
-            :clearable="false"
-            :disabled="pendingMeta"
-            class="bi-filter-date"
-            popper-class="bi-select__popper"
-          />
-        </div>
-        <div class="bi-filter-field">
-          <span class="bi-filter-label">{{
-            $t('menus.businessInsight.profitAnalysisFilters.app')
-          }}</span>
           <AppPlatformSearchSelect
             v-model="query.sAppId"
-            class="bi-filter-select"
+            class="bi-filter-select bi-filter-select--app"
             :placeholder="$t('menus.businessInsight.profitAnalysisFilters.selectPlaceholder')"
             :disabled="pendingMeta"
             search-placeholder="搜索类别/应用名称/应用简称"
             mode="app"
             :setting-apps="settingAppsForSelect"
             :height="36"
-            :min-width="148"
-            :max-width="220"
+            :min-width="200"
+            :max-width="240"
             input-class="bi-filter-select__input"
-          >
-          </AppPlatformSearchSelect>
+            dropdown-class="bi-select__popper"
+          />
         </div>
         <div class="bi-filter-field">
-          <span class="bi-filter-label">{{
-            $t('menus.businessInsight.profitAnalysisFilters.country')
-          }}</span>
           <ElSelect
             v-model="query.sCountryCode"
             class="bi-filter-select"
@@ -970,9 +945,6 @@
           </ElSelect>
         </div>
         <div class="bi-filter-field">
-          <span class="bi-filter-label">{{
-            $t('menus.businessInsight.profitAnalysisFilters.platform')
-          }}</span>
           <ElSelect
             v-model="query.platform"
             class="bi-filter-select bi-filter-select--platform"
@@ -988,9 +960,34 @@
             />
           </ElSelect>
         </div>
-        <ElButton type="primary" plain round :disabled="pendingMeta" @click="reloadDashboard"
-          >查询</ElButton
+        <div class="bi-filter-field">
+          <AppDatePicker
+            v-model="dateRangePicker"
+            permission-page-key="AccountPerformance"
+            type="daterange"
+            unlink-panels
+            range-separator="~"
+            :start-placeholder="$t('menus.businessInsight.profitAnalysisFilters.startDate')"
+            :end-placeholder="$t('menus.businessInsight.profitAnalysisFilters.endDate')"
+            value-format="YYYY-MM-DD"
+            format="YYYY-MM-DD"
+            :shortcuts="dateRangeShortcuts"
+            :clearable="false"
+            :disabled="pendingMeta"
+            class="bi-filter-date"
+            popper-class="bi-select__popper"
+          />
+        </div>
+        <ElButton
+          type="primary"
+          plain
+          round
+          class="bi-query-btn"
+          :disabled="pendingMeta"
+          @click="reloadDashboard"
         >
+          查询
+        </ElButton>
       </div>
     </header>
 
@@ -1220,6 +1217,8 @@
 
 <style scoped lang="scss">
   @use '../../user-growth/ad-performance/styles/ap-card-fx.scss' as ap;
+  @use '../../user-growth/styles/app-platform-select-ad-theme.scss' as apSelect;
+  @use '../../user-growth/styles/filter-bar-theme.scss' as filterTheme;
 
   /* 旋转渐变边框：CSS Houdini @property（复刻 ad-performance-kpi-cards） */
   @property --kpi-border-angle {
@@ -1403,128 +1402,74 @@
     color: var(--text-pri);
   }
 
-  .bi-filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
+  .bi-filters.bi-filter-panel {
+    @include filterTheme.filter-panel(14px 16px);
+    @include filterTheme.filter-panel-children;
+    @include filterTheme.filter-row;
+
+    min-width: 0;
+  }
+
+  .bi-filters.bi-filter-panel > .bi-filter-field {
+    display: inline-flex;
+    gap: 0;
     align-items: center;
+    min-height: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
   }
 
-  .bi-filter-panel {
-    padding: 10px 14px;
-    overflow: hidden;
-    border-radius: 16px;
-
-    @include ap.ap-neon-bg;
-    @include ap.ap-card-mesh;
-
-    transition:
-      box-shadow 0.35s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
-      border-color 0.3s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
-
-    &:hover {
-      border-color: rgb(96 165 250 / 48%);
-      box-shadow:
-        0 12px 40px rgb(0 0 0 / 44%),
-        0 0 0 1px rgb(96 165 250 / 22%),
-        inset 0 1px 0 rgb(186 230 253 / 16%),
-        0 0 48px rgb(59 130 246 / 14%);
-    }
-
-    .bi-filter-field {
-      position: relative;
-      z-index: 1;
-    }
-  }
-
-  .bi-filter-panel :deep(.bi-filter-select .el-select__wrapper),
-  .bi-filter-panel :deep(.bi-filter-select__input .el-select__wrapper),
-  .bi-filter-panel :deep(.bi-filter-date.el-date-editor--daterange) {
-    min-height: 36px;
-    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
-    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
-    border-radius: var(--el-border-radius-base, 4px);
-    box-shadow: none;
-    transition:
-      border-color 0.2s ease,
-      box-shadow 0.2s ease,
-      background 0.2s ease;
-  }
-
-  .bi-filter-panel :deep(.bi-filter-select .el-select__wrapper:hover),
-  .bi-filter-panel :deep(.bi-filter-select__input .el-select__wrapper:hover),
-  .bi-filter-panel :deep(.bi-filter-date.el-date-editor--daterange:hover) {
-    border-color: var(--theme-color, var(--art-primary, #3b82f6));
-    box-shadow: 0 0 0 1px
-      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
-  }
-
-  .bi-filter-panel :deep(.bi-filter-select .el-select__wrapper.is-focused),
-  .bi-filter-panel :deep(.bi-filter-select__input .el-select__wrapper.is-focused),
-  .bi-filter-panel :deep(.bi-filter-date.el-date-editor--daterange.is-active),
-  .bi-filter-panel :deep(.bi-filter-date.el-date-editor--daterange:focus-within) {
-    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
-    box-shadow: 0 0 0 2px
-      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
-  }
-
-  .bi-filter-field {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    min-height: 32px;
-  }
-
-  .bi-filter-label {
-    flex-shrink: 0;
-    font-size: 12px;
-    color: var(--text-sec);
-    white-space: nowrap;
-  }
-
-  .bi-filter-select {
-    width: 148px;
+  .bi-filter-select:not(.bi-filter-select--app) {
+    @include filterTheme.filter-select-size(240px, 200px, 240px);
   }
 
   .bi-filter-select--platform {
+    flex: 0 0 128px;
     width: 128px;
+    min-width: 128px;
+    max-width: 128px;
   }
 
-  .bi-filter-date {
-    width: 260px;
+  :deep(.bi-filter-date) {
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
+    --el-date-editor-width: 260px;
+    --el-date-editor-daterange-width: 260px;
   }
 
-  :deep(.bi-filter-select .el-select__wrapper),
-  :deep(.bi-filter-select__input .el-select__wrapper),
-  :deep(.bi-filter-date.el-date-editor--daterange) {
-    min-height: 36px;
+  @include filterTheme.date-range-trigger('.bi-filter-date', 260px);
+  @include filterTheme.element-select-trigger('.bi-filter-select');
+  @include apSelect.apply-app-platform-select-ad-theme(
+    '.bi-filters.bi-filter-panel',
+    'bi-filter-select__input',
+    'bi-select__popper',
+    240px,
+    200px,
+    240px
+  );
+  @include filterTheme.select-popper('bi-select__popper');
+  @include filterTheme.app-platform-popper('bi-select__popper');
+  @include filterTheme.date-picker-popper('bi-select__popper');
+
+  :global(.bi-select__popper.el-popper),
+  :global(.bi-select__popper.el-select__popper),
+  :global(.bi-select__popper.el-picker__popper) {
+    z-index: 4000 !important;
   }
 
-  :deep(.bi-filter-select .el-select__wrapper:hover),
-  :deep(.bi-filter-select__input .el-select__wrapper:hover),
-  :deep(.bi-filter-date.el-date-editor--daterange:hover) {
-    border-color: var(--theme-color, var(--art-primary, #3b82f6));
-  }
-
-  :deep(.bi-filter-select .el-select__placeholder),
-  :deep(.bi-filter-select .el-select__selected-item),
-  :deep(.bi-filter-select .el-select__caret),
-  :deep(.bi-filter-date .el-range-input),
-  :deep(.bi-filter-select__input .el-select__placeholder),
-  :deep(.bi-filter-select__input .el-select__selected-item),
-  :deep(.bi-filter-select__input .el-select__caret) {
-    color: #fff;
-  }
-
-  :deep(.bi-filter-date .el-range-separator) {
-    color: #fff;
-  }
-
-  :deep(.bi-filter-date .el-range__icon),
-  :deep(.bi-filter-date .el-input__prefix),
-  :deep(.bi-filter-date .el-input__suffix),
-  :deep(.bi-filter-date .el-input__inner) {
-    color: #fff;
+  :deep(.bi-filter-select),
+  :deep(.bi-filter-select__input) {
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
   }
 
   .bi-filter-panel :deep(.bi-query-btn.el-button) {
@@ -2370,19 +2315,6 @@
     .bi-card:active {
       transform: none;
     }
-  }
-
-  :global(html.dark .bi-select__popper.el-popper) {
-    overflow: hidden;
-    background: rgb(24 24 27 / 98%) !important;
-    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
-    border-radius: 12px !important;
-    box-shadow: 0 18px 52px rgb(0 0 0 / 58%) !important;
-  }
-
-  :global(html:not(.dark) .bi-select__popper.el-popper) {
-    border-radius: 12px !important;
-    box-shadow: 0 14px 40px rgb(15 23 42 / 12%) !important;
   }
 
   @media (width <= 1280px) {
