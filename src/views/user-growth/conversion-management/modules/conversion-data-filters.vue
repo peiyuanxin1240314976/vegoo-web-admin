@@ -2,20 +2,12 @@
   <div class="conversion-data-filters">
     <div class="conversion-data-filters__inner">
       <div class="conversion-data-filters__row">
-        <div class="conversion-data-filter-chip conversion-data-filter-chip--static">
-          <ElIcon class="conversion-data-filter-chip__icon"><Calendar /></ElIcon>
-          <span class="conversion-data-filter-chip__label">
-            {{ $t('conversionManagement.dataFilterDateLabel') }}
-          </span>
-          <span class="conversion-data-filter-chip__value">{{ dateRangeChipText }}</span>
-        </div>
-
         <AppDatePicker
           v-model="form.dateRange"
           type="daterange"
           :shortcuts="dateRangeShortcuts"
           unlink-panels
-          range-separator="-"
+          range-separator="~"
           value-format="YYYY-MM-DD"
           :start-placeholder="$t('conversionManagement.dataFilterStart')"
           :end-placeholder="$t('conversionManagement.dataFilterEnd')"
@@ -32,8 +24,8 @@
           dropdown-class="conversion-data-filter-popper"
           :setting-apps="settingAppsForSelect"
           :height="36"
-          :min-width="134"
-          :max-width="220"
+          :min-width="200"
+          :max-width="240"
           @change="doSearch"
         />
         <ElSelect
@@ -41,7 +33,7 @@
           :placeholder="$t('conversionManagement.filterConversionType')"
           clearable
           class="conversion-data-filter-select"
-          :prefix-icon="TrendCharts"
+          popper-class="conversion-data-filter-popper"
           @change="doSearch"
         >
           <ElOption
@@ -53,6 +45,8 @@
         </ElSelect>
         <ElButton
           type="primary"
+          plain
+          round
           class="conversion-data-filter-action-btn"
           @click="doSearch"
           v-ripple
@@ -65,7 +59,6 @@
 </template>
 
 <script setup lang="ts">
-  import { Calendar, TrendCharts } from '@element-plus/icons-vue'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import { useCockpitMetaFilterOptions } from '@/composables/use-cockpit-meta-filter'
   import type { CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
@@ -125,11 +118,11 @@
     conversionType: String(props.filter?.conversionType ?? '')
   })
 
-  const dateRangeChipText = computed(() => {
-    const r = form.dateRange
-    if (r?.[0] && r?.[1]) return `${r[0]} — ${r[1]}`
-    return '—'
-  })
+  // const dateRangeChipText = computed(() => {
+  //   const r = form.dateRange
+  //   if (r?.[0] && r?.[1]) return `${r[0]} — ${r[1]}`
+  //   return '—'
+  // })
 
   onMounted(() => {
     void ensureCockpitMetaLoaded()
@@ -161,31 +154,19 @@
 
 <style scoped lang="scss">
   @use '../../styles/app-platform-select-ad-theme.scss' as apSelect;
+  @use '../../styles/filter-bar-theme.scss' as filterTheme;
 
   .conversion-data-filters__inner {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 14px 16px;
-    align-items: center;
-    justify-content: space-between;
+    @include filterTheme.filter-panel(14px 16px);
+    @include filterTheme.filter-panel-children;
+
     min-width: 0;
-    padding: 18px 20px;
-    background: rgb(10 10 14 / 82%);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgb(96 165 250 / 20%);
-    border-radius: 16px;
-    box-shadow:
-      0 8px 32px rgb(0 0 0 / 40%),
-      inset 0 1px 0 rgb(186 230 253 / 10%),
-      0 0 40px rgb(59 130 246 / 8%);
   }
 
   .conversion-data-filters__row {
-    display: flex;
+    @include filterTheme.filter-row;
+
     flex: 1;
-    flex-wrap: wrap;
-    gap: 10px 12px;
-    align-items: center;
     min-width: 0;
   }
 
@@ -227,67 +208,29 @@
   }
 
   .conversion-data-filters__date {
-    flex: 0 1 200px;
-    width: 200px;
-    min-width: 170px;
-    max-width: 100%;
+    @include filterTheme.date-range-size;
   }
 
-  /* Element Plus daterange root node also carries el-input__wrapper; force width to avoid being stretched */
-  :deep(.conversion-data-filters__date.el-date-editor--daterange) {
-    flex: 0 0 200px;
-    width: 200px !important;
-    min-width: 170px !important;
-    max-width: 200px !important;
-  }
-
-  :deep(.conversion-data-filters__date .el-input__wrapper) {
-    min-height: 36px;
-    padding: 0 12px;
-    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
-    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
-    border-radius: var(--el-border-radius-base, 4px);
-    box-shadow: none;
-    transition:
-      border-color 0.22s ease,
-      box-shadow 0.22s ease,
-      background 0.22s ease;
-  }
-
-  :deep(.conversion-data-filters__date .el-input__wrapper.is-focus) {
-    background: color-mix(
-      in srgb,
-      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
-      transparent
-    ) !important;
-    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
-    box-shadow: 0 0 0 2px
-      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
-  }
-
-  :deep(.conversion-data-filters__date .el-range-separator) {
-    color: var(--el-text-color-secondary);
-  }
-
-  :deep(.conversion-data-filters__date .el-range-input) {
-    font-size: 13px;
-    color: var(--el-text-color-primary);
-  }
+  @include filterTheme.date-range-trigger('.conversion-data-filters__date');
 
   .conversion-data-filter-select {
-    width: 134px;
-    min-width: 110px;
-    max-width: 100%;
+    @include filterTheme.filter-select-size;
+  }
+
+  .conversion-data-filter-select--app {
+    @include filterTheme.filter-select-size;
   }
 
   @include apSelect.apply-app-platform-select-ad-theme(
     '.conversion-data-filters__row',
     'conversion-data-filter-select__input',
     'conversion-data-filter-popper',
-    220px,
-    134px,
-    220px
+    240px,
+    200px,
+    240px
   );
+  @include filterTheme.select-popper('conversion-data-filter-popper');
+  @include filterTheme.app-platform-popper('conversion-data-filter-popper');
 
   :deep(.conversion-data-filter-select) {
     --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
@@ -315,6 +258,16 @@
     font-size: 14px;
     color: var(--el-text-color-primary);
     text-overflow: ellipsis;
+  }
+
+  :deep(.conversion-data-filter-select .el-select__selected-item),
+  :deep(.conversion-data-filter-select .el-select__selected-item .el-select__placeholder) {
+    color: var(--el-text-color-primary);
+  }
+
+  :deep(.conversion-data-filter-select .el-select__placeholder.is-transparent),
+  :deep(.conversion-data-filter-select .el-select__selected-item.is-transparent) {
+    color: var(--el-text-color-placeholder);
   }
 
   :deep(.conversion-data-filter-select .el-input__prefix-inner) {

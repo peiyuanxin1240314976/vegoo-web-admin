@@ -67,6 +67,116 @@
   }
 }
 
+@mixin date-range-size($width: 250px) {
+  flex: 0 0 $width;
+  width: $width;
+  min-width: $width;
+  max-width: $width;
+
+  @media (width <= 768px) {
+    flex: 1 1 100%;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+
+@mixin date-range-trigger($selector, $width: 250px) {
+  #{$selector} {
+    @include date-range-size($width);
+  }
+
+  :deep(#{$selector}.el-date-editor.el-date-editor--daterange),
+  :deep(#{$selector}.el-date-editor--daterange),
+  #{$selector}:deep(.el-date-editor.el-date-editor--daterange),
+  #{$selector}:deep(.el-date-editor--daterange),
+  #{$selector}:deep(.el-range-editor.el-input__wrapper),
+  #{$selector}:deep(.el-date-editor .el-input__wrapper) {
+    flex: 0 0 $width !important;
+    width: $width !important;
+    min-width: $width !important;
+    max-width: $width !important;
+    min-height: 36px;
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    border-radius: var(--el-border-radius-base, 4px) !important;
+    box-shadow: none !important;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      background 0.2s ease;
+  }
+
+  :deep(#{$selector}.el-date-editor.el-date-editor--daterange:hover),
+  :deep(#{$selector}.el-date-editor--daterange:hover),
+  #{$selector}:deep(.el-date-editor.el-date-editor--daterange:hover),
+  #{$selector}:deep(.el-date-editor--daterange:hover),
+  #{$selector}:deep(.el-range-editor.el-input__wrapper:hover),
+  #{$selector}:deep(.el-date-editor .el-input__wrapper:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
+  }
+
+  :deep(#{$selector}.el-date-editor.el-date-editor--daterange.is-active),
+  :deep(#{$selector}.el-date-editor.el-date-editor--daterange:focus-within),
+  :deep(#{$selector}.el-date-editor--daterange.is-active),
+  :deep(#{$selector}.el-date-editor--daterange:focus-within),
+  #{$selector}:deep(.el-date-editor.el-date-editor--daterange.is-active),
+  #{$selector}:deep(.el-date-editor.el-date-editor--daterange:focus-within),
+  #{$selector}:deep(.el-date-editor--daterange.is-active),
+  #{$selector}:deep(.el-date-editor--daterange:focus-within),
+  #{$selector}:deep(.el-range-editor.el-input__wrapper.is-focus),
+  #{$selector}:deep(.el-date-editor .el-input__wrapper.is-focus) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
+  }
+
+  :deep(#{$selector} .el-range-input),
+  :deep(#{$selector} .el-range-separator),
+  #{$selector}:deep(.el-range-input),
+  #{$selector}:deep(.el-range-separator) {
+    font-size: 14px;
+    color: var(--el-text-color-primary);
+  }
+
+  :deep(#{$selector} .el-range-input::placeholder),
+  #{$selector}:deep(.el-range-input::placeholder) {
+    color: var(--el-text-color-placeholder);
+  }
+
+  :deep(#{$selector} .el-range__icon),
+  :deep(#{$selector} .el-range__close-icon),
+  #{$selector}:deep(.el-range__icon),
+  #{$selector}:deep(.el-range__close-icon) {
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+  }
+
+  @media (width <= 768px) {
+    :deep(#{$selector}.el-date-editor.el-date-editor--daterange),
+    :deep(#{$selector}.el-date-editor--daterange),
+    #{$selector}:deep(.el-date-editor.el-date-editor--daterange),
+    #{$selector}:deep(.el-date-editor--daterange),
+    #{$selector}:deep(.el-range-editor.el-input__wrapper),
+    #{$selector}:deep(.el-date-editor .el-input__wrapper) {
+      flex: 1 1 100% !important;
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: 100% !important;
+    }
+  }
+}
+
 @mixin element-select-trigger($selector) {
   #{$selector} :deep(.el-select__wrapper) {
     min-height: 36px;
