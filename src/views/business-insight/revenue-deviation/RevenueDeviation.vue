@@ -12,7 +12,7 @@
           range-separator="~"
           start-placeholder="开始日期"
           end-placeholder="结束日期"
-          format="YYYY/MM/DD"
+          format="YYYY-MM-DD"
           value-format="YYYY-MM-DD"
           class="rd-filter-date"
           :teleported="true"
