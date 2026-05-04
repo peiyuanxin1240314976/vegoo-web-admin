@@ -10,7 +10,6 @@
       </div> -->
       <div class="bi-filters bi-filter-panel">
         <div class="bi-filter-field">
-          <span class="bi-filter-label">日期</span>
           <AppDatePicker
             v-model="dateRange"
             type="daterange"
@@ -20,15 +19,15 @@
             range-separator="～"
             start-placeholder="开始日期"
             end-placeholder="结束日期"
-            value-format="YYYY/MM/DD"
-            format="YYYY/MM/DD"
+            value-format="YYYY-MM-DD"
+            format="YYYY-MM-DD"
             class="bi-filter-date"
-            popper-class="bi-select__popper"
+            popper-class="ecpm-filter__popper"
+            :prefix-icon="Calendar"
           />
         </div>
 
         <div class="bi-filter-field">
-          <span class="bi-filter-label">应用</span>
           <el-skeleton :loading="loadingMetaFilterOptions" animated>
             <template #template>
               <el-skeleton-item variant="text" class="filter-sel-skeleton" />
@@ -42,14 +41,14 @@
               search-placeholder="应用"
               :setting-apps="settingAppsForSelect"
               :height="36"
-              :min-width="148"
-              :max-width="220"
+              :min-width="200"
+              :max-width="240"
+              dropdown-class="ecpm-filter__popper"
             />
           </el-skeleton>
         </div>
 
         <div class="bi-filter-field">
-          <span class="bi-filter-label">广告平台</span>
           <el-skeleton :loading="loadingMetaFilterOptions" animated>
             <template #template>
               <el-skeleton-item variant="text" class="filter-sel-skeleton" />
@@ -57,8 +56,9 @@
             <el-select
               v-model="filterPlatform"
               size="default"
-              class="bi-filter-select"
-              popper-class="bi-select__popper"
+              class="bi-filter-select bi-filter-select--platform"
+              popper-class="ecpm-filter__popper"
+              placeholder="广告平台"
             >
               <el-option
                 v-for="item in sourceOptions"
@@ -71,7 +71,6 @@
         </div>
 
         <div class="bi-filter-field">
-          <span class="bi-filter-label">国家</span>
           <el-skeleton :loading="loadingMetaFilterOptions" animated>
             <template #template>
               <el-skeleton-item variant="text" class="filter-sel-skeleton" />
@@ -80,7 +79,8 @@
               v-model="filterCountry"
               size="default"
               class="bi-filter-select"
-              popper-class="bi-select__popper"
+              popper-class="ecpm-filter__popper"
+              placeholder="国家"
               filterable
             >
               <el-option
@@ -459,6 +459,7 @@
   import { useResizeObserver } from '@vueuse/core'
   import { echarts } from '@/plugins/echarts'
   import {
+    Calendar,
     // TrendCharts, // 与「预估 ECPM」卡片一并恢复
     Money,
     Location,
@@ -1479,7 +1480,8 @@
 </script>
 
 <style scoped lang="scss">
-  @use '../../user-growth/ad-performance/styles/ap-card-fx.scss' as ap;
+  @use '../../user-growth/styles/app-platform-select-ad-theme.scss' as apSelect;
+  @use '../../user-growth/styles/filter-bar-theme.scss' as filterTheme;
 
   /* ── Root & Variables ─────────────────────────────────────────── */
   .ecpm-dash {
@@ -1627,129 +1629,74 @@
     color: var(--text);
   } */
 
-  .bi-filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    align-items: center;
+  .bi-filters.bi-filter-panel {
+    @include filterTheme.filter-panel(14px 16px);
+    @include filterTheme.filter-panel-children;
+    @include filterTheme.filter-row;
+
+    min-width: 0;
   }
 
-  .bi-filter-panel {
-    position: relative;
-    padding: 10px 14px;
-    overflow: hidden;
-    border-radius: 16px;
-
-    @include ap.ap-neon-bg;
-    @include ap.ap-card-mesh;
-
-    transition:
-      box-shadow 0.35s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
-      border-color 0.3s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
-
-    &:hover {
-      border-color: rgb(96 165 250 / 48%);
-      box-shadow:
-        0 12px 40px rgb(0 0 0 / 44%),
-        0 0 0 1px rgb(96 165 250 / 22%),
-        inset 0 1px 0 rgb(186 230 253 / 16%),
-        0 0 48px rgb(59 130 246 / 14%);
-    }
-
-    > * {
-      position: relative;
-      z-index: 1;
-    }
-  }
-
-  .bi-filter-panel :deep(.bi-filter-select .el-select__wrapper),
-  .bi-filter-panel :deep(.bi-filter-select__input .el-select__wrapper),
-  .bi-filter-panel :deep(.bi-filter-date.el-date-editor--daterange) {
-    min-height: 36px;
-    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
-    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
-    border-radius: var(--el-border-radius-base, 4px);
-    box-shadow: none;
-    transition:
-      border-color 0.2s ease,
-      box-shadow 0.2s ease,
-      background 0.2s ease;
-  }
-
-  .bi-filter-panel :deep(.bi-filter-select .el-select__wrapper:hover),
-  .bi-filter-panel :deep(.bi-filter-select__input .el-select__wrapper:hover),
-  .bi-filter-panel :deep(.bi-filter-date.el-date-editor--daterange:hover) {
-    border-color: var(--theme-color, var(--art-primary, #3b82f6));
-    box-shadow: 0 0 0 1px
-      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
-  }
-
-  .bi-filter-panel :deep(.bi-filter-select .el-select__wrapper.is-focused),
-  .bi-filter-panel :deep(.bi-filter-select__input .el-select__wrapper.is-focused),
-  .bi-filter-panel :deep(.bi-filter-date.el-date-editor--daterange.is-active),
-  .bi-filter-panel :deep(.bi-filter-date.el-date-editor--daterange:focus-within) {
-    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
-    box-shadow: 0 0 0 2px
-      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
-  }
-
-  .bi-filter-field {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    min-height: 32px;
-  }
-
-  .bi-filter-label {
-    flex-shrink: 0;
-    font-size: 12px;
-    color: var(--text-sec);
-    white-space: nowrap;
-  }
-
-  .bi-filter-select {
-    width: 148px;
-  }
-
-  .bi-filter-select--app {
+  .bi-filters.bi-filter-panel > .bi-filter-field {
     display: inline-flex;
+    gap: 0;
+    align-items: center;
+    min-height: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
   }
 
-  .bi-filter-date {
-    width: 260px;
+  .bi-filter-select:not(.bi-filter-select--app) {
+    @include filterTheme.filter-select-size(240px, 200px, 240px);
   }
 
-  :deep(.bi-filter-select .el-select__wrapper),
-  :deep(.bi-filter-select__input .el-select__wrapper),
-  :deep(.bi-filter-date.el-date-editor--daterange) {
-    min-height: 36px;
+  .bi-filter-select--platform {
+    flex: 0 0 128px;
+    width: 128px;
+    min-width: 128px;
+    max-width: 128px;
   }
 
-  :deep(.bi-filter-select .el-select__wrapper:hover),
-  :deep(.bi-filter-select__input .el-select__wrapper:hover),
-  :deep(.bi-filter-date.el-date-editor--daterange:hover) {
-    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+  :deep(.bi-filter-date) {
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
+    --el-date-editor-width: 260px;
+    --el-date-editor-daterange-width: 260px;
   }
 
-  :deep(.bi-filter-select .el-select__placeholder),
-  :deep(.bi-filter-select .el-select__selected-item),
-  :deep(.bi-filter-select .el-select__caret),
-  :deep(.bi-filter-date .el-range-input),
-  :deep(.bi-filter-select__input .el-select__placeholder),
-  :deep(.bi-filter-select__input .el-select__selected-item),
-  :deep(.bi-filter-select__input .el-select__caret) {
-    color: #fff;
+  @include filterTheme.date-range-trigger('.bi-filter-date', 260px);
+  @include filterTheme.element-select-trigger('.bi-filter-select');
+  @include apSelect.apply-app-platform-select-ad-theme(
+    '.bi-filters.bi-filter-panel',
+    'bi-filter-select__input',
+    'ecpm-filter__popper',
+    240px,
+    200px,
+    240px
+  );
+  @include filterTheme.select-popper('ecpm-filter__popper');
+  @include filterTheme.app-platform-popper('ecpm-filter__popper');
+  @include filterTheme.date-picker-popper('ecpm-filter__popper');
+
+  :global(.ecpm-filter__popper.el-popper),
+  :global(.ecpm-filter__popper.el-select__popper),
+  :global(.ecpm-filter__popper.el-picker__popper) {
+    z-index: 4000 !important;
   }
 
-  :deep(.bi-filter-date .el-range-separator) {
-    color: #fff;
-  }
-
-  :deep(.bi-filter-date .el-range__icon),
-  :deep(.bi-filter-date .el-input__prefix),
-  :deep(.bi-filter-date .el-input__suffix),
-  :deep(.bi-filter-date .el-input__inner) {
-    color: #fff;
+  :deep(.bi-filter-select),
+  :deep(.bi-filter-select__input) {
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
   }
 
   .bi-filter-panel :deep(.bi-query-btn.el-button) {
@@ -1769,7 +1716,7 @@
   }
 
   :deep(.filter-sel-skeleton.el-skeleton__item) {
-    width: 148px;
+    width: 240px;
     height: 36px;
     border-radius: var(--el-border-radius-base, 4px);
   }
@@ -1922,12 +1869,8 @@
       animation: none;
     }
 
-    .bi-filter-panel {
+    .bi-filters.bi-filter-panel {
       transition: none;
-    }
-
-    .bi-filter-panel::after {
-      opacity: 0.35;
     }
   }
 
