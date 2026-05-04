@@ -1,5 +1,5 @@
-// 筛选区域视觉：玻璃条带 + 主题主色交互（与 Element primary / --art-primary 一致）
-// 选中、悬浮、聚焦使用 --art-primary，不使用成功绿。
+// 筛选区域视觉：玻璃条带 + 主题主色交互（与 Element `--el-color-primary` 一致，随设置换色）
+// 选中、悬浮、聚焦使用 --el-color-primary，不使用成功绿。
 
 @mixin pa-theme-filter-glass {
   background: color-mix(in srgb, var(--default-box-color) 82%, transparent);
@@ -60,19 +60,19 @@
       box-shadow 0.15s ease;
 
     &:hover {
-      color: var(--art-primary);
-      background: color-mix(in srgb, var(--art-primary) 12%, transparent);
+      color: var(--el-color-primary);
+      background: color-mix(in srgb, var(--el-color-primary) 12%, transparent);
     }
 
     &.active {
       font-weight: 700;
-      color: var(--art-primary);
-      background: color-mix(in srgb, var(--art-primary) 18%, transparent);
-      box-shadow: 0 0 0 1px color-mix(in srgb, var(--art-primary) 45%, transparent) inset;
+      color: var(--el-color-primary);
+      background: color-mix(in srgb, var(--el-color-primary) 18%, transparent);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--el-color-primary) 45%, transparent) inset;
     }
 
     &:focus-visible {
-      box-shadow: 0 0 0 2px color-mix(in srgb, var(--art-primary) 45%, transparent);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--el-color-primary) 45%, transparent);
     }
   }
 
@@ -106,8 +106,8 @@
     font-size: 13px;
     font-weight: 500;
     color: var(--el-text-color-secondary);
-    background: color-mix(in srgb, var(--art-primary) 6%, transparent);
-    border: 1px solid color-mix(in srgb, var(--art-primary) 28%, transparent);
+    background: color-mix(in srgb, var(--el-color-primary) 6%, transparent);
+    border: 1px solid color-mix(in srgb, var(--el-color-primary) 28%, transparent);
     border-radius: 9999px;
     transition:
       color 0.2s ease,
@@ -116,27 +116,27 @@
       box-shadow 0.2s ease;
 
     &:hover {
-      color: var(--art-primary);
-      border-color: color-mix(in srgb, var(--art-primary) 55%, transparent);
-      box-shadow: 0 0 12px color-mix(in srgb, var(--art-primary) 12%, transparent);
+      color: var(--el-color-primary);
+      border-color: color-mix(in srgb, var(--el-color-primary) 55%, transparent);
+      box-shadow: 0 0 12px color-mix(in srgb, var(--el-color-primary) 12%, transparent);
     }
 
     &.active {
       font-weight: 700;
-      color: var(--art-primary);
-      background: color-mix(in srgb, var(--art-primary) 18%, transparent);
-      border-color: color-mix(in srgb, var(--art-primary) 45%, transparent);
-      box-shadow: 0 0 0 1px color-mix(in srgb, var(--art-primary) 35%, transparent) inset;
+      color: var(--el-color-primary);
+      background: color-mix(in srgb, var(--el-color-primary) 18%, transparent);
+      border-color: color-mix(in srgb, var(--el-color-primary) 45%, transparent);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--el-color-primary) 35%, transparent) inset;
     }
 
     &:focus-visible {
       outline: none;
-      box-shadow: 0 0 0 2px color-mix(in srgb, var(--art-primary) 40%, transparent);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--el-color-primary) 40%, transparent);
     }
   }
 
   .filter-spacer {
-    border-left-color: color-mix(in srgb, var(--art-primary) 25%, transparent);
+    border-left-color: color-mix(in srgb, var(--el-color-primary) 25%, transparent);
   }
 
   .search-input {
