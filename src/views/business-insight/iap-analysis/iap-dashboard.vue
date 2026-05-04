@@ -2,25 +2,8 @@
   <div class="iap-dashboard-page iap-fx-page art-full-height">
     <div class="iap-page-fx" aria-hidden="true"></div>
     <header class="iap-dashboard-topbar iap-entry-1">
-      <div class="iap-dashboard-header">
-        <div class="iap-dashboard-header__left">
-          <div class="iap-dashboard-subtitle">应用内购订单与收入分析</div>
-        </div>
-        <div class="iap-dashboard-header__actions">
-          <!-- <ElButton type="info" plain round>
-            <ElIcon><Download /></ElIcon>
-            导出
-          </ElButton> -->
-          <ElButton type="primary" round @click="loadDashboard">
-            <ElIcon><Refresh /></ElIcon>
-            刷新
-          </ElButton>
-        </div>
-      </div>
-
-      <div class="iap-dashboard-filter">
+      <div class="iap-dashboard-filter iap-filter-panel">
         <div class="iap-dashboard-filter__item">
-          <span class="iap-dashboard-f-label">时间范围</span>
           <AppDatePicker
             v-model="dateRange"
             type="daterange"
@@ -29,32 +12,33 @@
             start-placeholder="开始日期"
             end-placeholder="结束日期"
             value-format="YYYY-MM-DD"
-            class="iap-dashboard-sel iap-dashboard-sel--w220"
-            popper-class="iap-date-popper"
+            class="iap-filter-date"
+            popper-class="iap-filter__popper"
+            :prefix-icon="Calendar"
           />
         </div>
         <div class="iap-dashboard-filter__item">
-          <span class="iap-dashboard-f-label">应用</span>
           <AppPlatformSearchSelect
             v-model="filters.s_app_id"
-            class="iap-dashboard-sel iap-dashboard-sel--w110"
-            input-class="iap-dashboard-sel__input"
+            class="iap-filter-select iap-filter-select--app"
+            input-class="iap-filter-select__input"
             mode="app"
             placeholder="应用"
             search-placeholder="应用"
             :setting-apps="settingAppsForSelect"
-            :height="40"
-            :min-width="110"
-            :max-width="220"
-          >
-          </AppPlatformSearchSelect>
+            :height="36"
+            :min-width="200"
+            :max-width="240"
+            dropdown-class="iap-filter__popper"
+          />
         </div>
         <div class="iap-dashboard-filter__item">
-          <span class="iap-dashboard-f-label">国家</span>
           <ElSelect
             v-model="filters.s_country_code"
-            class="iap-dashboard-sel iap-dashboard-sel--w90"
-            popper-class="iap-select-popper"
+            class="iap-filter-select"
+            popper-class="iap-filter__popper"
+            placeholder="国家"
+            filterable
           >
             <ElOption
               v-for="opt in filterOptions?.countryOptions"
@@ -65,11 +49,11 @@
           </ElSelect>
         </div>
         <div class="iap-dashboard-filter__item">
-          <span class="iap-dashboard-f-label">平台</span>
           <ElSelect
             v-model="filters.platform"
-            class="iap-dashboard-sel iap-dashboard-sel--w90"
-            popper-class="iap-select-popper"
+            class="iap-filter-select iap-filter-select--platform"
+            popper-class="iap-filter__popper"
+            placeholder="终端平台"
           >
             <ElOption
               v-for="opt in filterOptions?.platformOptions"
@@ -80,7 +64,13 @@
           </ElSelect>
         </div>
 
-        <ElButton type="primary" plain round @click="loadDashboard"> 查询 </ElButton>
+        <ElButton type="primary" plain round class="iap-query-btn" @click="loadDashboard">
+          查询
+        </ElButton>
+        <ElButton type="primary" plain round @click="loadDashboard">
+          <ElIcon><Refresh /></ElIcon>
+          刷新
+        </ElButton>
       </div>
     </header>
 
@@ -349,6 +339,7 @@
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import {
+    Calendar,
     Download,
     Refresh,
     Top,
@@ -894,6 +885,8 @@
 <style scoped lang="scss">
   @use './styles/iap-card-fx.scss' as *;
   @use '../../user-growth/ad-performance/styles/ap-card-fx.scss' as ap;
+  @use '../../user-growth/styles/app-platform-select-ad-theme.scss' as apSelect;
+  @use '../../user-growth/styles/filter-bar-theme.scss' as filterTheme;
 
   .iap-dashboard-page {
     display: flex;
@@ -908,18 +901,7 @@
   }
 
   .iap-dashboard-topbar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    align-items: center;
-    justify-content: space-between;
-    padding: 18px 20px;
     margin-bottom: 16px;
-    background: color-mix(in srgb, var(--default-bg-color) 82%, transparent);
-    backdrop-filter: blur(12px);
-    border: 1px solid color-mix(in srgb, var(--el-color-primary) 24%, transparent);
-    border-radius: 14px;
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--el-color-primary) 8%, transparent);
   }
 
   .iap-dashboard-header {
@@ -1020,171 +1002,90 @@
     }
   }
 
-  .iap-dashboard-filter {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
+  .iap-dashboard-filter.iap-filter-panel {
+    @include filterTheme.filter-panel(14px 16px);
+    @include filterTheme.filter-panel-children;
+    @include filterTheme.filter-row;
+
+    min-width: 0;
+  }
+
+  .iap-dashboard-filter.iap-filter-panel > .iap-dashboard-filter__item {
+    display: inline-flex;
+    gap: 0;
     align-items: center;
+    min-height: 0;
     padding: 0;
-    margin-bottom: 0;
     background: transparent;
     border: none;
   }
 
-  .iap-dashboard-filter__item {
-    display: flex;
-    gap: 8px;
-    align-items: center;
+  .iap-filter-select:not(.iap-filter-select--app) {
+    @include filterTheme.filter-select-size(240px, 200px, 240px);
   }
 
-  .iap-dashboard-f-label {
-    font-size: 13px;
-    color: var(--art-gray-600);
-    white-space: nowrap;
+  .iap-filter-select--platform {
+    flex: 0 0 128px;
+    width: 128px;
+    min-width: 128px;
+    max-width: 128px;
   }
 
-  :deep(.iap-dashboard-sel) {
+  :deep(.iap-filter-date) {
     --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
     --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
     --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
-    --el-component-size: 40px;
-
-    .el-select__wrapper,
-    .el-input__wrapper {
-      padding: 0 14px;
-      background: color-mix(
-        in srgb,
-        var(--theme-color, var(--art-primary, #3b82f6)) 6%,
-        transparent
-      ) !important;
-      border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
-      border-radius: var(--el-border-radius-base, 4px);
-      box-shadow: none !important;
-      transition:
-        border-color 0.22s var(--ease-default),
-        box-shadow 0.22s var(--ease-default),
-        background-color 0.22s var(--ease-default);
-    }
-
-    .el-input__inner,
-    .el-select__selected-item {
-      font-size: 14px;
-      color: var(--text-primary) !important;
-    }
-
-    .el-input__prefix-inner {
-      margin-right: 4px;
-    }
-
-    .el-select__placeholder {
-      color: var(--el-text-color-placeholder);
-    }
-
-    .el-select__caret,
-    .el-select__suffix,
-    .el-select__icon {
-      color: var(--theme-color, var(--art-primary, #3b82f6));
-    }
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
+    --el-date-editor-width: 250px;
+    --el-date-editor-daterange-width: 250px;
   }
 
-  :deep(.iap-dashboard-sel__input) {
+  @include filterTheme.date-range-trigger('.iap-filter-date', 250px);
+  @include filterTheme.element-select-trigger('.iap-filter-select');
+  @include apSelect.apply-app-platform-select-ad-theme(
+    '.iap-dashboard-filter.iap-filter-panel',
+    'iap-filter-select__input',
+    'iap-filter__popper',
+    240px,
+    200px,
+    240px
+  );
+  @include filterTheme.select-popper('iap-filter__popper');
+  @include filterTheme.app-platform-popper('iap-filter__popper');
+  @include filterTheme.date-picker-popper('iap-filter__popper');
+
+  :global(.iap-filter__popper.el-popper),
+  :global(.iap-filter__popper.el-select__popper),
+  :global(.iap-filter__popper.el-picker__popper) {
+    z-index: 4000 !important;
+  }
+
+  :deep(.iap-filter-select),
+  :deep(.iap-filter-select__input) {
     --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
     --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
     --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
-    --el-component-size: 40px;
-
-    .el-select__wrapper {
-      padding: 0 14px;
-      background: color-mix(
-        in srgb,
-        var(--theme-color, var(--art-primary, #3b82f6)) 6%,
-        transparent
-      ) !important;
-      border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
-      border-radius: var(--el-border-radius-base, 4px);
-      box-shadow: none !important;
-      transition:
-        border-color 0.22s var(--ease-default),
-        box-shadow 0.22s var(--ease-default),
-        background-color 0.22s var(--ease-default);
-    }
-
-    .el-select__selected-item,
-    .el-select__placeholder,
-    .el-select__caret,
-    .el-select__suffix,
-    .el-select__icon {
-      color: var(--theme-color, var(--art-primary, #3b82f6));
-    }
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
   }
 
-  :deep(.iap-dashboard-sel.el-date-editor.el-date-editor--daterange) {
-    background: color-mix(
-      in srgb,
-      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
-      transparent
-    ) !important;
-    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
-    border-radius: var(--el-border-radius-base, 4px) !important;
-    box-shadow: none !important;
-    transition:
-      border-color 0.22s var(--ease-default),
-      box-shadow 0.22s var(--ease-default),
-      background-color 0.22s var(--ease-default);
+  .iap-filter-panel :deep(.iap-query-btn.el-button) {
+    height: 36px;
+    padding: 0 18px;
+    font-weight: 600;
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: none;
   }
 
-  :deep(.iap-dashboard-sel.el-date-editor.el-date-editor--daterange:hover) {
-    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+  .iap-filter-panel :deep(.iap-query-btn.el-button:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
     box-shadow: 0 0 0 1px
-      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
-  }
-
-  :deep(.iap-dashboard-sel.el-date-editor.el-date-editor--daterange.is-active),
-  :deep(.iap-dashboard-sel.el-date-editor.el-date-editor--daterange:focus-within) {
-    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
-    box-shadow: 0 0 0 2px
-      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
-  }
-
-  :deep(.iap-dashboard-sel.el-date-editor.el-date-editor--daterange .el-range-input),
-  :deep(.iap-dashboard-sel.el-date-editor.el-date-editor--daterange .el-range-separator),
-  :deep(.iap-dashboard-sel.el-date-editor.el-date-editor--daterange .el-range__icon),
-  :deep(.iap-dashboard-sel.el-date-editor.el-date-editor--daterange .el-range__close-icon) {
-    color: #fff;
-  }
-
-  :deep(.iap-dashboard-sel .el-select__wrapper.is-focused),
-  :deep(.iap-dashboard-sel__input .el-select__wrapper.is-focused),
-  :deep(.iap-dashboard-sel .el-input__wrapper.is-focus),
-  :deep(.iap-dashboard-sel.el-date-editor--daterange:focus-within .el-input__wrapper) {
-    background: color-mix(
-      in srgb,
-      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
-      transparent
-    ) !important;
-    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
-    box-shadow: 0 0 0 2px
-      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
-  }
-
-  :deep(.iap-dashboard-sel .el-select__wrapper:hover),
-  :deep(.iap-dashboard-sel__input .el-select__wrapper:hover),
-  :deep(.iap-dashboard-sel .el-input__wrapper:hover) {
-    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
-    box-shadow: 0 0 0 1px
-      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
-  }
-
-  :deep(.iap-dashboard-sel--w220) {
-    width: 220px;
-  }
-
-  :deep(.iap-dashboard-sel--w110) {
-    width: 110px;
-  }
-
-  :deep(.iap-dashboard-sel--w90) {
-    width: 90px;
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
   }
 
   .iap-dashboard-kpi-row {
