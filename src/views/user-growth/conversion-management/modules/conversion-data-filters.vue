@@ -43,14 +43,7 @@
             :value="opt.value"
           />
         </ElSelect>
-        <ElButton
-          type="primary"
-          plain
-          round
-          class="conversion-data-filter-action-btn"
-          @click="doSearch"
-          v-ripple
-        >
+        <ElButton type="primary" plain round @click="doSearch" v-ripple>
           {{ $t('conversionManagement.dataFilterSearch') }}
         </ElButton>
       </div>
@@ -303,37 +296,37 @@
       color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
   }
 
-  .conversion-data-filter-action-btn {
-    --el-button-size: 36px;
+  // .conversion-data-filter-action-btn {
+  //   --el-button-size: 36px;
 
-    height: 36px;
-    padding: 0 20px;
-    font-size: 14px;
-    color: var(--theme-color, var(--art-primary, #3b82f6));
-    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
-    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
-    border-radius: var(--el-border-radius-base, 4px);
-    box-shadow: 0 0 18px
-      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 20%, transparent);
-    transition:
-      box-shadow 0.22s ease,
-      transform 0.18s ease;
+  //   height: 36px;
+  //   padding: 0 20px;
+  //   font-size: 14px;
+  //   color: var(--theme-color, var(--art-primary, #3b82f6));
+  //   background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+  //   border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+  //   border-radius: var(--el-border-radius-base, 4px);
+  //   box-shadow: 0 0 18px
+  //     color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 20%, transparent);
+  //   transition:
+  //     box-shadow 0.22s ease,
+  //     transform 0.18s ease;
 
-    &:hover {
-      background: color-mix(
-        in srgb,
-        var(--theme-color, var(--art-primary, #3b82f6)) 8%,
-        transparent
-      );
-      box-shadow: 0 0 26px
-        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 28%, transparent);
-      transform: translateY(-1px);
-    }
+  //   &:hover {
+  //     background: color-mix(
+  //       in srgb,
+  //       var(--theme-color, var(--art-primary, #3b82f6)) 8%,
+  //       transparent
+  //     );
+  //     box-shadow: 0 0 26px
+  //       color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 28%, transparent);
+  //     transform: translateY(-1px);
+  //   }
 
-    &:active {
-      transform: translateY(0);
-    }
-  }
+  //   &:active {
+  //     transform: translateY(0);
+  //   }
+  // }
 
   @media (width <= 768px) {
     .conversion-data-filters__inner {
