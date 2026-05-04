@@ -3,6 +3,7 @@
     <AppDatePicker
       v-model="selectedDate"
       type="date"
+      :shortcuts="dateShortcuts"
       value-format="YYYY-MM-DD"
       format="YYYY-MM-DD"
       :clearable="false"
@@ -10,11 +11,10 @@
       class="cockpit-date-display"
       placeholder="选择日期"
       :prefix-icon="Calendar"
-      :disabled-date="disableNotToday"
       @update:model-value="onDateChange"
     />
     <div class="actions">
-      <ElButton
+      <!-- <ElButton
         size="default"
         type="primary"
         class="toolbar-btn toolbar-btn--primary"
@@ -22,7 +22,7 @@
       >
         <ElIcon class="btn-icon"><DataAnalysis /></ElIcon>
         模拟分析
-      </ElButton>
+      </ElButton> -->
       <ElButton size="default" class="toolbar-btn toolbar-btn--ghost" @click="toggleFullScreen">
         <ElIcon class="btn-icon"><FullScreen /></ElIcon>
         {{ isFullScreen ? '退出全屏' : '全屏' }}
@@ -33,9 +33,14 @@
 
 <script setup lang="ts">
   import { ref, onMounted, onUnmounted, watch } from 'vue'
-  import { Calendar, DataAnalysis, FullScreen } from '@element-plus/icons-vue'
+  import {
+    Calendar,
+    //  DataAnalysis,
+    FullScreen
+  } from '@element-plus/icons-vue'
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { useTableStore } from '@/store/modules/table'
+  import { dateShortcuts } from '@/utils/form/date-shortcuts'
   import { formatYYYYMMDD, getAppNow } from '@/utils/app-now'
 
   defineOptions({ name: 'CockpitTopBarActions' })
@@ -71,11 +76,6 @@
       if (v && v !== selectedDate.value) selectedDate.value = v
     }
   )
-
-  function disableNotToday(date: Date): boolean {
-    const d = formatYYYYMMDD(date)
-    return d !== todayStr()
-  }
 
   function onDateChange(value: string | undefined) {
     if (!value) {

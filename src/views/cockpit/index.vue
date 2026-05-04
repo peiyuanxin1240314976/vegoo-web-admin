@@ -166,6 +166,7 @@
 
 <script setup lang="ts">
   import { ref, watch, defineAsyncComponent } from 'vue'
+  import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
   import { useCockpitData } from './composables/useCockpitData'
   import type { CockpitDateRange } from './types'
   import CockpitDateRangeTabs from './modules/date-range-tabs.vue'
@@ -201,7 +202,7 @@
     load({ dateRange: value })
   }
 
-  // 顶部日期选择器（单日）变更时，刷新全量模块接口
+  // 顶部日期选择器（单日）变更时：与付费分析一致可走快捷「今天 / 昨天」；同步 Tab 与 overall 的日期口径后再刷新
   watch(
     date,
     (v, oldV) => {
@@ -210,6 +211,15 @@
         suppressNextDateWatch.value = false
         return
       }
+      const today = formatYYYYMMDD(getAppNow())
+      const y = cloneAppDate(getAppNow())
+      y.setDate(y.getDate() - 1)
+      const yesterdayStr = formatYYYYMMDD(y)
+      let nextRange = dateRange.value
+      if (v === today) nextRange = 'today'
+      else if (v === yesterdayStr) nextRange = 'yesterday'
+      else if (nextRange === 'today' || nextRange === 'yesterday') nextRange = 'week'
+      if (nextRange !== dateRange.value) dateRange.value = nextRange
       load({ date: v, dateRange: dateRange.value })
     },
     { flush: 'post' }
