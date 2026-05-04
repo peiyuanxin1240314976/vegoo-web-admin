@@ -942,6 +942,7 @@
 
 <style scoped lang="scss">
   @use '../../../user-growth/ad-performance/styles/ap-card-fx.scss' as *;
+  @use '../../../user-growth/styles/filter-bar-theme.scss' as filterTheme;
 
   // ─── Variables ───
   $bg-page: #08111e;
@@ -1011,6 +1012,9 @@
   }
 
   .aa-tab-bar-row {
+    @include filterTheme.filter-panel(14px 16px);
+    @include filterTheme.filter-panel-children;
+
     display: flex;
     flex-wrap: wrap;
     gap: 12px 16px;
@@ -1055,6 +1059,8 @@
     width: 250px;
     max-width: min(250px, 100%);
   }
+
+  @include filterTheme.date-range-trigger('.filter-date');
 
   .aa-tab-bar-filters .filter-date :deep(.el-input__wrapper) {
     box-sizing: border-box;
@@ -2904,48 +2910,5 @@
         box-shadow 0.16s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
       transform: none !important;
     }
-  }
-</style>
-
-<style lang="scss">
-  /* 挂载在 body，须非 scoped；与广告成效筛选下拉视觉对齐 */
-  .aa-agency-filter-popper.el-popper {
-    // background: rgb(10 10 14 / 96%) !important;
-    border: 1px solid rgb(96 165 250 / 28%) !important;
-    border-radius: 12px !important;
-    box-shadow:
-      0 16px 48px rgb(0 0 0 / 55%),
-      0 0 0 1px rgb(16 185 129 / 12%),
-      0 0 32px rgb(59 130 246 / 15%) !important;
-  }
-
-  .aa-agency-filter-popper .el-popper__arrow::before {
-    background: rgb(10 10 14 / 96%) !important;
-    border: 1px solid rgb(96 165 250 / 25%) !important;
-  }
-
-  .aa-agency-filter-popper .el-select-dropdown__item {
-    font-size: 13px;
-  }
-
-  .aa-agency-filter-popper .el-select-dropdown__item.is-selected {
-    font-weight: 600;
-    color: #34d399 !important;
-    background: rgb(16 185 129 / 12%) !important;
-  }
-
-  .aa-agency-filter-popper .el-select-dropdown__item.is-hovering {
-    background: rgb(59 130 246 / 12%) !important;
-  }
-
-  .aa-agency-filter-popper.el-picker__popper.el-popper,
-  .aa-agency-filter-popper .el-picker-panel {
-    background: rgb(10 10 14 / 96%) !important;
-    border: 1px solid rgb(96 165 250 / 28%) !important;
-
-    --el-datepicker-border-color: rgb(96 165 250 / 35%);
-    --el-datepicker-text-color: #e2e8f0;
-    --el-datepicker-off-text-color: #64748b;
-    --el-datepicker-header-text-color: #f1f5f9;
   }
 </style>
