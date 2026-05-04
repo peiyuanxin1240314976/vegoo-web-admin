@@ -132,70 +132,62 @@
 </script>
 
 <style scoped lang="scss">
+  /* 日期框：对齐 user-growth/styles/filter-bar-theme.scss 中 date-trigger（宽度保留驾驶舱 164px） */
   .cockpit-top-bar {
-    --toolbar-theme: var(--theme-color, var(--art-primary, var(--el-color-primary, #3b82f6)));
-    --toolbar-theme-soft: color-mix(in srgb, var(--toolbar-theme) 72%, #8b5cf6);
-    --toolbar-theme-cyan: color-mix(in srgb, var(--toolbar-theme) 82%, #38bdf8);
-    --toolbar-surface: linear-gradient(180deg, rgb(9 16 34 / 92%), rgb(7 12 26 / 88%));
-    --toolbar-border: color-mix(in srgb, var(--toolbar-theme) 24%, transparent);
-    --toolbar-border-strong: color-mix(in srgb, var(--toolbar-theme) 38%, transparent);
-    --toolbar-shadow: 0 12px 28px rgb(2 6 23 / 26%), inset 0 1px 0 rgb(255 255 255 / 6%);
-    --toolbar-active: linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--toolbar-theme) 78%, white 22%) 0%,
-      var(--toolbar-theme-soft) 54%,
-      var(--toolbar-theme-cyan) 100%
-    );
-
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
     align-items: center;
     justify-content: space-between;
 
-    :deep(.cockpit-date-display) {
+    :deep(.cockpit-date-display.el-date-editor) {
+      flex: 0 0 164px !important;
       width: 164px !important;
+      min-width: 164px !important;
+      max-width: 164px !important;
     }
 
     :deep(.cockpit-date-display .el-input__wrapper) {
-      min-height: 40px;
-      cursor: default;
-      background: var(--toolbar-surface);
-      border: 1px solid var(--toolbar-border);
-      border-radius: 14px;
-      box-shadow:
-        var(--toolbar-shadow),
-        0 0 0 1px rgb(24 36 72 / 72%),
-        0 0 18px color-mix(in srgb, var(--toolbar-theme) 10%, transparent);
+      width: 100% !important;
+      min-height: 36px;
+      cursor: pointer;
+      background: color-mix(in srgb, var(--el-color-primary) 6%, transparent) !important;
+      border: 1px solid var(--el-color-primary) !important;
+      border-radius: var(--el-border-radius-base, 4px) !important;
+      box-shadow: none !important;
       transition:
         border-color 0.2s ease,
         box-shadow 0.2s ease,
-        transform 0.16s ease;
+        background 0.2s ease;
     }
 
     :deep(.cockpit-date-display .el-input__wrapper:hover) {
-      border-color: var(--toolbar-border-strong);
-      box-shadow:
-        var(--toolbar-shadow),
-        0 0 0 1px rgb(24 36 72 / 72%),
-        0 0 22px color-mix(in srgb, var(--toolbar-theme) 14%, transparent);
+      border-color: var(--el-border-color-hover) !important;
+      box-shadow: none !important;
+    }
+
+    :deep(.cockpit-date-display .el-input__wrapper.is-focus),
+    :deep(.cockpit-date-display .el-input__wrapper:focus-within) {
+      background: color-mix(in srgb, var(--el-color-primary) 6%, transparent) !important;
+      border-color: var(--el-input-focus-border-color) !important;
+      box-shadow: none !important;
     }
 
     :deep(.cockpit-date-display .el-input__inner) {
-      font-size: 13px;
-      font-weight: 600;
-      line-height: 1;
-      color: rgb(234 242 255 / 94%);
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1.2;
+      color: var(--el-text-color-primary);
       text-align: center;
-      letter-spacing: 0.02em;
-      cursor: default;
-      user-select: none;
     }
 
-    :deep(.cockpit-date-display .el-input__prefix) {
-      margin-right: 4px;
-      color: rgb(162 185 255 / 88%);
-      color: color-mix(in srgb, var(--toolbar-theme) 42%, white 36%);
+    :deep(.cockpit-date-display .el-input__inner::placeholder) {
+      color: var(--el-text-color-placeholder);
+    }
+
+    :deep(.cockpit-date-display .el-input__prefix-inner),
+    :deep(.cockpit-date-display .el-input__icon) {
+      color: var(--el-color-primary);
     }
 
     :deep(.cockpit-date-display .el-input__prefix-inner) {
@@ -204,24 +196,20 @@
       justify-content: center;
     }
 
-    :deep(.cockpit-date-display .el-input__icon) {
-      font-size: 15px;
-      filter: drop-shadow(0 0 10px color-mix(in srgb, var(--toolbar-theme) 18%, transparent));
-    }
-
     .actions {
       display: flex;
       gap: 10px;
       align-items: center;
 
+      /* 对齐 IAPAnalysis.vue .iap-search-btn */
       :deep(.toolbar-btn) {
-        min-height: 40px;
-        padding: 0 16px;
+        height: 36px;
+        min-height: 36px;
+        padding: 0 20px;
         margin-left: 0;
-        font-size: 13px;
-        font-weight: 600;
-        letter-spacing: 0.02em;
-        border-radius: 14px;
+        font-size: 14px;
+        font-weight: 500;
+        border-radius: var(--el-border-radius-base, 4px);
         transition:
           transform 0.16s ease,
           box-shadow 0.22s ease,
@@ -232,48 +220,29 @@
       :deep(.toolbar-btn .btn-icon) {
         margin-right: 6px;
         font-size: 15px;
-        opacity: 0.96;
-      }
-
-      :deep(.toolbar-btn .el-icon) {
-        filter: drop-shadow(0 0 10px color-mix(in srgb, var(--toolbar-theme) 18%, transparent));
-      }
-
-      :deep(.toolbar-btn--primary) {
-        color: #f7fbff;
-        background: var(--toolbar-active);
-        border: 1px solid color-mix(in srgb, var(--toolbar-theme) 34%, white 16%);
-        box-shadow:
-          inset 0 1px 0 rgb(255 255 255 / 24%),
-          0 10px 22px color-mix(in srgb, var(--toolbar-theme) 24%, transparent),
-          0 0 24px color-mix(in srgb, var(--toolbar-theme) 20%, transparent);
-      }
-
-      :deep(.toolbar-btn--primary:hover) {
-        border-color: color-mix(in srgb, var(--toolbar-theme) 42%, white 12%);
-        box-shadow:
-          inset 0 1px 0 rgb(255 255 255 / 28%),
-          0 14px 30px color-mix(in srgb, var(--toolbar-theme) 30%, transparent),
-          0 0 28px color-mix(in srgb, var(--toolbar-theme) 24%, transparent);
       }
 
       :deep(.toolbar-btn--ghost) {
-        color: rgb(232 239 255 / 90%);
-        background: var(--toolbar-surface);
-        border: 1px solid var(--toolbar-border);
-        box-shadow:
-          var(--toolbar-shadow),
-          0 0 0 1px rgb(24 36 72 / 72%),
-          0 0 18px color-mix(in srgb, var(--toolbar-theme) 10%, transparent);
+        color: var(--theme-color, var(--art-primary, #3b82f6));
+        background: color-mix(
+          in srgb,
+          var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+          transparent
+        );
+        border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+        box-shadow: 0 0 18px
+          color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 20%, transparent);
       }
 
       :deep(.toolbar-btn--ghost:hover) {
-        color: #f7fbff;
-        border-color: var(--toolbar-border-strong);
-        box-shadow:
-          var(--toolbar-shadow),
-          0 0 0 1px rgb(24 36 72 / 72%),
-          0 0 24px color-mix(in srgb, var(--toolbar-theme) 16%, transparent);
+        background: color-mix(
+          in srgb,
+          var(--theme-color, var(--art-primary, #3b82f6)) 8%,
+          transparent
+        );
+        border-color: var(--theme-color, var(--art-primary, #3b82f6));
+        box-shadow: 0 0 26px
+          color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 28%, transparent);
       }
 
       :deep(.toolbar-btn:active) {
