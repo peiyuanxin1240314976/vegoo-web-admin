@@ -480,3 +480,9 @@
     height: 12px;
   }
 </style>
+
+<style>
+  .iaa-filter__popper .el-date-table td.today .el-date-table-cell__text {
+    color: #fff !important;
+  }
+</style>
