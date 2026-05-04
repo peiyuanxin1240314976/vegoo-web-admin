@@ -22,8 +22,8 @@
         dropdown-class="ad-performance-filter-popper"
         :setting-apps="settingAppsForSelect"
         :height="36"
-        :min-width="134"
-        :max-width="220"
+        :min-width="200"
+        :max-width="240"
         @update:model-value="onAppChange"
       />
 
@@ -31,7 +31,7 @@
         :model-value="draft.adPlatform"
         :placeholder="tr('adPerformance.filterAdPlatform', '广告平台')"
         class="ad-performance-filter-select"
-        :prefix-icon="Promotion"
+        popper-class="ad-performance-filter-popper"
         @update:model-value="onAdPlatformChange"
       >
         <ElOption :label="tr('adPerformance.filterAll', '全部')" value="" />
@@ -47,7 +47,7 @@
         :model-value="draft.account"
         :placeholder="tr('adPerformance.filterAccount', '账户')"
         class="ad-performance-filter-select"
-        :prefix-icon="User"
+        popper-class="ad-performance-filter-popper"
         @update:model-value="onAccountChange"
       >
         <ElOption :label="tr('adPerformance.filterAll', '全部')" value="" />
@@ -63,7 +63,7 @@
         :model-value="draft.country"
         :placeholder="tr('adPerformance.filterCountry', '国家')"
         class="ad-performance-filter-select"
-        :prefix-icon="Flag"
+        popper-class="ad-performance-filter-popper"
         @update:model-value="onCountryChange"
       >
         <ElOption :label="tr('adPerformance.filterAll', '全部')" value="" />
@@ -94,7 +94,7 @@
 </template>
 
 <script setup lang="ts">
-  import { Calendar, Flag, Promotion, RefreshRight, User } from '@element-plus/icons-vue'
+  import { Calendar, RefreshRight } from '@element-plus/icons-vue'
   import { computed, ref, watch } from 'vue'
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { useI18n } from 'vue-i18n'
@@ -251,38 +251,27 @@
 
 <style scoped lang="scss">
   @use '../../styles/app-platform-select-ad-theme.scss' as apSelect;
+  @use '../../styles/filter-bar-theme.scss' as filterTheme;
 
   .ad-performance-filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 14px 16px;
-    align-items: center;
-    justify-content: space-between;
+    @include filterTheme.filter-panel(14px 16px);
+    @include filterTheme.filter-panel-children;
+
     min-width: 0;
-    padding: 18px 20px;
-    background: rgb(10 10 14 / 82%);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgb(96 165 250 / 20%);
-    border-radius: 16px;
-    box-shadow:
-      0 8px 32px rgb(0 0 0 / 40%),
-      inset 0 1px 0 rgb(186 230 253 / 10%),
-      0 0 40px rgb(59 130 246 / 8%);
   }
 
   .ad-performance-filters__left {
-    display: flex;
+    @include filterTheme.filter-row;
+
     flex: 1;
-    flex-wrap: wrap;
-    gap: 10px 12px;
-    align-items: center;
     min-width: 0;
   }
 
   .ad-performance-date-picker {
-    width: 280px;
-    min-width: 280px;
-    max-width: 100%;
+    flex: 0 0 250px;
+    width: 250px;
+    min-width: 250px;
+    max-width: 250px;
   }
 
   :deep(.ad-performance-date-picker) {
@@ -292,8 +281,8 @@
     --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
     --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
     --el-component-size: 36px;
-    --el-date-editor-width: 280px;
-    --el-date-editor-daterange-width: 280px;
+    --el-date-editor-width: 250px;
+    --el-date-editor-daterange-width: 250px;
   }
 
   :deep(.ad-performance-date-picker .el-input__wrapper),
@@ -314,15 +303,15 @@
   }
 
   :deep(.ad-performance-date-picker.el-date-editor) {
-    width: 280px !important;
-    min-width: 280px;
-    max-width: 280px;
+    width: 250px !important;
+    min-width: 250px;
+    max-width: 250px;
     height: 36px;
     padding: 0 10px;
   }
 
   :deep(.ad-performance-date-picker.el-date-editor .el-range-input) {
-    font-size: 12px;
+    font-size: 14px;
     color: var(--el-text-color-primary);
     background: transparent;
     border: none;
@@ -330,9 +319,13 @@
     box-shadow: none;
   }
 
+  :deep(.ad-performance-date-picker.el-date-editor .el-range-input::placeholder) {
+    color: var(--el-text-color-placeholder);
+  }
+
   :deep(.ad-performance-date-picker.el-date-editor .el-range-separator) {
-    font-size: 12px;
-    color: var(--el-text-color-secondary);
+    font-size: 14px;
+    color: var(--el-text-color-primary);
   }
 
   :deep(.ad-performance-date-picker.el-date-editor .el-range__icon) {
@@ -362,25 +355,23 @@
   }
 
   .ad-performance-filter-select {
-    width: 134px;
-    min-width: 110px;
-    max-width: 100%;
+    @include filterTheme.filter-select-size;
   }
 
   .ad-performance-filter-select--app {
-    width: 134px;
-    min-width: 134px;
-    max-width: 220px;
+    @include filterTheme.filter-select-size;
   }
 
   @include apSelect.apply-app-platform-select-ad-theme(
     '.ad-performance-filters__left',
     'ad-performance-filter-select__input',
     'ad-performance-filter-popper',
-    220px,
-    134px,
-    220px
+    240px,
+    200px,
+    240px
   );
+  @include filterTheme.select-popper('ad-performance-filter-popper');
+  @include filterTheme.app-platform-popper('ad-performance-filter-popper');
 
   :deep(.ad-performance-filter-select),
   :deep(.ad-performance-filter-select__input) {
@@ -410,6 +401,16 @@
     font-size: 14px;
     color: var(--el-text-color-primary);
     text-overflow: ellipsis;
+  }
+
+  :deep(.ad-performance-filter-select .el-select__selected-item),
+  :deep(.ad-performance-filter-select .el-select__selected-item .el-select__placeholder) {
+    color: var(--el-text-color-primary);
+  }
+
+  :deep(.ad-performance-filter-select .el-select__placeholder.is-transparent),
+  :deep(.ad-performance-filter-select .el-select__selected-item.is-transparent) {
+    color: var(--el-text-color-placeholder);
   }
 
   :deep(.ad-performance-filter-select .el-input__prefix-inner) {
