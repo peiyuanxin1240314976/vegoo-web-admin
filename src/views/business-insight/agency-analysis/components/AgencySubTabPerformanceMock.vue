@@ -749,9 +749,50 @@
     width: min(360px, 100%);
   }
 
-  .aa-sub-mock__acct-range :deep(.el-input__wrapper) {
-    background: rgb(8 17 30 / 55%);
-    box-shadow: 0 0 0 1px rgb(30 58 95 / 55%) inset;
+  .aa-sub-mock__acct-range :deep(.el-input__wrapper),
+  .aa-sub-mock__acct-range :deep(.el-range-editor.el-input__wrapper),
+  .aa-sub-mock__acct-range :deep(.el-date-editor) {
+    min-height: 32px;
+    padding: 0 10px;
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    border-radius: var(--el-border-radius-base, 4px) !important;
+    box-shadow: none !important;
+    transition:
+      border-color 0.22s ease,
+      box-shadow 0.22s ease,
+      background 0.22s ease;
+  }
+
+  .aa-sub-mock__acct-range :deep(.el-date-editor) {
+    height: 32px;
+  }
+
+  .aa-sub-mock__acct-range :deep(.el-date-editor:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
+  }
+
+  .aa-sub-mock__acct-range :deep(.el-date-editor.is-active),
+  .aa-sub-mock__acct-range :deep(.el-date-editor:focus-within) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
+  }
+
+  .aa-sub-mock__acct-range :deep(.el-range__icon),
+  .aa-sub-mock__acct-range :deep(.el-range__close-icon) {
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   .aa-sub-mock__acct-query {

@@ -1576,7 +1576,9 @@
   }
 
   :deep(.filter-date.el-date-editor.is-active),
-  :deep(.filter-date.el-date-editor--daterange.is-active) {
+  :deep(.filter-date.el-date-editor--daterange.is-active),
+  :deep(.filter-date.el-date-editor:focus-within),
+  :deep(.filter-date.el-date-editor--daterange:focus-within) {
     background: color-mix(
       in srgb,
       var(--theme-color, var(--art-primary, #3b82f6)) 6%,

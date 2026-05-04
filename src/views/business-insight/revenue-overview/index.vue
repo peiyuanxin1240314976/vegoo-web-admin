@@ -13,7 +13,6 @@
       <header class="rev-header rev-entry-1">
         <div class="rev-header__filters rev-filter-panel">
           <div class="rev-pill rev-pill--app-multi">
-            <span class="rev-pill__k">应用:</span>
             <AppPlatformSearchSelect
               v-model="filtersDraft.appIds"
               mode="app"
@@ -21,15 +20,15 @@
               placeholder="应用（多选，空为不限）"
               search-placeholder="搜索类别/应用名称/应用简称"
               :setting-apps="metaSettingApps"
-              :height="32"
-              :min-width="220"
+              :height="36"
+              :min-width="200"
               :max-width="320"
               input-class="rev-app-platform-select"
+              dropdown-class="rev-select__popper"
             />
           </div>
 
           <div class="rev-pill">
-            <span class="rev-pill__k">国家：</span>
             <ElSelect
               v-model="filtersDraft.s_country_code"
               class="rev-select"
@@ -49,7 +48,6 @@
           </div>
 
           <!-- <div class="rev-pill">
-            <span class="rev-pill__k">Version:</span>
             <ElSelect
               v-model="filtersDraft.app_version"
               class="rev-select"
@@ -67,7 +65,6 @@
           </div> -->
 
           <div class="rev-pill">
-            <span class="rev-pill__k">日期：</span>
             <AppDatePicker
               v-model="dateRangePicker"
               type="daterange"
@@ -80,10 +77,13 @@
               popper-class="rev-select__popper"
               :teleported="true"
               :clearable="false"
+              :prefix-icon="Calendar"
             />
           </div>
 
-          <ElButton type="primary" plain round @click="onQuery">查询</ElButton>
+          <ElButton type="primary" plain round class="rev-query-btn" @click="onQuery"
+            >查询</ElButton
+          >
         </div>
 
         <!-- <button type="button" class="rev-export" @click="onExport">Export</button> -->
@@ -697,6 +697,7 @@
     watch,
     type CSSProperties
   } from 'vue'
+  import { Calendar } from '@element-plus/icons-vue'
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { useRouter } from 'vue-router'
   import { storeToRefs } from 'pinia'
@@ -2532,6 +2533,8 @@
 
 <style scoped lang="scss">
   @use '../../user-growth/ad-performance/styles/ap-card-fx.scss' as ap;
+  @use '../../user-growth/styles/app-platform-select-ad-theme.scss' as apSelect;
+  @use '../../user-growth/styles/filter-bar-theme.scss' as filterTheme;
 
   /* 背景与主题变量在外层 root，保证铺满可视区；内层 scale 后视觉缩小，不再依赖透明底露边 */
   .revenue-overview-root.revenue-overview-page {
@@ -2716,60 +2719,36 @@
   }
 
   .rev-header__filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    align-items: center;
+    @include filterTheme.filter-row;
+
+    gap: 12px;
   }
 
   .rev-filter-panel {
-    position: relative;
-    padding: 10px 14px;
-    overflow: hidden;
-    border-radius: 16px;
+    @include filterTheme.filter-panel(14px 16px);
+    @include filterTheme.filter-panel-children;
 
-    @include ap.ap-neon-bg;
-    @include ap.ap-card-mesh;
-
-    transition:
-      box-shadow 0.35s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
-      border-color 0.3s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
-
-    &:hover {
-      border-color: rgb(96 165 250 / 48%);
-      box-shadow:
-        0 12px 40px rgb(0 0 0 / 44%),
-        0 0 0 1px rgb(96 165 250 / 22%),
-        inset 0 1px 0 rgb(186 230 253 / 16%),
-        0 0 48px rgb(59 130 246 / 14%);
-    }
-
-    > * {
-      position: relative;
-      z-index: 1;
-    }
-  }
-
-  :global(html:not(.dark) .rev-filter-panel) {
-    background: linear-gradient(148deg, rgb(255 255 255 / 98%), rgb(248 250 252 / 99%));
-    border: 1px solid var(--rev-border-soft);
-    box-shadow: 0 10px 32px rgb(15 23 42 / 7%);
-
-    &:hover {
-      border-color: rgb(59 130 246 / 22%);
-      box-shadow: 0 12px 36px rgb(15 23 42 / 10%);
-    }
+    min-width: 0;
   }
 
   :global(html.dark .rev-filter-panel .rev-pill) {
-    background: rgb(15 23 42 / 0%);
-    border-color: rgb(96 165 250 / 26%);
-    box-shadow: 0 0 0 0 rgb(59 130 246 / 8%) inset;
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+  }
+
+  .rev-filter-panel :deep(.rev-select) {
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
   }
 
   .rev-filter-panel :deep(.rev-select .el-select__wrapper) {
     min-height: 36px;
-    padding: 0 10px;
+    padding: 0 12px;
     background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
     border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
     border-radius: var(--el-border-radius-base, 4px);
@@ -2780,8 +2759,24 @@
       background 0.2s ease;
   }
 
+  .rev-filter-panel :deep(.rev-select .el-select__selected-item),
+  .rev-filter-panel :deep(.rev-select .el-select__selected-item .el-select__placeholder) {
+    color: var(--el-text-color-primary);
+  }
+
+  .rev-filter-panel :deep(.rev-select .el-select__placeholder.is-transparent),
+  .rev-filter-panel :deep(.rev-select .el-select__selected-item.is-transparent) {
+    color: var(--el-text-color-placeholder);
+  }
+
+  .rev-filter-panel :deep(.rev-select .el-select__caret),
+  .rev-filter-panel :deep(.rev-select .el-select__suffix),
+  .rev-filter-panel :deep(.rev-select .el-select__icon) {
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+  }
+
   /*
-   * 日期范围：与 .rev-select / 应用选择器同一条主题实线；EP 仍走 --el-input-border-color
+   * 日期范围：与 .rev-select / 应用选择器同一条主题实线
    */
   .rev-filter-panel :deep(.rev-date.el-date-editor) {
     --el-input-border-color: var(--theme-color, var(--art-primary, #3b82f6));
@@ -2789,11 +2784,15 @@
     --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
     --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
     --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
-    --el-text-color-primary: #fff;
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
+
+    height: 36px;
   }
 
   .rev-filter-panel :deep(.rev-date .el-range-input) {
-    color: #fff;
+    font-size: 14px;
+    color: var(--el-text-color-primary);
   }
 
   .rev-filter-panel :deep(.rev-date .el-range-input::placeholder) {
@@ -2801,28 +2800,44 @@
   }
 
   .rev-filter-panel :deep(.rev-date .el-range-separator) {
-    color: #fff;
+    font-size: 14px;
+    color: var(--el-text-color-primary);
+  }
+
+  .rev-filter-panel :deep(.rev-date.el-date-editor .el-range__icon),
+  .rev-filter-panel :deep(.rev-date.el-date-editor .el-range__close-icon) {
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   .rev-filter-panel :deep(.rev-date .el-input__wrapper),
+  .rev-filter-panel :deep(.rev-date .el-range-editor.el-input__wrapper),
   .rev-filter-panel :deep(.rev-date.el-date-editor .el-input__wrapper),
-  .rev-filter-panel :deep(.rev-date .el-range-editor.el-input__wrapper) {
+  .rev-filter-panel :deep(.rev-date.el-date-editor) {
     min-height: 36px;
     padding: 0 10px;
-    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
     border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
-    border-radius: var(--el-border-radius-base, 4px);
+    border-radius: var(--el-border-radius-base, 4px) !important;
     box-shadow: none !important;
     transition:
-      border-color 0.2s ease,
-      box-shadow 0.2s ease,
-      background 0.2s ease;
+      border-color 0.22s ease,
+      box-shadow 0.22s ease,
+      background 0.22s ease;
   }
 
   :global(html:not(.dark) .rev-filter-panel) :deep(.rev-select .el-select__wrapper),
   :global(html:not(.dark) .rev-filter-panel) :deep(.rev-date .el-input__wrapper),
-  :global(html:not(.dark) .rev-filter-panel) :deep(.rev-date .el-range-editor.el-input__wrapper) {
-    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+  :global(html:not(.dark) .rev-filter-panel) :deep(.rev-date .el-range-editor.el-input__wrapper),
+  :global(html:not(.dark) .rev-filter-panel) :deep(.rev-date.el-date-editor) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
     border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
     box-shadow: none !important;
   }
@@ -2840,6 +2855,11 @@
   .rev-filter-panel :deep(.rev-date .el-input__wrapper:focus-within),
   .rev-filter-panel :deep(.rev-date.el-date-editor.is-active),
   .rev-filter-panel :deep(.rev-date.el-date-editor:focus-within) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
     border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
     box-shadow: 0 0 0 2px
       color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
@@ -2884,9 +2904,22 @@
     border-radius: 14px;
   }
 
-  .rev-pill__k {
-    font-size: 12px;
-    color: var(--rev-muted);
+  /* 去掉 label 后不再用 pill 留白；控件间距由 .rev-header__filters gap 统一控制 */
+  .rev-filter-panel.rev-header__filters > .rev-pill {
+    gap: 0;
+    height: auto;
+    min-height: 36px;
+    padding: 0;
+    color: inherit;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  :global(html:not(.dark) .rev-filter-panel.rev-header__filters > .rev-pill) {
+    background: transparent;
+    border: none;
   }
 
   .rev-pill--app-multi {
@@ -2895,8 +2928,26 @@
 
   .rev-filter-panel :deep(.rev-app-platform-select) {
     flex: 1;
-    min-width: 220px;
+    min-width: 200px;
     max-width: 320px;
+  }
+
+  @include apSelect.apply-app-platform-select-ad-theme(
+    '.rev-filter-panel',
+    'rev-app-platform-select',
+    'rev-select__popper',
+    320px,
+    200px,
+    320px
+  );
+  @include filterTheme.select-popper('rev-select__popper');
+  @include filterTheme.app-platform-popper('rev-select__popper');
+  @include filterTheme.date-picker-popper('rev-select__popper');
+
+  :global(.rev-select__popper.el-popper),
+  :global(.rev-select__popper.el-select__popper),
+  :global(.rev-select__popper.el-picker__popper) {
+    z-index: 4000 !important;
   }
 
   .rev-export {
@@ -2912,24 +2963,6 @@
 
   .rev-export:hover {
     filter: brightness(1.06);
-  }
-
-  .rev-query-btn {
-    height: 36px;
-    padding: 0 14px;
-    color: var(--rev-text);
-    background: var(--rev-pill);
-    border: 1px solid var(--rev-pill-border);
-    border-radius: 9999px;
-  }
-
-  .rev-query-btn:hover {
-    filter: brightness(1.06);
-  }
-
-  :deep(.rev-query-btn.el-button) {
-    background: var(--rev-pill);
-    border-color: var(--rev-pill-border);
   }
 
   .rev-skeleton {
@@ -4747,23 +4780,6 @@
   :global(html:not(.dark) .rev-page-fx) {
     opacity: 0.32;
     animation: none;
-  }
-
-  /* 下拉与日期面板（teleported=false 时仍在页内，同步霓虹底） */
-  :global(html.dark .rev-select__popper.el-popper) {
-    overflow: hidden;
-    background: rgb(24 24 27 / 98%) !important;
-    border: 1px solid rgb(96 165 250 / 30%) !important;
-    border-radius: 12px !important;
-    box-shadow:
-      0 18px 52px rgb(0 0 0 / 58%),
-      0 0 0 1px rgb(96 165 250 / 14%),
-      inset 0 1px 0 rgb(186 230 253 / 10%) !important;
-  }
-
-  :global(html:not(.dark) .rev-select__popper.el-popper) {
-    border-radius: 12px !important;
-    box-shadow: 0 14px 40px rgb(15 23 42 / 12%) !important;
   }
 
   /* 固定画布布局：不做响应式重排，保持原型一致 */

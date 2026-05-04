@@ -270,6 +270,7 @@
     flex: 0 0 auto;
     width: 250px;
     max-width: 100%;
+    height: 36px;
 
     --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
     --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
@@ -277,6 +278,8 @@
     --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
     --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
     --el-component-size: 36px;
+    --el-date-editor-width: 250px;
+    --el-date-editor-daterange-width: 250px;
   }
 
   :deep(.or-filter-date .el-range__icon) {
@@ -301,20 +304,29 @@
     width: 42%;
   }
 
-  :deep(.or-filter-date .el-input__wrapper) {
+  :deep(.or-filter-date .el-input__wrapper),
+  :deep(.or-filter-date .el-range-editor.el-input__wrapper),
+  :deep(.or-filter-date.el-date-editor) {
     min-height: 36px;
-    padding: 0 12px;
-    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
-    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
-    border-radius: var(--el-border-radius-base, 4px);
-    box-shadow: none;
+    padding: 0 10px;
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    border-radius: var(--el-border-radius-base, 4px) !important;
+    box-shadow: none !important;
     transition:
       border-color 0.22s ease,
       box-shadow 0.22s ease,
       background 0.22s ease;
   }
 
-  :deep(.or-filter-date .el-input__wrapper.is-focus) {
+  :deep(.or-filter-date .el-input__wrapper.is-focus),
+  :deep(.or-filter-date .el-input__wrapper:focus-within),
+  :deep(.or-filter-date.el-date-editor.is-active),
+  :deep(.or-filter-date.el-date-editor:focus-within) {
     background: color-mix(
       in srgb,
       var(--theme-color, var(--art-primary, #3b82f6)) 6%,
@@ -325,10 +337,11 @@
       color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
   }
 
-  :deep(.or-filter-date .el-input__wrapper:hover) {
-    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+  :deep(.or-filter-date .el-input__wrapper:hover),
+  :deep(.or-filter-date.el-date-editor:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
     box-shadow: 0 0 0 1px
-      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
   }
 
   .or-filter-select {

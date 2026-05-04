@@ -88,8 +88,10 @@
 
   :deep(#{$selector}.el-date-editor.el-date-editor--daterange),
   :deep(#{$selector}.el-date-editor--daterange),
+  :deep(#{$selector}.el-date-editor),
   #{$selector}:deep(.el-date-editor.el-date-editor--daterange),
   #{$selector}:deep(.el-date-editor--daterange),
+  #{$selector}:deep(.el-date-editor),
   #{$selector}:deep(.el-range-editor.el-input__wrapper),
   #{$selector}:deep(.el-date-editor .el-input__wrapper) {
     flex: 0 0 $width !important;
@@ -113,8 +115,10 @@
 
   :deep(#{$selector}.el-date-editor.el-date-editor--daterange:hover),
   :deep(#{$selector}.el-date-editor--daterange:hover),
+  :deep(#{$selector}.el-date-editor:hover),
   #{$selector}:deep(.el-date-editor.el-date-editor--daterange:hover),
   #{$selector}:deep(.el-date-editor--daterange:hover),
+  #{$selector}:deep(.el-date-editor:hover),
   #{$selector}:deep(.el-range-editor.el-input__wrapper:hover),
   #{$selector}:deep(.el-date-editor .el-input__wrapper:hover) {
     border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
@@ -125,10 +129,14 @@
   :deep(#{$selector}.el-date-editor.el-date-editor--daterange:focus-within),
   :deep(#{$selector}.el-date-editor--daterange.is-active),
   :deep(#{$selector}.el-date-editor--daterange:focus-within),
+  :deep(#{$selector}.el-date-editor.is-active),
+  :deep(#{$selector}.el-date-editor:focus-within),
   #{$selector}:deep(.el-date-editor.el-date-editor--daterange.is-active),
   #{$selector}:deep(.el-date-editor.el-date-editor--daterange:focus-within),
   #{$selector}:deep(.el-date-editor--daterange.is-active),
   #{$selector}:deep(.el-date-editor--daterange:focus-within),
+  #{$selector}:deep(.el-date-editor.is-active),
+  #{$selector}:deep(.el-date-editor:focus-within),
   #{$selector}:deep(.el-range-editor.el-input__wrapper.is-focus),
   #{$selector}:deep(.el-date-editor .el-input__wrapper.is-focus) {
     background: color-mix(
@@ -163,8 +171,10 @@
   @media (width <= 768px) {
     :deep(#{$selector}.el-date-editor.el-date-editor--daterange),
     :deep(#{$selector}.el-date-editor--daterange),
+    :deep(#{$selector}.el-date-editor),
     #{$selector}:deep(.el-date-editor.el-date-editor--daterange),
     #{$selector}:deep(.el-date-editor--daterange),
+    #{$selector}:deep(.el-date-editor),
     #{$selector}:deep(.el-range-editor.el-input__wrapper),
     #{$selector}:deep(.el-date-editor .el-input__wrapper) {
       flex: 1 1 100% !important;
