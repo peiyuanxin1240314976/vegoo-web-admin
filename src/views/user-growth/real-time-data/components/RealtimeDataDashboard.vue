@@ -361,15 +361,19 @@
 
 <template>
   <div class="dashboard dashboard--ap-fx art-full-height">
-    <!-- ===== Header ===== -->
-    <div class="top-header rtd-entry-1">
-      <div class="breadcrumb">
-        <!-- <span class="bc-parent">用户增长</span>
-        <span class="bc-sep">›</span>
-        <span class="bc-current">实时数据</span> -->
-        <!-- <div class="bc-subtitle">按需要调整匹配产品的最新广告投战数据</div> -->
+    <!-- ===== 顶栏：提示 + 最后更新 / 刷新 / 倒计时（单行） ===== -->
+    <div class="top-header rtd-toolbar rtd-entry-1">
+      <div class="toolbar-hint">
+        <span class="banner-icon">⚠</span>
+        <span class="banner-text">
+          {{ t('realtimeDashboard.banner.autoRefreshHint', { minutes: autoRefreshMinutes }) }}
+        </span>
+        <button class="banner-link" type="button" @click="onManualRefresh">
+          {{ t('realtimeDashboard.banner.manualRefresh') }}
+        </button>
+        <span class="banner-shortcut">{{ t('realtimeDashboard.banner.shortcut') }}</span>
       </div>
-      <div class="header-actions">
+      <div class="toolbar-actions">
         <span class="last-update">{{
           t('realtimeDashboard.header.lastUpdate', { time: lastUpdateTimeStr })
         }}</span>
@@ -379,29 +383,15 @@
         <el-button type="success" plain round @click="openAutoRefreshDialog">{{
           t('realtimeDashboard.header.autoRefreshSettings')
         }}</el-button>
-      </div>
-    </div>
-
-    <!-- ===== Alert Banner ===== -->
-    <div class="alert-banner rtd-entry-2">
-      <div class="banner-left">
-        <span class="banner-icon">⚠</span>
-        <span class="banner-text">
-          {{ t('realtimeDashboard.banner.autoRefreshHint', { minutes: autoRefreshMinutes }) }}
-        </span>
-        <button class="banner-link" @click="onManualRefresh">
-          {{ t('realtimeDashboard.banner.manualRefresh') }}
-        </button>
-        <span class="banner-shortcut">{{ t('realtimeDashboard.banner.shortcut') }}</span>
-      </div>
-      <div class="banner-right">
-        {{ t('realtimeDashboard.banner.nextAutoRefresh')
-        }}<span class="countdown">{{ nextRefreshDisplay }}</span>
+        <div class="toolbar-countdown">
+          {{ t('realtimeDashboard.banner.nextAutoRefresh')
+          }}<span class="countdown">{{ nextRefreshDisplay }}</span>
+        </div>
       </div>
     </div>
 
     <!-- ===== Filters ===== -->
-    <div class="filter-bar rtd-entry-3">
+    <div class="filter-bar rtd-entry-2">
       <div class="rtd-filter-panel">
         <div class="filter-group rtd-filter-field">
           <AppPlatformSearchSelect
@@ -475,7 +465,7 @@
           </ElSkeleton>
         </div>
       </div>
-      <div class="bottom-section rtd-skel-bottom rtd-entry-6">
+      <div class="bottom-section rtd-skel-bottom rtd-entry-5">
         <div class="bottom-header">
           <span class="bottom-title">{{ t('realtimeDashboard.skeleton.bottomTitle') }}</span>
         </div>
@@ -488,7 +478,7 @@
     </template>
     <template v-else>
       <!-- ===== Summary KPI Cards ===== -->
-      <div class="kpi-summary rtd-entry-4">
+      <div class="kpi-summary rtd-entry-3">
         <div class="summary-card">
           <div class="sum-label">{{ t('realtimeDashboard.kpi.onlineApps') }}</div>
           <div class="sum-value"
@@ -534,7 +524,7 @@
       </div>
 
       <!-- ===== App Cards Grid ===== -->
-      <div v-loading="dashboardLoading" class="app-grid rtd-entry-5">
+      <div v-loading="dashboardLoading" class="app-grid rtd-entry-4">
         <div
           v-for="(app, idx) in apps"
           :key="app.id"
@@ -618,7 +608,7 @@
       </div>
 
       <!-- ===== Bottom Chart ===== -->
-      <div class="bottom-section rtd-entry-6">
+      <div class="bottom-section rtd-entry-5">
         <div class="bottom-header">
           <span class="bottom-title">{{ t('realtimeDashboard.chart.bottomTitle') }}</span>
           <div class="legend-list">
@@ -773,11 +763,6 @@
     animation-delay: 0.1s;
   }
 
-  .rtd-entry-6 {
-    animation: rtd-slide-up 0.6s cubic-bezier(0, 0, 0.2, 1) both;
-    animation-delay: 0.12s;
-  }
-
   .rtd-skel-block {
     animation: rtd-skeleton-orbit 2.5s ease-in-out infinite;
   }
@@ -796,38 +781,39 @@
     background: #07090f;
   }
 
-  /* ===== Header ===== */
-  .top-header {
+  /* ===== 顶栏（提示 + 操作，单行可折行） ===== */
+  .top-header.rtd-toolbar {
     display: flex;
-    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 10px 20px;
+    align-items: center;
     justify-content: space-between;
-    padding: 18px 24px 10px;
+    padding: 10px 24px 12px;
     border-bottom: 1px solid rgb(96 165 250 / 16%);
   }
 
-  .breadcrumb {
+  .toolbar-hint {
     display: flex;
+    flex: 1 1 240px;
     flex-wrap: wrap;
-    gap: 6px;
-    align-items: baseline;
+    gap: 6px 8px;
+    align-items: center;
+    min-width: 0;
+    padding: 6px 12px;
+    font-size: 12px;
+    background: rgb(26 18 0 / 72%);
+    border: 1px solid #3a2a00;
+    border-radius: 10px;
   }
 
-  /* .bc-parent {
-    font-size: 17px;
-    font-weight: 500;
-    color: #6b7a99;
+  .toolbar-actions {
+    display: flex;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: flex-end;
   }
-
-  .bc-sep {
-    font-size: 16px;
-    color: #3a4a62;
-  }
-
-  .bc-current {
-    font-size: 17px;
-    font-weight: 700;
-    color: #e2ebf8;
-  } */
 
   .bc-subtitle {
     width: 100%;
@@ -835,13 +821,6 @@
     font-size: 12px;
     color: #3a4a62;
     letter-spacing: 0.01em;
-  }
-
-  .header-actions {
-    display: flex;
-    flex-shrink: 0;
-    gap: 10px;
-    align-items: center;
   }
 
   .last-update {
@@ -899,28 +878,10 @@
     border-color: rgb(96 165 250 / 38%);
   }
 
-  /* ===== Alert Banner ===== */
-  .alert-banner {
-    display: flex;
-    gap: 20px;
-    align-items: center;
-    justify-content: space-between;
-    padding: 9px 24px;
-    font-size: 12px;
-    background: #1a1200;
-    border-top: 1px solid #3a2a00;
-    border-bottom: 1px solid #3a2a00;
-  }
-
-  .banner-left {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    align-items: center;
-  }
-
   .banner-icon {
+    flex-shrink: 0;
     font-size: 13px;
+    line-height: 1;
     color: #f0b429;
   }
 
@@ -942,10 +903,12 @@
     color: #6b7a99;
   }
 
-  .banner-right {
-    flex-shrink: 0;
+  .toolbar-countdown {
+    padding-left: 4px;
+    font-size: 12px;
     color: #6b7a99;
     white-space: nowrap;
+    border-left: 1px solid rgb(96 165 250 / 22%);
   }
 
   .countdown {
@@ -1519,8 +1482,7 @@
     .rtd-entry-2,
     .rtd-entry-3,
     .rtd-entry-4,
-    .rtd-entry-5,
-    .rtd-entry-6 {
+    .rtd-entry-5 {
       opacity: 1;
       transform: none;
       animation: none;
