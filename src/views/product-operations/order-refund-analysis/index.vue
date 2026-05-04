@@ -5,112 +5,92 @@
     <div
       class="order-refund-analysis-page__section order-refund-analysis-page__section--filters ora-entry-1"
     >
-      <div class="ora-filters">
-        <div class="ora-filters__left">
-          <div class="ora-filter-chip">
-            <ElIcon class="ora-filter-chip__icon"><Calendar /></ElIcon>
-            <span class="ora-filter-chip__label">日期范围</span>
-            <span class="ora-filter-chip__value">{{ dateRangeDisplay }}</span>
-          </div>
+      <div class="ora-filters ora-filter-panel">
+        <AppPlatformSearchSelect
+          v-model="draftAppId"
+          mode="app"
+          class="ora-filter-select ora-filter-select--app"
+          input-class="ora-filter-select__input"
+          placeholder="应用"
+          search-placeholder="搜索类别/应用名称/应用简称"
+          all-label="全部应用"
+          :setting-apps="settingAppsForSelect"
+          :height="36"
+          :min-width="200"
+          :max-width="240"
+          dropdown-class="ora-filter__popper"
+          :show-platform-suffix="true"
+        />
 
-          <AppPlatformSearchSelect
-            v-model="draftAppId"
-            mode="app"
-            class="ora-filter-app-select-wrap"
-            input-class="ora-filter-app-select__trigger"
-            placeholder="应用"
-            search-placeholder="搜索类别/应用名称/应用简称"
-            all-label="全部应用"
-            :setting-apps="settingAppsForSelect"
-            :height="40"
-            :width="128"
-            :min-width="100"
-            :max-width="128"
-            radius="9999px"
-            dropdown-class="ora-filter-popper"
-            :show-platform-suffix="true"
+        <AppDatePicker
+          v-model="dateRangeDraft"
+          type="daterange"
+          range-separator="~"
+          start-placeholder="起"
+          end-placeholder="止"
+          value-format="YYYY-MM-DD"
+          class="ora-filter-date"
+          :shortcuts="dateRangeShortcuts"
+          popper-class="ora-filter__popper"
+          :prefix-icon="Calendar"
+        />
+
+        <ElSelect
+          v-model="draftFilters.compareType"
+          placeholder="对比期间"
+          class="ora-filter-select ora-filter-select--compare"
+          :prefix-icon="TrendCharts"
+          popper-class="ora-filter__popper"
+        >
+          <ElOption v-for="o in COMPARE_OPTIONS" :key="o.value" :label="o.label" :value="o.value" />
+        </ElSelect>
+
+        <ElSelect
+          v-model="draftFilters.country"
+          placeholder="国家"
+          class="ora-filter-select ora-filter-select--country"
+          :prefix-icon="Flag"
+          popper-class="ora-filter__popper"
+        >
+          <ElOption v-for="o in COUNTRY_OPTIONS" :key="o.value" :label="o.label" :value="o.value" />
+        </ElSelect>
+
+        <ElSelect
+          v-model="draftFilters.platform"
+          placeholder="支付平台"
+          class="ora-filter-select ora-filter-select--pay"
+          :prefix-icon="Money"
+          popper-class="ora-filter__popper"
+        >
+          <ElOption
+            v-for="o in PLATFORM_OPTIONS"
+            :key="o.value"
+            :label="o.label"
+            :value="o.value"
           />
+        </ElSelect>
 
-          <AppDatePicker
-            v-model="dateRangeDraft"
-            type="daterange"
-            range-separator="~"
-            start-placeholder="起"
-            end-placeholder="止"
-            value-format="YYYY-MM-DD"
-            class="ora-filter-date"
-            :shortcuts="dateRangeShortcuts"
-            popper-class="ora-filter-popper"
-          />
+        <ElButton
+          type="primary"
+          plain
+          round
+          class="ora-query-btn"
+          :disabled="!isDirty"
+          @click="onQuery"
+        >
+          查询
+        </ElButton>
+        <!-- <ElButton type="primary" plain round class="ora-export-btn" @click="handleExport">导出</ElButton> -->
 
-          <ElSelect
-            v-model="draftFilters.compareType"
-            placeholder="对比期间"
-            class="ora-filter-select ora-filter-select--compare"
-            :prefix-icon="TrendCharts"
-            popper-class="ora-filter-popper"
-          >
-            <ElOption
-              v-for="o in COMPARE_OPTIONS"
-              :key="o.value"
-              :label="o.label"
-              :value="o.value"
-            />
-          </ElSelect>
-
-          <ElSelect
-            v-model="draftFilters.country"
-            placeholder="国家"
-            class="ora-filter-select"
-            :prefix-icon="Flag"
-            popper-class="ora-filter-popper"
-          >
-            <ElOption
-              v-for="o in COUNTRY_OPTIONS"
-              :key="o.value"
-              :label="o.label"
-              :value="o.value"
-            />
-          </ElSelect>
-
-          <ElSelect
-            v-model="draftFilters.platform"
-            placeholder="支付平台"
-            class="ora-filter-select ora-filter-select--pay"
-            :prefix-icon="Money"
-            popper-class="ora-filter-popper"
-          >
-            <ElOption
-              v-for="o in PLATFORM_OPTIONS"
-              :key="o.value"
-              :label="o.label"
-              :value="o.value"
-            />
-          </ElSelect>
-
-          <ElButton
-            round
-            class="ora-filter-action-btn ora-filter-action-btn--query"
-            :disabled="!isDirty"
-            @click="onQuery"
-          >
-            查询
-          </ElButton>
-          <!-- <ElButton
-            round
-            class="ora-filter-action-btn ora-filter-action-btn--export"
-            @click="handleExport"
-          >
-            导出
-          </ElButton> -->
-          <ElButton
-            round
-            aria-label="刷新数据"
-            class="ora-filter-action-btn ora-filter-action-btn--refresh"
-            :icon="RefreshRight"
-            @click="onRefresh"
-          />
-        </div>
+        <ElButton
+          type="primary"
+          plain
+          round
+          aria-label="刷新数据"
+          class="ora-filter-refresh-btn"
+          :icon="RefreshRight"
+          @click="onRefresh"
+        />
       </div>
     </div>
 
@@ -399,12 +379,12 @@
     }
   })
 
-  const dateRangeDisplay = computed(() => {
-    const s = draftFilters.dateRange[0]?.trim()
-    const e = draftFilters.dateRange[1]?.trim()
-    if (s && e) return `${s} ~ ${e}`
-    return '请选择'
-  })
+  // const dateRangeDisplay = computed(() => {
+  //   const s = draftFilters.dateRange[0]?.trim()
+  //   const e = draftFilters.dateRange[1]?.trim()
+  //   if (s && e) return `${s} ~ ${e}`
+  //   return '请选择'
+  // })
 
   // KPI data
   const kpiRaw = reactive({
@@ -962,6 +942,8 @@
 
 <style scoped lang="scss">
   @use './styles/ora-card-fx.scss' as *;
+  @use '../../user-growth/styles/app-platform-select-ad-theme.scss' as apSelect;
+  @use '../../user-growth/styles/filter-bar-theme.scss' as filterTheme;
 
   @property --ora-kpi-border-angle {
     syntax: '<angle>';
@@ -978,9 +960,6 @@
     --ora-blue: var(--art-primary);
     --ora-green: var(--art-success);
     --ora-gold: #d97706;
-
-    /* 筛选条与 Art 主题色一致（与 --el-color-primary 解耦） */
-    --ora-filter-accent: var(--theme-color, var(--art-primary, #3b82f6));
 
     position: relative;
     box-sizing: border-box;
@@ -1146,260 +1125,103 @@
     min-width: 0;
   }
 
-  .ora-filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 14px 16px;
-    align-items: center;
-    justify-content: flex-start;
+  /* ── 筛选栏（filter-bar-theme，对齐广告成效筛选模板）── */
+  .ora-filters.ora-filter-panel {
+    @include filterTheme.filter-panel(14px 16px);
+    @include filterTheme.filter-panel-children;
+    @include filterTheme.filter-row;
+
     min-width: 0;
-    padding: 18px 20px;
-    background: rgb(10 10 14 / 82%);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgb(96 165 250 / 20%);
-    border-radius: 16px;
-    box-shadow:
-      0 8px 32px rgb(0 0 0 / 40%),
-      inset 0 1px 0 rgb(186 230 253 / 10%),
-      0 0 40px rgb(59 130 246 / 8%);
-  }
-
-  .ora-filters__left {
-    display: flex;
-    flex: 0 1 auto;
-    flex-wrap: nowrap;
-    gap: 10px 12px;
-    align-items: center;
-    justify-content: flex-start;
-    min-width: 0;
-    overflow-x: auto;
-    scrollbar-gutter: stable;
-  }
-
-  .ora-filter-chip {
-    display: inline-flex;
-    flex: 0 0 auto;
-    gap: 7px;
-    align-items: center;
-    min-height: 40px;
-    padding: 0 14px;
-    font-size: 14px;
-    color: var(--el-text-color-regular);
-    white-space: nowrap;
-    background: color-mix(in srgb, var(--ora-filter-accent) 8%, transparent);
-    border: 1px solid color-mix(in srgb, var(--ora-filter-accent) 30%, transparent);
-    border-radius: 9999px;
-    box-shadow: 0 0 16px color-mix(in srgb, var(--ora-filter-accent) 10%, transparent);
-  }
-
-  .ora-filter-chip__icon {
-    font-size: 16px;
-    color: var(--ora-filter-accent);
-    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--ora-filter-accent) 55%, transparent));
-  }
-
-  .ora-filter-chip__label {
-    font-size: 13px;
-    color: var(--el-text-color-secondary);
-  }
-
-  .ora-filter-chip__value {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--ora-filter-accent);
-    text-shadow: 0 0 10px color-mix(in srgb, var(--ora-filter-accent) 50%, transparent);
-  }
-
-  .ora-filter-app-select-wrap {
-    flex: 0 0 auto;
-    width: 128px;
-    min-width: 0;
-    max-width: 128px;
-  }
-
-  :deep(.ora-filter-app-select__trigger.app-platform-search-select) {
-    box-sizing: border-box;
-    width: 100% !important;
-    max-width: 100% !important;
-    padding: 0 12px !important;
-    font-size: 14px !important;
-    background: color-mix(in srgb, var(--ora-filter-accent) 6%, transparent) !important;
-    border: 1px solid color-mix(in srgb, var(--ora-filter-accent) 28%, transparent) !important;
-    box-shadow: none !important;
-    transition:
-      border-color 0.22s ease,
-      box-shadow 0.22s ease,
-      background 0.22s ease;
-  }
-
-  :deep(.ora-filter-app-select__trigger .app-platform-search-select__text) {
-    font-size: 14px;
-    color: var(--el-text-color-primary);
-  }
-
-  :deep(.ora-filter-app-select__trigger .app-platform-search-select__suffix) {
-    color: var(--ora-filter-accent);
-    filter: drop-shadow(0 0 5px color-mix(in srgb, var(--ora-filter-accent) 50%, transparent));
-  }
-
-  :deep(.ora-filter-app-select__trigger:hover),
-  :deep(.ora-filter-app-select__trigger.is-open) {
-    background: color-mix(in srgb, var(--ora-filter-accent) 10%, transparent) !important;
-    border-color: color-mix(in srgb, var(--ora-filter-accent) 60%, transparent) !important;
-    box-shadow: 0 0 12px color-mix(in srgb, var(--ora-filter-accent) 18%, transparent) !important;
-  }
-
-  .ora-filter-select {
-    width: 128px;
-    min-width: 100px;
-    max-width: 100%;
   }
 
   .ora-filter-select--compare {
-    width: 148px;
+    @include filterTheme.filter-select-size(160px, 140px, 180px);
+  }
+
+  .ora-filter-select--country {
+    @include filterTheme.filter-select-size(200px, 160px, 220px);
   }
 
   .ora-filter-select--pay {
-    width: 156px;
-    min-width: 130px;
-  }
-
-  :deep(.ora-filter-select) {
-    --el-input-border-color: color-mix(in srgb, var(--ora-filter-accent) 28%, transparent);
-    --el-input-focus-border-color: var(--ora-filter-accent);
-    --el-border-color: color-mix(in srgb, var(--ora-filter-accent) 28%, transparent);
-    --el-border-color-hover: color-mix(in srgb, var(--ora-filter-accent) 75%, transparent);
-    --el-border-color-focus: var(--ora-filter-accent);
-    --el-component-size: 40px;
-  }
-
-  :deep(.ora-filter-select .el-input__wrapper) {
-    padding: 0 12px;
-    background: color-mix(in srgb, var(--ora-filter-accent) 6%, transparent);
-    border: 1px solid color-mix(in srgb, var(--ora-filter-accent) 28%, transparent);
-    border-radius: 9999px;
-    box-shadow: none;
-    transition:
-      border-color 0.22s ease,
-      box-shadow 0.22s ease,
-      background 0.22s ease;
-  }
-
-  :deep(.ora-filter-select .el-input__inner) {
-    font-size: 14px;
-    color: var(--el-text-color-primary);
-    text-overflow: ellipsis;
-  }
-
-  :deep(.ora-filter-select .el-input__prefix-inner svg) {
-    width: 16px;
-    height: 16px;
-    color: var(--ora-filter-accent);
-    filter: drop-shadow(0 0 5px color-mix(in srgb, var(--ora-filter-accent) 50%, transparent));
-  }
-
-  :deep(.ora-filter-select .el-select__caret) {
-    color: var(--ora-filter-accent);
-  }
-
-  :deep(.ora-filter-select .el-input__wrapper.is-focus) {
-    background: color-mix(in srgb, var(--ora-filter-accent) 10%, transparent) !important;
-    border-color: var(--ora-filter-accent) !important;
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--ora-filter-accent) 20%, transparent) !important;
-  }
-
-  :deep(.ora-filter-select .el-input__wrapper:hover) {
-    border-color: color-mix(in srgb, var(--ora-filter-accent) 60%, transparent);
-    box-shadow: 0 0 12px color-mix(in srgb, var(--ora-filter-accent) 18%, transparent);
-  }
-
-  .ora-filter-date {
-    flex: 0 0 auto;
-    width: 220px;
-    max-width: 100%;
+    @include filterTheme.filter-select-size(200px, 140px, 220px);
   }
 
   :deep(.ora-filter-date) {
-    --el-input-border-color: color-mix(in srgb, var(--ora-filter-accent) 28%, transparent);
-    --el-input-focus-border-color: var(--ora-filter-accent);
-    --el-border-color: color-mix(in srgb, var(--ora-filter-accent) 28%, transparent);
-    --el-border-color-hover: color-mix(in srgb, var(--ora-filter-accent) 75%, transparent);
-    --el-border-color-focus: var(--ora-filter-accent);
-    --el-component-size: 40px;
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
+    --el-date-editor-width: 250px;
+    --el-date-editor-daterange-width: 250px;
   }
 
-  :deep(.ora-filter-date .el-input__wrapper) {
-    min-height: 40px;
-    padding: 0 6px 0 8px;
-    background: color-mix(in srgb, var(--ora-filter-accent) 6%, transparent);
-    border: 1px solid color-mix(in srgb, var(--ora-filter-accent) 28%, transparent);
-    border-radius: 9999px;
+  @include filterTheme.date-range-trigger('.ora-filter-date', 250px);
+  @include filterTheme.element-select-trigger('.ora-filter-select');
+  @include apSelect.apply-app-platform-select-ad-theme(
+    '.ora-filters.ora-filter-panel',
+    'ora-filter-select__input',
+    'ora-filter__popper',
+    240px,
+    200px,
+    240px
+  );
+  @include filterTheme.select-popper('ora-filter__popper');
+  @include filterTheme.app-platform-popper('ora-filter__popper');
+  @include filterTheme.date-picker-popper('ora-filter__popper');
+
+  :global(.ora-filter__popper.el-popper),
+  :global(.ora-filter__popper.el-select__popper),
+  :global(.ora-filter__popper.el-picker__popper) {
+    z-index: 4000 !important;
+  }
+
+  :deep(.ora-filter-select),
+  :deep(.ora-filter-select__input) {
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
+  }
+
+  .ora-filter-panel :deep(.ora-query-btn.el-button) {
+    height: 36px;
+    padding: 0 18px;
+    font-weight: 600;
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
     box-shadow: none;
-    transition:
-      border-color 0.22s ease,
-      box-shadow 0.22s ease,
-      background 0.22s ease;
   }
 
-  :deep(.ora-filter-date .el-input__wrapper:hover) {
-    border-color: color-mix(in srgb, var(--ora-filter-accent) 60%, transparent);
-    box-shadow: 0 0 12px color-mix(in srgb, var(--ora-filter-accent) 18%, transparent);
+  .ora-filter-panel :deep(.ora-query-btn.el-button:hover:not(:disabled)) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
   }
 
-  :deep(.ora-filter-date .el-input__wrapper.is-focus) {
-    background: color-mix(in srgb, var(--ora-filter-accent) 10%, transparent) !important;
-    border-color: var(--ora-filter-accent) !important;
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--ora-filter-accent) 20%, transparent) !important;
-  }
-
-  :deep(.ora-filter-date .el-range-input) {
-    width: 78px;
-    font-size: 12px;
-    color: var(--el-text-color-primary);
-    text-align: left;
-  }
-
-  :deep(.ora-filter-date .el-range-separator) {
-    flex-shrink: 0;
-    padding: 0 2px;
-    font-size: 12px;
-    color: var(--el-text-color-secondary);
-  }
-
-  :deep(.ora-filter-date .el-range__icon) {
-    margin-right: 2px;
-    color: var(--ora-filter-accent);
-    filter: drop-shadow(0 0 5px color-mix(in srgb, var(--ora-filter-accent) 50%, transparent));
-  }
-
-  .ora-filter-action-btn {
-    flex: 0 0 auto;
-
-    --el-button-size: 40px;
-    --el-button-bg-color: color-mix(in srgb, var(--ora-filter-accent) 8%, transparent);
-    --el-button-text-color: var(--ora-filter-accent);
-    --el-button-border-color: color-mix(in srgb, var(--ora-filter-accent) 40%, transparent);
-    --el-button-hover-text-color: var(--el-color-primary-light-3);
-    --el-button-hover-border-color: var(--ora-filter-accent);
-    --el-button-hover-bg-color: color-mix(in srgb, var(--ora-filter-accent) 16%, transparent);
-
-    font-size: 14px;
-    box-shadow: 0 0 14px color-mix(in srgb, var(--ora-filter-accent) 12%, transparent);
-    transition: box-shadow 0.22s ease;
-
-    &:hover:not(:disabled) {
-      box-shadow: 0 0 22px color-mix(in srgb, var(--ora-filter-accent) 28%, transparent);
-    }
-  }
-
-  .ora-filter-action-btn--query:disabled {
+  .ora-filter-panel :deep(.ora-query-btn.el-button:disabled) {
     cursor: not-allowed;
     opacity: 0.42;
   }
 
-  .ora-filter-action-btn--refresh {
-    min-width: 40px;
+  .ora-filter-panel :deep(.ora-filter-refresh-btn.el-button) {
+    min-width: 36px;
+    height: 36px;
     padding: 0 12px;
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: none;
+  }
+
+  .ora-filter-panel :deep(.ora-filter-refresh-btn.el-button:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
   }
 
   /* ── KPI 霓虹卡片：5 列等宽均分（24 栅格无法整除 5）── */
@@ -2023,19 +1845,26 @@
       padding: 16px 16px 20px;
     }
 
-    .ora-filters__left {
+    .ora-filters.ora-filter-panel {
       flex-wrap: wrap;
       overflow-x: visible;
     }
 
-    .ora-filter-app-select-wrap,
+    .ora-filter-select--app,
     .ora-filter-select,
     .ora-filter-select--compare,
+    .ora-filter-select--country,
     .ora-filter-select--pay,
     .ora-filter-date {
       flex: 1 1 100%;
       width: 100%;
       max-width: 100%;
+    }
+
+    .ora-filters.ora-filter-panel :deep(.ora-query-btn.el-button),
+    .ora-filters.ora-filter-panel :deep(.ora-filter-refresh-btn.el-button) {
+      flex: 1 1 auto;
+      min-width: 0;
     }
 
     .ora-chart-card__body {
@@ -2048,6 +1877,14 @@
 
     .ora-chart-card__body--country {
       height: 260px;
+    }
+  }
+
+  @media (width <= 1024px) {
+    .ora-filters.ora-filter-panel {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scrollbar-gutter: stable;
     }
   }
 
@@ -2097,56 +1934,9 @@
         filter: none;
       }
     }
-  }
-</style>
 
-<style lang="scss">
-  .ora-filter-popper.el-select__popper,
-  .ora-filter-popper.app-platform-search-select__popper,
-  .ora-filter-popper.el-picker__popper {
-    --el-bg-color-overlay: rgb(18 20 28 / 96%);
-  }
-
-  .ora-filter-popper.el-select__popper,
-  .ora-filter-popper.app-platform-search-select__popper {
-    border-color: color-mix(in srgb, var(--el-color-primary) 35%, transparent) !important;
-  }
-
-  .ora-filter-popper.app-platform-search-select__popper {
-    background: rgb(18 20 28 / 96%) !important;
-  }
-
-  .ora-filter-popper .el-select-dropdown__item {
-    color: var(--el-text-color-regular) !important;
-  }
-
-  .ora-filter-popper .el-select-dropdown__item.is-hovering,
-  .ora-filter-popper .el-select-dropdown__item:hover {
-    color: var(--el-color-primary) !important;
-    background: color-mix(in srgb, var(--el-color-primary) 12%, transparent) !important;
-  }
-
-  .ora-filter-popper .el-select-dropdown__item.is-selected {
-    font-weight: 600;
-    color: var(--el-color-primary) !important;
-  }
-
-  .ora-filter-popper.el-picker-panel,
-  .ora-filter-popper .el-picker-panel {
-    border-color: color-mix(in srgb, var(--el-color-primary) 35%, transparent) !important;
-  }
-
-  .ora-filter-popper .el-date-table td.in-range div {
-    background: color-mix(in srgb, var(--el-color-primary) 12%, transparent) !important;
-  }
-
-  .ora-filter-popper .el-date-table td.start-date div,
-  .ora-filter-popper .el-date-table td.end-date div {
-    color: #fff !important;
-    background: linear-gradient(
-      135deg,
-      var(--el-color-primary),
-      var(--el-color-primary-dark-2)
-    ) !important;
+    .ora-filters.ora-filter-panel {
+      transition: none;
+    }
   }
 </style>
