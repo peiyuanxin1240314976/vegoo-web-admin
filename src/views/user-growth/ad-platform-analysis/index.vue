@@ -2974,7 +2974,7 @@
   :global(html.dark .aps-filter-popper.el-popper) {
     overflow: hidden;
     background: rgb(24 24 27 / 98%) !important;
-    border: 1px solid color-mix(in srgb, var(--theme-color) 32%, transparent) !important;
+    // border: 1px solid color-mix(in srgb, var(--theme-color) 32%, transparent) !important;
     border-radius: 12px !important;
     box-shadow:
       0 18px 52px rgb(0 0 0 / 58%),

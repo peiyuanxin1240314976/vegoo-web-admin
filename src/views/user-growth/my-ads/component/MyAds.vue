@@ -1094,7 +1094,7 @@
   @include filterTheme.select-popper('my-ads-filter-select-popper');
 
   .my-ads-filter-date-popper.el-popper {
-    --el-datepicker-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    // --el-datepicker-border-color: var(--theme-color, var(--art-primary, #3b82f6));
     --el-datepicker-text-color: #e2e8f0;
     --el-datepicker-off-text-color: #64748b;
     --el-datepicker-header-text-color: #e2e8f0;
@@ -1102,6 +1102,6 @@
     --el-datepicker-hover-text-color: var(--theme-color, var(--art-primary, #3b82f6));
 
     background: #0f1929;
-    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    // border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
   }
 </style>

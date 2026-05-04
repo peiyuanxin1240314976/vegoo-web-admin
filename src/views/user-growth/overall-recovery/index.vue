@@ -261,14 +261,14 @@
 
   .or-filter-date {
     flex: 0 0 auto;
-    width: 320px;
+    width: 250px;
     min-width: 0;
     max-width: 100%;
   }
 
   :deep(.or-filter-date.el-date-editor) {
     flex: 0 0 auto;
-    width: 320px;
+    width: 250px;
     max-width: 100%;
 
     --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
@@ -525,7 +525,7 @@
   .or-filter-popper.el-popper {
     z-index: var(--z-dropdown) !important;
     background: rgb(10 10 14 / 96%) !important;
-    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    // border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
     border-radius: 12px !important;
     box-shadow:
       0 16px 48px rgb(0 0 0 / 55%),
