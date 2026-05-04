@@ -91,7 +91,7 @@
     }
 
     const isRangeType = type === 'daterange' || type === 'datetimerange'
-    const baseShortcuts = dateRangeShortcuts as unknown as DateShortcutItem[]
+    const baseShortcuts = dateRangeShortcuts
 
     if (isRangeType) {
       const hasExplicitShortcuts = 'shortcuts' in attrs && attrs.shortcuts !== undefined

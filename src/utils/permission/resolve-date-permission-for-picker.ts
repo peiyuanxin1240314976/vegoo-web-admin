@@ -3,6 +3,8 @@ import { cloneAppDate } from '@/utils/app-now'
 export type DateShortcutItem = {
   text: string
   value: () => Date | [Date, Date]
+  /** 需特殊权限规则的预设（勿用 text 判断，便于后续 i18n） */
+  preset?: 'thisMonth'
 }
 
 /** 与角色管理 / 用户信息契约一致：无权限配置时不做运行时限制 */
@@ -107,6 +109,12 @@ export function filterDateRangeShortcutsForScope(
     const [a, b] = raw
     if (startOfDay(a).getTime() < (min?.getTime() ?? -Infinity)) return false
     if (endOfDay(b).getTime() > max.getTime()) return false
+    if (s.preset === 'thisMonth') {
+      const spanDays = inclusiveLocalDayCount(a, b)
+      if (typeof scope.maxHistoryDays === 'number' && scope.maxHistoryDays >= 0) {
+        if (spanDays > scope.maxHistoryDays) return false
+      }
+    }
     if (!scope.allowCustomRange) {
       const days = inclusiveLocalDayCount(a, b)
       if (days !== scope.defaultRangeDays) return false
