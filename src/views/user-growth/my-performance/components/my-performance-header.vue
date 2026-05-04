@@ -21,7 +21,6 @@
     </div>
     <div class="my-performance-header__right">
       <div class="field">
-        <span class="label">{{ personLabel }}</span>
         <ElSelect
           v-model="personIdModel"
           class="person-select"
@@ -179,7 +178,7 @@
     return monthOpts.find((o) => o.value === appNowMonth)?.value ?? monthOpts[0]?.value ?? ''
   })
 
-  const personLabel = computed(() => props.personLabel)
+  // const personLabel = computed(() => props.personLabel)
   const personPlaceholder = computed(() => props.personPlaceholder)
   // const exportLabel = computed(() => props.exportLabel)
   const quarterLabel = computed(() => props.quarterLabel)
@@ -285,36 +284,60 @@
 
   .my-performance-header__right {
     display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
+    flex-wrap: nowrap;
+    gap: 12px;
     align-items: center;
     justify-content: flex-end;
+    max-width: 100%;
+    padding: 12px 16px;
+    overflow-x: auto;
+    background: rgb(15 23 42 / 72%);
+    backdrop-filter: blur(12px);
+    border: 1px solid
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent);
+    border-radius: 10px;
+    box-shadow:
+      0 8px 24px rgb(0 0 0 / 18%),
+      inset 0 1px 0 rgb(255 255 255 / 5%);
   }
 
   .field {
     display: inline-flex;
-    gap: 6px;
+    flex: 0 0 auto;
+    gap: 8px;
     align-items: center;
   }
 
   .label {
-    font-size: 12px;
-    color: var(--art-gray-600);
+    flex: 0 0 auto;
+    font-size: 14px;
+    line-height: 36px;
+    color: var(--el-text-color-primary);
+    white-space: nowrap;
   }
 
   .person-select {
-    width: 140px;
+    flex: 0 0 auto;
+    width: 240px;
+    min-width: 200px;
+    max-width: 240px;
+
+    @media (width <= 768px) {
+      min-width: 0;
+      max-width: 100%;
+    }
   }
 
   :deep(.person-select .el-select__wrapper) {
     min-height: 36px;
+    padding: 4px 12px;
     background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
     border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
     border-radius: var(--el-border-radius-base, 4px);
     box-shadow: none;
   }
 
-  :deep(.person-select .el-select__wrapper.is-hovering) {
+  :deep(.person-select .el-select__wrapper:hover) {
     border-color: var(--theme-color, var(--art-primary, #3b82f6));
     box-shadow: 0 0 0 1px
       color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
@@ -327,15 +350,18 @@
       color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent);
   }
 
-  :deep(.person-select .el-select__placeholder) {
-    color: rgb(244 244 245 / 65%);
+  :deep(.person-select .el-select__selected-item),
+  :deep(.person-select .el-select__selected-item .el-select__placeholder) {
+    color: var(--el-text-color-primary);
   }
 
-  :deep(.person-select .el-select__selected-item) {
-    color: rgb(244 244 245 / 92%);
+  :deep(.person-select .el-select__placeholder.is-transparent),
+  :deep(.person-select .el-select__selected-item.is-transparent) {
+    color: var(--el-text-color-placeholder);
   }
 
-  :deep(.person-select .el-select__caret) {
+  :deep(.person-select .el-select__caret),
+  :deep(.person-select .el-select__suffix) {
     color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
@@ -368,6 +394,7 @@
   .period-switch {
     position: relative;
     display: inline-flex;
+    flex: 0 0 auto;
     gap: 4px;
     align-items: center;
     padding: 3px;
@@ -428,9 +455,10 @@
     display: inline-flex;
     gap: 6px;
     align-items: center;
-    padding: 7px 14px;
-    font-size: 13px;
-    color: var(--text-secondary);
+    min-height: 30px;
+    padding: 6px 14px;
+    font-size: 14px;
+    color: var(--el-text-color-primary);
     cursor: pointer;
     background: transparent;
     border: 1px solid transparent;
@@ -445,12 +473,12 @@
   .period-tab__value {
     font-weight: 650;
     font-variant-numeric: tabular-nums;
-    color: rgb(244 244 245 / 85%);
+    color: var(--el-text-color-primary);
     opacity: 0.9;
   }
 
   .period-tab.is-active {
-    color: rgb(244 244 245 / 98%);
+    color: var(--el-text-color-primary);
     background: color-mix(
       in srgb,
       var(--theme-color, var(--art-primary, #3b82f6)) 12%,
@@ -472,7 +500,7 @@
   }
 
   .period-tab:hover:not(.is-active) {
-    color: rgb(244 244 245 / 90%);
+    color: var(--el-text-color-primary);
     background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 8%, transparent);
     border-color: color-mix(
       in srgb,
