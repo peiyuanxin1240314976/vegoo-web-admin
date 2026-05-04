@@ -118,8 +118,7 @@
   #{$selector}:deep(.el-range-editor.el-input__wrapper:hover),
   #{$selector}:deep(.el-date-editor .el-input__wrapper:hover) {
     border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
-    box-shadow: 0 0 0 1px
-      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
+    box-shadow: none !important;
   }
 
   :deep(#{$selector}.el-date-editor.el-date-editor--daterange.is-active),
@@ -138,8 +137,7 @@
       transparent
     ) !important;
     border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
-    box-shadow: 0 0 0 2px
-      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
+    box-shadow: none !important;
   }
 
   :deep(#{$selector} .el-range-input),
@@ -177,6 +175,82 @@
   }
 }
 
+@mixin date-trigger($anchor, $date-class, $width: 240px) {
+  #{$anchor} :deep(#{$date-class}) {
+    @include filter-select-size($width, 200px, $width);
+
+    --el-input-border-color: var(--el-color-primary);
+    --el-border-color: var(--el-color-primary);
+    --el-input-focus-border-color: var(--el-color-primary);
+    --el-border-color-focus: var(--el-color-primary);
+    --el-border-color-hover: var(--el-color-primary);
+  }
+
+  #{$anchor} :deep(#{$date-class}.el-date-editor) {
+    flex: 0 0 $width !important;
+    width: $width !important;
+    min-width: 200px !important;
+    max-width: $width !important;
+  }
+
+  #{$anchor} :deep(#{$date-class} .el-input__wrapper) {
+    width: 100% !important;
+    min-height: 36px;
+    background: color-mix(in srgb, var(--el-color-primary) 6%, transparent) !important;
+    border: 1px solid var(--el-color-primary) !important;
+    border-radius: var(--el-border-radius-base, 4px) !important;
+    box-shadow: none !important;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      background 0.2s ease;
+  }
+
+  #{$anchor} :deep(#{$date-class}.el-date-editor .el-input__wrapper) {
+    border-color: var(--el-color-primary) !important;
+  }
+
+  #{$anchor} :deep(#{$date-class} .el-input__wrapper:hover) {
+    border-color: var(--el-border-color-hover) !important;
+    box-shadow: none !important;
+  }
+
+  #{$anchor} :deep(#{$date-class} .el-input__wrapper.is-focus),
+  #{$anchor} :deep(#{$date-class} .el-input__wrapper:focus-within) {
+    background: color-mix(in srgb, var(--el-color-primary) 6%, transparent) !important;
+    border-color: var(--el-input-focus-border-color) !important;
+    box-shadow: none !important;
+  }
+
+  #{$anchor} :deep(#{$date-class} .el-input__inner) {
+    font-size: 14px;
+    color: var(--el-text-color-primary);
+  }
+
+  #{$anchor} :deep(#{$date-class} .el-input__inner::placeholder) {
+    color: var(--el-text-color-placeholder);
+  }
+
+  #{$anchor} :deep(#{$date-class} .el-input__prefix-inner),
+  #{$anchor} :deep(#{$date-class} .el-input__icon),
+  #{$anchor} :deep(#{$date-class} .el-input__suffix) {
+    color: var(--el-color-primary);
+  }
+
+  @media (width <= 768px) {
+    #{$anchor} :deep(#{$date-class}.el-date-editor) {
+      flex: 1 1 100% !important;
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: 100% !important;
+    }
+
+    #{$anchor} :deep(#{$date-class} .el-input__wrapper) {
+      width: 100% !important;
+    }
+  }
+}
+
 @mixin element-select-trigger($selector) {
   #{$selector} :deep(.el-select__wrapper) {
     min-height: 36px;
@@ -193,15 +267,13 @@
 
   #{$selector} :deep(.el-select__wrapper:hover) {
     border-color: var(--theme-color, var(--art-primary, #3b82f6));
-    box-shadow: 0 0 0 1px
-      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
+    box-shadow: none;
   }
 
   #{$selector} :deep(.el-select__wrapper.is-focused) {
     background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
     border-color: var(--theme-color, var(--art-primary, #3b82f6));
-    box-shadow: 0 0 0 2px
-      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent);
+    box-shadow: none;
   }
 
   #{$selector} :deep(.el-select__selected-item),
@@ -241,8 +313,7 @@
 
   #{$selector} :deep(.app-platform-search-select:hover) {
     border-color: var(--theme-color, var(--art-primary, #3b82f6));
-    box-shadow: 0 0 0 1px
-      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
+    box-shadow: none;
   }
 
   #{$selector} :deep(.app-platform-search-select.is-open) {
@@ -252,8 +323,7 @@
       transparent
     ) !important;
     border-color: var(--theme-color, var(--art-primary, #3b82f6));
-    box-shadow: 0 0 0 2px
-      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent);
+    box-shadow: none;
   }
 
   #{$selector} :deep(.app-platform-search-select__text),
