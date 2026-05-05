@@ -110,7 +110,7 @@
           </div>
           <div class="kpi-card-metrics">
             <span>花费 {{ card.cost }}</span>
-            <span>收入 {{ card.revenue }}</span>
+            <span>广告收入 {{ card.revenue }}</span>
             <span>CPI {{ card.cpi }}</span>
           </div>
           <div :ref="(el) => setCardChartRef(card.id, el)" class="kpi-card-mini-chart"></div>
@@ -920,7 +920,7 @@
     return [
       { label: '广告平台名称', prop: 'channel', minWidth: 140, sortable: 'custom' },
       { label: '花费', prop: 'cost', minWidth: 90, sortable: 'custom' },
-      { label: '收入', prop: 'revenue', minWidth: 90, sortable: 'custom' },
+      { label: '广告收入', prop: 'revenue', minWidth: 90, sortable: 'custom' },
       { label: 'ROI', prop: 'roi', minWidth: 90, useSlot: true, sortable: 'custom' },
       // {
       //   label: 'ROAS',
