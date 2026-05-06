@@ -980,16 +980,16 @@
       color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
       background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
       border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-      box-shadow 0.25s cubic-bezier(0, 0, 0.2, 1),
-      transform 0.25s cubic-bezier(0, 0, 0.2, 1);
+      box-shadow 0.25s cubic-bezier(0, 0, 0.2, 1);
   }
 
   .back-btn:hover {
     color: var(--text-primary);
     background: var(--bg-hover);
     border-color: var(--border-light);
-    box-shadow: 0 0 18px color-mix(in srgb, var(--art-primary) 14%, transparent);
-    transform: translateX(-2px);
+    box-shadow:
+      0 0 22px color-mix(in srgb, var(--art-primary) 22%, transparent),
+      0 0 44px color-mix(in srgb, var(--art-primary) 10%, transparent);
   }
 
   .breadcrumb {
@@ -1418,21 +1418,20 @@
       0 0 0 1px color-mix(in srgb, var(--kpi-accent) 10%, transparent),
       inset 0 1px 0 color-mix(in srgb, var(--kpi-accent) 10%, transparent);
     transition:
-      transform 0.32s cubic-bezier(0, 0, 0.2, 1),
       box-shadow 0.32s cubic-bezier(0, 0, 0.2, 1),
       border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
       filter 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .kpi-card:hover {
-    filter: brightness(1.05);
-    border-color: color-mix(in srgb, var(--kpi-accent) 44%, var(--default-border));
+    filter: brightness(1.06);
+    border-color: color-mix(in srgb, var(--kpi-accent) 48%, var(--default-border));
     box-shadow:
-      0 20px 52px -14px rgb(0 0 0 / 62%),
-      0 0 0 1px color-mix(in srgb, var(--kpi-accent) 18%, transparent),
-      inset 0 1px 0 color-mix(in srgb, var(--kpi-accent) 14%, transparent),
-      0 0 40px color-mix(in srgb, var(--kpi-accent) 18%, transparent);
-    transform: translateY(-5px);
+      0 16px 48px -12px rgb(0 0 0 / 58%),
+      0 0 0 1px color-mix(in srgb, var(--kpi-accent) 22%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--kpi-accent) 16%, transparent),
+      0 0 36px color-mix(in srgb, var(--kpi-accent) 26%, transparent),
+      0 0 72px color-mix(in srgb, var(--kpi-accent) 12%, transparent);
   }
 
   .kpi-card.is-active {
@@ -1605,19 +1604,18 @@
       0 12px 40px rgb(0 0 0 / 44%),
       inset 0 1px 0 color-mix(in srgb, var(--art-primary) 10%, transparent);
     transition:
-      transform 0.32s cubic-bezier(0, 0, 0.2, 1),
       box-shadow 0.32s cubic-bezier(0, 0, 0.2, 1),
       border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .chart-panel:hover {
-    border-color: color-mix(in srgb, var(--art-primary) 32%, var(--default-border));
+    border-color: color-mix(in srgb, var(--art-primary) 38%, var(--default-border));
     box-shadow:
-      0 20px 52px -14px rgb(0 0 0 / 62%),
-      0 0 0 1px color-mix(in srgb, var(--art-primary) 16%, transparent),
-      inset 0 1px 0 color-mix(in srgb, var(--art-primary) 12%, transparent),
-      0 0 44px color-mix(in srgb, var(--art-primary) 14%, transparent);
-    transform: translateY(-4px);
+      0 16px 48px -12px rgb(0 0 0 / 58%),
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 22%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--art-primary) 14%, transparent),
+      0 0 40px color-mix(in srgb, var(--art-primary) 22%, transparent),
+      0 0 80px color-mix(in srgb, var(--art-primary) 10%, transparent);
   }
 
   .panel-header {
@@ -1685,19 +1683,18 @@
       0 12px 40px rgb(0 0 0 / 44%),
       inset 0 1px 0 color-mix(in srgb, var(--art-primary) 10%, transparent);
     transition:
-      transform 0.32s cubic-bezier(0, 0, 0.2, 1),
       box-shadow 0.32s cubic-bezier(0, 0, 0.2, 1),
       border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .table-panel:hover {
-    border-color: color-mix(in srgb, var(--art-primary) 32%, var(--default-border));
+    border-color: color-mix(in srgb, var(--art-primary) 38%, var(--default-border));
     box-shadow:
-      0 20px 52px -14px rgb(0 0 0 / 62%),
-      0 0 0 1px color-mix(in srgb, var(--art-primary) 16%, transparent),
-      inset 0 1px 0 color-mix(in srgb, var(--art-primary) 12%, transparent),
-      0 0 44px color-mix(in srgb, var(--art-primary) 14%, transparent);
-    transform: translateY(-4px);
+      0 16px 48px -12px rgb(0 0 0 / 58%),
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 22%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--art-primary) 14%, transparent),
+      0 0 40px color-mix(in srgb, var(--art-primary) 22%, transparent),
+      0 0 80px color-mix(in srgb, var(--art-primary) 10%, transparent);
   }
 
   .custom-table {
@@ -1733,7 +1730,6 @@
     border-radius: var(--radius-sm);
     transition:
       background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1),
-      transform 0.2s cubic-bezier(0, 0, 0.2, 1),
       box-shadow 0.25s cubic-bezier(0, 0, 0.2, 1),
       border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
@@ -1744,11 +1740,11 @@
 
   .table-row.row-hover {
     background: var(--bg-hover);
-    border-color: color-mix(in srgb, var(--art-primary) 22%, transparent);
+    border-color: color-mix(in srgb, var(--art-primary) 28%, transparent);
     box-shadow:
-      0 12px 34px -18px rgb(0 0 0 / 58%),
-      0 0 0 1px color-mix(in srgb, var(--art-primary) 12%, transparent);
-    transform: translateY(-1px);
+      0 8px 28px -14px rgb(0 0 0 / 52%),
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 18%, transparent),
+      0 0 24px color-mix(in srgb, var(--art-primary) 14%, transparent);
   }
 
   .col-network-cell {
@@ -1856,19 +1852,18 @@
       0 12px 40px rgb(0 0 0 / 44%),
       inset 0 1px 0 color-mix(in srgb, var(--art-primary) 10%, transparent);
     transition:
-      transform 0.32s cubic-bezier(0, 0, 0.2, 1),
       box-shadow 0.32s cubic-bezier(0, 0, 0.2, 1),
       border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .ai-insight-panel:hover {
-    border-color: color-mix(in srgb, var(--art-primary) 32%, var(--default-border));
+    border-color: color-mix(in srgb, var(--art-primary) 38%, var(--default-border));
     box-shadow:
-      0 20px 52px -14px rgb(0 0 0 / 62%),
-      0 0 0 1px color-mix(in srgb, var(--art-primary) 16%, transparent),
-      inset 0 1px 0 color-mix(in srgb, var(--art-primary) 12%, transparent),
-      0 0 44px color-mix(in srgb, var(--art-primary) 14%, transparent);
-    transform: translateY(-4px);
+      0 16px 48px -12px rgb(0 0 0 / 58%),
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 22%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--art-primary) 14%, transparent),
+      0 0 40px color-mix(in srgb, var(--art-primary) 22%, transparent),
+      0 0 80px color-mix(in srgb, var(--art-primary) 10%, transparent);
   }
 
   .ai-panel-header {
@@ -1921,17 +1916,17 @@
     transition:
       background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
       border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-      transform 0.2s cubic-bezier(0, 0, 0.2, 1),
       box-shadow 0.25s cubic-bezier(0, 0, 0.2, 1);
   }
 
   .insight-card:hover {
     background: var(--bg-hover);
-    border-color: color-mix(in srgb, var(--art-primary) 28%, var(--default-border));
+    border-color: color-mix(in srgb, var(--art-primary) 32%, var(--default-border));
     box-shadow:
-      0 12px 34px -18px rgb(0 0 0 / 58%),
-      0 0 0 1px color-mix(in srgb, var(--art-primary) 12%, transparent);
-    transform: translateY(-2px);
+      0 10px 32px -16px rgb(0 0 0 / 55%),
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 18%, transparent),
+      0 0 28px color-mix(in srgb, var(--art-primary) 18%, transparent),
+      0 0 52px color-mix(in srgb, var(--art-primary) 8%, transparent);
   }
 
   .insight-card.insight-expanded {
