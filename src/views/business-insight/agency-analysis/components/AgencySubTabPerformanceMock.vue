@@ -328,7 +328,6 @@
               <th colspan="2">广告账户</th>
               <th class="text-right">广告支出</th>
               <th class="text-right">预算</th>
-              <th class="text-right">CPA</th>
               <th class="text-right">CPI</th>
               <th class="text-right">代投买量用户数</th>
               <th>首日ROI趋势</th>
@@ -337,13 +336,13 @@
               <th colspan="3"></th>
               <th>ID</th>
               <th>名称</th>
-              <th colspan="5"></th>
+              <th colspan="4"></th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             <tr v-if="!recentRows.length">
-              <td colspan="11" class="aa-sub-mock__merge-cell">暂无数据</td>
+              <td colspan="10" class="aa-sub-mock__merge-cell">暂无数据</td>
             </tr>
             <tr v-for="(row, idx) in recentRows" :key="`${row.accountId}-${idx}`">
               <template v-if="idx === 0">
@@ -359,7 +358,6 @@
               <td>{{ row.accountName }}</td>
               <td class="text-right fw-600">{{ row.spend }}</td>
               <td class="text-right">{{ row.budget }}</td>
-              <td class="text-right">{{ row.cpa }}</td>
               <td class="text-right">{{ row.cpi }}</td>
               <td class="text-right">{{ row.installs }}</td>
               <td class="aa-sub-mock__td-spark">
@@ -428,25 +426,27 @@
           <h3 class="aa-sub-mock__section-title">账户汇总</h3>
         </div>
         <div class="aa-sub-mock__section-actions" aria-label="账户汇总查询">
-          <AppDatePicker
-            v-model="accountRangeDraft"
-            :shortcuts="dateRangeShortcuts"
-            type="daterange"
-            format="YYYY-MM-DD"
-            value-format="YYYY-MM-DD"
-            range-separator="~"
-            start-placeholder="开始"
-            end-placeholder="结束"
-            size="small"
-            class="aa-sub-mock__acct-range"
-            popper-class="aa-agency-filter-popper"
-            unlink-panels
-          />
+          <div class="filter-date-wrap filter-date-wrap--sub-mock-inline">
+            <AppDatePicker
+              v-model="accountRangeDraft"
+              :shortcuts="dateRangeShortcuts"
+              type="daterange"
+              format="YYYY-MM-DD"
+              value-format="YYYY-MM-DD"
+              range-separator="~"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              size="default"
+              class="filter-date"
+              popper-class="aa-agency-filter-popper"
+              unlink-panels
+            />
+          </div>
           <el-button
             type="primary"
             plain
-            size="small"
-            class="aa-sub-mock__acct-query"
+            size="default"
+            round
             :icon="Search"
             :loading="accountSummaryQuerying"
             @click="handleAccountSummaryQuery"
@@ -466,14 +466,13 @@
               <th>账户名称</th>
               <th class="text-right">广告支出</th>
               <th class="text-right">首日ROI</th>
-              <th class="text-right">CPA</th>
               <th class="text-right">CPI</th>
               <th class="text-right">代投买量用户数</th>
             </tr>
           </thead>
           <tbody>
             <tr v-if="!accountRows.length">
-              <td colspan="10" class="aa-sub-mock__merge-cell">暂无数据</td>
+              <td colspan="9" class="aa-sub-mock__merge-cell">暂无数据</td>
             </tr>
             <tr v-for="(row, idx) in accountRows" :key="`${row.accountId}-${idx}`">
               <template v-if="idx === 0">
@@ -489,7 +488,6 @@
               <td>{{ row.accountName }}</td>
               <td class="text-right fw-600">{{ row.spend }}</td>
               <td class="text-right">{{ row.roi1 }}</td>
-              <td class="text-right">{{ row.cpa }}</td>
               <td class="text-right">{{ row.cpi }}</td>
               <td class="text-right">{{ row.installs }}</td>
             </tr>
@@ -501,10 +499,14 @@
 </template>
 
 <style scoped lang="scss">
+  @use '../../../user-growth/styles/filter-bar-theme.scss' as filterTheme;
+
   $card: #11161f;
   $border: #1e3a5f;
   $text: #e2e8f0;
   $muted: #94a3b8;
+
+  @include filterTheme.date-range-trigger('.filter-date');
 
   .aa-sub-mock {
     display: flex;
@@ -747,15 +749,37 @@
     justify-content: flex-end;
   }
 
-  .aa-sub-mock__acct-range {
-    width: min(360px, 100%);
+  /* 与 AdAgencyAnalysis 汇总 Tab 内日期筛选同构：wrapper 定宽 + filterTheme 命中 ElDatePicker 根节点 */
+  .filter-date-wrap {
+    flex: none;
+    width: 250px;
+
+    :deep(.el-date-editor) {
+      width: 100% !important;
+      min-width: 0 !important;
+    }
   }
 
-  .aa-sub-mock__acct-range :deep(.el-input__wrapper),
-  .aa-sub-mock__acct-range :deep(.el-range-editor.el-input__wrapper),
-  .aa-sub-mock__acct-range :deep(.el-date-editor) {
-    min-height: 32px;
-    padding: 0 10px;
+  .filter-date-wrap--sub-mock-inline {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    width: 250px;
+    max-width: min(250px, 100%);
+  }
+
+  :deep(.filter-date.el-date-editor),
+  :deep(.filter-date.el-date-editor--daterange) {
+    flex: none !important;
+    width: 250px !important;
+
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-input-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-date-editor-width: 250px;
+    --el-date-editor-daterange-width: 250px;
+
+    min-height: 36px;
+    padding: 0 12px;
     background: color-mix(
       in srgb,
       var(--theme-color, var(--art-primary, #3b82f6)) 6%,
@@ -770,18 +794,89 @@
       background 0.22s ease;
   }
 
-  .aa-sub-mock__acct-range :deep(.el-date-editor) {
-    height: 32px;
+  :deep(.filter-date.el-date-editor--daterange) {
+    width: 250px !important;
+    min-width: 250px !important;
+    max-width: 250px !important;
   }
 
-  .aa-sub-mock__acct-range :deep(.el-date-editor:hover) {
+  .aa-sub-mock__section-actions .filter-date :deep(.el-input__wrapper) {
+    box-sizing: border-box;
+    height: 36px;
+    min-height: 36px !important;
+  }
+
+  .filter-date {
+    :deep(.el-date-editor),
+    :deep(.el-range-editor),
+    :deep(.el-date-editor.el-input__wrapper),
+    :deep(.el-range-editor.el-input__wrapper),
+    :deep(.el-input__wrapper) {
+      min-height: 36px;
+      padding: 0 12px;
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+        transparent
+      ) !important;
+      border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+      border-radius: var(--el-border-radius-base, 4px) !important;
+      box-shadow: none !important;
+      transition:
+        border-color 0.22s ease,
+        box-shadow 0.22s ease,
+        background 0.22s ease;
+    }
+
+    :deep(.el-date-editor:hover),
+    :deep(.el-range-editor:hover),
+    :deep(.el-input__wrapper:hover) {
+      border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+      box-shadow: 0 0 0 1px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
+    }
+
+    :deep(.el-date-editor.is-active),
+    :deep(.el-range-editor.is-active),
+    :deep(.el-date-editor.el-input__wrapper.is-focus),
+    :deep(.el-input__wrapper.is-focus) {
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+        transparent
+      ) !important;
+      border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+      box-shadow: 0 0 0 2px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
+    }
+
+    :deep(.el-range-input),
+    :deep(.el-input__inner) {
+      font-size: 12px;
+      color: $text !important;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
+
+    :deep(.el-input__prefix-inner),
+    :deep(.el-range__icon),
+    :deep(.el-range__close-icon) {
+      color: var(--theme-color, var(--art-primary, #3b82f6));
+    }
+  }
+
+  :deep(.filter-date.el-date-editor:hover),
+  :deep(.filter-date.el-date-editor--daterange:hover) {
     border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
     box-shadow: 0 0 0 1px
       color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
   }
 
-  .aa-sub-mock__acct-range :deep(.el-date-editor.is-active),
-  .aa-sub-mock__acct-range :deep(.el-date-editor:focus-within) {
+  :deep(.filter-date.el-date-editor.is-active),
+  :deep(.filter-date.el-date-editor--daterange.is-active),
+  :deep(.filter-date.el-date-editor:focus-within),
+  :deep(.filter-date.el-date-editor--daterange:focus-within) {
     background: color-mix(
       in srgb,
       var(--theme-color, var(--art-primary, #3b82f6)) 6%,
@@ -790,11 +885,6 @@
     border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
     box-shadow: 0 0 0 2px
       color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
-  }
-
-  .aa-sub-mock__acct-range :deep(.el-range__icon),
-  .aa-sub-mock__acct-range :deep(.el-range__close-icon) {
-    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   .aa-sub-mock__acct-query {
