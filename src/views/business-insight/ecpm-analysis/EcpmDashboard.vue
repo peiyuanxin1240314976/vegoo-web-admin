@@ -54,15 +54,17 @@
               <el-skeleton-item variant="text" class="filter-sel-skeleton" />
             </template>
             <el-select
-              v-model="filterPlatform"
+              :model-value="filterPlatform"
               size="default"
               class="bi-filter-select bi-filter-select--platform"
               popper-class="ecpm-filter__popper"
               placeholder="广告平台"
               clearable
+              @update:model-value="onPlatformFilterUpdate"
             >
+              <el-option :label="tr('adPerformance.filterAll', '全部')" value="" />
               <el-option
-                v-for="item in cockpitSourceOptions"
+                v-for="item in cockpitSourceOptionsForSelect"
                 :key="item.value"
                 :label="item.label"
                 :value="item.value"
@@ -77,16 +79,18 @@
               <el-skeleton-item variant="text" class="filter-sel-skeleton" />
             </template>
             <el-select
-              v-model="filterCountry"
+              :model-value="filterCountry"
               size="default"
               class="bi-filter-select"
               popper-class="ecpm-filter__popper"
               placeholder="国家"
               filterable
               clearable
+              @update:model-value="onCountryFilterUpdate"
             >
+              <el-option :label="tr('adPerformance.filterAll', '全部')" value="" />
               <el-option
-                v-for="item in cockpitCountryOptions"
+                v-for="item in cockpitCountryOptionsForSelect"
                 :key="item.value"
                 :label="item.label"
                 :value="item.value"
@@ -458,6 +462,7 @@
 
 <script setup lang="ts">
   import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+  import { useI18n } from 'vue-i18n'
   import { storeToRefs } from 'pinia'
   import { useResizeObserver } from '@vueuse/core'
   import { echarts } from '@/plugins/echarts'
@@ -492,6 +497,9 @@
 
   defineOptions({ name: 'EcpmDashboard' })
 
+  const { t, te } = useI18n()
+  const tr = (key: string, fallback: string) => (te(key) ? t(key) : fallback)
+
   const cockpitMetaStore = useCockpitMetaFilterStore()
   const { data: cockpitMeta } = storeToRefs(cockpitMetaStore)
   /** 应用下拉与驾驶舱 settingApps 对齐（sAppId），勿仅用 ecpm meta 的 apps 文案项 */
@@ -501,6 +509,22 @@
   )
   const cockpitCountryOptions = computed<CockpitMetaOptionItem[]>(
     () => cockpitMeta.value?.countryOptions ?? []
+  )
+  const cockpitSourceOptionsForSelect = computed(() =>
+    cockpitSourceOptions.value.filter((o) => {
+      const v = String(o.value ?? '')
+        .trim()
+        .toLowerCase()
+      return v !== '' && v !== 'all'
+    })
+  )
+  const cockpitCountryOptionsForSelect = computed(() =>
+    cockpitCountryOptions.value.filter((o) => {
+      const v = String(o.value ?? '')
+        .trim()
+        .toLowerCase()
+      return v !== '' && v !== 'all'
+    })
   )
 
   function fmt2(n: number) {
@@ -581,6 +605,15 @@
   const filterPlatform = ref('')
   const filterApp = ref<string | string[]>([])
   const filterCountry = ref('')
+
+  function onPlatformFilterUpdate(v: string | undefined | null) {
+    filterPlatform.value = v ?? ''
+  }
+
+  function onCountryFilterUpdate(v: string | undefined | null) {
+    filterCountry.value = v ?? ''
+  }
+
   const loadingMetaFilterOptions = ref(false)
   const loadingOverviewKpis = ref(false)
   const loadingOverviewTrend = ref(false)
@@ -1186,10 +1219,8 @@
     try {
       await cockpitMetaStore.ensureLoaded()
       const meta = cockpitMeta.value
-      const sources = meta?.sourceOptions ?? []
-      const countries = meta?.countryOptions ?? []
-      filterPlatform.value = String(sources[0]?.value ?? '')
-      filterCountry.value = String(countries[0]?.value ?? '')
+      filterPlatform.value = ''
+      filterCountry.value = ''
       const cockpitApps = meta?.settingApps ?? []
       if (cockpitApps.length > 0) {
         filterApp.value = [String(cockpitApps[0]!.sAppId ?? '').trim()].filter(Boolean)
