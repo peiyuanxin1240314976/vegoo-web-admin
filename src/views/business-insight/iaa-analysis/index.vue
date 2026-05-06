@@ -5,6 +5,20 @@
     <header class="iaa-header iaa-entry-1">
       <div class="iaa-header__filters iaa-filter-panel">
         <div class="iaa-filter-field">
+          <AppDatePicker
+            v-model="filtersDraft.t_date"
+            type="date"
+            :shortcuts="dateShortcuts"
+            value-format="YYYY-MM-DD"
+            format="YYYY-MM-DD"
+            class="iaa-filter-date"
+            :teleported="true"
+            popper-class="iaa-filter__popper"
+            :clearable="false"
+            :prefix-icon="Calendar"
+          />
+        </div>
+        <div class="iaa-filter-field">
           <AppPlatformSearchSelect
             v-model="filtersDraft.s_app_id"
             mode="app"
@@ -21,35 +35,24 @@
         </div>
         <div class="iaa-filter-field">
           <ElSelect
-            v-model="filtersDraft.s_country_code"
+            :model-value="filtersDraft.s_country_code"
             class="iaa-filter-select"
             popper-class="iaa-filter__popper"
             placeholder="国家"
             :teleported="true"
             :fit-input-width="true"
             filterable
+            clearable
+            @update:model-value="onCountryFilterUpdate"
           >
+            <ElOption :label="tr('adPerformance.filterAll', '全部')" value="" />
             <ElOption
-              v-for="opt in countryOptions"
+              v-for="opt in countryOptionsForSelect"
               :key="opt.value"
               :label="opt.label"
               :value="opt.value"
             />
           </ElSelect>
-        </div>
-        <div class="iaa-filter-field">
-          <AppDatePicker
-            v-model="filtersDraft.t_date"
-            type="date"
-            :shortcuts="dateShortcuts"
-            value-format="YYYY-MM-DD"
-            format="YYYY-MM-DD"
-            class="iaa-filter-date"
-            :teleported="true"
-            popper-class="iaa-filter__popper"
-            :clearable="false"
-            :prefix-icon="Calendar"
-          />
         </div>
 
         <ElButton type="primary" plain round class="iaa-query-btn" :icon="Search" @click="onQuery">
@@ -120,6 +123,7 @@
 
 <script setup lang="ts">
   import { ref, computed, reactive, watch } from 'vue'
+  import { useI18n } from 'vue-i18n'
   import { storeToRefs } from 'pinia'
   import { Calendar, Search } from '@element-plus/icons-vue'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
@@ -139,6 +143,10 @@
   import TabVersion from './modules/tab-version.vue'
 
   defineOptions({ name: 'IaaAnalysis' })
+
+  const { t, te } = useI18n()
+  const tr = (key: string, fallback: string) => (te(key) ? t(key) : fallback)
+
   const metaStore = useCockpitMetaFilterStore()
   const { data: cockpitMeta } = storeToRefs(metaStore)
 
@@ -156,21 +164,29 @@
   const filtersDraft = reactive<IaaFilterState>({
     s_app_id: [],
     platform: 'all',
-    s_country_code: 'all',
+    s_country_code: '',
     t_date: getAppTodayYYYYMMDD()
   })
 
-  const {
-    appOptions,
-    // platformOptions,
-    countryOptions,
-    loading: filterOptionsLoading
-  } = useIaaFilters()
+  function onCountryFilterUpdate(v: string | undefined | null) {
+    filtersDraft.s_country_code = v ?? ''
+  }
+
+  const { appOptions, loading: filterOptionsLoading } = useIaaFilters()
+
+  const countryOptionsForSelect = computed(() =>
+    (cockpitMeta.value?.countryOptions ?? []).filter((o) => {
+      const v = String(o.value ?? '')
+        .trim()
+        .toLowerCase()
+      return v !== '' && v !== 'all'
+    })
+  )
   const settingAppsForSelect = computed<CockpitSettingAppItem[]>(() => {
     const fromCockpit = cockpitMeta.value?.settingApps ?? []
     if (fromCockpit.length) return fromCockpit
 
-    return appOptions.value
+    return (cockpitMeta.value?.appOptions ?? [])
       .filter((opt) => opt.value && opt.value !== 'all')
       .map((opt, index) => ({
         sAppId: String(opt.value ?? ''),

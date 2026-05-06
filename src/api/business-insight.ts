@@ -35,7 +35,6 @@ import type { RevenueOverviewPieSlice } from '@/views/business-insight/revenue-o
 import type { RevenueOverviewTopCountryRow } from '@/views/business-insight/revenue-overview/mock'
 import type { RevenueOverviewQualityMetric } from '@/views/business-insight/revenue-overview/mock'
 import type {
-  IaaFilterOptions,
   IaaKpiCard,
   IaaPlatformTableRow,
   IaaPlatformRankItem,
@@ -737,28 +736,6 @@ function normalizeIaaPlatformTabData(raw: unknown): IaaPlatformTabData {
     ecpmComparison,
     trend7d: normalizeIaaPlatformTrend7d(o.trend7d)
   }
-}
-
-/** 网关 data 可能缺字段或为 null，避免下拉赋值 undefined 导致页面异常 */
-function normalizeIaaFilterOptions(raw: IaaFilterOptions | null | undefined): IaaFilterOptions {
-  const arr = (v: unknown) => (Array.isArray(v) ? v : []) as IaaFilterOptions['appOptions']
-  const o =
-    raw !== null && raw !== undefined && typeof raw === 'object'
-      ? (raw as unknown as Record<string, unknown>)
-      : {}
-  return {
-    appOptions: arr(o.appOptions ?? o.app_options),
-    platformOptions: arr(o.platformOptions ?? o.platform_options),
-    countryOptions: arr(o.countryOptions ?? o.country_options)
-  }
-}
-
-export async function fetchIaaMetaFilterOptions() {
-  if (isIaaAnalysisEndpointMock(IaaAnalysisEndpoint.MetaFilterOptions)) {
-    return insightMock.mockFetchIaaMetaFilterOptions()
-  }
-  const raw = await request.get<unknown>({ url: `${IAA_BASE}/meta-filter-options` })
-  return normalizeIaaFilterOptions(unwrapIaaPayload<IaaFilterOptions>(raw))
 }
 
 function normalizeRevenueOverviewMetaFilterOptions(

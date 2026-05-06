@@ -9,8 +9,6 @@
  * 说明：契约 03～10 为细粒度文档，当前实现为 Tab 聚合接口（11～16 对应各 `overview/*-tab`）；KPI 由各自 Tab 接口内返回，无单独 overview-kpi。
  */
 export enum IaaAnalysisEndpoint {
-  /** 01-meta-filter-options */
-  MetaFilterOptions = 'metaFilterOptions',
   /** 11-overview-ad-type-tab */
   AdTypeTab = 'adTypeTab',
   /** 12-overview-platform-tab */
@@ -26,7 +24,6 @@ export enum IaaAnalysisEndpoint {
 }
 
 export const IAA_ANALYSIS_USE_MOCK: Record<IaaAnalysisEndpoint, boolean> = {
-  [IaaAnalysisEndpoint.MetaFilterOptions]: false,
   [IaaAnalysisEndpoint.AdTypeTab]: false,
   [IaaAnalysisEndpoint.PlatformTab]: false,
   [IaaAnalysisEndpoint.PlacementTab]: false,

@@ -4,7 +4,6 @@
  */
 /* eslint-disable @typescript-eslint/no-unused-vars -- Mock 保留入参形状供联调对照 */
 import type {
-  IaaFilterOptions,
   IaaFilterState,
   IaaAdTypeTabData,
   IaaPlatformTabData,
@@ -24,27 +23,6 @@ import type {
   IapDetailUser,
   IapDetailTrend
 } from '@/views/business-insight/iap-analysis/types'
-
-/** 全局筛选下拉选项（Mock：后端就绪后改为 request.get） */
-export function mockFetchIaaMetaFilterOptions() {
-  return Promise.resolve<IaaFilterOptions>({
-    appOptions: [
-      { label: '全部', value: 'all' },
-      { label: 'Weather5', value: 'weather5' }
-    ],
-    platformOptions: [
-      { label: 'Android&iOS', value: 'all' },
-      { label: 'Android', value: 'android' },
-      { label: 'iOS', value: 'ios' }
-    ],
-    countryOptions: [
-      { label: '全部', value: 'all' },
-      { label: '美国', value: 'US' },
-      { label: '韩国', value: 'KR' },
-      { label: '日本', value: 'JP' }
-    ]
-  })
-}
 
 /** 广告类型 Tab - 整页数据（KPI/表格/图表，Mock：后端就绪后改为 request.post） */
 export function mockFetchIaaAdTypeTabData(_params: IaaFilterState) {
