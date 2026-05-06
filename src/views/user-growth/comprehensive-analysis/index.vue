@@ -38,27 +38,33 @@
             />
 
             <ElSelect
-              v-model="filters.adPlatform"
+              :model-value="filters.adPlatform"
               class="ca-filter-select ca-filter-select--source"
               placeholder="广告平台"
               popper-class="ca-select-popper"
+              clearable
+              @update:model-value="onAdPlatformFilterUpdate"
             >
+              <ElOption :label="tr('adPerformance.filterAll', '全部')" value="" />
               <ElOption
-                v-for="opt in sourceOptions"
+                v-for="opt in sourceOptionsForSelect"
                 :key="opt.value"
                 :label="opt.label"
                 :value="opt.value"
               />
             </ElSelect>
             <ElSelect
-              v-model="filters.s_country_code"
+              :model-value="filters.s_country_code"
               class="ca-filter-select ca-filter-select--country"
               placeholder="国家"
               popper-class="ca-select-popper"
               filterable
+              clearable
+              @update:model-value="onCountryFilterUpdate"
             >
+              <ElOption :label="tr('adPerformance.filterAll', '全部')" value="" />
               <ElOption
-                v-for="opt in countryOptions"
+                v-for="opt in countryOptionsForSelect"
                 :key="opt.value"
                 :label="opt.label"
                 :value="opt.value"
@@ -179,6 +185,7 @@
 
 <script setup lang="ts">
   import { ref, reactive, onMounted, computed, defineAsyncComponent, watch } from 'vue'
+  import { useI18n } from 'vue-i18n'
   import { useRouter, useRoute } from 'vue-router'
   import { Top, Bottom, Calendar, Search } from '@element-plus/icons-vue'
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
@@ -206,6 +213,9 @@
 
   defineOptions({ name: 'ComprehensiveAnalysis' })
 
+  const { t, te } = useI18n()
+  const tr = (key: string, fallback: string) => (te(key) ? t(key) : fallback)
+
   const router = useRouter()
   const route = useRoute()
 
@@ -219,8 +229,24 @@
     s_country_code: ''
   })
 
+  function onAdPlatformFilterUpdate(v: string | undefined | null) {
+    filters.adPlatform = v ?? ''
+  }
+
+  function onCountryFilterUpdate(v: string | undefined | null) {
+    filters.s_country_code = v ?? ''
+  }
+
   const { appOptions, sourceOptions, countryOptions, settingApps } =
     useComprehensiveAnalysisFilters()
+
+  const sourceOptionsForSelect = computed(() =>
+    sourceOptions.value.filter((o) => String(o.value ?? '').trim() !== '')
+  )
+  const countryOptionsForSelect = computed(() =>
+    countryOptions.value.filter((o) => String(o.value ?? '').trim() !== '')
+  )
+
   const settingAppsForSelect = computed<CockpitSettingAppItem[]>(() => {
     if (settingApps.value.length) return settingApps.value as CockpitSettingAppItem[]
     return appOptions.value
