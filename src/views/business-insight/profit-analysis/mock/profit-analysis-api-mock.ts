@@ -20,18 +20,15 @@ import {
 export function mockFetchProfitMetaFilterOptions(): ProfitFilterOptions {
   return {
     appOptions: [
-      { label: '全部', value: 'all' },
       { label: 'Weather5', value: 'weather5' },
       { label: 'PhoneTracker', value: 'phonetracker' },
       { label: 'BloodSugar2', value: 'bloodsugar2' }
     ],
     platformOptions: [
-      { label: '全部', value: 'all' },
       { label: 'Android', value: 'android' },
       { label: 'iOS', value: 'ios' }
     ],
     countryOptions: [
-      { label: '全部', value: 'all' },
       { label: '美国', value: 'us' },
       { label: '韩国', value: 'kr' },
       { label: '德国', value: 'de' }

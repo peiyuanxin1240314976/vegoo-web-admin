@@ -34,20 +34,17 @@
   "sampleRequest": null,
   "sampleResponse": {
     "appOptions": [
-      { "label": "全部", "value": "all" },
       { "label": "Weather5", "value": "weather5" },
       { "label": "PhoneTracker", "value": "phonetracker" }
     ],
     "platformOptions": [
-      { "label": "全部", "value": "all" },
       { "label": "Android", "value": "android" },
       { "label": "iOS", "value": "ios" }
     ],
     "countryOptions": [
-      { "label": "全部", "value": "all" },
-      { "label": "美国", "value": "US" },
-      { "label": "韩国", "value": "KR" },
-      { "label": "德国", "value": "DE" }
+      { "label": "美国", "value": "us" },
+      { "label": "韩国", "value": "kr" },
+      { "label": "德国", "value": "de" }
     ],
     "datePresets": [
       { "label": "近7天", "value": "7" },

@@ -3,6 +3,7 @@
   import 'element-plus/theme-chalk/el-table-v2.css'
   import 'element-plus/theme-chalk/el-virtual-list.css'
   import { computed, h, ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
+  import { useI18n } from 'vue-i18n'
   import { storeToRefs } from 'pinia'
   import { ElTableV2 } from 'element-plus'
   import { Search } from '@element-plus/icons-vue'
@@ -22,6 +23,9 @@
   import { useProfitAnalysisDashboard } from './composables/useProfitAnalysisDashboard'
 
   defineOptions({ name: 'BusinessInsight' })
+
+  const { t, te } = useI18n()
+  const tr = (key: string, fallback: string) => (te(key) ? t(key) : fallback)
 
   const {
     query,
@@ -43,6 +47,30 @@
     loadDashboard,
     reloadDashboard
   } = useProfitAnalysisDashboard()
+
+  const countryOptionsForSelect = computed(() =>
+    (filterOptions.value?.countryOptions ?? []).filter((o) => {
+      const v = String(o.value ?? '')
+        .trim()
+        .toLowerCase()
+      return v !== '' && v !== 'all'
+    })
+  )
+  // const platformOptionsForSelect = computed(() =>
+  //   (filterOptions.value?.platformOptions ?? []).filter((o) => {
+  //     const v = String(o.value ?? '').trim().toLowerCase()
+  //     return v !== '' && v !== 'all'
+  //   })
+  // )
+
+  function onCountryFilterUpdate(v: string | undefined | null) {
+    query.sCountryCode = v ?? ''
+  }
+
+  // function onPlatformFilterUpdate(v: string | undefined | null) {
+  //   query.platform = v ?? ''
+  // }
+
   const metaStore = useCockpitMetaFilterStore()
   const { data: cockpitMeta } = storeToRefs(metaStore)
   const settingAppsForSelect = computed<CockpitSettingAppItem[]>(() => {
@@ -930,37 +958,43 @@
         </div>
         <div class="bi-filter-field">
           <ElSelect
-            v-model="query.sCountryCode"
+            :model-value="query.sCountryCode"
             class="bi-filter-select"
             popper-class="bi-select__popper"
-            :placeholder="$t('menus.businessInsight.profitAnalysisFilters.selectPlaceholder')"
+            :placeholder="$t('menus.businessInsight.profitAnalysisFilters.country')"
             :disabled="pendingMeta"
             filterable
+            clearable
+            @update:model-value="onCountryFilterUpdate"
           >
+            <ElOption :label="tr('adPerformance.filterAll', '全部')" value="" />
             <ElOption
-              v-for="opt in filterOptions.countryOptions"
+              v-for="opt in countryOptionsForSelect"
               :key="opt.value"
               :label="opt.label"
               :value="opt.value"
             />
           </ElSelect>
         </div>
-        <div class="bi-filter-field">
+        <!-- <div class="bi-filter-field">
           <ElSelect
-            v-model="query.platform"
+            :model-value="query.platform"
             class="bi-filter-select bi-filter-select--platform"
             popper-class="bi-select__popper"
-            :placeholder="$t('menus.businessInsight.profitAnalysisFilters.selectPlaceholder')"
+            :placeholder="$t('menus.businessInsight.profitAnalysisFilters.platform')"
             :disabled="pendingMeta"
+            clearable
+            @update:model-value="onPlatformFilterUpdate"
           >
+            <ElOption :label="tr('adPerformance.filterAll', '全部')" value="" />
             <ElOption
-              v-for="opt in filterOptions.platformOptions"
+              v-for="opt in platformOptionsForSelect"
               :key="opt.value"
               :label="opt.label"
               :value="opt.value"
             />
           </ElSelect>
-        </div>
+        </div> -->
         <div class="bi-filter-field">
           <AppDatePicker
             v-model="dateRangePicker"

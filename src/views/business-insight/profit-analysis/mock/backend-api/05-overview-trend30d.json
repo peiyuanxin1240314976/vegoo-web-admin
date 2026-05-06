@@ -53,9 +53,9 @@
     "currentPage": 0,
     "dateRange": "2026-03-01,2026-03-05",
     "pageSize": 0,
-    "platform": "all",
-    "sAppId": "all",
-    "sCountryCode": "all"
+    "platform": "",
+    "sAppId": [],
+    "sCountryCode": ""
   },
   "sampleResponse": {
     "days": ["01天", "02天", "03天", "04天", "05天"],

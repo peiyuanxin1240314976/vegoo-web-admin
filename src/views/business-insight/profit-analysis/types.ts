@@ -11,10 +11,11 @@ export interface ProfitAnalysisQueryParams {
   pageSize: number
   /** 逗号分隔 YYYY-MM-DD，如 2026-03-01,2026-03-05 */
   dateRange: string
+  /** 终端平台；不限与统一筛选一致传 `""` */
   platform: string
-  /** 应用 ID，全部传 all */
+  /** 应用 ID；不限传空数组或非具体 ID；请求体会由 API 层规范化 */
   sAppId: string | string[]
-  /** 国家代码，全部传 all */
+  /** 国家代码；不限传空字符串（与统一筛选「全部」一致） */
   sCountryCode: string
 }
 

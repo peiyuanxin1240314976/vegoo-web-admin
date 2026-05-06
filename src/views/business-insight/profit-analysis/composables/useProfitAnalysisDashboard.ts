@@ -8,6 +8,7 @@ import type {
   ProfitAppProfitTreeNode,
   ProfitSankeyLink,
   ProfitSankeyNode,
+  ProfitSelectOption,
   ProfitTrend30d
 } from '../types'
 import {
@@ -20,11 +21,21 @@ import {
 } from '@/api/business-insight'
 import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
 
+/** 与页面 ElSelect 首项「全部」value="" 一致：列表内不再保留 value 为 all/空串 的占位项 */
+function stripAllSentinelOptions(list: ProfitSelectOption[] | undefined): ProfitSelectOption[] {
+  if (!Array.isArray(list)) return []
+  return list.filter((o) => {
+    const v = String(o.value ?? '')
+      .trim()
+      .toLowerCase()
+    return v !== '' && v !== 'all'
+  })
+}
+
 const DEFAULT_FILTER_OPTIONS: ProfitFilterOptions = {
-  appOptions: [{ label: '全部', value: 'all' }],
-  countryOptions: [{ label: '全部', value: 'all' }],
+  appOptions: [],
+  countryOptions: [],
   platformOptions: [
-    { label: '全部', value: 'all' },
     { label: 'Android', value: 'android' },
     { label: 'iOS', value: 'ios' }
   ]
@@ -57,14 +68,19 @@ const EMPTY_APP_PROFIT_ROOT: ProfitAppProfitTreeNode = {
 
 function mergeFilterOptions(remote: ProfitFilterOptions | null): ProfitFilterOptions {
   if (!remote) return { ...DEFAULT_FILTER_OPTIONS }
+  const app = remote.appOptions?.length
+    ? stripAllSentinelOptions(remote.appOptions)
+    : DEFAULT_FILTER_OPTIONS.appOptions
+  const country = remote.countryOptions?.length
+    ? stripAllSentinelOptions(remote.countryOptions)
+    : DEFAULT_FILTER_OPTIONS.countryOptions
+  const plat = remote.platformOptions?.length
+    ? stripAllSentinelOptions(remote.platformOptions)
+    : DEFAULT_FILTER_OPTIONS.platformOptions
   return {
-    appOptions: remote.appOptions?.length ? remote.appOptions : DEFAULT_FILTER_OPTIONS.appOptions,
-    countryOptions: remote.countryOptions?.length
-      ? remote.countryOptions
-      : DEFAULT_FILTER_OPTIONS.countryOptions,
-    platformOptions: remote.platformOptions?.length
-      ? remote.platformOptions
-      : DEFAULT_FILTER_OPTIONS.platformOptions,
+    appOptions: app,
+    countryOptions: country,
+    platformOptions: plat.length ? plat : DEFAULT_FILTER_OPTIONS.platformOptions,
     datePresets: remote.datePresets?.length ? remote.datePresets : undefined
   }
 }
@@ -103,9 +119,9 @@ export function useProfitAnalysisDashboard(): UseProfitAnalysisDashboardReturn {
     currentPage: 0,
     pageSize: 0,
     dateRange: `${defaultStart},${defaultEnd}`,
-    platform: 'all',
+    platform: '',
     sAppId: [],
-    sCountryCode: 'all'
+    sCountryCode: ''
   })
 
   const filterOptions = ref<ProfitFilterOptions>({ ...DEFAULT_FILTER_OPTIONS })
@@ -157,8 +173,12 @@ export function useProfitAnalysisDashboard(): UseProfitAnalysisDashboardReturn {
         ? query.sAppId.length > 0
         : !!String(query.sAppId ?? '').trim()
       const firstAppId = String(
-        filterOptions.value.appOptions.find((item) => String(item.value ?? '').trim() !== 'all')
-          ?.value ?? ''
+        filterOptions.value.appOptions.find((item) => {
+          const v = String(item.value ?? '')
+            .trim()
+            .toLowerCase()
+          return v !== '' && v !== 'all'
+        })?.value ?? ''
       ).trim()
       if (!hasSelectedApp && firstAppId) {
         query.sAppId = [firstAppId]

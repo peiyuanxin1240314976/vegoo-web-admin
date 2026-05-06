@@ -87,9 +87,9 @@
     "currentPage": 1,
     "dateRange": "2026-03-01,2026-03-05",
     "pageSize": 20,
-    "platform": "all",
-    "sAppId": "all",
-    "sCountryCode": "all"
+    "platform": "",
+    "sAppId": [],
+    "sCountryCode": ""
   },
   "sampleResponse": {
     "root": {

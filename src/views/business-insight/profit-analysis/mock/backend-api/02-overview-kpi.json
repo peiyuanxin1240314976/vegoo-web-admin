@@ -12,11 +12,19 @@
       "platform": {
         "type": "string",
         "required": false,
-        "enum": ["all", "android", "ios"],
-        "description": "终端平台。"
+        "enum": ["", "android", "ios"],
+        "description": "终端平台；不限传空字符串 \"\"（与统一筛选「全部」一致）。"
       },
-      "sAppId": { "type": "string", "required": false, "description": "应用 ID，全部 all。" },
-      "sCountryCode": { "type": "string", "required": false, "description": "国家代码，全部 all。" }
+      "sAppId": {
+        "type": "string|string[]",
+        "required": false,
+        "description": "应用 ID；不限传 [] 或由前端按 appIds 规范化。"
+      },
+      "sCountryCode": {
+        "type": "string",
+        "required": false,
+        "description": "国家代码；不限传空字符串 \"\"（ISO 3166-1 alpha-2 小写）。"
+      }
     },
     "response": {
       "kpis": {
@@ -48,9 +56,9 @@
     "currentPage": 0,
     "dateRange": "2026-03-01,2026-03-05",
     "pageSize": 0,
-    "platform": "all",
-    "sAppId": "all",
-    "sCountryCode": "all"
+    "platform": "",
+    "sAppId": [],
+    "sCountryCode": ""
   },
   "sampleResponse": {
     "kpis": [

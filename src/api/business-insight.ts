@@ -1214,10 +1214,12 @@ export async function fetchRevenueOverviewQualityMetrics(params: RevenueOverview
 
 /** 利润分析 - 顶部 KPI POST .../overview/kpi，body 扁平 ProfitAnalysisQueryParams */
 function normalizeProfitAnalysisBody(params: ProfitAnalysisQueryParams) {
-  const { sAppId, ...rest } = params
+  const { sAppId, platform, sCountryCode, ...rest } = params
   return {
     ...rest,
-    ...buildAppSelectionRequestBody(sAppId === 'all' ? '' : (sAppId ?? ''))
+    platform: emptyIfAll(platform),
+    sCountryCode: emptyIfAll(sCountryCode),
+    ...buildAppSelectionRequestBody(emptyIfAll(sAppId))
   }
 }
 
