@@ -12,47 +12,70 @@
         <span class="iap-breadcrumb__sep">&gt;</span>
         <span class="iap-breadcrumb__item is-active">{{ appName }}</span>
       </div>
-      <div class="iap-actions">
-        <div class="iap-pill">
-          <span class="iap-pill__label">时间范围</span>
+      <div class="iap-actions iap-detail-filter-panel">
+        <div class="iap-pill iap-detail-filter-pill">
           <AppDatePicker
             v-model="dateRange"
             type="daterange"
             :shortcuts="dateRangeShortcuts"
-            size="small"
-            range-separator="-"
+            range-separator="～"
             start-placeholder="开始日期"
             end-placeholder="结束日期"
             value-format="YYYY-MM-DD"
-            class="iap-select iap-select--daterange"
-            popper-class="iap-date-popper"
+            unlink-panels
+            class="iap-detail-filter-date"
+            popper-class="iap-detail-filter__popper"
           />
         </div>
-        <div class="iap-pill">
-          <span class="iap-pill__label">国家</span>
+        <div class="iap-pill iap-detail-filter-pill">
           <ElSelect
-            v-model="country"
-            size="small"
-            class="iap-select"
-            popper-class="iap-select-popper"
+            :model-value="country"
+            class="iap-detail-filter-select"
+            popper-class="iap-detail-filter__popper"
+            filterable
+            clearable
+            @update:model-value="onCountryFilterUpdate"
+            placeholder="国家"
           >
-            <ElOption label="全部" value="all" />
+            <ElOption :label="tr('adPerformance.filterAll', '全部')" value="" />
+            <ElOption
+              v-for="opt in countryOptionsForSelect"
+              :key="String(opt.value)"
+              :label="opt.label"
+              :value="opt.value"
+            />
           </ElSelect>
         </div>
-        <div class="iap-pill">
-          <span class="iap-pill__label">平台</span>
+        <div class="iap-pill iap-detail-filter-pill">
           <ElSelect
-            v-model="platform"
-            size="small"
-            class="iap-select"
-            popper-class="iap-select-popper"
+            :model-value="platform"
+            class="iap-detail-filter-select"
+            popper-class="iap-detail-filter__popper"
+            filterable
+            clearable
+            @update:model-value="onPlatformFilterUpdate"
+            placeholder="终端平台"
           >
-            <ElOption label="全部" value="all" />
+            <ElOption :label="tr('adPerformance.filterAll', '全部')" value="" />
+            <ElOption
+              v-for="opt in platformOptionsForSelect"
+              :key="String(opt.value)"
+              :label="opt.label"
+              :value="opt.value"
+            />
           </ElSelect>
         </div>
-        <ElButton size="small" round class="iap-export-btn">
-          <ElIcon><Download /></ElIcon>
-          导出
+        <ElButton
+          class="iap-detail-query-btn"
+          type="primary"
+          plain
+          round
+          :icon="Search"
+          :loading="detailLoading"
+          :disabled="detailLoading"
+          @click="runQuery"
+        >
+          查询
         </ElButton>
       </div>
     </header>
@@ -370,11 +393,14 @@
 
 <script setup lang="ts">
   import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
+  import { storeToRefs } from 'pinia'
+  import { useI18n } from 'vue-i18n'
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { useRoute, useRouter } from 'vue-router'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import { getAppTodayYYYYMMDD } from '@/utils/app-now'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
-  import { ArrowUp, ArrowDown, Download, Monitor } from '@element-plus/icons-vue'
+  import { ArrowUp, ArrowDown, Search, Monitor } from '@element-plus/icons-vue'
   import { echarts } from '@/plugins/echarts'
   import {
     fetchIapDetailKpi,
@@ -393,6 +419,31 @@
 
   const route = useRoute()
   const router = useRouter()
+
+  const { t, te } = useI18n()
+  const tr = (key: string, fallback: string) => (te(key) ? t(key) : fallback)
+
+  const metaStore = useCockpitMetaFilterStore()
+  const { data: cockpitMeta } = storeToRefs(metaStore)
+
+  /** cockpit meta：下拉去掉占位「全部」，首项由模板 ElOption value="" */
+  const countryOptionsForSelect = computed(() =>
+    (cockpitMeta.value?.countryOptions ?? []).filter((o) => {
+      const v = String(o.value ?? '')
+        .trim()
+        .toLowerCase()
+      return v !== '' && v !== 'all'
+    })
+  )
+
+  const platformOptionsForSelect = computed(() =>
+    (cockpitMeta.value?.platformOptions ?? []).filter((o) => {
+      const v = String(o.value ?? '')
+        .trim()
+        .toLowerCase()
+      return v !== '' && v !== 'all'
+    })
+  )
 
   const appName = computed(() => (route.query.app as string) || 'PhoneTracker')
   /** 详情接口入参：来自路由 query.appId */
@@ -415,8 +466,35 @@
       endDate.value = val?.[1] ?? ''
     }
   })
-  const country = ref('all')
-  const platform = ref('all')
+  /** 「全部」为 `''`，与 `emptyIfAll` / 契约一致（筛选条为草稿，仅「查询」写入 applied*） */
+  const country = ref('')
+  const platform = ref('')
+
+  /** 最近一次查询（或首屏初始化）使用的条件，所有接口与 Tab 懒加载均以此为准 */
+  const appliedStartDate = ref(startDate.value)
+  const appliedEndDate = ref(endDate.value)
+  const appliedCountry = ref('')
+  const appliedPlatform = ref('')
+
+  function commitFilters() {
+    appliedStartDate.value = startDate.value
+    appliedEndDate.value = endDate.value
+    appliedCountry.value = country.value
+    appliedPlatform.value = platform.value
+  }
+
+  async function runQuery() {
+    commitFilters()
+    await refreshDetailScope()
+  }
+
+  function onCountryFilterUpdate(v: string | undefined | null) {
+    country.value = v ?? ''
+  }
+
+  function onPlatformFilterUpdate(v: string | undefined | null) {
+    platform.value = v ?? ''
+  }
   const activeTab = ref<'product' | 'user' | 'trend'>('product')
 
   /** 筛选变更：KPI + 当前 Tab 数据重拉 */
@@ -1096,10 +1174,10 @@
 
   const params = () => ({
     s_app_id: s_app_id.value,
-    startDate: startDate.value,
-    endDate: endDate.value,
-    s_country_code: country.value,
-    platform: platform.value
+    startDate: appliedStartDate.value,
+    endDate: appliedEndDate.value,
+    s_country_code: appliedCountry.value,
+    platform: appliedPlatform.value
   })
 
   /** 按 Tab 分片：10-detail-product / 11-detail-user / 12-detail-trend */
@@ -1164,20 +1242,20 @@
     initAllCharts()
   })
 
-  watch([startDate, endDate, country, platform], refreshDetailScope)
-
   watch(
     () => route.query,
     () => {
+      commitFilters()
       refreshDetailScope()
     },
     { deep: true }
   )
 
-  onMounted(() => {
-    refreshDetailScope().then(() => {
-      window.addEventListener('resize', resizeCharts)
-    })
+  onMounted(async () => {
+    await metaStore.ensureLoaded()
+    commitFilters()
+    await refreshDetailScope()
+    window.addEventListener('resize', resizeCharts)
   })
 
   onUnmounted(() => {
@@ -1190,6 +1268,7 @@
 <style scoped lang="scss">
   @use './styles/iap-card-fx.scss' as *;
   @use '../../user-growth/ad-performance/styles/ap-card-fx.scss' as ap;
+  @use '../../user-growth/styles/filter-bar-theme.scss' as filterTheme;
 
   .iap-analysis-page {
     display: flex;
@@ -1242,11 +1321,18 @@
     }
   }
 
-  .iap-actions {
-    display: flex;
+  .iap-actions.iap-detail-filter-panel {
+    @include filterTheme.filter-row(10px);
+
     flex-wrap: wrap;
-    gap: 10px;
     align-items: center;
+    min-width: 0;
+  }
+
+  .iap-detail-query-btn {
+    flex: 0 0 auto;
+    height: 36px;
+    padding: 0 18px;
   }
 
   .iap-pill {
@@ -1260,14 +1346,41 @@
     }
   }
 
-  :deep(.iap-select .el-input__wrapper) {
-    background: var(--default-box-color) !important;
-    box-shadow: 0 0 0 1px var(--default-border) !important;
+  .iap-detail-filter-select {
+    @include filterTheme.filter-select-size(140px, 120px, 200px);
+  }
 
-    .el-input__inner {
-      font-size: 12px;
-      color: var(--art-gray-900) !important;
-    }
+  .iap-actions.iap-detail-filter-panel :deep(.iap-detail-filter-date) {
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
+  }
+
+  @include filterTheme.date-trigger(
+    '.iap-actions.iap-detail-filter-panel',
+    '.iap-detail-filter-date',
+    260px
+  );
+  @include filterTheme.element-select-trigger('.iap-detail-filter-select');
+  @include filterTheme.select-popper('iap-detail-filter__popper');
+  @include filterTheme.date-picker-popper('iap-detail-filter__popper');
+
+  :global(.iap-detail-filter__popper.el-popper),
+  :global(.iap-detail-filter__popper.el-select__popper),
+  :global(.iap-detail-filter__popper.el-picker__popper) {
+    z-index: calc(var(--z-modal) - 1) !important;
+  }
+
+  :deep(.iap-detail-filter-select) {
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
   }
 
   .iap-export-btn {
@@ -1858,8 +1971,4 @@
       }
     }
   }
-</style>
-
-<style lang="scss">
-  @use './styles/iap-popper.scss' as *;
 </style>
