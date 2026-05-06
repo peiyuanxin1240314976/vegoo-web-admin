@@ -84,16 +84,7 @@
             />
           </div>
 
-          <ElButton
-            type="primary"
-            plain
-            round
-            class="rev-query-btn"
-            :icon="Search"
-            @click="onQuery"
-          >
-            查询
-          </ElButton>
+          <ElButton type="primary" plain round :icon="Search" @click="onQuery"> 查询 </ElButton>
         </div>
 
         <!-- <button type="button" class="rev-export" @click="onExport">Export</button> -->

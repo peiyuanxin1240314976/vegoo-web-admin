@@ -219,7 +219,15 @@
               @mouseenter="hoverRow = idx"
               @mouseleave="hoverRow = -1"
             >
-              <span class="col-network">{{ row.network }}</span>
+              <span class="col-network-cell">
+                <el-tooltip
+                  :content="String(row.network ?? '')"
+                  placement="top"
+                  :disabled="!row.network"
+                >
+                  <span class="col-network">{{ row.network }}</span>
+                </el-tooltip>
+              </span>
               <span class="col-format">
                 <span class="format-tag" :class="`format-${row.formatType}`">{{ row.format }}</span>
               </span>
@@ -1121,7 +1129,7 @@
   .main-layout {
     position: relative;
     display: grid;
-    grid-template-columns: 1fr 440px;
+    grid-template-columns: 1fr 615px;
     gap: 16px;
     padding: 0 24px;
   }
@@ -1137,7 +1145,7 @@
     inset: 0;
     z-index: 2;
     display: grid;
-    grid-template-columns: 1fr 440px;
+    grid-template-columns: 1fr 615px;
     gap: 16px;
     padding: 0 24px;
   }
@@ -1693,6 +1701,7 @@
   }
 
   .custom-table {
+    max-height: 550px;
     margin-top: 12px;
     overflow: auto;
     -webkit-overflow-scrolling: touch;
@@ -1742,9 +1751,25 @@
     transform: translateY(-1px);
   }
 
+  .col-network-cell {
+    min-width: 0;
+    max-width: 120px;
+  }
+
+  .col-network-cell > :deep(.el-tooltip__trigger) {
+    display: block;
+    max-width: 100%;
+  }
+
   .col-network {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
     font-weight: 500;
     color: var(--text-secondary);
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .format-tag {
