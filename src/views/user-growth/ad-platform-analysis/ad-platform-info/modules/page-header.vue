@@ -24,10 +24,10 @@
               type="daterange"
               :shortcuts="dateRangeShortcuts"
               unlink-panels
-              range-separator="至"
+              range-separator="～"
               start-placeholder="开始日期"
               end-placeholder="结束日期"
-              format="YYYY/MM/DD"
+              format="YYYY-MM-DD"
               value-format="YYYY-MM-DD"
               popper-class="api-info-filter-popper"
             />
@@ -190,16 +190,16 @@
     padding: 4px 6px;
     background: color-mix(in srgb, var(--el-color-primary) 8%, transparent);
     border: 1px solid color-mix(in srgb, var(--el-color-primary) 30%, transparent);
-    border-radius: 9999px;
+    border-radius: 5px;
     box-shadow: 0 0 16px color-mix(in srgb, var(--el-color-primary) 16%, transparent);
 
     :deep(.el-range-editor.el-input__wrapper) {
       width: 100%;
-      min-height: 34px;
+      min-height: 30px;
       padding: 0 12px;
       background: transparent;
       border: none;
-      border-radius: 9999px;
+      border-radius: 5px;
       box-shadow: none;
       transition:
         box-shadow 0.22s ease,
