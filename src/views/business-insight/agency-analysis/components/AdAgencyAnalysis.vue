@@ -214,7 +214,9 @@
 
     // Country horizontal bar
     if (countryRef.value) {
-      const countries = charts.value.countryTop8.map((item) => item.s_country_code)
+      const countries = charts.value.countryTop8.map(
+        (item) => item.s_country_name?.trim() || item.s_country_code
+      )
       const values = charts.value.countryTop8.map((item) => item.spend)
       const percents = charts.value.countryTop8.map((item) => `${item.sharePct}%`)
       const c = echarts.init(countryRef.value)

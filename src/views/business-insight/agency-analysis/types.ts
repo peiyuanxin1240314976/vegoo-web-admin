@@ -144,6 +144,7 @@ export interface ChannelDistributionSeries {
 }
 
 export interface CountryDistributionItem {
+  s_country_name?: string
   s_country_code: string
   spend: number
   sharePct: number

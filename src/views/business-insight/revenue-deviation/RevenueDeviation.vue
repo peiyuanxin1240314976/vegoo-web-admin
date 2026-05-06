@@ -770,6 +770,16 @@
     return base
   }
 
+  function fmtUsdPlain(n?: number | null) {
+    if (n === null || n === undefined || Number.isNaN(n)) return '--'
+    return n.toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })
+  }
+
   function fmtPctSigned(n?: number | null) {
     if (n === null || n === undefined || Number.isNaN(n)) return '--'
     if (n === 0) return '0.0%'
@@ -993,6 +1003,7 @@
         : countryTop10.value.tab_rate
     const countries = list.map((i) => i.label_display)
     const amounts = list.map((i) => i.n_value)
+    const tabIsRate = activeCountryTab.value === 'rate'
     countryChart.setOption({
       backgroundColor: 'transparent',
       grid: { top: 5, right: 76, bottom: 5, left: 60 },
@@ -1001,7 +1012,39 @@
         axisPointer: { type: 'none' },
         backgroundColor: ttBg,
         borderColor: ttBorder,
-        textStyle: { color: ttText, fontSize: 12 }
+        textStyle: { color: ttText, fontSize: 12 },
+        formatter: (params: unknown) => {
+          const first = (Array.isArray(params) ? params[0] : params) as {
+            name?: string
+            dataIndex?: number
+            value?: number | string
+          }
+          const idx = first?.dataIndex ?? 0
+          const row = list[idx]
+          if (!row) return ''
+          const title = first?.name ?? row.label_display
+          const raw = Number(first?.value ?? row.n_value)
+          const mainLine = tabIsRate
+            ? `偏差率：${Number.isFinite(raw) ? `${raw.toFixed(1)}%` : '--'}`
+            : `偏差金额：${
+                Number.isFinite(raw)
+                  ? raw.toLocaleString('en-US', { maximumFractionDigits: 0 })
+                  : '--'
+              }`
+          const blocks = [
+            `<div style="font-weight:600;margin-bottom:4px">${title}</div>`,
+            `<div>${mainLine}</div>`
+          ]
+          if (row.d_estimated_usd !== undefined && row.d_estimated_usd !== null) {
+            blocks.push(
+              `<div style="margin-top:6px">预估收入：${fmtUsdPlain(row.d_estimated_usd)}</div>`
+            )
+          }
+          if (row.d_real_usd !== undefined && row.d_real_usd !== null) {
+            blocks.push(`<div>真实收入：${fmtUsdPlain(row.d_real_usd)}</div>`)
+          }
+          return blocks.join('')
+        }
       },
       xAxis: {
         type: 'value',

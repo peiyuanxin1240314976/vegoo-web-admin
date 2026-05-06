@@ -98,6 +98,10 @@ export type RevenueDeviationCountryItem = {
   s_country_code: string
   label_display: string
   n_value: number
+  /** 预估收入（USD），供 Tooltip 等展示 */
+  d_estimated_usd?: number
+  /** 真实收入（USD），供 Tooltip 等展示 */
+  d_real_usd?: number
 }
 
 export type RevenueDeviationCountryTop10 = {
