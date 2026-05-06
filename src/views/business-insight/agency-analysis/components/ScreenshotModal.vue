@@ -71,7 +71,7 @@
   const kpiKeys = [
     'spend',
     'roi1',
-    'cpa',
+    'cpi',
     'installs',
     'appCount',
     'accountCount',
@@ -84,7 +84,7 @@
   const kpiLabels = [
     '广告支出',
     '首日ROI',
-    'CPA',
+    'CPI',
     '代投买量用户数',
     '在投应用数',
     '广告账户数',
@@ -113,8 +113,14 @@
   })
 
   const kpiSections = computed(() => {
-    const metricValue = (payload: AgencySubTabKpiPayload | null | undefined, key: string) =>
-      payload?.metrics?.find((item) => item.key === key)?.value ?? '--'
+    const metricValue = (payload: AgencySubTabKpiPayload | null | undefined, key: string) => {
+      const metrics = payload?.metrics
+      let item = metrics?.find((m) => m.key === key)
+      if (!item && key === 'cpi') {
+        item = metrics?.find((m) => m.key === 'cpa')
+      }
+      return item?.value ?? '--'
+    }
 
     return [
       {

@@ -189,6 +189,7 @@ export interface AgencySubTabKpiMetricItem {
   key:
     | 'spend'
     | 'roi1'
+    | 'cpi'
     | 'cpa'
     | 'installs'
     | 'appCount'

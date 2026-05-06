@@ -83,7 +83,7 @@
   const METRIC_LABELS = [
     '广告支出',
     '首日ROI',
-    'CPA',
+    'CPI',
     '代投买量用户数',
     '在投应用数',
     '广告账户数',
@@ -96,7 +96,7 @@
   const CARD_THEMES = [
     'spend',
     'roi',
-    'cpa',
+    'cpi',
     'install',
     'app',
     'acct',
@@ -180,7 +180,7 @@
   const KPI_KEYS_ORDER: AgencySubTabKpiMetricItem['key'][] = [
     'spend',
     'roi1',
-    'cpa',
+    'cpi',
     'installs',
     'appCount',
     'accountCount',
@@ -194,7 +194,11 @@
     payload: AgencySubTabKpiPayload | null | undefined,
     key: AgencySubTabKpiMetricItem['key']
   ) {
-    const m = payload?.metrics?.find((x) => x.key === key)
+    const metrics = payload?.metrics
+    let m = metrics?.find((x) => x.key === key)
+    if (!m && key === 'cpi') {
+      m = metrics?.find((x) => x.key === 'cpa')
+    }
     return m?.value ?? '--'
   }
 
@@ -632,7 +636,7 @@
     border-color: rgb(16 185 129 / 38%);
   }
 
-  .aa-sub-mock__kpi-card--cpa {
+  .aa-sub-mock__kpi-card--cpi {
     border-color: rgb(245 158 11 / 35%);
   }
 
