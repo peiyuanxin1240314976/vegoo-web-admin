@@ -19,38 +19,45 @@
         <span class="page-title" :title="pageDetailTitle">{{ pageDetailTitle }}</span>
       </div>
 
-      <div class="filters filters-panel">
+      <div class="filters aapp-filter-panel">
         <div class="filter-item filter-field">
           <span class="filter-label">日期范围</span>
           <AppDatePicker
             v-model="dateRange"
             type="daterange"
             :shortcuts="dateRangeShortcuts"
-            range-separator="至"
+            range-separator="～"
             start-placeholder="开始日期"
             end-placeholder="结束日期"
             value-format="YYYY-MM-DD"
             unlink-panels
-            class="filter-date-picker filter-select--date"
+            class="aapp-filter-date"
+            popper-class="aapp-filter__popper"
           />
         </div>
         <div class="filter-item filter-field">
           <span class="filter-label">国家</span>
           <el-select
-            v-model="countryFilter"
-            class="custom-select filter-select filter-select--country"
+            :model-value="countryFilter"
+            class="aapp-filter-select"
+            popper-class="aapp-filter__popper"
+            filterable
+            clearable
+            @update:model-value="onCountryFilterUpdate"
+            placeholder="国家"
           >
+            <el-option :label="tr('adPerformance.filterAll', '全部')" value="" />
             <el-option
-              v-for="(o, idx) in countryBarOptions"
-              :key="`ct-${idx}-${o.value || 'all'}`"
-              :label="o.label"
-              :value="o.value"
+              v-for="opt in countryOptionsForSelect"
+              :key="String(opt.value)"
+              :label="opt.label"
+              :value="opt.value"
             />
           </el-select>
         </div>
 
         <el-button
-          class="filter-query-btn"
+          class="aapp-query-btn"
           type="primary"
           plain
           round
@@ -201,7 +208,7 @@
             <div class="table-header">
               <span>广告位</span>
               <span>格式</span>
-              <span>收入</span>
+              <span>广告收入</span>
               <span>eCPM</span>
               <span>填充率</span>
               <span>展示次数</span>
@@ -317,6 +324,7 @@
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { storeToRefs } from 'pinia'
   import { useRoute, useRouter } from 'vue-router'
+  import { useI18n } from 'vue-i18n'
   import type { LocationQueryValue } from 'vue-router'
   import { ElMessage } from 'element-plus'
   import { echarts, type EChartsOption } from '@/plugins/echarts'
@@ -329,7 +337,6 @@
   } from '@/api/ad-platform-detail'
   import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
-  import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
   import type {
     AdPlatformDetailKpiItem,
     AppAdPlatformAdUnitRow,
@@ -341,38 +348,26 @@
   const router = useRouter()
   const route = useRoute()
 
+  const { t, te } = useI18n()
+  const tr = (key: string, fallback: string) => (te(key) ? t(key) : fallback)
+
   const cockpitMetaStore = useCockpitMetaFilterStore()
   const { data: cockpitMeta } = storeToRefs(cockpitMetaStore)
 
-  /** UI 选「全部」用 `all`，与接口 `countryCode` 空串区分，便于 el-select 选中 */
-  function toUiCountryValue(value: string): string {
-    return value === '' || value === 'all' ? 'all' : value
-  }
-
   function toApiCountryCode(value: string): string {
-    return value === 'all' ? '' : value
+    const v = String(value ?? '').trim()
+    return v === '' || v.toLowerCase() === 'all' ? '' : value
   }
 
-  function normalizeCountryOptions(list: CockpitMetaOptionItem[]): CockpitMetaOptionItem[] {
-    const normalized = list.map((o) => ({
-      ...o,
-      value: toUiCountryValue(o.value)
-    }))
-    const deduped = normalized.filter(
-      (item, idx, arr) => arr.findIndex((x) => x.value === item.value) === idx
-    )
-    if (deduped.some((o) => o.value === 'all')) return deduped
-    return [{ label: '全部', value: 'all' }, ...deduped]
-  }
-
-  function fallbackCountryOptions(): CockpitMetaOptionItem[] {
-    return [{ label: '全部', value: 'all' }]
-  }
-
-  const countryBarOptions = computed(() => {
-    const list = cockpitMeta.value?.countryOptions
-    return list?.length ? normalizeCountryOptions(list) : fallbackCountryOptions()
-  })
+  /** 国家下拉：去掉 meta 中占位「全部」，首项由模板 ElOption value="" 提供 */
+  const countryOptionsForSelect = computed(() =>
+    (cockpitMeta.value?.countryOptions ?? []).filter((o) => {
+      const v = String(o.value ?? '')
+        .trim()
+        .toLowerCase()
+      return v !== '' && v !== 'all'
+    })
+  )
 
   function querySourceLabelString(
     v: LocationQueryValue | LocationQueryValue[] | undefined
@@ -447,8 +442,12 @@
   const initialDateRange = buildDefaultDateRangeStrings()
   /** `YYYY-MM-DD` 起止；与接口 `startDate` / `endDate` 一致 */
   const dateRange = ref<[string, string] | null>(initialDateRange)
-  /** 与 `countryBarOptions` 对齐，「全部」为 UI 值 `all`；请求前用 `toApiCountryCode` 映射为 `""` */
-  const countryFilter = ref('all')
+  /** 与 meta `countryOptions` 对齐，「全部」为 `""`；请求前由 `toApiCountryCode` 映射 */
+  const countryFilter = ref('')
+
+  function onCountryFilterUpdate(v: string | undefined | null) {
+    countryFilter.value = v ?? ''
+  }
 
   // ─── KPI（契约字段驱动）──────────────────────────────────────────
   const INITIAL_APP_KPIS: AdPlatformDetailKpiItem[] = [
@@ -539,9 +538,9 @@
   let chartInstance: ReturnType<typeof echarts.init> | null = null
 
   const legendItems = ref([
-    { key: 'revenue', label: 'Revenue', color: '#f59e0b', active: true },
+    { key: 'revenue', label: '广告收入', color: '#f59e0b', active: true },
     { key: 'ecpm', label: 'eCPM', color: '#3b82f6', active: true },
-    { key: 'fill', label: 'Fill Rate', color: '#10b981', active: true }
+    { key: 'fill', label: '填充率', color: '#10b981', active: true }
   ])
 
   function toggleLegend(item: (typeof legendItems.value)[0]) {
@@ -910,7 +909,9 @@
   // 初始化会自动查询；之后仅点击「查询」按钮才触发 runQuery()
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+  @use '../../../user-growth/styles/filter-bar-theme.scss' as filterTheme;
+
   /* ═══════════════════════════════════════════════
    CSS 变量 & 基础
 ═══════════════════════════════════════════════ */
@@ -1031,153 +1032,89 @@
     white-space: nowrap;
   }
 
-  .filters {
-    display: flex;
-    gap: 12px;
-    align-items: center;
+  .filters.aapp-filter-panel {
+    @include filterTheme.filter-panel(10px 14px);
+    @include filterTheme.filter-panel-children;
+    @include filterTheme.filter-row(12px);
+
+    min-width: 0;
   }
 
-  .filters-panel {
-    padding: 10px 14px;
-    overflow: hidden;
-    background:
-      radial-gradient(
-        circle at 20% 10%,
-        color-mix(in srgb, var(--art-primary) 16%, transparent) 0%,
-        transparent 58%
-      ),
-      radial-gradient(
-        circle at 82% 16%,
-        color-mix(in srgb, var(--art-success) 10%, transparent) 0%,
-        transparent 52%
-      ),
-      linear-gradient(180deg, rgb(0 0 0 / 22%) 0%, rgb(0 0 0 / 10%) 100%);
-    border: 1px solid color-mix(in srgb, var(--art-primary) 18%, var(--default-border));
-    border-radius: 16px;
-    box-shadow:
-      0 12px 40px rgb(0 0 0 / 44%),
-      0 0 0 1px color-mix(in srgb, var(--art-primary) 10%, transparent),
-      inset 0 1px 0 color-mix(in srgb, var(--art-primary) 10%, transparent);
-  }
-
-  .filter-item {
-    display: flex;
+  .filters.aapp-filter-panel > .filter-item.filter-field {
+    display: inline-flex;
     gap: 8px;
     align-items: center;
-  }
-
-  .filter-field {
-    min-height: 32px;
+    min-height: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
   }
 
   .filter-label {
     font-size: 12px;
-    color: var(--text-secondary);
+    color: var(--el-text-color-secondary);
     white-space: nowrap;
   }
 
-  .filter-select--date {
-    width: min(100%, 320px);
-    min-width: 280px;
+  .aapp-filter-select {
+    @include filterTheme.filter-select-size(150px, 130px, 150px);
   }
 
-  .filter-select--country {
-    width: 150px;
-    min-width: 130px;
+  .filters.aapp-filter-panel :deep(.aapp-filter-date) {
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
   }
 
-  /* 日期范围：与筛选条视觉一致 */
-  :deep(.filter-date-picker.el-date-editor) {
-    --el-date-editor-width: 100%;
+  @include filterTheme.date-trigger('.filters.aapp-filter-panel', '.aapp-filter-date', 280px);
+  @include filterTheme.element-select-trigger('.aapp-filter-select');
+  @include filterTheme.select-popper('aapp-filter__popper');
+  @include filterTheme.date-picker-popper('aapp-filter__popper');
+
+  :global(.aapp-filter__popper.el-popper),
+  :global(.aapp-filter__popper.el-select__popper),
+  :global(.aapp-filter__popper.el-picker__popper) {
+    z-index: 4000 !important;
   }
 
-  :deep(.filter-date-picker .el-input__wrapper) {
-    min-height: 34px;
-    background: rgb(0 0 0 / 22%) !important;
-    border-radius: 10px !important;
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--art-primary) 22%, transparent) !important;
-    transition:
-      box-shadow 0.25s cubic-bezier(0, 0, 0.2, 1),
-      border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  :deep(.aapp-filter-select) {
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
   }
 
-  :deep(.filter-date-picker .el-input__wrapper:hover) {
-    box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--art-primary) 44%, transparent) inset,
-      0 0 20px color-mix(in srgb, var(--art-primary) 12%, transparent) !important;
-  }
-
-  :deep(.filter-date-picker .el-input__inner) {
-    font-size: 12px;
-    color: var(--text-primary) !important;
-  }
-
-  /* Element Plus select 深色适配 */
-  :deep(.custom-select .el-input__wrapper) {
-    min-height: 34px;
-    background: rgb(0 0 0 / 22%) !important;
-    border-radius: 10px !important;
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--art-primary) 22%, transparent) !important;
-    transition:
-      box-shadow 0.25s cubic-bezier(0, 0, 0.2, 1),
-      border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  :deep(.custom-select .el-input__wrapper:hover) {
-    box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--art-primary) 44%, transparent) inset,
-      0 0 20px color-mix(in srgb, var(--art-primary) 12%, transparent) !important;
-  }
-
-  :deep(.custom-select .el-input__inner) {
-    font-size: 12px;
-    color: var(--text-primary) !important;
-  }
-
-  :deep(.el-select__popper) {
-    background: var(--bg-panel) !important;
-    border: 1px solid var(--border) !important;
-  }
-
-  :deep(.el-select-dropdown__item) {
-    font-size: 12px;
-    color: var(--text-secondary) !important;
-  }
-
-  :deep(.el-select-dropdown__item.is-selected),
-  :deep(.el-select-dropdown__item:hover) {
-    color: var(--text-primary) !important;
-    background: var(--bg-hover) !important;
-  }
-
-  .filter-query-btn {
-    min-height: 34px;
-    padding: 0 16px;
+  .filters.aapp-filter-panel :deep(.aapp-query-btn.el-button) {
+    height: 36px;
+    padding: 0 18px;
     margin-left: 4px;
     font-weight: 600;
-    letter-spacing: 0.2px;
-    border: 1px solid color-mix(in srgb, var(--art-primary) 38%, transparent);
-    box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--art-primary) 10%, transparent) inset,
-      0 10px 28px color-mix(in srgb, var(--art-primary) 10%, transparent);
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: none;
     transition:
-      transform 0.25s cubic-bezier(0, 0, 0.2, 1),
+      border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
       box-shadow 0.25s cubic-bezier(0, 0, 0.2, 1),
-      border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      transform 0.25s cubic-bezier(0, 0, 0.2, 1);
   }
 
-  .filter-query-btn:hover:not(.is-disabled) {
-    border-color: color-mix(in srgb, var(--art-primary) 56%, transparent);
+  .filters.aapp-filter-panel :deep(.aapp-query-btn.el-button:hover:not(.is-disabled)) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
+  }
+
+  .filters.aapp-filter-panel :deep(.aapp-query-btn.el-button:focus-visible) {
+    outline: none;
     box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--art-primary) 16%, transparent) inset,
-      0 0 22px color-mix(in srgb, var(--art-primary) 18%, transparent),
-      0 12px 38px color-mix(in srgb, var(--art-primary) 12%, transparent);
-    transform: translateY(-1px);
-  }
-
-  .filter-query-btn:active:not(.is-disabled) {
-    transition-duration: 0.14s;
-    transform: translateY(0);
+      0 0 0 2px color-mix(in srgb, var(--el-color-primary) 35%, transparent),
+      0 0 0 4px color-mix(in srgb, var(--el-color-primary) 18%, transparent);
   }
 
   /* ═══════════════════════════════════════════════
@@ -2070,12 +2007,12 @@
       width: 100%;
     }
 
-    .filters-panel {
+    .aapp-filter-panel {
       width: 100%;
     }
 
-    .filter-select--date,
-    .filter-select--country {
+    .aapp-filter-date,
+    .aapp-filter-select {
       width: 100%;
       min-width: 0;
     }
@@ -2096,10 +2033,10 @@
     .chart-panel,
     .table-panel,
     .ai-insight-panel,
-    .filter-query-btn,
+    .aapp-query-btn,
     .back-btn,
-    :deep(.custom-select .el-input__wrapper),
-    :deep(.filter-date-picker .el-input__wrapper) {
+    :deep(.aapp-filter-select .el-select__wrapper),
+    :deep(.aapp-filter-date .el-input__wrapper) {
       transition: none !important;
     }
 
