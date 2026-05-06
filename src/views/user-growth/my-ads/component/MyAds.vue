@@ -9,9 +9,13 @@
   import { cloneAppDate, formatYYYYMMDD, getAppNow, getAppTodayYYYYMMDD } from '@/utils/app-now'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import { Search } from '@element-plus/icons-vue'
+  import { useI18n } from 'vue-i18n'
   import type { MyAdsStaffOption, MyAdsUserCardMock, MyAdsMetricStripItem } from '../types'
 
   defineOptions({ name: 'MyAdsPageContent' })
+
+  const { t, te } = useI18n()
+  const tr = (key: string, fallback: string) => (te(key) ? t(key) : fallback)
 
   function getDefaultDateRange(): [string, string] {
     const today = getAppTodayYYYYMMDD()
@@ -23,6 +27,9 @@
   }
 
   const staffList = ref<MyAdsStaffOption[]>([])
+  const staffListForSelect = computed(() =>
+    staffList.value.filter((s) => String(s.id ?? '').trim() !== '')
+  )
   /** 顶部控件绑定：改人员/日期不会自动请求，需点「查询」 */
   const selectedStaffId = ref('')
   const dateRange = ref<[string, string]>(getDefaultDateRange())
@@ -197,6 +204,10 @@
   const handleTabClick = (key: 'summary' | 'platform' | 'campaign') => {
     activeTab.value = key
   }
+
+  function onSelectedStaffIdUpdate(v: string | undefined | null) {
+    selectedStaffId.value = v ?? ''
+  }
 </script>
 
 <template>
@@ -208,12 +219,15 @@
       <div class="top-actions filter-bar" aria-label="页面筛选">
         <div class="date-pill date-pill--range">
           <ElSelect
-            v-model="selectedStaffId"
+            :model-value="selectedStaffId"
             class="filter-staff-select"
             popper-class="my-ads-filter-select-popper"
             :teleported="true"
+            clearable
+            @update:model-value="onSelectedStaffIdUpdate"
           >
-            <ElOption v-for="s in staffList" :key="s.id" :label="`${s.name}`" :value="s.id" />
+            <ElOption :label="tr('adPerformance.filterAll', '全部')" value="" />
+            <ElOption v-for="s in staffListForSelect" :key="s.id" :label="s.name" :value="s.id" />
           </ElSelect>
           <AppDatePicker
             v-model="dateRange"
