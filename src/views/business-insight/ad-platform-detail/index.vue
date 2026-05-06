@@ -1,9 +1,11 @@
 <script setup lang="ts">
   import { computed, ref, onMounted, onUnmounted, onActivated, nextTick, watch } from 'vue'
+  import { Search } from '@element-plus/icons-vue'
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import { storeToRefs } from 'pinia'
   import { useRoute, useRouter } from 'vue-router'
+  import { useI18n } from 'vue-i18n'
   import { ElMessage } from 'element-plus'
   import { echarts } from '@/plugins/echarts'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
@@ -26,6 +28,9 @@
   const router = useRouter()
   const route = useRoute()
 
+  const { t, te } = useI18n()
+  const tr = (key: string, fallback: string) => (te(key) ? t(key) : fallback)
+
   const cockpitMetaStore = useCockpitMetaFilterStore()
   const { data: cockpitMeta } = storeToRefs(cockpitMetaStore)
 
@@ -34,7 +39,8 @@
   }
 
   function toApiFilterValue(value: string): string {
-    return value === 'all' ? '' : value
+    const v = String(value ?? '').trim()
+    return v === '' || v.toLowerCase() === 'all' ? '' : value
   }
 
   function normalizeMetaOptions(list: CockpitMetaOptionItem[]): CockpitMetaOptionItem[] {
@@ -58,6 +64,15 @@
     return list?.length ? normalizeMetaOptions(list) : fallbackMetaOptions('全部')
   })
 
+  /** 跳过「全部」占位（all / 空），用于首次默认选中 */
+  function firstSelectableAppId(): string | null {
+    for (const o of appBarOptions.value) {
+      const v = String(o.value ?? '').trim()
+      if (v && v.toLowerCase() !== 'all') return v
+    }
+    return null
+  }
+
   const appFilterSettingApps = computed(() => {
     const settingApps = cockpitMeta.value?.settingApps ?? []
     const appIdSet = new Set(
@@ -69,10 +84,19 @@
     return settingApps.filter((item) => appIdSet.has(String(item.sAppId ?? '').trim()))
   })
 
-  const countryBarOptions = computed(() => {
-    const list = cockpitMeta.value?.countryOptions
-    return list?.length ? normalizeMetaOptions(list) : fallbackMetaOptions('全部')
-  })
+  /** 国家下拉：去掉 meta 中占位「全部」，首项由模板 ElOption value="" 提供 */
+  const countryOptionsForSelect = computed(() =>
+    (cockpitMeta.value?.countryOptions ?? []).filter((o) => {
+      const v = String(o.value ?? '')
+        .trim()
+        .toLowerCase()
+      return v !== '' && v !== 'all'
+    })
+  )
+
+  function onCountryFilterUpdate(v: string | undefined | null) {
+    countryFilter.value = v ?? ''
+  }
 
   /**
    * 路由 query：优先 `source`（广告平台，如收入概览平台表跳转 `?source=Google`），
@@ -145,12 +169,19 @@
   }
 
   // ─── State ───────────────────────────────────────────────────────────────────
-  const dateRange = ref('最近30天')
-  const customDateRange = ref<[Date, Date] | []>([])
+  const INITIAL_CUSTOM_DATE_RANGE = (() => {
+    const end = cloneAppDate(getAppNow())
+    end.setHours(0, 0, 0, 0)
+    const start = cloneAppDate(end)
+    start.setDate(end.getDate() - 29)
+    return [start, end] as [Date, Date]
+  })()
+
+  const customDateRange = ref<[Date, Date] | []>([...INITIAL_CUSTOM_DATE_RANGE])
   /** 与 meta `appOptions` 的 value 对齐，「全部应用」为 `""` */
   const appFilter = ref<string | string[]>([])
   /** 与 meta `countryOptions` 的 value 对齐（多为小写 ISO2），「全部」为 `""` */
-  const countryFilter = ref('all')
+  const countryFilter = ref('')
   const activeMetric = ref<'revenue' | 'ecpm' | 'fillRate'>('revenue')
   /** 请求进行中（含首屏），用于骨架/遮罩与按钮 loading */
   const pendingQuery = ref(true)
@@ -158,12 +189,11 @@
   const queryInFlight = ref(false)
 
   const appliedFilters = ref({
-    dateRange: dateRange.value,
+    startDate: formatYYYYMMDD(INITIAL_CUSTOM_DATE_RANGE[0]),
+    endDate: formatYYYYMMDD(INITIAL_CUSTOM_DATE_RANGE[1]),
     appFilter: appFilter.value,
     countryFilter: countryFilter.value
   })
-
-  const dateOptions = ['最近7天', '最近30天', '最近90天', '自定义']
 
   // ─── KPI Cards ───────────────────────────────────────────────────────────────
   const INITIAL_KPI_CARDS: KpiCard[] = [
@@ -325,20 +355,19 @@
     let days = 30
     if (label === '最近7天') days = 7
     else if (label === '最近90天') days = 90
-    else if (label === '自定义') days = 30
     start.setDate(end.getDate() - (days - 1))
     return { startDate: formatYYYYMMDD(start), endDate: formatYYYYMMDD(end) }
   }
 
   function resolveDateRangeParams(): { startDate: string; endDate: string } {
-    if (dateRange.value === '自定义' && customDateRange.value.length === 2) {
+    if (customDateRange.value.length === 2) {
       const [start, end] = customDateRange.value
       return {
         startDate: formatYYYYMMDD(start),
         endDate: formatYYYYMMDD(end)
       }
     }
-    return resolveDateRangeLabel(dateRange.value)
+    return resolveDateRangeLabel('最近30天')
   }
 
   function mapKpiItemToCard(item: AdPlatformDetailKpiItem): KpiCard {
@@ -478,7 +507,8 @@
       }
 
       appliedFilters.value = {
-        dateRange: dateRange.value,
+        startDate,
+        endDate,
         appFilter: appFilter.value,
         countryFilter: countryFilter.value
       }
@@ -667,6 +697,15 @@
   onMounted(async () => {
     await cockpitMetaStore.ensureLoaded()
     await nextTick()
+    const firstId = firstSelectableAppId()
+    if (firstId) {
+      const cur = appFilter.value
+      const empty =
+        cur == null ||
+        (Array.isArray(cur) && cur.length === 0) ||
+        (typeof cur === 'string' && !String(cur).trim())
+      if (empty) appFilter.value = [firstId]
+    }
     initChart()
     window.addEventListener('resize', handleResize)
     lastParamKey = currentParamKey()
@@ -711,17 +750,12 @@
     <div class="page-body">
       <!-- Page header -->
       <div class="page-header">
-        <div class="filters filters-panel">
+        <div class="filters apd-filter-panel">
           <h2 class="filter-detail-heading">{{
             (route.query['platform-name'] ?? '') + ' 广告平台详情'
           }}</h2>
           <div class="filter-field">
-            <span class="filter-label">日期范围</span>
-            <el-select v-model="dateRange" size="default" class="filter-select">
-              <el-option v-for="o in dateOptions" :key="o" :label="o" :value="o" />
-            </el-select>
             <AppDatePicker
-              v-if="dateRange === '自定义'"
               v-model="customDateRange"
               type="daterange"
               :shortcuts="dateRangeShortcuts"
@@ -729,14 +763,14 @@
               range-separator="～"
               start-placeholder="开始日期"
               end-placeholder="结束日期"
-              class="filter-date-picker"
+              class="apd-filter-date"
+              popper-class="apd-filter__popper"
             />
           </div>
           <div class="filter-field">
-            <span class="filter-label">应用</span>
             <AppPlatformSearchSelect
               v-model="appFilter"
-              class="filter-select"
+              class="apd-filter-select apd-filter-select--app"
               mode="app"
               placeholder="全部"
               search-placeholder="搜索类别/应用名称/应用简称"
@@ -746,18 +780,27 @@
               :height="32"
               :min-width="150"
               :max-width="150"
-              input-class="filter-select"
-              dropdown-class="ad-platform-detail-app-popper"
+              input-class="apd-filter-select__input"
+              dropdown-class="apd-filter__popper"
             />
           </div>
           <div class="filter-field">
-            <span class="filter-label">国家</span>
-            <el-select v-model="countryFilter" size="default" class="filter-select">
+            <el-select
+              :model-value="countryFilter"
+              size="default"
+              class="apd-filter-select"
+              popper-class="apd-filter__popper"
+              filterable
+              clearable
+              @update:model-value="onCountryFilterUpdate"
+              placeholder="国家"
+            >
+              <el-option :label="tr('adPerformance.filterAll', '全部')" value="" />
               <el-option
-                v-for="(o, idx) in countryBarOptions"
-                :key="`ct-${idx}-${o.value || 'all'}`"
-                :label="o.label"
-                :value="o.value"
+                v-for="opt in countryOptionsForSelect"
+                :key="String(opt.value)"
+                :label="opt.label"
+                :value="opt.value"
               />
             </el-select>
           </div>
@@ -766,6 +809,8 @@
             type="primary"
             round
             plain
+            :icon="Search"
+            class="apd-query-btn"
             :loading="pendingQuery"
             :disabled="pendingQuery"
             @click="runQuery"
@@ -1002,6 +1047,9 @@
 </template>
 
 <style scoped lang="scss">
+  @use '../../user-growth/styles/app-platform-select-ad-theme.scss' as apSelect;
+  @use '../../user-growth/styles/filter-bar-theme.scss' as filterTheme;
+
   // ─── CSS Variables ────────────────────────────────────────────────────────────
   .admob-dashboard {
     --bg-base: var(--default-bg-color);
@@ -1353,13 +1401,6 @@
     color: var(--text-1);
   }
 
-  .filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    align-items: center;
-  }
-
   .filter-detail-heading {
     padding-right: var(--space-4, 16px);
     margin: 0;
@@ -1367,204 +1408,103 @@
     font-size: 16px;
     font-weight: 700;
     line-height: 1.3;
-    color: var(--text-primary, var(--text-1));
+    color: var(--el-text-color-primary);
     white-space: nowrap;
   }
 
-  .filters-panel {
-    padding: 10px 14px;
-    overflow: hidden;
-    background:
-      radial-gradient(
-        circle at 20% 10%,
-        color-mix(in srgb, var(--art-primary) 16%, transparent) 0%,
-        transparent 58%
-      ),
-      radial-gradient(
-        circle at 82% 16%,
-        color-mix(in srgb, var(--art-success) 10%, transparent) 0%,
-        transparent 52%
-      ),
-      linear-gradient(180deg, rgb(0 0 0 / 22%) 0%, rgb(0 0 0 / 10%) 100%);
-    border: 1px solid color-mix(in srgb, var(--art-primary) 18%, var(--default-border));
-    border-radius: 16px;
-    box-shadow:
-      0 12px 40px rgb(0 0 0 / 44%),
-      0 0 0 1px color-mix(in srgb, var(--art-primary) 10%, transparent),
-      inset 0 1px 0 color-mix(in srgb, var(--art-primary) 10%, transparent);
-    transition:
-      box-shadow 0.35s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
-      border-color 0.3s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
+  .filters.apd-filter-panel {
+    @include filterTheme.filter-panel(10px 14px);
+    @include filterTheme.filter-panel-children;
+    @include filterTheme.filter-row(10px);
 
-    &:hover {
-      border-color: color-mix(in srgb, var(--art-primary) 32%, var(--default-border));
-      box-shadow:
-        0 12px 40px rgb(0 0 0 / 44%),
-        0 0 0 1px color-mix(in srgb, var(--art-primary) 18%, transparent),
-        inset 0 1px 0 color-mix(in srgb, var(--art-primary) 12%, transparent),
-        0 0 48px color-mix(in srgb, var(--art-primary) 14%, transparent);
-    }
-
-    > * {
-      position: relative;
-      z-index: 1;
-    }
-
-    &::after {
-      position: absolute;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-      content: '';
-      background-image:
-        linear-gradient(
-          color-mix(in srgb, var(--art-primary) 5%, transparent) 1px,
-          transparent 1px
-        ),
-        linear-gradient(
-          90deg,
-          color-mix(in srgb, var(--art-primary) 5%, transparent) 1px,
-          transparent 1px
-        );
-      background-size: 20px 20px;
-      opacity: 0.55;
-      mask-image: radial-gradient(ellipse 80% 70% at 50% 36%, black 0%, transparent 72%);
-    }
+    min-width: 0;
   }
 
-  .filter-field {
-    display: flex;
+  .filters.apd-filter-panel > .filter-field {
+    display: inline-flex;
     gap: 8px;
     align-items: center;
-    min-height: 32px;
+    min-height: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
   }
 
   .filter-label {
     font-size: 13px;
-    color: var(--text-2);
+    color: var(--el-text-color-secondary);
     white-space: nowrap;
   }
 
-  .filter-select {
-    width: 150px;
-
-    :deep(.el-select__wrapper) {
-      color: var(--text-1);
-      background: rgb(0 0 0 / 22%) !important;
-      border-color: color-mix(in srgb, var(--art-primary) 22%, transparent) !important;
-      border-radius: 10px;
-      box-shadow: none !important;
-      transition:
-        border-color 0.2s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
-        box-shadow 0.25s var(--ease-out, cubic-bezier(0, 0, 0.2, 1));
-
-      &:hover {
-        border-color: color-mix(in srgb, var(--art-primary) 44%, transparent) !important;
-        box-shadow:
-          0 0 0 1px color-mix(in srgb, var(--art-primary) 12%, transparent) inset,
-          0 0 20px color-mix(in srgb, var(--art-primary) 12%, transparent);
-      }
-    }
-
-    :deep(.el-select__selected-item) {
-      color: var(--text-1);
-    }
-
-    :deep(.el-select__caret) {
-      color: var(--text-2);
-    }
+  .apd-filter-select:not(.apd-filter-select--app) {
+    @include filterTheme.filter-select-size(150px, 150px, 150px);
   }
 
-  /* 应用筛选：与国家筛选（ElSelect）完全对齐，覆盖子组件默认/内联样式 */
-  .filter-field :deep(.app-platform-search-select.filter-select) {
-    gap: 6px;
-    align-items: center;
-    width: 150px;
-    min-height: 32px !important;
-    padding: 0 10px !important;
-    color: var(--text-1);
-    background: rgb(0 0 0 / 22%) !important;
-    border: 1px solid color-mix(in srgb, var(--art-primary) 22%, transparent) !important;
-    border-radius: 10px !important;
-    box-shadow: none !important;
-    transition:
-      border-color 0.2s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
-      box-shadow 0.25s var(--ease-out, cubic-bezier(0, 0, 0.2, 1));
+  .filters.apd-filter-panel :deep(.apd-filter-date) {
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
   }
 
-  .filter-field :deep(.app-platform-search-select.filter-select:hover),
-  .filter-field :deep(.app-platform-search-select.filter-select.is-open) {
-    border-color: color-mix(in srgb, var(--art-primary) 44%, transparent) !important;
-    box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--art-primary) 12%, transparent) inset,
-      0 0 20px color-mix(in srgb, var(--art-primary) 12%, transparent) !important;
+  @include filterTheme.date-trigger('.filters.apd-filter-panel', '.apd-filter-date', 280px);
+  @include filterTheme.element-select-trigger('.apd-filter-select');
+  @include apSelect.apply-app-platform-select-ad-theme(
+    '.filters.apd-filter-panel',
+    'apd-filter-select__input',
+    'apd-filter__popper',
+    150px,
+    150px,
+    150px
+  );
+  @include filterTheme.select-popper('apd-filter__popper');
+  @include filterTheme.app-platform-popper('apd-filter__popper');
+  @include filterTheme.date-picker-popper('apd-filter__popper');
+
+  :global(.apd-filter__popper.el-popper),
+  :global(.apd-filter__popper.el-select__popper),
+  :global(.apd-filter__popper.el-picker__popper) {
+    z-index: 4000 !important;
   }
 
-  .filter-field :deep(.app-platform-search-select.filter-select .app-platform-search-select__text) {
-    font-size: 13px;
-    color: var(--text-1);
+  :deep(.apd-filter-select:not(.apd-filter-select--app)),
+  :deep(.apd-filter-select__input) {
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
   }
 
-  .filter-field
-    :deep(
-      .app-platform-search-select.filter-select .app-platform-search-select__text.is-placeholder
-    ) {
-    font-size: 13px;
-    color: var(--text-2);
-  }
-
-  .filter-field
-    :deep(.app-platform-search-select.filter-select .app-platform-search-select__suffix) {
-    font-size: 12px;
-    color: var(--text-2);
-  }
-
-  .filter-date-picker {
-    width: 280px;
-
-    :deep(.el-input__wrapper) {
-      color: var(--text-1);
-      background: rgb(0 0 0 / 22%);
-      border-color: color-mix(in srgb, var(--art-primary) 22%, transparent);
-      border-radius: 10px;
-      box-shadow: none;
-    }
-  }
-
-  .filter-query-btn {
-    min-height: 34px;
-    padding: 0 16px;
+  .filters.apd-filter-panel :deep(.apd-query-btn.el-button) {
+    height: 36px;
+    padding: 0 18px;
     margin-left: 4px;
     font-weight: 600;
-    letter-spacing: 0.2px;
-    border: 1px solid color-mix(in srgb, var(--art-primary) 38%, transparent);
-    box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--art-primary) 10%, transparent) inset,
-      0 10px 28px color-mix(in srgb, var(--art-primary) 10%, transparent);
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: none;
     transition:
-      transform 0.25s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
+      border-color 0.2s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
       box-shadow 0.25s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
-      border-color 0.2s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
+      transform 0.25s var(--ease-out, cubic-bezier(0, 0, 0.2, 1));
+  }
 
-    &:hover:not(.is-disabled) {
-      border-color: color-mix(in srgb, var(--art-primary) 56%, transparent);
-      box-shadow:
-        0 0 0 1px color-mix(in srgb, var(--art-primary) 16%, transparent) inset,
-        0 0 22px color-mix(in srgb, var(--art-primary) 18%, transparent),
-        0 12px 38px color-mix(in srgb, var(--art-primary) 12%, transparent);
-      transform: translateY(-1px);
-    }
+  .filters.apd-filter-panel :deep(.apd-query-btn.el-button:hover:not(.is-disabled)) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
+  }
 
-    &:active:not(.is-disabled) {
-      transition-duration: 0.14s;
-      transform: translateY(0);
-    }
-
-    &:focus-visible {
-      box-shadow:
-        0 0 0 2px color-mix(in srgb, var(--art-primary) 38%, transparent),
-        0 0 0 4px color-mix(in srgb, var(--art-primary) 16%, transparent);
-    }
+  .filters.apd-filter-panel :deep(.apd-query-btn.el-button:focus-visible) {
+    outline: none;
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--el-color-primary) 35%, transparent),
+      0 0 0 4px color-mix(in srgb, var(--el-color-primary) 18%, transparent);
   }
 
   // ─── Main grid ───────────────────────────────────────────────────────────────
@@ -1782,7 +1722,7 @@
 
     .back-btn,
     .metric-btn,
-    .filters-panel,
+    .apd-filter-panel,
     .kpi-card,
     .chart-card,
     .ai-panel,
