@@ -21,13 +21,16 @@
           />
 
           <ElSelect
-            v-model="draftSource"
+            :model-value="draftSource"
             placeholder="广告平台"
             class="ap-filter-select"
             popper-class="ap-filter-popper"
+            clearable
+            @update:model-value="onDraftSourceUpdate"
           >
+            <ElOption :label="tr('adPerformance.filterAll', '全部')" value="" />
             <ElOption
-              v-for="opt in metaAdPlatformOptions"
+              v-for="opt in metaAdPlatformOptionsForSelect"
               :key="opt.value"
               :label="opt.label"
               :value="opt.value"
@@ -35,13 +38,16 @@
           </ElSelect>
 
           <ElSelect
-            v-model="draftFilterOwner"
+            :model-value="draftFilterOwner"
             placeholder="负责人"
             class="ap-filter-select"
             popper-class="ap-filter-popper"
+            clearable
+            @update:model-value="onDraftFilterOwnerUpdate"
           >
+            <ElOption :label="tr('adPerformance.filterAll', '全部')" value="" />
             <ElOption
-              v-for="opt in ownerOptions"
+              v-for="opt in ownerOptionsForSelect"
               :key="opt.value"
               :label="opt.label"
               :value="opt.value"
@@ -287,6 +293,7 @@
   import request from '@/utils/http'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import { Search } from '@element-plus/icons-vue'
+  import { useI18n } from 'vue-i18n'
   import { formatYYYYMMDD, getAppNow } from '@/utils/app-now'
   import { buildAppSelectionRequestBody } from '@/utils/app-id-request'
   import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
@@ -312,6 +319,9 @@
   import { MOCK_ACCOUNT_PERFORMANCE } from './mock/data'
 
   defineOptions({ name: 'AccountPerformance' })
+
+  const { t, te } = useI18n()
+  const tr = (key: string, fallback: string) => (te(key) ? t(key) : fallback)
 
   const settingStore = useSettingStore()
   const { isDark } = storeToRefs(settingStore)
@@ -339,6 +349,10 @@
   const metaAdPlatformOptions = computed<CockpitMetaOptionItem[]>(
     () => cockpitMeta.value?.sourceOptions ?? []
   )
+  /** 与广告成效筛选一致：首项单独「全部」，列表内去掉空 value，避免重复 */
+  const metaAdPlatformOptionsForSelect = computed(() =>
+    metaAdPlatformOptions.value.filter((o) => String(o.value ?? '').trim() !== '')
+  )
   const metaSettingApps = computed(() => cockpitMeta.value?.settingApps ?? [])
   const firstMetaAppId = computed(() => String(metaSettingApps.value[0]?.sAppId ?? '').trim())
   const hasSelectedDraftApp = computed(() =>
@@ -347,6 +361,17 @@
       : !!String(draftAppId.value).trim()
   )
   const ownerOptions = ref<Array<{ label: string; value: string }>>([])
+  const ownerOptionsForSelect = computed(() =>
+    ownerOptions.value.filter((o) => String(o.value ?? '').trim() !== '')
+  )
+
+  function onDraftSourceUpdate(v: string | undefined | null) {
+    draftSource.value = v ?? ''
+  }
+
+  function onDraftFilterOwnerUpdate(v: string | undefined | null) {
+    draftFilterOwner.value = v ?? ''
+  }
   const appDraftKeys = ref('')
   const appAppliedKeys = ref('')
   const platformDraftKeys = ref('')
