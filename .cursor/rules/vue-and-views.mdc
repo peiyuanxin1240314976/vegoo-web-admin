@@ -6,6 +6,8 @@ alwaysApply: false
 
 # Vue 与 views 约定
 
+顶栏筛选与同构驾驶舱维度写法见 `docs/page-filter-bar-conventions.md`（`page-filter-bar-conventions.mdc` 已 **alwaysApply**，筛选相关无需 `@`）。
+
 ## 页面组件（views 下）
 
 - 入口文件统一为 `index.vue`，路由中 component 填路径如 `'/system/user'` 对应 `src/views/system/user/index.vue`。

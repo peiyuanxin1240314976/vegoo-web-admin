@@ -116,6 +116,7 @@ alwaysApply: true
 - **子组件**: 放在同目录下 `modules/`，如 `views/system/user/modules/user-dialog.vue`；文件名 kebab-case，组件名 PascalCase。
 - **组件名**: 必须在 `<script setup>` 中写 `defineOptions({ name: 'PascalCaseName' })`，与路由 name 或功能一致，例如 `ResultSuccess`、`UserRightPanel`；公共组件使用 `Art` 前缀（如 `ArtTable`）。
 - **模板**: 使用 Element Plus 组件时用自动导入的短名（如 `ElButton`）；项目内公共组件如 `ArtTable`、`ArtResultPage` 等按项目已有用法引用。
+- **顶栏筛选**（应用、日期、与驾驶舱同构的广告平台 / 国家 / 终端平台等）：完整约定见 `docs/page-filter-bar-conventions.md`；对应规则 `page-filter-bar-conventions.mdc` 为 **alwaysApply**，筛选相关任务 **无需** `@` 该规则。
 
 ## 组件设计结构（概要）
 
