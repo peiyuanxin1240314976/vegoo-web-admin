@@ -7,6 +7,10 @@ alwaysApply: true
 
 本规则用于约束 **接口地址如何抽象**、**接口如何按模块/功能拆分**、以及 **Mock 契约如何沉淀到 `mock/backend-api`**，以保证后期可优化渲染、可拆分、可联调。
 
+## 新建 mock 契约时的关键字字典（硬性）
+
+- **凡任务明确要求「新建 / 生成 / 补充」`mock/backend-api` 契约**（新增 `*.json`）时，除本文件与 **`backend-fields.mdc`** 外，**analysis / 报表 / 广告指标类** 字段须遵守 **`keyword-dictionary-analysis.mdc`** 及 **`docs/关键字字典规则.md`**、**`docs/关键字字典规则-前端落地边界.md`**。该要求由 **`keyword-dictionary-analysis.mdc`（`alwaysApply`）** 默认生效，**无需** 在对话中 `@` 该规则文件；按条文编写时请 **Read** 仓库内上述 **`docs/**`** 文件。
+
 ## 契约归属与前后端协作（必读）
 
 - **`mock/backend-api/*.json` 为接口契约的源文件**：由**前端**在仓库内维护，在 JSON 中定义 `fieldDescription`（请求/响应字段说明）、`sampleRequest`、`sampleResponse`、`api`（路径、方法、requestBody/responseBody 摘要）等。**后端按该契约实现**接口路径、入参、出参结构与语义，**不是**由后端先定一套字段再要求前端改契约迁就。
@@ -14,6 +18,7 @@ alwaysApply: true
 - **不阻塞主流程（强制）**：对接/整理契约时，必须保证页面在 **接口未返回、返回为空、或请求失败** 的情况下依然能进入并完成主流程的浏览/操作路径（至少能看到完整 UI 框架 + 合理空态/占位），禁止把页面“是否可用”绑定到接口“必须有数据”这一前提上。
 - **变更流程**：增删改字段或业务含义时，须**前后端协商一致**后，**优先更新契约 JSON**（及 README），再同步改前端类型与请求封装、Mock、后端实现；禁止长期存在「文档一套、接口一套、前端一套」。
 - **字段与数据字典**：新建或修订契约 JSON 时，**逐字段**对照 `.cursor/rules/backend-fields.mdc`：`fieldDescription` 与 `sampleRequest` / `sampleResponse` 中的字段名、业务含义须可映射到字典；无法映射时须在 `_comment` 或 `mock/backend-api/README.md` 说明，并推动补全字典条目。
+- **关键字字典（analysis 域 · 新契约）**：新增或修订 **`mock/backend-api`**，且响应体含 **datacenter/analysis、报表/广告类指标**（ROI、收入、`*Pct`、环比同比等）时，指标键名与新字段登记须符合 **`docs/关键字字典规则.md`**；筛选维度 **string/int**、分页字段名、cockpit 联动须符合 **`docs/关键字字典规则-前端落地边界.md`**，并与 **`backend-fields.mdc`** 一致。详见 **`keyword-dictionary-analysis.mdc`**。
 - **契约键名（驼峰 · 禁止下划线）**：`sampleRequest` / `sampleResponse` / `fieldDescription` 所涉**业务字段键名**须 **camelCase**，**不得**含 `_`（禁止 `s_*`、`n_*`、`date_start`、`request_quantity` 等）；细则见 **`backend-fields.mdc`**「接口契约与 HTTP JSON 命名」。
 - **请求体日期范围**：凡表示查询/筛选时间范围的入参，键名须为 **`startDate`**、**`endDate`**（推荐值 `YYYY-MM-DD` 字符串，与模块约定一致）；详见 `backend-fields.mdc`「接口请求 · 日期范围」。
 - **筛选入参枚举类型**：请求体键名须符合 `backend-fields.mdc` **「接口请求 · 统一筛选维度键名」**；广告平台用 **`source`**（**string**，如 `\"1\"`），**勿**在 `sampleRequest` 请求体中使用 `n_source` 作键名；**勿**写 JSON number。「全部」用 `\"\"` 等规则见 `backend-fields.mdc`「接口请求 · 筛选「全部」」与「接口请求 · 筛选字段类型（枚举 string）」。

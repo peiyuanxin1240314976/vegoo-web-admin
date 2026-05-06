@@ -89,6 +89,7 @@ alwaysApply: true
 
 - **全局 API 类型**: 使用命名空间 `Api.*`，定义在 `src/types/api/api.d.ts`，无需 import（如 `Api.Auth.LoginParams`、`Api.SystemManage.UserListItem`）。
 - **后端字段与业务概念**: 与报表、用户增长、广告数据等相关的字段命名与语义须遵循规则 `backend-fields.mdc`（数据字典），定义类型、API、表格列、筛选器时与该表一致。
+- **关键字字典（analysis 域 · 新开发）**：**后续新页面、新契约、新类型**若对接 **`com.vegoo.datacenter.analysis`** 或同类报表/广告**指标**接口，除 `backend-fields.mdc` 外须严格遵守 **`docs/关键字字典规则.md`** 与 **`docs/关键字字典规则-前端落地边界.md`**（指标 ROI/收入/`Pct`、新字段登记、cockpit 与独立接口维度口径）。细则见规则 **`keyword-dictionary-analysis.mdc`**。已接入接口或既有 mock 的存量页面 **不强制** 回迁。
 - **通用类型**: 从 `@/types` 或 `@/types/router`、`@/types/store` 等按需导入。
 - **接口请求**: 使用 `request.get/post/put/delete`（来自 `@/utils/http`），方法命名以 `fetch` 开头，如 `fetchLogin`、`fetchGetUserList`；泛型使用 `Api.*` 类型。
 
@@ -143,7 +144,7 @@ alwaysApply: true
 ## 数据与开发流程规范
 
 - **先 Mock 再开发组件**：开发大模块时，先在该模块下建立/完善 **Mock 数据**（如 `views/<模块>/<页面>/mock/data.ts` 或 `mock.ts`），并同步定义好 **类型**（`types.ts` 或类型与 mock 同文件）。待大模块的数据结构与字段约定清晰后，再进行页面入口与 `modules/` 内子组件的开发；组件内优先用 mock 做展示与联调，接口就绪后再切换为真实请求。
-- **契约 + 真实请求 + 小模块 config 开关**：使用 Mock 开发时，须按 **`mock/backend-api` 契约**在 `src/api` 写好 **`fetch*`**，并在 **该小模块** `config/` 内维护开关；契约格式与协作见 **`api-contract-and-mock-conventions.mdc`**，实现细则见 **`module-api-mock-config.mdc`**。
+- **契约 + 真实请求 + 小模块 config 开关**：使用 Mock 开发时，须按 **`mock/backend-api` 契约**在 `src/api` 写好 **`fetch*`**，并在 **该小模块** `config/` 内维护开关；契约格式与协作见 **`api-contract-and-mock-conventions.mdc`**，实现细则见 **`module-api-mock-config.mdc`**。**凡明确要求生成新的 mock 契约**，还须遵守 **`keyword-dictionary-analysis.mdc`**（默认生效，无需 `@`）及 **`docs/关键字字典规则*.md`**。
 - **导出 / 下载文件**：新增或对接「导出」类接口的 **`mock/backend-api` 契约与 `fetch*`** 时，**一律**按 **HTTP 二进制文件流**（`blob` / `requestBlob`、响应头 `Content-Type` + `Content-Disposition`）约定与实现，**禁止**把该导出 endpoint 的主响应写成「仅 JSON + Base64」等替代形态；完整条款见 **`api-contract-and-mock-conventions.mdc`**「导出 / 下载类接口（HTTP 文件流 · 硬性）」（异步任务类导出另立契约，不与即时流式导出混用）。
 
 ### Mock 与数据源开关（与 module-api-mock-config 一致）
@@ -314,7 +315,7 @@ z-index 统一使用变量，避免随意数值冲突：
 
 ## 其他
 
-- **模块接口契约整理**：当需要 **按路由/页面梳理 `mock/backend-api`、与 `fetch*` / `config/data-source` 对齐、输出契约清单** 时，Agent 应遵循项目技能 **`.cursor/skills/module-api-contract-audit/SKILL.md`**，并配合规则 **`backend-fields.mdc`**、**`module-api-contract-audit.mdc`**、**`api-contract-and-mock-conventions.mdc`**、**`module-api-mock-config.mdc`**。契约须满足该 Skill「章节 0」：**`sampleResponse` 完整可联调**（含 **`api-contract-and-mock-conventions.mdc`**：**表格类主数组 ≥3 条**、**表列/树节点上闭合 `enum` 在示例中写全**）；**§0.4 / §0.5**：字段与 **`backend-fields`** 对齐、入参日期 **`startDate`/`endDate`**、同模块 **`sampleResponse` 形态尽量统一**；**§0.6（硬性）**：与 **`GET .../analysis/cockpit/meta-filter-options`**（无参）同构的顶栏公用下拉 **不** 再建模块内 `*meta-filter-options*.json`；页面 **直接读** **`useCockpitMetaFilterStore().data`**（或 **`useCockpitMetaFilterOptions().cockpitMeta`**），仅在 **`mock/backend-api/README.md`** 标注并引用 **`paid-analysis/mock/backend-api/README.md` 附录 A**（详见 **`api-contract-and-mock-conventions.mdc`**）。URL 按 **路由+模块+功能**（kebab-case）组织；**接口一律 POST + JSON 请求体**（与 `request.post` 一致；**例外**：该公用 meta 为 **GET 无参**，见 **`api-contract-and-mock-conventions.mdc`**）。**大模块多页面** 时另有 Skill「章节 9～10」：**契约 JSON 与开关聚合到模块根目录**（子页不单独建契约目录/config）、**`data-source` 须注释且多页面用多 enum / 多 `is*Mock` 方法**、**每 JSON 根级 `interaction`**、**README 场景→接口表**。
+- **模块接口契约整理**：当需要 **按路由/页面梳理 `mock/backend-api`、与 `fetch*` / `config/data-source` 对齐、输出契约清单** 时，Agent 应遵循项目技能 **`.cursor/skills/module-api-contract-audit/SKILL.md`**，并配合规则 **`backend-fields.mdc`**、**`keyword-dictionary-analysis.mdc`**（analysis/报表类 **指标** 契约时对照 **`docs/关键字字典规则.md`**、**`docs/关键字字典规则-前端落地边界.md`**）、**`module-api-contract-audit.mdc`**、**`api-contract-and-mock-conventions.mdc`**、**`module-api-mock-config.mdc`**。契约须满足该 Skill「章节 0」：**`sampleResponse` 完整可联调**（含 **`api-contract-and-mock-conventions.mdc`**：**表格类主数组 ≥3 条**、**表列/树节点上闭合 `enum` 在示例中写全**）；**§0.4 / §0.5**：字段与 **`backend-fields`** 对齐、入参日期 **`startDate`/`endDate`**、同模块 **`sampleResponse` 形态尽量统一**；**§0.6（硬性）**：与 **`GET .../analysis/cockpit/meta-filter-options`**（无参）同构的顶栏公用下拉 **不** 再建模块内 `*meta-filter-options*.json`；页面 **直接读** **`useCockpitMetaFilterStore().data`**（或 **`useCockpitMetaFilterOptions().cockpitMeta`**），仅在 **`mock/backend-api/README.md`** 标注并引用 **`paid-analysis/mock/backend-api/README.md` 附录 A**（详见 **`api-contract-and-mock-conventions.mdc`**）。URL 按 **路由+模块+功能**（kebab-case）组织；**接口一律 POST + JSON 请求体**（与 `request.post` 一致；**例外**：该公用 meta 为 **GET 无参**，见 **`api-contract-and-mock-conventions.mdc`**）。**大模块多页面** 时另有 Skill「章节 9～10」：**契约 JSON 与开关聚合到模块根目录**（子页不单独建契约目录/config）、**`data-source` 须注释且多页面用多 enum / 多 `is*Mock` 方法**、**每 JSON 根级 `interaction`**、**README 场景→接口表**。
 - **应用当前时间**：业务里表示「今天/此刻」或基于今天算日期时，**禁止**裸 `new Date()`，统一使用 `@/utils/app-now` 的 `getAppNow` / `cloneAppDate` / `offsetAppNowMs` 等；细则与例外见 **`app-now-date.mdc`**。
 - **环境变量**: 以 `VITE_` 开头，在 `src/env.d.ts` 或代码中通过 `import.meta.env` 使用；勿提交敏感信息。
 - **生产构建**: `pnpm build` 会先执行 `vue-tsc --noEmit`，再 Vite 构建；生产会 drop console/debugger。

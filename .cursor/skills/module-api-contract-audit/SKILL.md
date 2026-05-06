@@ -1,12 +1,12 @@
 ---
 name: module-api-contract-audit
 description: >-
-  Audits and organizes per-module HTTP API contracts, mock/backend-api JSON, README inventories, config data-source switches, fetch* in src/api, and UI coverage across routes. Enforces full sampleResponse, POST-only JSON APIs (except documented GET exceptions e.g. cockpit meta), and URL shape route+module+feature. Enforces reuse of GET /api/v1/datacenter/analysis/cockpit/meta-filter-options (no params): no duplicate meta-filter-options JSON; pages read useCockpitMetaFilterStore().data; document in README only per §0.6. Maps each contract to reachable UI; flags orphaned or unreachable surfaces for human/product confirmation before deleting or changing. Use when the user asks to 整理/梳理/校验/补全 项目或某业务模块的 接口契约、mock 契约、backend-api、或检查某模块是否少接口；或提到「模块接口与页面对齐」「契约与 fetch 对照」 「返回示例」「sampleResponse」「表列枚举写全」「全部 POST」「接口路径命名」、大模块多页面契约目录聚合、 数据源开关统一、data-source 注释、多 enum 多 isMock、交互说明、初始化加载、默认选中、契约与页面可达/入口、字段字典、backend-fields、startDate、endDate、返回体统一、sampleResponse 形态、cockpit meta-filter-options、公用下拉。
+  Audits and organizes per-module HTTP API contracts, mock/backend-api JSON, README inventories, config data-source switches, fetch* in src/api, and UI coverage across routes. Enforces full sampleResponse, POST-only JSON APIs (except documented GET exceptions e.g. cockpit meta), and URL shape route+module+feature. Enforces reuse of GET /api/v1/datacenter/analysis/cockpit/meta-filter-options (no params): no duplicate meta-filter-options JSON; pages read useCockpitMetaFilterStore().data; document in README only per §0.6. Maps each contract to reachable UI; flags orphaned or unreachable surfaces for human/product confirmation before deleting or changing. For analysis/reporting metric fields, also enforce docs/关键字字典规则.md and docs/关键字字典规则-前端落地边界.md (with backend-fields). Use when the user asks to 整理/梳理/校验/补全 项目或某业务模块的 接口契约、mock 契约、backend-api、或检查某模块是否少接口；或提到「模块接口与页面对齐」「契约与 fetch 对照」 「返回示例」「sampleResponse」「表列枚举写全」「全部 POST」「接口路径命名」、大模块多页面契约目录聚合、 数据源开关统一、data-source 注释、多 enum 多 isMock、交互说明、初始化加载、默认选中、契约与页面可达/入口、字段字典、backend-fields、startDate、endDate、返回体统一、sampleResponse 形态、cockpit meta-filter-options、公用下拉。
 ---
 
 # 模块接口契约整理（工作流）
 
-执行前须同时遵守仓库规则：`.cursor/rules/backend-fields.mdc`（**整理前须用工具 Read 全文或由用户 `@` 该文件**）、`api-contract-and-mock-conventions.mdc`、`module-api-mock-config.mdc`、`project-conventions.mdc` 中与 Mock、config、`fetch*` 相关的条款。
+执行前须同时遵守仓库规则：`.cursor/rules/backend-fields.mdc`（**整理前须用工具 Read 全文或由用户 `@` 该文件**）、`api-contract-and-mock-conventions.mdc`、`module-api-mock-config.mdc`、`project-conventions.mdc`、`keyword-dictionary-analysis.mdc` 中与 Mock、config、`fetch*` 相关的条款。**凡用户或任务明确要求「生成 / 新建」`mock/backend-api` 契约**，关键字字典按 **`keyword-dictionary-analysis.mdc`（`alwaysApply`）** 自动适用，**无需** 用户 `@` 该规则；按条文 **Read** **`docs/关键字字典规则.md`** 与 **`docs/关键字字典规则-前端落地边界.md`** 即可。若整理 **analysis/报表类指标** 契约，同样适用上述 docs。
 
 ## 0. 契约硬性要求（本项目必须满足）
 
@@ -34,6 +34,7 @@ description: >-
 ### 0.4 字段与数据字典对齐
 
 - 整理前用工具 **阅读** `.cursor/rules/backend-fields.mdc`（或由用户 `@` 该文件）；**禁止**仅凭记忆命名。
+- **关键字字典（analysis 域）**：契约响应中含 **datacenter/analysis、报表/广告类指标**（ROI、收入、`*Pct`、环比同比等）时，须核对 **`docs/关键字字典规则.md`**（禁用裸 `roi`/`revenue`、指标命名）；筛选维度与 cockpit、**string/int** 口径见 **`docs/关键字字典规则-前端落地边界.md`**。交付物中单列与 **`backend-fields.mdc`** 冲突项（若有）。
 - 核对本模块契约 `fieldDescription` 中请求/响应字段是否与字典一致；存在同义不同名时单列 **合并建议**。
 - **入参日期范围**：凡带日期范围的请求，入参键名须为 **`startDate`** / **`endDate`**（见 `backend-fields.mdc`「接口请求 · 日期范围」）；历史别名字段在交付物中列 **「迁移为 startDate/endDate」**。
 - 大范围字段改名或契约结构重组时，交付物中单列影响面与迁移计划，并与联调方对齐后再改。

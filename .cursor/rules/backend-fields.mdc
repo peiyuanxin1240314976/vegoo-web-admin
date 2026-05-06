@@ -16,6 +16,12 @@ alwaysApply: true
 
 
 
+### 关键字字典（analysis 域指标 · 与本文并存）
+
+**新开发**的 **`com.vegoo.datacenter.analysis`**（或同构 mock）中**指标类**响应字段（金额、计数、ROI、收入、百分比、环比同比等），除本文表格外还须遵守 **`docs/关键字字典规则.md`**（禁用裸 **`roi`** / **`roiPct`** / **`revenue`**；**`*Pct`** / **`*Ratio`** 后缀等）。HTTP 筛选维度与 cockpit、**string/int** 取舍、分页键名等见 **`docs/关键字字典规则-前端落地边界.md`**，不得与本文「统一筛选维度」在**同一请求体**内混用两种口径。存量接口 **不强制** 一次性回迁。完整约束见 **`keyword-dictionary-analysis.mdc`**。
+
+
+
 ### 接口契约与 HTTP JSON 命名（硬性 · 全量键名）
 
 
