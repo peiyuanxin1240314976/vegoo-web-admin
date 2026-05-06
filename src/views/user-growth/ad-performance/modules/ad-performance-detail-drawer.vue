@@ -190,7 +190,7 @@
     router.push({
       path: '/campaign-detail',
       query: {
-        id: props.campaignRow.id,
+        id: props.campaignRow.campaignId,
         name: props.campaignRow.name,
         appId: props.campaignRow.appId ?? '',
         appName: props.campaignRow.appName
