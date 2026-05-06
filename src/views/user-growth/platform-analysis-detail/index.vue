@@ -4,29 +4,25 @@
 
     <!-- ── 顶栏筛选（日期自定义；应用/广告平台/国家来自 cockpit meta-filter Store）──── -->
     <header class="pad-filter-bar">
-      <div class="pad-filter-bar__inner">
-        <div class="pad-filter-item pad-filter-item--date">
-          <ElIcon class="pad-filter-item__icon" aria-hidden="true"><Calendar /></ElIcon>
-          <span v-if="isLast7DaysPreset" class="pad-filter-date-preset">近7天</span>
+      <div class="pad-filter-bar__inner pad-filter-panel">
+        <div class="pad-filter-item">
           <AppDatePicker
             v-model="dateRange"
             type="daterange"
             :shortcuts="dateRangeShortcuts"
             unlink-panels
-            range-separator="~"
+            range-separator="～"
             value-format="YYYY-MM-DD"
             format="YYYY-MM-DD"
             :clearable="false"
             class="pad-filter-date"
-            popper-class="pad-filter-date-popper"
+            popper-class="pad-filter__popper"
           />
         </div>
 
         <div class="pad-filter-item pad-filter-item--select">
-          <span class="pad-filter-item__prefix">应用：</span>
           <AppPlatformSearchSelect
             v-model="filters.appId"
-            class="pad-filter-select pad-filter-select--app"
             placeholder="全部"
             search-placeholder="搜索类别/应用名称/应用简称"
             mode="app"
@@ -34,25 +30,28 @@
             empty-selection-label="全部"
             select-all-label="全部"
             :setting-apps="filterSettingApps"
-            :height="32"
-            :min-width="188"
-            :max-width="220"
-            input-class="pad-filter-select"
-            dropdown-class="pad-filter-select-popper"
+            :height="36"
+            :min-width="260"
+            :max-width="280"
+            input-class="pad-filter-select__input"
+            dropdown-class="pad-filter__popper"
           />
         </div>
 
         <div class="pad-filter-item pad-filter-item--select">
-          <span class="pad-filter-item__prefix">广告平台：</span>
           <ElSelect
-            v-model="filters.source"
+            :model-value="filters.source"
             class="pad-filter-select pad-filter-select--source"
-            placeholder="全部"
-            popper-class="pad-filter-select-popper"
+            placeholder="广告平台"
+            popper-class="pad-filter__popper"
+            filterable
+            clearable
+            @update:model-value="onSourceFilterUpdate"
           >
+            <ElOption :label="tr('adPerformance.filterAll', '全部')" value="" />
             <ElOption
-              v-for="opt in sourceOptions"
-              :key="opt.value === '' ? '__all_src__' : opt.value"
+              v-for="opt in sourceOptionsForSelect"
+              :key="String(opt.value)"
               :label="opt.label"
               :value="opt.value"
             />
@@ -60,24 +59,26 @@
         </div>
 
         <div class="pad-filter-item pad-filter-item--select">
-          <span class="pad-filter-item__prefix">国家：</span>
           <ElSelect
-            v-model="filters.s_country_code"
+            :model-value="filters.s_country_code"
             class="pad-filter-select pad-filter-select--country"
             filterable
-            placeholder="全部"
-            popper-class="pad-filter-select-popper"
+            clearable
+            placeholder="国家"
+            popper-class="pad-filter__popper"
+            @update:model-value="onCountryFilterUpdate"
           >
+            <ElOption :label="tr('adPerformance.filterAll', '全部')" value="" />
             <ElOption
-              v-for="opt in countryOptions"
-              :key="opt.value === '' ? '__all_cty__' : opt.value"
+              v-for="opt in countryOptionsForSelect"
+              :key="String(opt.value)"
               :label="opt.label"
               :value="opt.value"
             />
           </ElSelect>
         </div>
 
-        <ElButton round class="pad-filter-search" :icon="Search" @click="loadPage">查询</ElButton>
+        <ElButton type="primary" plain round :icon="Search" @click="loadPage">查询</ElButton>
       </div>
     </header>
 
@@ -352,11 +353,12 @@
 <script setup lang="ts">
   import 'flag-icons/css/flag-icons.min.css'
   import { ref, reactive, computed, onMounted, watch } from 'vue'
+  import { useI18n } from 'vue-i18n'
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import { storeToRefs } from 'pinia'
   import { useRoute } from 'vue-router'
-  import { Top, Bottom, Calendar, Search } from '@element-plus/icons-vue'
+  import { Top, Bottom, Search } from '@element-plus/icons-vue'
   import ProfitTip from '../components/ProfitTip.vue'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
@@ -370,6 +372,9 @@
   defineOptions({ name: 'PlatformAnalysisDetail' })
 
   const route = useRoute()
+
+  const { t, te } = useI18n()
+  const tr = (key: string, fallback: string) => (te(key) ? t(key) : fallback)
 
   const cockpitMetaStore = useCockpitMetaFilterStore()
   const { data: cockpitMetaRef } = storeToRefs(cockpitMetaStore)
@@ -406,8 +411,25 @@
   })
 
   const appOptions = ref<{ label: string; value: string }[]>([])
-  const sourceOptions = ref<{ label: string; value: string }[]>([])
-  const countryOptions = ref<{ label: string; value: string }[]>([])
+
+  /** cockpit meta：下拉去掉占位「全部」，首项由模板 ElOption value="" */
+  const sourceOptionsForSelect = computed(() =>
+    (cockpitMetaRef.value?.sourceOptions ?? []).filter((o) => {
+      const v = String(o.value ?? '')
+        .trim()
+        .toLowerCase()
+      return v !== '' && v !== 'all'
+    })
+  )
+
+  const countryOptionsForSelect = computed(() =>
+    (cockpitMetaRef.value?.countryOptions ?? []).filter((o) => {
+      const v = String(o.value ?? '')
+        .trim()
+        .toLowerCase()
+      return v !== '' && v !== 'all'
+    })
+  )
   const filterSettingApps = computed(() => {
     const settingApps = cockpitMetaRef.value?.settingApps ?? []
     const appIdSet = new Set(
@@ -429,16 +451,22 @@
     const m = cockpitMetaRef.value
     if (!m) return
     appOptions.value = normalizeMetaOptions(m.appOptions)
-    sourceOptions.value = normalizeMetaOptions(m.sourceOptions)
-    countryOptions.value = normalizeMetaOptions(m.countryOptions)
   }
 
-  const isLast7DaysPreset = computed(() => {
-    const cur = dateRange.value
-    if (!cur?.[0] || !cur?.[1]) return false
-    const p = resolveDateRangeFromPreset('7d')
-    return cur[0] === p.date_start && cur[1] === p.date_end
-  })
+  function onSourceFilterUpdate(v: string | undefined | null) {
+    filters.source = v ?? ''
+  }
+
+  function onCountryFilterUpdate(v: string | undefined | null) {
+    filters.s_country_code = v ?? ''
+  }
+
+  // const isLast7DaysPreset = computed(() => {
+  //   const cur = dateRange.value
+  //   if (!cur?.[0] || !cur?.[1]) return false
+  //   const p = resolveDateRangeFromPreset('7d')
+  //   return cur[0] === p.date_start && cur[1] === p.date_end
+  // })
 
   function optionLabel(value: string, options: { label: string; value: string }[]) {
     if (value === '' || value === 'all') return '全部'
@@ -464,9 +492,11 @@
     if (labels.length === 1) return labels[0]
     return `${labels[0]} +${labels.length - 1}`
   })
-  const selectedSourceLabel = computed(() => optionLabel(filters.source, sourceOptions.value))
+  const selectedSourceLabel = computed(() =>
+    optionLabel(filters.source, sourceOptionsForSelect.value)
+  )
   const selectedCountryLabel = computed(() =>
-    optionLabel(filters.s_country_code, countryOptions.value)
+    optionLabel(filters.s_country_code, countryOptionsForSelect.value)
   )
 
   function dimensionToApi(v: string) {
@@ -747,6 +777,9 @@
 </script>
 
 <style scoped lang="scss">
+  @use '../styles/filter-bar-theme.scss' as filterTheme;
+  @use '../styles/app-platform-select-ad-theme.scss' as apSelect;
+
   /* 整页滚动：固定可视高度 + 纵向 auto，避免只在 main/表格内出现滚动条 */
   .pad-page {
     position: relative;
@@ -836,189 +869,116 @@
     margin-bottom: 14px;
   }
 
-  .pad-filter-bar__inner {
-    display: flex;
+  .pad-filter-bar__inner.pad-filter-panel {
+    @include filterTheme.filter-panel(14px 18px);
+    @include filterTheme.filter-panel-children;
+    @include filterTheme.filter-row(12px);
+
     flex-wrap: wrap;
-    gap: 10px 12px;
     align-items: center;
-    padding: 14px 18px;
-    background: color-mix(in srgb, rgb(8 8 12) 94%, transparent);
-    border: 1px solid color-mix(in srgb, var(--art-primary) 26%, var(--default-border));
-    border-radius: 14px;
-    box-shadow:
-      0 6px 28px rgb(0 0 0 / 38%),
-      inset 0 1px 0 rgb(255 255 255 / 8%),
-      0 0 0 1px color-mix(in srgb, var(--art-primary) 10%, transparent);
+    min-width: 0;
   }
 
   .pad-filter-item {
     display: inline-flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 8px;
     align-items: center;
-    min-height: 40px;
-    padding: 4px 14px;
-    background: color-mix(in srgb, var(--default-box-color) 50%, rgb(10 12 20));
-    border: 1px solid color-mix(in srgb, var(--default-border) 90%, rgb(148 163 184 / 20%));
-    border-radius: 12px;
-    transition:
-      border-color var(--duration-fast) var(--ease-default),
-      box-shadow var(--duration-fast) var(--ease-default);
-
-    &:hover {
-      border-color: color-mix(in srgb, var(--art-primary) 40%, var(--default-border));
-      box-shadow: 0 0 18px color-mix(in srgb, var(--art-primary) 12%, transparent);
-    }
+    min-height: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
 
     &--date {
-      flex: 0 1 320px;
-      min-width: min(100%, 300px);
+      flex: 0 1 300px;
+      min-width: min(100%, 260px);
     }
 
     &--select {
       flex: 0 1 auto;
-      flex-wrap: nowrap;
-    }
-
-    &__icon {
-      flex-shrink: 0;
-      font-size: 18px;
-      color: var(--art-primary);
-    }
-
-    &__prefix {
-      flex-shrink: 0;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      white-space: nowrap;
     }
   }
 
-  .pad-filter-date-preset {
-    flex-shrink: 0;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-primary);
+  .pad-filter-select.pad-filter-select--source {
+    @include filterTheme.filter-select-size(120px, 100px, 160px);
   }
 
-  :deep(.pad-filter-date.el-date-editor) {
-    flex: 0 1 220px;
-    width: auto !important;
-    min-width: 0;
+  .pad-filter-select.pad-filter-select--country {
+    @include filterTheme.filter-select-size(136px, 120px, 200px);
   }
 
-  :deep(.pad-filter-select--source .el-select__wrapper),
-  :deep(.pad-filter-select--country .el-select__wrapper) {
-    min-width: 104px;
+  .pad-filter-bar__inner.pad-filter-panel :deep(.pad-filter-date) {
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
+  }
+
+  @include filterTheme.date-trigger(
+    '.pad-filter-bar__inner.pad-filter-panel',
+    '.pad-filter-date',
+    280px
+  );
+  @include filterTheme.element-select-trigger('.pad-filter-select--source');
+  @include filterTheme.element-select-trigger('.pad-filter-select--country');
+  @include apSelect.apply-app-platform-select-ad-theme(
+    '.pad-filter-bar__inner.pad-filter-panel',
+    'pad-filter-select__input',
+    'pad-filter__popper',
+    280px,
+    260px,
+    280px
+  );
+  @include filterTheme.select-popper('pad-filter__popper');
+  @include filterTheme.app-platform-popper('pad-filter__popper');
+  @include filterTheme.date-picker-popper('pad-filter__popper');
+
+  :global(.pad-filter__popper.el-popper),
+  :global(.pad-filter__popper.el-select__popper),
+  :global(.pad-filter__popper.el-picker__popper) {
+    z-index: 4000 !important;
   }
 
   :deep(.pad-filter-select--source),
   :deep(.pad-filter-select--country) {
-    width: 112px;
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
   }
 
-  :deep(.pad-filter-date .el-input__wrapper) {
-    padding: 2px 6px 2px 2px;
-    background: transparent;
-    border: none;
+  .pad-filter-bar__inner.pad-filter-panel :deep(.pad-filter-search.el-button) {
+    height: 36px;
+    padding: 0 18px;
+    font-weight: 600;
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
     box-shadow: none;
-  }
-
-  :deep(.pad-filter-date .el-input__inner) {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-primary);
-  }
-
-  :deep(.pad-filter-date .el-range-separator) {
-    padding: 0 4px;
-    font-weight: 600;
-    color: var(--text-tertiary);
-  }
-
-  :deep(.pad-filter-date .el-range-input) {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-primary);
-  }
-
-  .pad-filter-select {
-    width: 168px;
-    min-width: 120px;
-
-    &--app {
-      min-width: 148px;
-    }
-
-    &--country {
-      min-width: 136px;
-    }
-  }
-
-  :deep(.pad-filter-select .el-select__wrapper) {
-    min-height: 32px;
-    padding: 2px 10px;
-    background: transparent;
-    border: none;
-    box-shadow: none;
-  }
-
-  :deep(.pad-filter-select.app-platform-search-select) {
-    min-height: 32px;
-    padding: 2px 10px;
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-  }
-
-  :deep(.pad-filter-select .el-select__placeholder) {
-    font-size: 13px;
-    color: var(--text-tertiary);
-  }
-
-  :deep(.pad-filter-select .app-platform-search-select__text.is-placeholder) {
-    font-size: 13px;
-    color: var(--text-tertiary);
-  }
-
-  :deep(.pad-filter-select .el-select__selected-item) {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-primary);
-  }
-
-  :deep(.pad-filter-select .app-platform-search-select__text) {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-primary);
-  }
-
-  :deep(.pad-filter-select .el-select__caret) {
-    color: var(--text-tertiary);
-  }
-
-  :deep(.pad-filter-select .app-platform-search-select__suffix) {
-    color: var(--text-tertiary);
-  }
-
-  .pad-filter-search {
-    --el-button-bg-color: color-mix(in srgb, var(--el-color-primary) 10%, transparent);
-    --el-button-text-color: var(--el-color-primary);
-    --el-button-border-color: color-mix(in srgb, var(--el-color-primary) 42%, transparent);
-    --el-button-hover-text-color: var(--text-primary);
-    --el-button-hover-border-color: var(--el-color-primary);
-    --el-button-hover-bg-color: color-mix(in srgb, var(--el-color-primary) 18%, transparent);
-
-    box-shadow: 0 0 14px color-mix(in srgb, var(--el-color-primary) 10%, transparent);
     transition:
-      box-shadow 0.22s var(--ease-default),
-      transform 0.18s var(--ease-default);
+      border-color 0.2s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
+      box-shadow 0.22s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
+      transform 0.18s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
+  }
 
-    &:hover {
-      box-shadow: 0 0 22px color-mix(in srgb, var(--el-color-primary) 22%, transparent);
-      transform: translateY(-1px);
-    }
+  .pad-filter-bar__inner.pad-filter-panel
+    :deep(.pad-filter-search.el-button:hover:not(.is-disabled)) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
+    transform: translateY(-1px);
+  }
+
+  .pad-filter-bar__inner.pad-filter-panel :deep(.pad-filter-search.el-button:focus-visible) {
+    outline: none;
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--el-color-primary) 35%, transparent),
+      0 0 0 4px color-mix(in srgb, var(--el-color-primary) 18%, transparent);
   }
 
   .pad-page-fx {

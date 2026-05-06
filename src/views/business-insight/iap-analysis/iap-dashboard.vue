@@ -67,16 +67,7 @@
           </ElSelect>
         </div> -->
 
-        <ElButton
-          type="primary"
-          plain
-          round
-          class="iap-query-btn"
-          :icon="Search"
-          @click="loadDashboard"
-        >
-          查询
-        </ElButton>
+        <ElButton type="primary" plain round :icon="Search" @click="loadDashboard"> 查询 </ElButton>
         <ElButton type="primary" plain round @click="loadDashboard">
           <ElIcon><Refresh /></ElIcon>
           刷新
@@ -876,20 +867,22 @@
       })
       productTypeDonut.value = donut.list
       platformCompare.value = platform
-      nextTick(() => {
-        charts.forEach((c) => c.dispose())
-        charts.length = 0
-        initKpiSparklines()
-        initAppSparklines()
-        initChart1()
-        initChart2()
-        initChart3()
-        initDonut()
-        initPlatform()
-      })
     } finally {
       overviewLoading.value = false
     }
+    // Skeleton 关闭后再等一轮 patch，避免 chart ref 仍为 null
+    await nextTick()
+    await nextTick()
+    charts.forEach((c) => c.dispose())
+    charts.length = 0
+    initKpiSparklines()
+    initAppSparklines()
+    initChart1()
+    initChart2()
+    initChart3()
+    initDonut()
+    initPlatform()
+    resizeCharts()
   }
 
   onMounted(() => {

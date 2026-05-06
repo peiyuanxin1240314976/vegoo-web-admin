@@ -21,7 +21,6 @@
 
       <div class="filters aapp-filter-panel">
         <div class="filter-item filter-field">
-          <span class="filter-label">日期范围</span>
           <AppDatePicker
             v-model="dateRange"
             type="daterange"
@@ -36,7 +35,6 @@
           />
         </div>
         <div class="filter-item filter-field">
-          <span class="filter-label">国家</span>
           <el-select
             :model-value="countryFilter"
             class="aapp-filter-select"
