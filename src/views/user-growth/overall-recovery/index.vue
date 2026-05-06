@@ -34,30 +34,36 @@
             dropdown-class="or-filter-popper"
           />
           <ElSelect
-            v-model="filters.source"
+            :model-value="filters.source"
             class="or-filter-select"
             :prefix-icon="Promotion"
             placeholder="广告平台"
             popper-class="or-filter-popper"
+            clearable
+            @update:model-value="onSourceFilterUpdate"
           >
+            <ElOption :label="tr('adPerformance.filterAll', '全部')" value="" />
             <ElOption
-              v-for="opt in sourceOptions"
-              :key="opt.value === '' ? '__or_all_src__' : opt.value"
+              v-for="opt in sourceOptionsForSelect"
+              :key="opt.value"
               :label="opt.label"
               :value="opt.value"
             />
           </ElSelect>
           <ElSelect
-            v-model="filters.s_country_code"
+            :model-value="filters.s_country_code"
             class="or-filter-select or-filter-select--wide"
             :prefix-icon="Flag"
             placeholder="国家"
             filterable
             popper-class="or-filter-popper"
+            clearable
+            @update:model-value="onCountryFilterUpdate"
           >
+            <ElOption :label="tr('adPerformance.filterAll', '全部')" value="" />
             <ElOption
-              v-for="opt in countryOptions"
-              :key="opt.value === '' ? '__or_all_country__' : opt.value"
+              v-for="opt in countryOptionsForSelect"
+              :key="opt.value"
               :label="opt.label"
               :value="opt.value"
             />
@@ -103,6 +109,7 @@
 
 <script setup lang="ts">
   import type { Component } from 'vue'
+  import { useI18n } from 'vue-i18n'
   import { Calendar, Flag, Promotion, Search } from '@element-plus/icons-vue'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import type { CockpitMetaOptionItem, CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
@@ -115,6 +122,9 @@
   import TabOrganic from './modules/tab-organic.vue'
 
   defineOptions({ name: 'OverallRecovery' })
+
+  const { t, te } = useI18n()
+  const tr = (key: string, fallback: string) => (te(key) ? t(key) : fallback)
 
   const tabList: { key: OverallRecoveryTabKey; label: string }[] = [
     { key: 'overall', label: '整体回收（整合用户回）' },
@@ -132,11 +142,27 @@
     s_country_code: ''
   })
 
+  function onSourceFilterUpdate(v: string | undefined | null) {
+    filters.source = v ?? ''
+  }
+
+  function onCountryFilterUpdate(v: string | undefined | null) {
+    filters.s_country_code = v ?? ''
+  }
+
   const appliedFilters = ref<OverallRecoveryFilterState>({ ...filters })
   const searchToken = ref(0)
   const hasSyncedInitialAutoApp = ref(false)
 
   const { appOptions, sourceOptions, countryOptions, settingApps } = useOverallRecoveryFilters()
+
+  const sourceOptionsForSelect = computed(() =>
+    sourceOptions.value.filter((o) => String(o.value ?? '').trim() !== '')
+  )
+  const countryOptionsForSelect = computed(() =>
+    countryOptions.value.filter((o) => String(o.value ?? '').trim() !== '')
+  )
+
   const settingAppsForSelect = computed<CockpitSettingAppItem[]>(() => {
     if (settingApps.value.length) return settingApps.value
     return appOptions.value
@@ -388,12 +414,6 @@
 
   :deep(.or-filter-select .el-select__selection) {
     flex-wrap: nowrap;
-  }
-
-  :deep(.or-filter-select .el-select__placeholder),
-  :deep(.or-filter-select .el-select__selected-item) {
-    font-size: 14px;
-    color: var(--el-text-color-primary);
   }
 
   :deep(.or-filter-select .el-select__prefix) {
