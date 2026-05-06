@@ -30,17 +30,20 @@
 
           <div class="rev-pill">
             <ElSelect
-              v-model="filtersDraft.s_country_code"
+              :model-value="filtersDraft.s_country_code"
               class="rev-select"
               popper-class="rev-select__popper"
               :teleported="true"
               :fit-input-width="true"
               filterable
               placeholder="国家"
+              clearable
+              @update:model-value="onCountryFilterUpdate"
             >
+              <ElOption :label="tr('adPerformance.filterAll', '全部')" value="" />
               <ElOption
-                v-for="opt in countryOptions"
-                :key="opt.value === '' ? '__country_empty__' : opt.value"
+                v-for="opt in countryOptionsForSelect"
+                :key="opt.value"
                 :label="opt.label"
                 :value="opt.value"
               />
@@ -707,6 +710,7 @@
   import { Calendar, Search } from '@element-plus/icons-vue'
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { useRouter } from 'vue-router'
+  import { useI18n } from 'vue-i18n'
   import { storeToRefs } from 'pinia'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
@@ -772,6 +776,9 @@
 
   defineOptions({ name: 'RevenueOverview' })
 
+  const { t, te } = useI18n()
+  const tr = (key: string, fallback: string) => (te(key) ? t(key) : fallback)
+
   const router = useRouter()
   const cockpitMetaStore = useCockpitMetaFilterStore()
   const { data: cockpitMeta } = storeToRefs(cockpitMetaStore)
@@ -824,6 +831,10 @@
   // applied filters：仅在点击「查询」时更新，用于所有接口请求
   const filters = reactive<RevenueOverviewFilterState>({ ...MOCK_REVENUE_OVERVIEW_FILTERS })
 
+  function onCountryFilterUpdate(v: string | undefined | null) {
+    filtersDraft.s_country_code = v ?? ''
+  }
+
   /** 与 AppDatePicker daterange 双向绑定，底层为 filtersDraft.startDate / endDate */
   const dateRangePicker = computed<[string, string] | null>({
     get() {
@@ -862,6 +873,10 @@
     }
     return COUNTRY_OPTIONS_FALLBACK
   })
+
+  const countryOptionsForSelect = computed<SelectOption[]>(() =>
+    countryOptions.value.filter((o) => String(o.value ?? '').trim() !== '')
+  )
 
   /** 版本筛选项（模板中注释）；未在驾驶舱 meta 中提供，保持本地静态 */
   // const versionOptions: SelectOption[] = [
