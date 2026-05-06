@@ -7,7 +7,6 @@
  * 当前页面仅接入本地 Mock；联调时按需将单项改为 `false`。
  */
 export enum EcpmAnalysisEndpoint {
-  MetaFilterOptions = 'metaFilterOptions',
   OverviewKpis = 'overviewKpis',
   OverviewTrend = 'overviewTrend',
   TablePlatform = 'tablePlatform',
@@ -19,7 +18,6 @@ export enum EcpmAnalysisEndpoint {
 }
 
 export const ECPM_ANALYSIS_USE_MOCK: Record<EcpmAnalysisEndpoint, boolean> = {
-  [EcpmAnalysisEndpoint.MetaFilterOptions]: false,
   [EcpmAnalysisEndpoint.OverviewKpis]: false,
   [EcpmAnalysisEndpoint.OverviewTrend]: false,
   [EcpmAnalysisEndpoint.TablePlatform]: false,

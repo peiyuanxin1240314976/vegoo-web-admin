@@ -63,7 +63,6 @@ import {
   isProfitAnalysisEndpointMock
 } from '@/views/business-insight/profit-analysis/config/data-source'
 import type {
-  EcpmMetaFilterOptions,
   EcpmOverviewKpis,
   EcpmTrendBundle
 } from '@/views/business-insight/ecpm-analysis/types'
@@ -98,61 +97,6 @@ export {
 const IAA_BASE = `${ANALYSIS_API_BASE}/business-insight/iaa-analysis`
 const REVENUE_OVERVIEW_BASE = `${ANALYSIS_API_BASE}/business-insight/revenue-overview`
 const ECPM_ANALYSIS_BASE = `${ANALYSIS_API_BASE}/business-insight/ecpm-analysis`
-
-function normalizeEcpmMetaFilterOptions(
-  raw: EcpmMetaFilterOptions | null | undefined
-): EcpmMetaFilterOptions {
-  const arr = (v: unknown) => (Array.isArray(v) ? v : []) as EcpmMetaFilterOptions['apps']
-  const countryArr = (v: unknown) =>
-    (Array.isArray(v) ? v : []) as EcpmMetaFilterOptions['countries']
-  const o =
-    raw !== null && raw !== undefined && typeof raw === 'object'
-      ? (raw as unknown as Record<string, unknown>)
-      : {}
-  return {
-    apps: arr(o.apps),
-    platforms_terminal: arr(o.platforms_terminal),
-    sources: arr(o.sources),
-    countries: countryArr(o.countries)
-  }
-}
-
-/** ECPM 分析 - 顶栏筛选项 GET .../meta-filter-options */
-export async function fetchEcpmMetaFilterOptions() {
-  if (isEcpmAnalysisEndpointMock(EcpmAnalysisEndpoint.MetaFilterOptions)) {
-    const { MOCK_ECPM_MAP_COUNTRIES, MOCK_ECPM_PLATFORMS, MOCK_ECPM_APP_RANK } = await import(
-      '@/views/business-insight/ecpm-analysis/mock'
-    )
-    return {
-      apps: [
-        { value: '', label: '全部应用' },
-        ...MOCK_ECPM_APP_RANK.map((item) => ({
-          value: item.s_app_name,
-          label: item.s_app_name
-        }))
-      ],
-      platforms_terminal: [
-        { value: '', label: '全部终端' },
-        { value: 'android', label: 'Android' },
-        { value: 'ios', label: 'iOS' }
-      ],
-      sources: [
-        { value: '', label: '全部广告平台' },
-        ...MOCK_ECPM_PLATFORMS.map((item) => ({ value: item.name.toLowerCase(), label: item.name }))
-      ],
-      countries: [
-        { value: '', label: '全部国家', s_country_code: '' },
-        ...MOCK_ECPM_MAP_COUNTRIES.map((item) => ({
-          value: item.s_country_code.toLowerCase(),
-          label: item.geo_name,
-          s_country_code: item.s_country_code
-        }))
-      ]
-    }
-  }
-  const raw = await request.get<unknown>({ url: `${ECPM_ANALYSIS_BASE}/meta-filter-options` })
-  return normalizeEcpmMetaFilterOptions(unwrapIaaPayload<EcpmMetaFilterOptions>(raw))
-}
 
 function normalizeEcpmOverviewKpis(raw: EcpmOverviewKpis | null | undefined): EcpmOverviewKpis {
   return {

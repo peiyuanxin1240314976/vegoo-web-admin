@@ -2,22 +2,6 @@
 
 export type EcpmTrendDirection = 'up' | 'down' | 'flat'
 
-export interface EcpmFilterOption {
-  value: string
-  label: string
-}
-
-export interface EcpmCountryFilterOption extends EcpmFilterOption {
-  s_country_code: string
-}
-
-export interface EcpmMetaFilterOptions {
-  apps: EcpmFilterOption[]
-  platforms_terminal: EcpmFilterOption[]
-  sources: EcpmFilterOption[]
-  countries: EcpmCountryFilterOption[]
-}
-
 export interface EcpmOverviewKpis {
   d_ecpm_estimated: number
   d_ecpm_real: number

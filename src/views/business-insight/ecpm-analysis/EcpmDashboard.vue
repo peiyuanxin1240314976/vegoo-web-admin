@@ -59,12 +59,13 @@
               class="bi-filter-select bi-filter-select--platform"
               popper-class="ecpm-filter__popper"
               placeholder="广告平台"
+              clearable
             >
               <el-option
-                v-for="item in sourceOptions"
+                v-for="item in cockpitSourceOptions"
                 :key="item.value"
                 :label="item.label"
-                :value="toSelectValue(item.value)"
+                :value="item.value"
               />
             </el-select>
           </el-skeleton>
@@ -82,12 +83,13 @@
               popper-class="ecpm-filter__popper"
               placeholder="国家"
               filterable
+              clearable
             >
               <el-option
-                v-for="item in countryOptions"
+                v-for="item in cockpitCountryOptions"
                 :key="item.value"
                 :label="item.label"
-                :value="toSelectValue(item.value)"
+                :value="item.value"
               />
             </el-select>
           </el-skeleton>
@@ -474,7 +476,6 @@
   import { getAppNow, cloneAppDate } from '@/utils/app-now'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import {
-    fetchEcpmMetaFilterOptions,
     fetchEcpmOverviewAdSlotRanking,
     fetchEcpmOverviewAppRanking,
     fetchEcpmOverviewInsightTip,
@@ -484,12 +485,8 @@
     fetchEcpmOverviewTrend,
     fetchEcpmTablePlatform
   } from '@/api/business-insight'
-  import type {
-    EcpmCountryFilterOption,
-    EcpmFilterOption,
-    EcpmOverviewKpis,
-    EcpmTrendBundle
-  } from './types'
+  import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
+  import type { EcpmOverviewKpis, EcpmTrendBundle } from './types'
   import type { ColumnOption } from '@/types'
   import { ISO2_TO_ECHARTS_WORLD_GEO_NAME } from './config/world-map-iso-to-geo-json-name'
 
@@ -499,6 +496,12 @@
   const { data: cockpitMeta } = storeToRefs(cockpitMetaStore)
   /** 应用下拉与驾驶舱 settingApps 对齐（sAppId），勿仅用 ecpm meta 的 apps 文案项 */
   const settingAppsForSelect = computed(() => cockpitMeta.value?.settingApps ?? [])
+  const cockpitSourceOptions = computed<CockpitMetaOptionItem[]>(
+    () => cockpitMeta.value?.sourceOptions ?? []
+  )
+  const cockpitCountryOptions = computed<CockpitMetaOptionItem[]>(
+    () => cockpitMeta.value?.countryOptions ?? []
+  )
 
   function fmt2(n: number) {
     return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -568,8 +571,6 @@
   )
 
   // ─── State ───────────────────────────────────────────────────────────────
-  const ALL_OPTION_VALUE = '__ALL__'
-
   const defaultEnd = getAppNow()
   const defaultStart = cloneAppDate(defaultEnd)
   defaultStart.setDate(defaultStart.getDate() - 6)
@@ -577,9 +578,9 @@
     formatYmdSlash(defaultStart),
     formatYmdSlash(defaultEnd)
   ])
-  const filterPlatform = ref(ALL_OPTION_VALUE)
+  const filterPlatform = ref('')
   const filterApp = ref<string | string[]>([])
-  const filterCountry = ref(ALL_OPTION_VALUE)
+  const filterCountry = ref('')
   const loadingMetaFilterOptions = ref(false)
   const loadingOverviewKpis = ref(false)
   const loadingOverviewTrend = ref(false)
@@ -590,9 +591,6 @@
   const loadingOverviewAppRanking = ref(false)
   const loadingOverviewInsightTip = ref(false)
   const querying = ref(false)
-  const sourceOptions = ref<EcpmFilterOption[]>([])
-  const appOptions = ref<EcpmFilterOption[]>([])
-  const countryOptions = ref<EcpmCountryFilterOption[]>([])
   const trendData = ref<EcpmTrendBundle>({
     x_labels: [],
     series_estimated: [],
@@ -687,22 +685,18 @@
     nextTick(() => top10Chart?.resize())
   })
 
-  // ─── Spark Line Helper ────────────────────────────────────────────────────
-  function toSelectValue(value: string) {
-    return value === '' ? ALL_OPTION_VALUE : value
-  }
-
-  function fromSelectValue(value: string): string {
-    return value === ALL_OPTION_VALUE ? '' : value
+  /** 顶栏「全部」：cockpit 常见为 `all` 或空串；POST 不限时统一为 '' */
+  function toUnlimitedDimension(v: string): string {
+    const s = String(v ?? '').trim()
+    return s === 'all' || s === '' ? '' : s
   }
 
   function fromSelectAppValue(value: string | string[]): string | string[] {
     if (Array.isArray(value)) {
-      return value
-        .map((item) => String(item ?? '').trim())
-        .filter((item) => item && item !== ALL_OPTION_VALUE)
+      return value.map((item) => String(item ?? '').trim()).filter((item) => item && item !== 'all')
     }
-    return value === ALL_OPTION_VALUE ? '' : value
+    const s = String(value ?? '').trim()
+    return s === '' || s === 'all' ? '' : s
   }
 
   function normalizeYmd(value: string) {
@@ -1191,17 +1185,21 @@
     loadingMetaFilterOptions.value = true
     try {
       await cockpitMetaStore.ensureLoaded()
-      const response = await fetchEcpmMetaFilterOptions()
-      sourceOptions.value = response.sources
-      appOptions.value = response.apps
-      countryOptions.value = response.countries
-      filterPlatform.value = toSelectValue(response.sources[0]?.value ?? '')
-      const cockpitApps = cockpitMeta.value?.settingApps ?? []
-      filterApp.value =
-        cockpitApps.length > 0
-          ? [String(cockpitApps[0]!.sAppId ?? '').trim()].filter(Boolean)
-          : [String(response.apps[0]?.value ?? '').trim()].filter(Boolean)
-      filterCountry.value = toSelectValue(response.countries[0]?.value ?? '')
+      const meta = cockpitMeta.value
+      const sources = meta?.sourceOptions ?? []
+      const countries = meta?.countryOptions ?? []
+      filterPlatform.value = String(sources[0]?.value ?? '')
+      filterCountry.value = String(countries[0]?.value ?? '')
+      const cockpitApps = meta?.settingApps ?? []
+      if (cockpitApps.length > 0) {
+        filterApp.value = [String(cockpitApps[0]!.sAppId ?? '').trim()].filter(Boolean)
+      } else {
+        const firstApp = meta?.appOptions?.find((o) => {
+          const v = String(o.value ?? '').trim()
+          return v && v !== 'all'
+        })
+        filterApp.value = firstApp ? [firstApp.value] : []
+      }
     } finally {
       loadingMetaFilterOptions.value = false
     }
@@ -1216,10 +1214,10 @@
         t_start_date: normalizeYmd(start),
         t_end_date: normalizeYmd(end),
         platform: 'all',
-        source: fromSelectValue(filterPlatform.value),
+        source: toUnlimitedDimension(filterPlatform.value),
         // 网关 POST 体由 fetchEcpm* 转为 appIds: string[]（见 api/business-insight.ts）
         s_app_id: fromSelectAppValue(filterApp.value),
-        s_country_code: fromSelectValue(filterCountry.value)
+        s_country_code: toUnlimitedDimension(filterCountry.value)
       })
     } finally {
       loadingOverviewKpis.value = false
@@ -1235,10 +1233,10 @@
         t_start_date: normalizeYmd(start),
         t_end_date: normalizeYmd(end),
         platform: 'all',
-        source: fromSelectValue(filterPlatform.value),
+        source: toUnlimitedDimension(filterPlatform.value),
         // 网关 POST 体由 fetchEcpm* 转为 appIds: string[]（见 api/business-insight.ts）
         s_app_id: fromSelectAppValue(filterApp.value),
-        s_country_code: fromSelectValue(filterCountry.value)
+        s_country_code: toUnlimitedDimension(filterCountry.value)
       })
       if (trendChart) initTrendChart()
     } finally {
@@ -1257,7 +1255,7 @@
         platform: 'all',
         // 网关 POST 体由 fetchEcpm* 转为 appIds: string[]（见 api/business-insight.ts）
         s_app_id: fromSelectAppValue(filterApp.value),
-        s_country_code: fromSelectValue(filterCountry.value)
+        s_country_code: toUnlimitedDimension(filterCountry.value)
       })
       platforms.value = response.rows.map((row) => ({
         name: row.name,
@@ -1287,10 +1285,10 @@
         t_start_date: normalizeYmd(start),
         t_end_date: normalizeYmd(end),
         platform: 'all',
-        source: fromSelectValue(filterPlatform.value),
+        source: toUnlimitedDimension(filterPlatform.value),
         // 网关 POST 体由 fetchEcpm* 转为 appIds: string[]（见 api/business-insight.ts）
         s_app_id: fromSelectAppValue(filterApp.value),
-        s_country_code: fromSelectValue(filterCountry.value),
+        s_country_code: toUnlimitedDimension(filterCountry.value),
         map_metric: mapMode.value
       })
       if (requestSeq !== mapRequestSeq) return
@@ -1350,10 +1348,10 @@
         t_start_date: normalizeYmd(start),
         t_end_date: normalizeYmd(end),
         platform: 'all',
-        source: fromSelectValue(filterPlatform.value),
+        source: toUnlimitedDimension(filterPlatform.value),
         // 网关 POST 体由 fetchEcpm* 转为 appIds: string[]（见 api/business-insight.ts）
         s_app_id: fromSelectAppValue(filterApp.value),
-        s_country_code: fromSelectValue(filterCountry.value),
+        s_country_code: toUnlimitedDimension(filterCountry.value),
         metric: mapMode.value
       })
       if (requestSeq !== top10RequestSeq) return
@@ -1377,10 +1375,10 @@
         t_start_date: normalizeYmd(start),
         t_end_date: normalizeYmd(end),
         platform: 'all',
-        source: fromSelectValue(filterPlatform.value),
+        source: toUnlimitedDimension(filterPlatform.value),
         // 网关 POST 体由 fetchEcpm* 转为 appIds: string[]（见 api/business-insight.ts）
         s_app_id: fromSelectAppValue(filterApp.value),
-        s_country_code: fromSelectValue(filterCountry.value)
+        s_country_code: toUnlimitedDimension(filterCountry.value)
       })
       adSlots.value = response.rows.map((row) => ({
         name: row.s_ad_unit_label,
@@ -1401,10 +1399,10 @@
         t_start_date: normalizeYmd(start),
         t_end_date: normalizeYmd(end),
         platform: 'all',
-        source: fromSelectValue(filterPlatform.value),
+        source: toUnlimitedDimension(filterPlatform.value),
         // 网关 POST 体由 fetchEcpm* 转为 appIds: string[]（见 api/business-insight.ts）
         s_app_id: fromSelectAppValue(filterApp.value),
-        s_country_code: fromSelectValue(filterCountry.value)
+        s_country_code: toUnlimitedDimension(filterCountry.value)
       })
       appRankRows.value = response.rows
     } finally {
