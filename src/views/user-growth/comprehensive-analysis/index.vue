@@ -425,13 +425,17 @@
     gap: 12px;
     align-items: center;
     min-width: 0;
+    overflow: visible;
   }
 
   .ca-filters-left {
     @include filterTheme.filter-row;
 
     flex: 1;
+    flex-wrap: wrap;
+    align-items: center;
     min-width: 0;
+    overflow: visible;
   }
 
   .ca-filter-date-picker {
@@ -645,7 +649,8 @@
 
     :deep(.ca-filter-date-picker.el-date-editor) {
       width: 100% !important;
-      max-width: 100%;
+      min-width: 0 !important;
+      max-width: 100% !important;
     }
   }
 

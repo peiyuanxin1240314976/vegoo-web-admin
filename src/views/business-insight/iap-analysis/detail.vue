@@ -1327,6 +1327,7 @@
     flex-wrap: wrap;
     align-items: center;
     min-width: 0;
+    overflow: visible;
   }
 
   .iap-detail-query-btn {

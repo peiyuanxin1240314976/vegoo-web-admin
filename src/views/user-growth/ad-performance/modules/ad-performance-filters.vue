@@ -258,13 +258,17 @@
     @include filterTheme.filter-panel-children;
 
     min-width: 0;
+    overflow: visible;
   }
 
   .ad-performance-filters__left {
     @include filterTheme.filter-row;
 
     flex: 1;
+    flex-wrap: wrap;
+    align-items: center;
     min-width: 0;
+    overflow: visible;
   }
 
   .ad-performance-date-picker {
@@ -497,8 +501,6 @@
 
   @media (width <= 768px) {
     .ad-performance-filters {
-      flex-direction: column;
-      align-items: stretch;
       padding: 14px 16px;
     }
 
@@ -512,6 +514,12 @@
       width: 100%;
       min-width: 0;
       max-width: 100%;
+    }
+
+    :deep(.ad-performance-date-picker.el-date-editor) {
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: 100% !important;
     }
   }
 </style>

@@ -49,51 +49,83 @@
 
       <!-- ── Filters Row ────────────────────────────── -->
       <div class="filter-row">
-        <div class="filter-item filter-item--range">
-          <span class="fl">日期范围</span>
-          <AppDatePicker
-            v-model="orderDateRange"
-            type="daterange"
-            :shortcuts="dateRangeShortcuts"
-            unlink-panels
-            value-format="YYYY-MM-DD"
-            format="YYYY-MM-DD"
-            range-separator="~"
-            start-placeholder="开始"
-            end-placeholder="结束"
-            class="fi-range"
+        <AppDatePicker
+          v-model="orderDateRange"
+          type="daterange"
+          :shortcuts="dateRangeShortcuts"
+          unlink-panels
+          value-format="YYYY-MM-DD"
+          format="YYYY-MM-DD"
+          range-separator="~"
+          start-placeholder="开始"
+          end-placeholder="结束"
+          class="fi-range"
+        />
+        <AppPlatformSearchSelect
+          v-model="fApp"
+          mode="app"
+          multiple
+          placeholder="应用"
+          search-placeholder="搜索应用"
+          class="fi-app-select"
+          input-class="fi-app-select__input"
+          dropdown-class="iap-order-filter-popper"
+          :setting-apps="settingAppsForSelect"
+          :height="36"
+          :min-width="200"
+          :max-width="280"
+          :max-display-tags="2"
+          auto-height
+          :auto-max-rows="2"
+        />
+        <el-select
+          v-model="fChannel"
+          size="small"
+          placeholder="广告平台"
+          clearable
+          filterable
+          class="fi-sel"
+          popper-class="iap-order-filter-popper"
+        >
+          <el-option label="全部" value="" />
+          <el-option
+            v-for="opt in sourceSelectOptions"
+            :key="String(opt.value)"
+            :label="opt.label"
+            :value="String(opt.value)"
           />
-        </div>
-        <el-select v-model="fApp" size="small" placeholder="应用" class="fi-sel">
-          <el-option label="全部" value="all" />
-          <el-option label="Weather5" value="weather5" />
-          <el-option label="PhoneTracker" value="phonetracker" />
-          <el-option label="PhoneTracker2" value="phonetracker2" />
-          <el-option label="YearCam" value="yearcam" />
-          <el-option label="AgeCam" value="agecam" />
         </el-select>
-        <el-select v-model="fChannel" size="small" placeholder="广告平台" class="fi-sel">
-          <el-option label="全部" value="all" />
-          <el-option label="Google" value="google" />
-          <el-option label="Facebook" value="facebook" />
-          <el-option label="TikTok" value="tiktok" />
-          <el-option label="自然量" value="organic" />
+        <el-select
+          :model-value="fCountry"
+          size="small"
+          placeholder="国家"
+          class="fi-sel"
+          clearable
+          filterable
+          popper-class="iap-order-filter-popper"
+          @update:model-value="onOrderCountrySelect"
+        >
+          <el-option label="全部" value="" />
+          <el-option
+            v-for="opt in countrySelectOptionsForOrder"
+            :key="String(opt.value)"
+            :label="opt.label"
+            :value="String(opt.value)"
+          />
         </el-select>
-        <el-select v-model="fCountry" size="small" placeholder="国家" class="fi-sel">
-          <el-option label="全部" value="all" />
-          <el-option label="US" value="us" />
-          <el-option label="DE" value="de" />
-          <el-option label="JP" value="jp" />
-          <el-option label="KR" value="kr" />
-          <el-option label="CA" value="ca" />
-          <el-option label="GB" value="gb" />
-        </el-select>
-        <el-select v-model="fProduct" size="small" placeholder="商品" class="fi-sel">
+        <el-select
+          v-model="fProduct"
+          size="small"
+          clearable
+          filterable
+          placeholder="商品"
+          class="fi-sel"
+        >
           <el-option label="全部" value="all" />
           <el-option label="年订" value="annual" />
           <el-option label="月订" value="monthly" />
         </el-select>
-        <el-select v-model="fStatus" size="small" placeholder="状态" class="fi-sel">
+        <el-select v-model="fStatus" size="small" clearable placeholder="状态" class="fi-sel">
           <el-option label="全部" value="all" />
           <el-option label="成功" value="success" />
           <el-option label="退款" value="refund" />
@@ -117,14 +149,13 @@
             plain
             round
             size="default"
-            class="order-search-btn"
             :icon="Search"
             @click="handleOrderSearch"
             >搜索</ElButton
           >
-          <ElButton type="primary" plain round size="default" class="export-btn-sm"
+          <!-- <ElButton type="primary" plain round size="default" class="export-btn-sm"
             >↓ 导出数据</ElButton
-          >
+          > -->
         </div>
       </div>
 
@@ -190,7 +221,7 @@
             <div class="card">
               <div class="card-hd">
                 按日期订单汇总
-                <div class="card-action">国家下钻: 全部 ▾</div>
+                <!-- <div class="card-action">国家下钻: 全部 ▾</div> -->
               </div>
               <table class="dt sm-dt">
                 <thead>
@@ -514,8 +545,12 @@
 <script setup lang="ts">
   import 'flag-icons/css/flag-icons.min.css'
   import { Document, Search } from '@element-plus/icons-vue'
+  import { storeToRefs } from 'pinia'
   import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
+  import type { CockpitMetaOptionItem, CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
   import { echarts } from '@/plugins/echarts'
   import { cloneAppDate, formatYYYYMMDD, getAppTodayYYYYMMDD } from '@/utils/app-now'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
@@ -532,6 +567,43 @@
   } from '@/api/user-growth/paid-analysis'
 
   defineOptions({ name: 'IAPOrderTab' })
+
+  const metaStore = useCockpitMetaFilterStore()
+  const { data: cockpitMeta } = storeToRefs(metaStore)
+
+  function fallbackMetaOptions(label: string): CockpitMetaOptionItem[] {
+    return [{ label, value: '' }]
+  }
+
+  const appSelectOptions = computed(() => {
+    const list = cockpitMeta.value?.appOptions
+    return list?.length ? list : fallbackMetaOptions('全部')
+  })
+
+  const sourceSelectOptions = computed(() =>
+    (cockpitMeta.value?.sourceOptions ?? []).filter((o) => String(o.value ?? '').trim() !== '')
+  )
+
+  const countrySelectOptionsForOrder = computed(() =>
+    (cockpitMeta.value?.countryOptions ?? []).filter((o) => String(o.value ?? '').trim() !== '')
+  )
+
+  const settingAppsForSelect = computed<CockpitSettingAppItem[]>(() => {
+    const fromCockpit = cockpitMeta.value?.settingApps ?? []
+    if (fromCockpit.length) return fromCockpit
+
+    return appSelectOptions.value
+      .filter((opt) => opt.value !== '')
+      .map((opt, index) => ({
+        sAppId: String(opt.value ?? ''),
+        nPlatform: '',
+        platformName: '',
+        sAppName: String(opt.label ?? ''),
+        sAppShortName: String(opt.label ?? ''),
+        nCategory: `fallback-${index}`,
+        categoryName: '应用'
+      }))
+  })
 
   /** 与公用 meta 一致：不限为 ''；兼容历史 'all' */
   function isAllFilter(v: string) {
@@ -570,7 +642,7 @@
   interface AppliedOrderFilters {
     dateStart: string
     dateEnd: string
-    app: string
+    app: string[]
     channel: string
     country: string
     product: string
@@ -579,24 +651,43 @@
   }
 
   const orderDateRange = ref<[string, string] | null>(null)
-  const fApp = ref('all')
-  const fChannel = ref('all')
-  const fCountry = ref('all')
+  const fApp = ref<string[]>([])
+  const fChannel = ref('')
+  const fCountry = ref('')
   const fProduct = ref('all')
   const fStatus = ref('all')
   const searchKw = ref('')
 
-  function normalizeAppFilterValue(v: string | string[]): string {
-    if (Array.isArray(v)) return v[0] ?? 'all'
-    return v || 'all'
+  function normalizeAppFilterValue(v: string | string[]): string[] {
+    if (Array.isArray(v)) {
+      const out: string[] = []
+      const seen = new Set<string>()
+      for (const x of v) {
+        const id = String(x ?? '').trim()
+        if (!id || seen.has(id)) continue
+        seen.add(id)
+        out.push(id)
+      }
+      return out
+    }
+    const id = String(v ?? '').trim()
+    return id ? [id] : []
+  }
+
+  function isUnlimitedAppSelection(ids: string[]) {
+    return ids.length === 0
+  }
+
+  function onOrderCountrySelect(v: string | undefined | null) {
+    fCountry.value = v ?? ''
   }
 
   const applied = ref<AppliedOrderFilters>({
     dateStart: '',
     dateEnd: '',
-    app: 'all',
-    channel: 'all',
-    country: 'all',
+    app: [],
+    channel: '',
+    country: '',
     product: 'all',
     status: 'all',
     keyword: ''
@@ -614,21 +705,6 @@
   const hourRef = ref<HTMLElement | null>(null)
   const typeRef = ref<HTMLElement | null>(null)
   const chartInstances: Array<ReturnType<typeof echarts.init>> = []
-
-  const APP_KEY_MAP: Record<string, string> = {
-    weather5: 'Weather5',
-    phonetracker: 'PhoneTracker',
-    phonetracker2: 'PhoneTracker2',
-    yearcam: 'YearCam',
-    agecam: 'AgeCam'
-  }
-
-  const CHANNEL_KEY_MAP: Record<string, string> = {
-    google: 'Google',
-    facebook: 'Facebook',
-    tiktok: 'TikTok',
-    organic: 'Organic'
-  }
 
   const STATUS_KEY_MAP: Record<string, string> = {
     success: '成功',
@@ -665,9 +741,11 @@
     return {
       startDate,
       endDate,
-      appId: isAllFilter(fApp.value) ? props.filters.appId || '' : fApp.value,
+      appId: isUnlimitedAppSelection(fApp.value) ? props.filters.appId || '' : fApp.value,
       platform: props.filters.platform || '',
-      countryCode: isAllFilter(fCountry.value) ? props.filters.country || '' : fCountry.value,
+      countryCode: isAllFilter(fCountry.value)
+        ? props.filters.country || ''
+        : fCountry.value.trim().toLowerCase(),
       source: isAllFilter(fChannel.value) ? '' : fChannel.value,
       keyword: searchKw.value.trim(),
       productSku: isAllFilter(fProduct.value) ? '' : fProduct.value,
@@ -684,7 +762,7 @@
     applied.value = {
       dateStart,
       dateEnd,
-      app: fApp.value,
+      app: [...fApp.value],
       channel: fChannel.value,
       country: fCountry.value,
       product: fProduct.value,
@@ -746,12 +824,19 @@
   }
 
   const filteredAppPlatRows = computed(() => {
-    const f = applied.value.app
-    const details = appPlatRows.value.filter((r) => r.appName !== '汇总')
-    if (isAllFilter(f)) return appPlatRows.value
-    const want = APP_KEY_MAP[f]
-    if (!want) return details.filter(() => false)
-    return details.filter((r) => r.appName === want)
+    const ids = applied.value.app
+    const rows = appPlatRows.value
+    const details = rows.filter((r) => r.appName !== '汇总')
+    if (isUnlimitedAppSelection(ids)) return rows
+    const names = new Set(
+      ids
+        .map(
+          (id) => settingAppsForSelect.value.find((a) => String(a.sAppId) === String(id))?.sAppName
+        )
+        .filter((n): n is string => Boolean(n))
+    )
+    if (names.size === 0) return []
+    return details.filter((r) => names.has(r.appName))
   })
 
   const filteredDailyRows = computed(() => {
@@ -777,15 +862,25 @@
     const a = applied.value
     return orderRows.value.filter((r) => {
       if (r.sortDate < a.dateStart || r.sortDate > a.dateEnd) return false
-      if (!isAllFilter(a.app)) {
-        const want = APP_KEY_MAP[a.app]
-        if (!want || r.app !== want) return false
+      if (!isUnlimitedAppSelection(a.app)) {
+        const names = a.app
+          .map(
+            (id) =>
+              settingAppsForSelect.value.find((x) => String(x.sAppId) === String(id))?.sAppName
+          )
+          .filter((n): n is string => Boolean(n))
+        if (names.length > 0 && !names.includes(r.app)) return false
       }
       if (!isAllFilter(a.channel)) {
-        const want = CHANNEL_KEY_MAP[a.channel]
-        if (!want || r.channel !== want) return false
+        const lb = sourceSelectOptions.value.find(
+          (o) => String(o.value) === String(a.channel)
+        )?.label
+        if (lb && r.channel !== lb) return false
       }
-      if (!isAllFilter(a.country) && r.countryCode !== a.country) return false
+      if (!isAllFilter(a.country)) {
+        const cc = a.country.trim().toLowerCase()
+        if (r.countryCode?.toLowerCase() !== cc) return false
+      }
       if (!matchProductScope(r.product, a.product)) return false
       if (!isAllFilter(a.status)) {
         const want = STATUS_KEY_MAP[a.status]
@@ -821,9 +916,10 @@
 
   /* ── ECharts ──────────────────────────────────── */
   onMounted(() => {
+    void metaStore.ensureLoaded()
     syncDateRangeFromParentDate(props.filters.date || getAppTodayYYYYMMDD())
     fApp.value = normalizeAppFilterValue(props.filters.appId)
-    fCountry.value = props.filters.country
+    fCountry.value = (props.filters.country || '').trim().toLowerCase()
     pushAppliedFromForm()
     void loadAll()
     initHourChart()
@@ -845,7 +941,7 @@
     () => {
       syncDateRangeFromParentDate(props.filters.date || getAppTodayYYYYMMDD())
       fApp.value = normalizeAppFilterValue(props.filters.appId)
-      fCountry.value = props.filters.country
+      fCountry.value = (props.filters.country || '').trim().toLowerCase()
       pushAppliedFromForm()
       selectedOrder.value = null
       selectedOrderDetail.value = null
@@ -988,6 +1084,7 @@
 
 <style scoped lang="scss">
   @use '../ad-performance/styles/ap-card-fx.scss' as *;
+  @use '../styles/filter-bar-theme.scss' as filterTheme;
 
   .order-tab {
     display: flex;
@@ -1107,47 +1204,32 @@
       0 0 32px rgb(59 130 246 / 8%);
   }
 
-  .filter-item {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-    font-size: 12px;
-  }
-
-  .fl {
-    color: #6b7a99;
-  }
-
-  .fv {
-    font-weight: 500;
-    color: #e2e8f5;
-  }
-
   .fi-sel {
+    flex: 0 0 auto;
     width: 120px;
   }
 
+  .fi-app-select {
+    flex: 0 0 auto;
+    width: 220px;
+    min-width: 200px;
+    max-width: 240px;
+  }
+
+  @include filterTheme.app-platform-trigger('.fi-app-select');
+
   .fi-search {
-    width: 180px;
-  }
-
-  .filter-item--range {
-    flex: 1 1 260px;
-    align-items: center;
-    min-width: 0;
-  }
-
-  .filter-item--range .fl {
-    flex-shrink: 0;
-  }
-
-  :deep(.fi-range) {
-    flex: 1;
-    max-width: 320px;
+    flex: 0 0 auto;
+    width: 200px;
   }
 
   :deep(.fi-range.el-date-editor),
   :deep(.fi-range.el-date-editor--daterange) {
+    flex: 0 0 auto !important;
+    width: 272px !important;
+    min-width: 272px !important;
+    max-width: 272px !important;
+
     --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
     --el-input-border-color: var(--theme-color, var(--art-primary, #3b82f6));
 
@@ -1189,7 +1271,7 @@
   }
 
   :deep(.fi-range .el-range-input) {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--el-text-color-primary);
     background: transparent !important;
     border: none !important;
@@ -1247,6 +1329,20 @@
     color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
   }
 
+  :deep(.fi-sel .el-select__selected-item),
+  :deep(.fi-sel .el-select__placeholder) {
+    font-size: 13px;
+  }
+
+  :deep(.fi-search) {
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
+  }
+
   :deep(.fi-search .el-input__wrapper) {
     min-height: 36px;
     padding: 0 12px;
@@ -1258,6 +1354,11 @@
     border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
     border-radius: var(--el-border-radius-base, 4px) !important;
     box-shadow: none !important;
+  }
+
+  :deep(.fi-search .el-input__inner) {
+    font-size: 13px;
+    color: var(--el-text-color-primary);
   }
 
   :deep(.fi-search .el-input__wrapper:hover) {
@@ -1807,20 +1908,6 @@
     transform: translateX(20px);
   }
 
-  /* ── Element Plus overrides ───────────────────── */
-  :deep(.fi-sel .el-input__wrapper),
-  :deep(.fi-search .el-input__wrapper) {
-    background: #1a2240 !important;
-    border: 1px solid #2a3450 !important;
-    box-shadow: none !important;
-  }
-
-  :deep(.fi-sel .el-input__inner),
-  :deep(.fi-search .el-input__inner) {
-    font-size: 12px;
-    color: #e2e8f5 !important;
-  }
-
   /* Scrollbar */
   .detail-panel::-webkit-scrollbar {
     width: 4px;
@@ -1884,10 +1971,25 @@
       min-width: 0;
     }
 
+    .fi-app-select,
+    .fi-range,
     .fi-sel,
     .fi-search {
       flex: 1 1 calc(50% - 6px);
-      width: auto;
+      width: auto !important;
+      min-width: 0 !important;
+      max-width: 100% !important;
+    }
+
+    .fi-app-select {
+      max-width: 100% !important;
+    }
+
+    :deep(.fi-range.el-date-editor),
+    :deep(.fi-range.el-date-editor--daterange) {
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: 100% !important;
     }
 
     .filter-row-actions {
@@ -1899,4 +2001,7 @@
       flex: 1 1 auto;
     }
   }
+
+  @include filterTheme.select-popper('iap-order-filter-popper');
+  @include filterTheme.app-platform-popper('iap-order-filter-popper');
 </style>

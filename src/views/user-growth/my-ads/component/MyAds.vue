@@ -648,7 +648,10 @@
     @include filterTheme.filter-panel-children;
     @include filterTheme.filter-row;
 
+    flex-wrap: wrap;
+    align-items: center;
     width: 100%;
+    overflow: visible;
     font-size: 14px;
     color: var(--el-text-color-primary);
     cursor: pointer;
@@ -670,8 +673,8 @@
   }
 
   .date-pill--range {
-    flex-shrink: 0;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
+    min-width: 0;
     cursor: default;
   }
 
@@ -715,6 +718,15 @@
 
     --el-date-editor-width: 250px;
     --el-date-editor-daterange-width: 250px;
+  }
+
+  @media (width <= 768px) {
+    .date-pill--range :deep(.el-date-editor.el-date-editor--daterange) {
+      flex: 1 1 100% !important;
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: 100% !important;
+    }
   }
 
   .date-pill--range :deep(.el-date-editor),

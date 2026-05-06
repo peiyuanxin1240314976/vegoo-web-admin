@@ -1485,9 +1485,14 @@
   .ac-perf-filter-panel {
     @include filterTheme.filter-panel;
 
+    overflow: visible;
+
     .ap-filters {
       position: relative;
       z-index: 1;
+      flex-wrap: wrap;
+      align-items: center;
+      overflow: visible;
     }
   }
 

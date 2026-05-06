@@ -1665,7 +1665,10 @@
     @include filterTheme.filter-panel-children;
     @include filterTheme.filter-row;
 
+    flex-wrap: wrap;
+    align-items: center;
     min-width: 0;
+    overflow: visible;
   }
 
   .bi-filters.bi-filter-panel > .bi-filter-field {

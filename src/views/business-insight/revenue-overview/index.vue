@@ -2734,7 +2734,10 @@
   .rev-header__filters {
     @include filterTheme.filter-row;
 
+    flex-wrap: wrap;
     gap: 12px;
+    align-items: center;
+    overflow: visible;
   }
 
   .rev-filter-panel {
@@ -2742,6 +2745,7 @@
     @include filterTheme.filter-panel-children;
 
     min-width: 0;
+    overflow: visible;
   }
 
   :global(html.dark .rev-filter-panel .rev-pill) {

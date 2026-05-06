@@ -256,13 +256,17 @@
     @include filterTheme.filter-panel-children;
 
     min-width: 0;
+    overflow: visible;
   }
 
   .iap-filters-row {
     @include filterTheme.filter-row;
 
     flex: 1;
+    flex-wrap: wrap;
+    align-items: center;
     min-width: 0;
+    overflow: visible;
   }
 
   .iap-filter-chip {

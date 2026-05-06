@@ -273,7 +273,10 @@
     @include filterTheme.filter-panel-children;
     @include filterTheme.filter-row;
 
+    flex-wrap: wrap;
+    align-items: center;
     min-width: 0;
+    overflow: visible;
   }
 
   .iaa-header__filters.iaa-filter-panel > .iaa-filter-field {
