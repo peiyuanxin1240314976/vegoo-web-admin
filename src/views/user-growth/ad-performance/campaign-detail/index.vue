@@ -36,10 +36,16 @@
           </ElSkeleton>
         </div>
         <div class="cd-title-row__actions cd-sk-actions">
-          <ElSkeletonItem variant="button" style="width: 92px; height: 28px" />
-          <ElSkeletonItem variant="button" style="width: 72px; height: 28px" />
-          <ElSkeletonItem variant="button" style="width: 56px; height: 28px" />
-          <ElSkeletonItem variant="button" style="width: 56px; height: 28px" />
+          <ElSkeleton animated :throttle="0">
+            <template #template>
+              <div class="cd-sk-actions__inner">
+                <ElSkeletonItem variant="button" style="width: 92px; height: 28px" />
+                <ElSkeletonItem variant="button" style="width: 72px; height: 28px" />
+                <ElSkeletonItem variant="button" style="width: 56px; height: 28px" />
+                <ElSkeletonItem variant="button" style="width: 56px; height: 28px" />
+              </div>
+            </template>
+          </ElSkeleton>
         </div>
       </div>
       <div class="cd-body cd-body--skeleton">
@@ -156,7 +162,7 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, onMounted, reactive, ref, watch } from 'vue'
+  import { computed, nextTick, reactive, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { ElMessage } from 'element-plus'
   import {
@@ -242,6 +248,24 @@
     Object.assign(data, normalizeCampaignDetailFromApi(o, ads, cr, ai))
   }
 
+  /** 让浏览器至少有机会绘制一帧骨架，再开始极快的 Mock/缓存请求（否则 loading 在同一帧内结束，看起来像未生效） */
+  function deferUntilAfterPaint(): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, 0))
+  }
+
+  async function loadCampaignDetailWithSkeleton(errorMessage: string) {
+    loading.value = true
+    await nextTick()
+    await deferUntilAfterPaint()
+    try {
+      await loadCampaignDetail()
+    } catch {
+      ElMessage.error(errorMessage)
+    } finally {
+      loading.value = false
+    }
+  }
+
   async function reloadAdList() {
     const campaignId = String(route.query.id ?? '')
     if (!campaignId) return
@@ -267,12 +291,22 @@
   watch([filterStartDate, filterEndDate], async ([nextStart, nextEnd], [prevStart, prevEnd]) => {
     if (!nextStart || !nextEnd) return
     if (nextStart === prevStart && nextEnd === prevEnd) return
-    try {
-      await loadCampaignDetail()
-    } catch {
-      ElMessage.error('按日期刷新系列详情失败')
-    }
+    if (!String(route.query.id ?? '').trim()) return
+    await loadCampaignDetailWithSkeleton('按日期刷新系列详情失败')
   })
+
+  watch(
+    () => String(route.query.id ?? '').trim(),
+    async (campaignId) => {
+      if (!campaignId) {
+        ElMessage.error('缺少广告系列 ID')
+        loading.value = false
+        return
+      }
+      await loadCampaignDetailWithSkeleton('加载系列详情失败')
+    },
+    { immediate: true }
+  )
 
   // async function onCampaignAction(actionType: CampaignDetailCampaignActionType) {
   //   const campaignId = String(route.query.id ?? '')
@@ -302,25 +336,13 @@
     }
     return map[s] ?? s
   }
-
-  onMounted(async () => {
-    const campaignId = String(route.query.id ?? '')
-    if (!campaignId) {
-      ElMessage.error('缺少广告系列 ID')
-      loading.value = false
-      return
-    }
-    try {
-      await loadCampaignDetail()
-    } catch {
-      ElMessage.error('加载系列详情失败')
-    } finally {
-      loading.value = false
-    }
-  })
 </script>
 
 <style scoped lang="scss">
+  @use '../../styles/filter-bar-theme.scss' as filterTheme;
+
+  @include filterTheme.date-range-trigger('.ap-date-picker');
+
   .cd-page {
     position: relative;
     display: flex;
@@ -573,6 +595,13 @@
       gap: 8px;
       align-items: center;
     }
+
+    .cd-sk-actions__inner {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
   }
 
   .cd-body--skeleton {
@@ -644,34 +673,6 @@
 
     .cd-back-btn {
       transition: none;
-    }
-  }
-
-  .ap-date-picker {
-    flex: 0 0 250px;
-    width: 250px;
-    min-width: 250px;
-    max-width: 250px;
-
-    @media (width <=768px) {
-      flex: 1 1 100%;
-      width: 100%;
-      min-width: 0;
-      max-width: 100%;
-    }
-  }
-
-  .campaign-detail-filters :deep(.ap-date-picker.el-date-editor.el-date-editor--daterange) {
-    flex: 0 0 250px !important;
-    width: 250px !important;
-    min-width: 250px !important;
-    max-width: 250px !important;
-
-    @media (width <=768px) {
-      flex: 1 1 100% !important;
-      width: 100% !important;
-      min-width: 0 !important;
-      max-width: 100% !important;
     }
   }
 </style>

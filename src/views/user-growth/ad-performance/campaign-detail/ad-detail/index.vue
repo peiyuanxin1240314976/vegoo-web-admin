@@ -43,8 +43,14 @@
           </ElSkeleton>
         </div>
         <div class="add-title-row__actions add-sk-actions">
-          <ElSkeletonItem variant="button" style="width: 120px; height: 36px" />
-          <ElSkeletonItem variant="button" style="width: 88px; height: 36px" />
+          <ElSkeleton animated :throttle="0">
+            <template #template>
+              <div class="add-sk-actions__inner">
+                <ElSkeletonItem variant="button" style="width: 120px; height: 36px" />
+                <ElSkeletonItem variant="button" style="width: 88px; height: 36px" />
+              </div>
+            </template>
+          </ElSkeleton>
         </div>
       </div>
       <div class="add-body add-body--skeleton">
@@ -140,7 +146,7 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, onMounted, reactive, ref, watch } from 'vue'
+  import { computed, nextTick, reactive, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { ElMessage } from 'element-plus'
   import {
@@ -183,15 +189,20 @@
     set(v) {
       const nextStart = String(v?.[0] ?? '').trim()
       const nextEnd = String(v?.[1] ?? '').trim()
-      if (!nextStart || !nextEnd) return
+      if (!nextStart || !nextEnd) {
+        const today = getAppTodayYYYYMMDD()
+        filterStartDate.value = today
+        filterEndDate.value = today
+        return
+      }
       filterStartDate.value = nextStart
       filterEndDate.value = nextEnd
     }
   })
 
   async function loadAdDetail() {
-    const adId = String(route.query.id ?? '')
-    const cid = campaignId.value
+    const adId = String(route.query.id ?? '').trim()
+    const cid = campaignId.value.trim()
     if (!adId || !cid) return
     const res = await fetchAdDetailOverview({
       adId,
@@ -200,6 +211,23 @@
       endDate: filterEndDate.value
     })
     Object.assign(data, normalizeAdDetailFromApi(res))
+  }
+
+  function deferUntilAfterPaint(): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, 0))
+  }
+
+  async function loadAdDetailWithSkeleton(errorMessage: string) {
+    loading.value = true
+    await nextTick()
+    await deferUntilAfterPaint()
+    try {
+      await loadAdDetail()
+    } catch {
+      ElMessage.error(errorMessage)
+    } finally {
+      loading.value = false
+    }
   }
 
   // function goToEdit() {
@@ -249,34 +277,31 @@
   watch([filterStartDate, filterEndDate], async ([nextStart, nextEnd], [prevStart, prevEnd]) => {
     if (!nextStart || !nextEnd) return
     if (nextStart === prevStart && nextEnd === prevEnd) return
-    try {
-      await loadAdDetail()
-    } catch {
-      ElMessage.error('按日期刷新广告详情失败')
-    }
+    const adId = String(route.query.id ?? '').trim()
+    if (!adId || !campaignId.value.trim()) return
+    await loadAdDetailWithSkeleton('按日期刷新广告详情失败')
   })
 
-  onMounted(async () => {
-    const adId = String(route.query.id ?? '')
-    campaignId.value = String(route.query.campaignId ?? '')
-
-    if (!adId || !campaignId.value) {
-      ElMessage.error('缺少广告 ID 或系列 ID')
-      loading.value = false
-      return
-    }
-
-    try {
-      await loadAdDetail()
-    } catch {
-      ElMessage.error('加载广告详情失败')
-    } finally {
-      loading.value = false
-    }
-  })
+  watch(
+    [() => String(route.query.id ?? '').trim(), () => String(route.query.campaignId ?? '').trim()],
+    async ([adId, cid]) => {
+      campaignId.value = cid
+      if (!adId || !cid) {
+        ElMessage.error('缺少广告 ID 或系列 ID')
+        loading.value = false
+        return
+      }
+      await loadAdDetailWithSkeleton('加载广告详情失败')
+    },
+    { immediate: true }
+  )
 </script>
 
 <style scoped lang="scss">
+  @use '../../../styles/filter-bar-theme.scss' as filterTheme;
+
+  @include filterTheme.date-range-trigger('.ap-date-picker');
+
   .add-page {
     position: relative;
     display: flex;
@@ -519,6 +544,13 @@
       gap: 8px;
       align-items: center;
     }
+
+    .add-sk-actions__inner {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
   }
 
   .add-body--skeleton {
@@ -583,34 +615,6 @@
 
     .add-back-btn {
       transition: none;
-    }
-  }
-
-  .ap-date-picker {
-    flex: 0 0 250px;
-    width: 250px;
-    min-width: 250px;
-    max-width: 250px;
-
-    @media (width <=768px) {
-      flex: 1 1 100%;
-      width: 100%;
-      min-width: 0;
-      max-width: 100%;
-    }
-  }
-
-  .add-title-row__actions :deep(.ap-date-picker.el-date-editor.el-date-editor--daterange) {
-    flex: 0 0 250px !important;
-    width: 250px !important;
-    min-width: 250px !important;
-    max-width: 250px !important;
-
-    @media (width <=768px) {
-      flex: 1 1 100% !important;
-      width: 100% !important;
-      min-width: 0 !important;
-      max-width: 100% !important;
     }
   }
 </style>

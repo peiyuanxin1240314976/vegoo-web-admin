@@ -70,7 +70,8 @@ export function useAdPlatformInfo() {
       }
     }
 
-    const preset: AdPlatformInfoDateRangePreset = filters.dateRange
+    const preset: AdPlatformInfoDateRangePreset =
+      filters.dateRange === null ? '30d' : filters.dateRange
     const end = getAppNow()
     const start = cloneAppDate(end)
     const days = preset === '7d' ? 7 : preset === '90d' ? 90 : 30

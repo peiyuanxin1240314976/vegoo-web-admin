@@ -19,9 +19,10 @@
         <div class="api-actions">
           <div class="api-pill">
             <AppDatePicker
-              size="small"
               v-model="datePickerValue"
+              class="ap-date-picker"
               type="daterange"
+              clearable
               :shortcuts="dateRangeShortcuts"
               unlink-panels
               range-separator="～"
@@ -29,6 +30,7 @@
               end-placeholder="结束日期"
               format="YYYY-MM-DD"
               value-format="YYYY-MM-DD"
+              size="default"
               popper-class="api-info-filter-popper"
             />
           </div>
@@ -70,8 +72,9 @@
     (e: 'export'): void
   }>()
 
-  const datePickerValue = computed<[string, string]>({
+  const datePickerValue = computed<[string, string] | null>({
     get: () => {
+      if (props.dateRange === null) return null
       if (Array.isArray(props.dateRange)) return props.dateRange as [string, string]
 
       const preset: AdPlatformInfoDateRangePreset = props.dateRange
@@ -81,10 +84,20 @@
       start.setDate(end.getDate() - (days - 1))
       return [formatYYYYMMDD(start), formatYYYYMMDD(end)] as [string, string]
     },
-    set: (v: [string, string]) => {
-      if (!v?.length) return
-      const [start, end] = v
-      if (!start || !end) return
+    set: (v: unknown) => {
+      if (v == null) {
+        emit('update:dateRange', null)
+        return
+      }
+      if (!Array.isArray(v) || v.length < 2) {
+        emit('update:dateRange', null)
+        return
+      }
+      const [start, end] = v as [string, string]
+      if (!start || !end) {
+        emit('update:dateRange', null)
+        return
+      }
       emit('update:dateRange', [start, end])
       emit('query')
     }
@@ -92,6 +105,10 @@
 </script>
 
 <style scoped lang="scss">
+  @use '../../../styles/filter-bar-theme.scss' as filterTheme;
+
+  @include filterTheme.date-range-trigger('.ap-date-picker');
+
   .api-header {
     padding: 16px 18px;
     border-radius: 16px;
@@ -183,47 +200,24 @@
     }
   }
 
+  /* 定宽容器；具体描边/底色由 filterTheme.date-range-trigger('.ap-date-picker') 统一处理 */
   .api-pill {
     display: inline-flex;
+    flex: 0 0 auto;
     align-items: center;
-    min-width: 280px;
-    padding: 4px 6px;
-    background: color-mix(in srgb, var(--el-color-primary) 8%, transparent);
-    border: 1px solid color-mix(in srgb, var(--el-color-primary) 30%, transparent);
-    border-radius: 5px;
-    box-shadow: 0 0 16px color-mix(in srgb, var(--el-color-primary) 16%, transparent);
+    width: 250px;
+    max-width: min(250px, 100%);
 
-    :deep(.el-range-editor.el-input__wrapper) {
+    @media (width <= 768px) {
       width: 100%;
-      min-height: 30px;
-      padding: 0 12px;
-      background: transparent;
-      border: none;
-      border-radius: 5px;
-      box-shadow: none;
-      transition:
-        box-shadow 0.22s ease,
-        background 0.22s ease;
+      max-width: 100%;
     }
+  }
 
-    :deep(.el-range-editor.el-input__wrapper:hover) {
-      background: color-mix(in srgb, var(--el-color-primary) 8%, transparent);
-      box-shadow: 0 0 12px color-mix(in srgb, var(--el-color-primary) 22%, transparent);
-    }
-
-    :deep(.el-range-editor.el-input__wrapper.is-focus) {
-      background: color-mix(in srgb, var(--el-color-primary) 12%, transparent);
-      box-shadow: 0 0 0 2px color-mix(in srgb, var(--el-color-primary) 28%, transparent);
-    }
-
-    :deep(.el-range-input) {
-      font-size: 13px;
-      color: var(--art-gray-900);
-    }
-
-    :deep(.el-range-separator) {
-      color: var(--art-gray-600);
-    }
+  .api-actions .ap-date-picker :deep(.el-input__wrapper) {
+    box-sizing: border-box;
+    height: 36px;
+    min-height: 36px !important;
   }
 
   .api-export {
