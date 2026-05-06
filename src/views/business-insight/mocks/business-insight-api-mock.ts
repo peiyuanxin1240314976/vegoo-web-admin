@@ -14,7 +14,6 @@ import type {
   IaaVersionTabData
 } from '@/views/business-insight/iaa-analysis/types'
 import type {
-  IapFilterOptions,
   IapKpiCard,
   IapOverviewTrend,
   IapAppCard,
@@ -1186,37 +1185,6 @@ function iapDashMockNumericScale(p: IapOverviewDashParams): number {
 
 function iapDashMockScaleNums(arr: number[], scale: number): number[] {
   return arr.map((n) => Math.round(n * scale * 100) / 100)
-}
-
-/** IAP 筛选下拉选项（Mock：后端就绪后改为 request.get） */
-export function mockFetchIapMetaFilterOptions() {
-  return Promise.resolve<IapFilterOptions>({
-    appOptions: [
-      { label: '全部应用', value: 'all' },
-      { label: 'PhoneTracker', value: 'phonetracker' },
-      { label: 'YearCam', value: 'yearcam' }
-    ],
-    platformOptions: [
-      { label: '全部', value: 'all' },
-      { label: 'Android', value: 'android' },
-      { label: 'iOS', value: 'ios' }
-    ],
-    countryOptions: [
-      { label: '全部', value: 'all' },
-      { label: '美国', value: 'US' },
-      { label: '韩国', value: 'KR' }
-    ],
-    productTypeOptions: [
-      { label: '全部', value: 'all' },
-      { label: '内购', value: 'iap' },
-      { label: '订阅', value: 'sub' }
-    ],
-    timeRangeOptions: [
-      { label: '最近7天', value: '7' },
-      { label: '最近30天', value: '30' },
-      { label: '最近90天', value: '90' }
-    ]
-  })
 }
 
 /** IAP Dashboard - 顶部 KPI（Mock：后端就绪后改为 request.post） */

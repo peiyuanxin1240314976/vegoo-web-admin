@@ -11,7 +11,6 @@ import {
 } from '@/views/business-insight/iap-analysis/config/data-source'
 import * as insightMock from '@/views/business-insight/mocks/business-insight-api-mock'
 import type {
-  IapFilterOptions,
   IapKpiCard,
   IapOverviewTrend,
   IapAppCard,
@@ -74,14 +73,6 @@ export type IapOverviewTableQuery = {
 function toMockSingleAppId(v: string | string[] | undefined): string | undefined {
   if (Array.isArray(v)) return v[0]
   return v
-}
-
-/** 契约 01-meta-filter-options.json — GET meta-filter-options */
-export function fetchIapMetaFilterOptions() {
-  if (isIapAnalysisEndpointMock(IapAnalysisEndpoint.MetaFilterOptions)) {
-    return insightMock.mockFetchIapMetaFilterOptions()
-  }
-  return request.get<IapFilterOptions>({ url: `${IAP_BASE}/meta-filter-options` })
 }
 
 /** 契约 02-overview-kpi.json — POST overview/kpi */

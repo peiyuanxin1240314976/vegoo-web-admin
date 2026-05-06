@@ -68,7 +68,6 @@ import type {
 } from '@/views/business-insight/ecpm-analysis/types'
 
 export {
-  fetchIapMetaFilterOptions,
   fetchIapOverviewKpi,
   fetchIapOverviewTrend,
   fetchIapOverviewAppCards,

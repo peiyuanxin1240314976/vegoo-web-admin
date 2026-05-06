@@ -34,21 +34,24 @@
         </div>
         <div class="iap-dashboard-filter__item">
           <ElSelect
-            v-model="filters.s_country_code"
+            :model-value="filters.s_country_code"
             class="iap-filter-select"
             popper-class="iap-filter__popper"
             placeholder="国家"
             filterable
+            clearable
+            @update:model-value="onCountryFilterUpdate"
           >
+            <ElOption :label="tr('adPerformance.filterAll', '全部')" value="" />
             <ElOption
-              v-for="opt in filterOptions?.countryOptions"
+              v-for="opt in countryOptionsForSelect"
               :key="opt.value"
               :label="opt.label"
               :value="opt.value"
             />
           </ElSelect>
         </div>
-        <div class="iap-dashboard-filter__item">
+        <!-- <div class="iap-dashboard-filter__item">
           <ElSelect
             v-model="filters.platform"
             class="iap-filter-select iap-filter-select--platform"
@@ -62,7 +65,7 @@
               :value="opt.value"
             />
           </ElSelect>
-        </div>
+        </div> -->
 
         <ElButton
           type="primary"
@@ -338,6 +341,7 @@
 
 <script setup lang="ts">
   import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+  import { useI18n } from 'vue-i18n'
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { useRouter } from 'vue-router'
   import { storeToRefs } from 'pinia'
@@ -362,7 +366,6 @@
   import { loadIapDashboardOverviewModules } from './composables/useIapDashboardModules'
   import type {
     IapFilterState,
-    IapFilterOptions,
     IapKpiCard,
     IapAppCard,
     IapCountryRow,
@@ -370,9 +373,12 @@
     IapOverviewTrend,
     IapPlatformCompare
   } from '@/views/business-insight/iap-analysis/types'
-  import type { CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
+  import type { CockpitMetaOptionItem, CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
 
   defineOptions({ name: 'IapDashboard' })
+
+  const { t, te } = useI18n()
+  const tr = (key: string, fallback: string) => (te(key) ? t(key) : fallback)
 
   const router = useRouter()
   const metaStore = useCockpitMetaFilterStore()
@@ -397,10 +403,23 @@
     startDate: defaultRangeStart,
     endDate: getAppTodayYYYYMMDD(),
     s_app_id: [],
-    s_country_code: 'all',
+    s_country_code: '',
     platform: 'all'
   }
   const filters = ref<IapFilterState>({ ...defaultFilters })
+
+  function onCountryFilterUpdate(v: string | undefined | null) {
+    filters.value.s_country_code = v ?? ''
+  }
+
+  const countryOptionsForSelect = computed(() =>
+    (cockpitMeta.value?.countryOptions ?? []).filter((o) => {
+      const v = String(o.value ?? '')
+        .trim()
+        .toLowerCase()
+      return v !== '' && v !== 'all'
+    })
+  )
 
   const dateRange = computed({
     get: (): [string, string] | null =>
@@ -413,7 +432,6 @@
     }
   })
 
-  const filterOptions = ref<IapFilterOptions | null>(null)
   /** 概览 KPI / 图表 / 应用卡 / 底栏统一骨架（查询、刷新、首屏） */
   const overviewLoading = ref(true)
   const kpiList = ref<IapKpiCard[]>([])
@@ -426,9 +444,9 @@
     const fromCockpit = cockpitMeta.value?.settingApps ?? []
     if (fromCockpit.length) return fromCockpit
 
-    return (filterOptions.value?.appOptions ?? [])
-      .filter((opt) => opt.value && opt.value !== 'all')
-      .map((opt, index) => ({
+    return (cockpitMeta.value?.appOptions ?? [])
+      .filter((opt: CockpitMetaOptionItem) => opt.value && opt.value !== 'all')
+      .map((opt: CockpitMetaOptionItem, index: number) => ({
         sAppId: String(opt.value ?? ''),
         nPlatform: '',
         platformName: '',
@@ -838,9 +856,8 @@
     overviewLoading.value = true
     try {
       const p = params()
-      const { meta, kpi, trend, appCards, country, donut, platform } =
+      const { kpi, trend, appCards, country, donut, platform } =
         await loadIapDashboardOverviewModules(p)
-      filterOptions.value = meta
       kpiList.value = kpi.kpis
       trendData.value = trend
       appList.value = appCards.list

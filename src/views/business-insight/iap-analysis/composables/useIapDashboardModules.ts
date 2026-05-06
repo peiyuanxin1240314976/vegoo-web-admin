@@ -3,7 +3,6 @@
  */
 import type { IapOverviewTableQuery } from '@/api/iap-analysis'
 import {
-  fetchIapMetaFilterOptions,
   fetchIapOverviewKpi,
   fetchIapOverviewTrend,
   fetchIapOverviewAppCards,
@@ -12,9 +11,9 @@ import {
   fetchIapOverviewPlatformCompare
 } from '@/api/iap-analysis'
 
+/** 筛选项（国家 / 应用等）由公用 `useCockpitMetaFilterStore` 提供，本函数不再请求 IAP meta-filter-options */
 export async function loadIapDashboardOverviewModules(p: IapOverviewTableQuery) {
-  const [meta, kpi, trend, appCards, country, donut, platform] = await Promise.all([
-    fetchIapMetaFilterOptions(),
+  const [kpi, trend, appCards, country, donut, platform] = await Promise.all([
     fetchIapOverviewKpi(p),
     fetchIapOverviewTrend(p),
     fetchIapOverviewAppCards(p),
@@ -23,5 +22,5 @@ export async function loadIapDashboardOverviewModules(p: IapOverviewTableQuery) 
     fetchIapOverviewPlatformCompare(p)
   ])
 
-  return { meta, kpi, trend, appCards, country, donut, platform }
+  return { kpi, trend, appCards, country, donut, platform }
 }
