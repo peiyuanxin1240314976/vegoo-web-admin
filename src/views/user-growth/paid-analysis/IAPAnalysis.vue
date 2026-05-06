@@ -32,14 +32,17 @@
             :max-width="240"
           />
           <ElSelect
-            v-model="filters.country"
+            :model-value="filters.country"
             placeholder="国家"
             class="iap-filter-select"
             popper-class="iap-filter-popper"
+            clearable
+            @update:model-value="onCountryFilterUpdate"
           >
+            <ElOption :label="tr('adPerformance.filterAll', '全部')" value="" />
             <ElOption
-              v-for="opt in countrySelectOptions"
-              :key="opt.value === '' ? '__all_country__' : opt.value"
+              v-for="opt in countrySelectOptionsForSelect"
+              :key="opt.value"
               :label="opt.label"
               :value="opt.value"
             />
@@ -122,6 +125,7 @@
 
 <script setup lang="ts">
   import { Search } from '@element-plus/icons-vue'
+  import { useI18n } from 'vue-i18n'
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { storeToRefs } from 'pinia'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
@@ -134,6 +138,9 @@
   import IAPOrderTab from './IAPOrderTab.vue'
 
   defineOptions({ name: 'IAPAnalysis' })
+
+  const { t, te } = useI18n()
+  const tr = (key: string, fallback: string) => (te(key) ? t(key) : fallback)
 
   const metaStore = useCockpitMetaFilterStore()
   const { data: cockpitMeta } = storeToRefs(metaStore)
@@ -150,6 +157,10 @@
     const list = cockpitMeta.value?.countryOptions
     return list?.length ? list : fallbackOptions('全部')
   })
+  const countrySelectOptionsForSelect = computed(() =>
+    countrySelectOptions.value.filter((o) => String(o.value ?? '').trim() !== '')
+  )
+
   const settingAppsForSelect = computed<CockpitSettingAppItem[]>(() => {
     const fromCockpit = cockpitMeta.value?.settingApps ?? []
     if (fromCockpit.length) return fromCockpit
@@ -181,6 +192,10 @@
     country: '',
     date: getAppTodayYYYYMMDD()
   })
+
+  function onCountryFilterUpdate(v: string | undefined | null) {
+    filters.country = v ?? ''
+  }
 
   const appliedFilters = ref<{ appId: string[]; platform: string; country: string; date: string }>({
     ...filters
