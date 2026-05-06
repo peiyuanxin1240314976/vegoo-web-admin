@@ -670,8 +670,8 @@
       "filterLoadFailed": "筛选项加载失败",
       "dashboardLoadFailed": "实时数据加载失败",
       "appDetailLoadFailed": "应用详情加载失败",
-      "allApps": "全部应用",
-      "allAdPlatforms": "全部广告平台"
+      "allApps": "全部",
+      "allAdPlatforms": "全部"
     }
   },
   "table": {
