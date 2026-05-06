@@ -151,7 +151,8 @@
     if (!reportRoot) throw new Error('截图内容还未准备完成')
     return elementToPngBlob(reportRoot, {
       pixelRatio: outputFormat.value === 'long' ? 2.4 : 2,
-      backgroundColor: '#ffffff'
+      backgroundColor: '#ffffff',
+      resetRootTransform: true
     })
   }
 

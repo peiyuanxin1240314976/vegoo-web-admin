@@ -96,6 +96,7 @@ export async function elementToPngBlob(
   options?: {
     pixelRatio?: number
     backgroundColor?: string
+    resetRootTransform?: boolean
   }
 ) {
   const rect = element.getBoundingClientRect()
@@ -111,7 +112,12 @@ export async function elementToPngBlob(
   wrapper.style.background = options?.backgroundColor ?? '#ffffff'
   wrapper.style.padding = '0'
   wrapper.style.margin = '0'
-  wrapper.appendChild(cloneNodeWithInlineStyles(element))
+  const clonedElement = cloneNodeWithInlineStyles(element)
+  if (options?.resetRootTransform) {
+    clonedElement.style.transform = 'none'
+    clonedElement.style.transformOrigin = 'top left'
+  }
+  wrapper.appendChild(clonedElement)
 
   const markup = new XMLSerializer().serializeToString(wrapper)
   const image = await loadImage(createSvgDataUrl(markup, width, height))
