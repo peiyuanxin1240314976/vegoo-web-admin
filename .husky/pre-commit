@@ -1,1 +1,18 @@
-pnpm run lint:lint-staged
+#!/usr/bin/env sh
+
+# Windows + Git Bash 兼容：
+# 部分环境 pnpm 只有 pnpm.ps1（PowerShell 可用），但 Git hooks 用 sh 执行会找不到 pnpm。
+# 这里优先用 pnpm（若可用），否则回退到用 node 直接执行 nvm4w 安装里的 pnpm.cjs。
+
+if command -v pnpm >/dev/null 2>&1; then
+  pnpm run lint:lint-staged
+  exit $?
+fi
+
+if command -v node >/dev/null 2>&1 && [ -f "/c/nvm4w/nodejs/node_modules/pnpm/bin/pnpm.cjs" ]; then
+  node "/c/nvm4w/nodejs/node_modules/pnpm/bin/pnpm.cjs" run lint:lint-staged
+  exit $?
+fi
+
+echo "pre-commit: pnpm not found. Please install pnpm (cmd) or ensure corepack/pnpm is on PATH." >&2
+exit 127

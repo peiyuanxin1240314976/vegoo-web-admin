@@ -1,6 +1,7 @@
 <script setup lang="ts">
   import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
-  import * as echarts from 'echarts'
+  import { echarts } from '@/plugins/echarts'
+  import { formatNumberWithWan } from '@/utils'
 
   defineOptions({ name: 'SummaryTab' })
 
@@ -45,23 +46,72 @@
   const estProfitCard = computed(() => statCards.value.estProfit)
 
   function progressDisplayRoi(row: Api.UserGrowth.MyAdsSummaryProgressItemDto): string {
-    return row.roi ?? '--'
+    const pre = row.roi
+    if (pre != null && String(pre).trim() !== '') return String(pre)
+    const r1 = row.roi1
+    if (r1 != null && Number.isFinite(r1)) {
+      return `${r1.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      })}%`
+    }
+    return '--'
   }
 
-  function progressDisplayStatus(row: Api.UserGrowth.MyAdsSummaryProgressItemDto): string {
-    if (row.status) return row.status
-    const map: Record<string, string> = {
-      ok: '正常',
-      warn: '超预算',
-      inactive: '未启动'
-    }
-    return map[row.statusType] ?? row.statusType
-  }
+  // function progressDisplayStatus(row: Api.UserGrowth.MyAdsSummaryProgressItemDto): string {
+  //   if (row.status) return row.status
+  //   const map: Record<string, string> = {
+  //     ok: '正常',
+  //     warn: '超预算',
+  //     inactive: '未启动'
+  //   }
+  //   return map[row.statusType] ?? row.statusType
+  // }
 
   const lineChartEl = ref<HTMLElement | null>(null)
   const pieChartEl = ref<HTMLElement | null>(null)
-  let lineChart: echarts.ECharts | null = null
-  let pieChart: echarts.ECharts | null = null
+  let lineChart: ReturnType<typeof echarts.init> | null = null
+  let pieChart: ReturnType<typeof echarts.init> | null = null
+  let chartResizeObserver: ResizeObserver | null = null
+
+  function observeChartContainers() {
+    chartResizeObserver?.disconnect()
+    chartResizeObserver = null
+
+    if (typeof ResizeObserver === 'undefined') return
+
+    chartResizeObserver = new ResizeObserver(() => {
+      if (showSkeleton.value) return
+      if (!trendIsEmpty.value) {
+        updateLineChart()
+        lineChart?.resize()
+      }
+      if (!sourcePieIsEmpty.value) {
+        updatePieChart()
+        pieChart?.resize()
+      }
+    })
+
+    if (lineChartEl.value) chartResizeObserver.observe(lineChartEl.value)
+    if (pieChartEl.value) chartResizeObserver.observe(pieChartEl.value)
+  }
+
+  async function renderCharts() {
+    await nextTick()
+    await nextTick()
+
+    if (!trendIsEmpty.value) {
+      updateLineChart()
+      lineChart?.resize()
+    }
+
+    if (!sourcePieIsEmpty.value) {
+      updatePieChart()
+      pieChart?.resize()
+    }
+
+    observeChartContainers()
+  }
 
   function updateLineChart() {
     if (!lineChartEl.value || !props.data?.trend) return
@@ -76,6 +126,7 @@
     if (!lineChart) {
       lineChart = echarts.init(dom, 'dark')
     }
+    if (!lineChart) return
     const t = props.data.trend
     lineChart.setOption({
       backgroundColor: 'transparent',
@@ -104,11 +155,16 @@
       yAxis: [
         {
           type: 'value',
-          min: 0,
+          min: (v: { min: number }) => Math.min(0, v.min),
           axisLabel: {
             color: '#64748b',
             fontSize: 11,
-            formatter: (v: number) => (v === 0 ? '$0' : `$${v / 1000}k`)
+            formatter: (v: number) => {
+              if (v === 0) return '$0'
+              const sign = v < 0 ? '-' : ''
+              const abs = Math.abs(v)
+              return abs >= 1000 ? `${sign}$${abs / 1000}k` : `${sign}$${abs}`
+            }
           },
           splitLine: { lineStyle: { color: '#1a2a3a', type: 'dashed' } },
           axisLine: { show: false },
@@ -116,7 +172,7 @@
         },
         {
           type: 'value',
-          min: 0,
+          min: (v: { min: number }) => Math.min(0, v.min),
           axisLabel: { color: '#64748b', fontSize: 11, formatter: '{value}%' },
           splitLine: { show: false },
           axisLine: { show: false },
@@ -133,7 +189,7 @@
           symbolSize: 6,
           lineStyle: { color: '#00d4aa', width: 2 },
           itemStyle: { color: '#00d4aa' },
-          label: { show: true, color: '#cbd5e1', fontSize: 11, position: 'top' }
+          label: { show: false }
         },
         {
           name: '预估利润',
@@ -144,7 +200,7 @@
           symbolSize: 6,
           lineStyle: { color: '#10b981', width: 2 },
           itemStyle: { color: '#10b981' },
-          label: { show: true, color: '#cbd5e1', fontSize: 11, position: 'bottom' }
+          label: { show: false }
         },
         {
           name: '首日ROI',
@@ -155,13 +211,7 @@
           symbolSize: 7,
           lineStyle: { color: '#f59e0b', width: 2, type: 'dashed' },
           itemStyle: { color: '#f59e0b' },
-          label: {
-            show: true,
-            color: '#f59e0b',
-            fontSize: 11,
-            position: 'top',
-            formatter: '{c}%'
-          }
+          label: { show: false }
         }
       ]
     })
@@ -193,6 +243,7 @@
     if (!pieChart) {
       pieChart = echarts.init(dom, 'dark')
     }
+    if (!pieChart) return
     const cd = channelData.value
     const centerAmount = pieCenterValue.value.replace(/[{}]/g, '')
     const el = pieChartEl.value
@@ -308,9 +359,11 @@
         pieChart.dispose()
         pieChart = null
       } else if (props.data && !sourcePieIsEmpty.value) {
-        await nextTick()
-        updatePieChart()
+        await renderCharts()
+        return
       }
+
+      observeChartContainers()
     },
     { immediate: true }
   )
@@ -326,13 +379,15 @@
 
   onUnmounted(() => {
     window.removeEventListener('resize', handleResize)
+    chartResizeObserver?.disconnect()
+    chartResizeObserver = null
     lineChart?.dispose()
     pieChart?.dispose()
     lineChart = null
     pieChart = null
   })
 
-  function progressColor(p: number, type: string) {
+  function progressColor(p: number, type: string | null | undefined) {
     if (type === 'warn') return '#f59e0b'
     if (type === 'inactive') return '#374151'
     if (p >= 90) return '#f59e0b'
@@ -374,11 +429,11 @@
           <div class="stat-title">本期广告支出</div>
           <template v-if="spendCard">
             <div class="stat-main" :style="{ color: spendCard.mainColor }">
-              {{ spendCard.main }}
+              {{ formatNumberWithWan(spendCard.main) }}
             </div>
             <div class="stat-row">
               <span class="label-dim">预算</span>
-              <span style="color: #f1f5f9">{{ spendCard.budget }}</span>
+              <span style="color: #f1f5f9">{{ formatNumberWithWan(spendCard.budget) }}</span>
               <span class="sep">|</span>
               <span class="label-dim">差异</span>
               <span :style="{ color: spendCard.diffColor }">{{ spendCard.diff }}</span>
@@ -405,7 +460,7 @@
               <span style="color: #f1f5f9">{{ agencyRatioCard.agency }}</span>
               <span class="sep">/</span>
               <span class="label-dim">直投</span>
-              <span style="color: #f1f5f9">{{ agencyRatioCard.direct }}</span>
+              <span style="color: #f1f5f9">{{ formatNumberWithWan(agencyRatioCard.direct) }}</span>
             </div>
             <div class="stat-row mt4">
               <span class="label-dim">{{ agencyRatioCard.prevLine }}</span>
@@ -445,11 +500,11 @@
           <div class="stat-title">预估利润</div>
           <template v-if="estProfitCard">
             <div class="stat-main" :style="{ color: estProfitCard.mainColor }">
-              {{ estProfitCard.main }}
+              {{ formatNumberWithWan(estProfitCard.main) }}
             </div>
             <div class="stat-row">
               <span class="label-dim">最低利润</span>
-              <span style="color: #f1f5f9">{{ estProfitCard.minProfit }}</span>
+              <span style="color: #f1f5f9">{{ formatNumberWithWan(estProfitCard.minProfit) }}</span>
               <span class="sep">|</span>
               <span class="label-dim">利润率</span>
               <span style="color: #f1f5f9">{{ estProfitCard.margin }}</span>
@@ -498,7 +553,7 @@
                 <th>广告支出/预算</th>
                 <th>进度</th>
                 <th>首日ROI</th>
-                <th>状态</th>
+                <!-- <th>状态</th> -->
               </tr>
             </thead>
             <tbody>
@@ -535,11 +590,11 @@
                 >
                   {{ progressDisplayRoi(row) }}
                 </td>
-                <td>
+                <!-- <td>
                   <span :class="['status-dot', row.statusType]">
                     <i class="dot"></i>{{ progressDisplayStatus(row) }}
                   </span>
-                </td>
+                </td> -->
               </tr>
             </tbody>
           </table>
@@ -690,14 +745,14 @@
       color 0.2s ease,
       border-color 0.2s ease,
       background 0.2s ease,
-      transform 0.2s ease;
+      box-shadow 0.2s ease;
   }
 
   .btn-sm:hover {
     color: var(--text-primary);
     background: rgb(0 212 170 / 10%);
     border-color: rgb(0 212 170 / 35%);
-    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgb(0 0 0 / 20%);
   }
 
   .chart-body {

@@ -198,12 +198,14 @@
     border: 1px solid var(--default-border);
     border-radius: 12px;
     transition:
-      transform 160ms ease,
+      box-shadow 160ms ease,
       border-color 160ms ease;
 
     &:hover {
       border-color: rgb(59 130 246 / 45%);
-      transform: translateY(-2px);
+      box-shadow:
+        0 14px 36px rgb(0 0 0 / 16%),
+        0 0 22px rgb(59 130 246 / 10%);
     }
 
     &__head {
@@ -330,7 +332,6 @@
   .api-kpi--top:hover {
     border-color: color-mix(in srgb, var(--kpi-accent-bg, rgb(59 130 246 / 45%)) 80%, white);
     box-shadow: 0 14px 30px rgb(0 0 0 / 28%);
-    transform: translateY(-4px);
   }
 
   .api-kpi--top:hover::before {

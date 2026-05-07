@@ -120,16 +120,16 @@
           </div>
           <svg class="spend-chart" viewBox="0 0 320 80" preserveAspectRatio="none">
             <defs>
-              <linearGradient id="bc-grad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#0d9488" stop-opacity="0.4" />
-                <stop offset="100%" stop-color="#0d9488" stop-opacity="0" />
+              <linearGradient id="bcSpendGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop class="spend-chart__stop spend-chart__stop--top" offset="0%" />
+                <stop class="spend-chart__stop spend-chart__stop--bottom" offset="100%" />
               </linearGradient>
             </defs>
-            <path :d="areaPath" fill="url(#bc-grad)" />
+            <path :d="areaPath" fill="url(#bcSpendGrad)" />
             <polyline
               :points="chartPoints"
               fill="none"
-              stroke="#0d9488"
+              stroke="currentColor"
               stroke-width="2"
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -141,9 +141,9 @@
       <!-- 底部 -->
       <div class="panel-footer">
         <ElButton round class="footer-btn footer-btn--primary">查看关联账户</ElButton>
-        <ElButton round class="footer-btn footer-btn--secondary" @click="emit('edit', bcData)"
-          >编辑</ElButton
-        >
+        <ElButton round class="footer-btn footer-btn--secondary" @click="emit('edit', bcData)">
+          编辑
+        </ElButton>
       </div>
     </template>
   </div>
@@ -215,16 +215,19 @@
 
 <style lang="scss" scoped>
   .bc-detail-panel {
-    --bg-panel: #0f1829;
-    --bg-hd: #131c2e;
-    --border: rgb(255 255 255 / 7%);
-    --text-primary: #e2e8f0;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
-    --accent: #3b82f6;
-    --teal: #0d9488;
-    --green: #22c55e;
-    --amber: #f59e0b;
+    --dp-border: color-mix(in srgb, var(--el-color-primary) 14%, transparent);
+    --dp-border-soft: color-mix(in srgb, var(--el-color-primary) 10%, transparent);
+    --dp-header-bg: color-mix(in srgb, var(--default-box-color) 94%, transparent);
+    --accent-dim: color-mix(in srgb, var(--el-color-primary) 12%, transparent);
+    --text-primary: var(--text-primary);
+    --text-secondary: var(--text-secondary);
+    --text-muted: var(--text-tertiary);
+    --green: var(--art-success);
+    --green-bg: color-mix(in srgb, var(--art-success) 14%, transparent);
+    --amber: var(--art-warning);
+    --amber-bg: color-mix(in srgb, var(--art-warning) 14%, transparent);
+    --purple: color-mix(in srgb, var(--theme-color) 42%, var(--el-color-primary) 58%);
+    --purple-bg: color-mix(in srgb, var(--theme-color) 12%, transparent);
 
     display: flex;
     flex-direction: column;
@@ -232,10 +235,22 @@
     min-width: 340px;
     height: 100%;
     overflow: hidden;
-    font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-    background: var(--bg-panel);
-    border: 1px solid var(--border);
-    border-radius: 10px;
+    background:
+      linear-gradient(
+        165deg,
+        color-mix(in srgb, var(--default-box-color) 98%, transparent) 0%,
+        color-mix(in srgb, var(--default-bg-color) 40%, transparent) 100%
+      ),
+      linear-gradient(
+        120deg,
+        color-mix(in srgb, var(--el-color-primary) 4%, transparent),
+        color-mix(in srgb, var(--theme-color) 3%, transparent)
+      );
+    border: 1px solid var(--dp-border);
+    border-radius: 14px;
+    box-shadow:
+      0 12px 36px rgb(0 0 0 / 8%),
+      inset 0 1px 0 color-mix(in srgb, white 7%, transparent);
   }
 
   .empty-state {
@@ -247,11 +262,11 @@
     justify-content: center;
     color: var(--text-muted);
   }
+
   .empty-text {
     font-size: 13px;
   }
 
-  // 头部
   .panel-header {
     display: flex;
     flex-shrink: 0;
@@ -260,8 +275,8 @@
     align-items: center;
     justify-content: space-between;
     padding: 14px 16px 10px;
-    background: var(--bg-hd);
-    border-bottom: 1px solid var(--border);
+    background: var(--dp-header-bg);
+    border-bottom: 1px solid var(--dp-border-soft);
   }
 
   .header-left {
@@ -281,9 +296,9 @@
     padding: 2px 7px;
     font-size: 11px;
     color: var(--text-muted);
-    background: rgb(255 255 255 / 5%);
-    border: 1px solid var(--border);
-    border-radius: 4px;
+    background: color-mix(in srgb, var(--default-box-color) 88%, transparent);
+    border: 1px solid var(--dp-border-soft);
+    border-radius: 6px;
   }
 
   .status-badge {
@@ -294,19 +309,23 @@
     font-weight: 600;
 
     &.status--healthy {
-      color: #22c55e;
+      color: var(--green);
     }
+
     &.status--available {
-      color: #3b82f6;
+      color: var(--el-color-primary);
     }
+
     &.status--banned {
-      color: #f59e0b;
+      color: var(--amber);
     }
+
     &.status--inactive {
-      color: #64748b;
+      color: var(--text-muted);
     }
+
     &.status--other {
-      color: #94a3b8;
+      color: var(--text-secondary);
     }
 
     &--sm {
@@ -323,19 +342,21 @@
   .panel-body {
     flex: 1;
     overflow-y: auto;
+
     &::-webkit-scrollbar {
       width: 3px;
     }
 
     &::-webkit-scrollbar-thumb {
-      background: rgb(255 255 255 / 8%);
+      background: color-mix(in srgb, var(--default-box-color) 50%, transparent);
       border-radius: 2px;
     }
   }
 
   .detail-section {
     padding: 14px 16px;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--dp-border-soft);
+
     &--last {
       border-bottom: none;
     }
@@ -354,8 +375,8 @@
     margin-bottom: 12px;
     font-size: 12px;
     font-weight: 700;
-    color: var(--accent);
-    border-left: 3px solid var(--accent);
+    color: var(--el-color-primary);
+    border-left: 3px solid var(--el-color-primary);
   }
 
   .section-title-row .section-title {
@@ -365,14 +386,16 @@
   .edit-link {
     padding: 2px 8px;
     font-size: 12px;
-    color: var(--accent);
+    font-weight: 500;
+    color: var(--el-color-primary);
     cursor: pointer;
-    background: none;
-    background: rgb(59 130 246 / 10%);
+    background: var(--accent-dim);
     border: none;
-    border-radius: 4px;
+    border-radius: 6px;
+    transition: background-color var(--duration-fast) var(--ease-out);
+
     &:hover {
-      background: rgb(59 130 246 / 20%);
+      background: color-mix(in srgb, var(--el-color-primary) 20%, transparent);
     }
   }
 
@@ -407,6 +430,7 @@
       font-size: 11px;
       color: var(--text-secondary);
     }
+
     &--remark {
       color: var(--text-secondary);
     }
@@ -421,30 +445,30 @@
     display: inline-block;
     padding: 2px 8px;
     font-size: 11px;
-    color: #34d399;
-    background: rgb(52 211 153 / 12%);
-    border-radius: 4px;
+    color: var(--green);
+    background: var(--green-bg);
+    border-radius: 6px;
   }
 
   .owner-badge {
     display: inline-block;
     padding: 2px 8px;
     font-size: 11px;
-    border-radius: 4px;
+    border-radius: 6px;
 
     &--corp {
-      color: #60a5fa;
-      background: rgb(96 165 250 / 12%);
+      color: var(--el-color-primary);
+      background: var(--accent-dim);
     }
 
     &--personal {
-      color: #a78bfa;
-      background: rgb(167 139 250 / 12%);
+      color: var(--purple);
+      background: var(--purple-bg);
     }
 
     &--small {
-      color: #34d399;
-      background: rgb(52 211 153 / 12%);
+      color: var(--green);
+      background: var(--green-bg);
     }
   }
 
@@ -453,16 +477,16 @@
     padding: 2px 10px;
     font-size: 12px;
     font-weight: 600;
-    border-radius: 4px;
+    border-radius: 6px;
 
     &--no {
-      color: #64748b;
-      background: rgb(100 116 139 / 15%);
+      color: var(--text-muted);
+      background: color-mix(in srgb, var(--text-tertiary) 12%, transparent);
     }
 
     &--yes {
-      color: #f59e0b;
-      background: rgb(245 158 11 / 15%);
+      color: var(--amber);
+      background: var(--amber-bg);
     }
   }
 
@@ -475,6 +499,7 @@
     margin-bottom: 6px;
     font-size: 12px;
     color: var(--text-secondary);
+
     &:last-child {
       margin-bottom: 0;
     }
@@ -482,22 +507,26 @@
 
   .sn {
     font-weight: 600;
+
     &--blue {
-      color: var(--accent);
+      color: var(--el-color-primary);
     }
+
     &--green {
       color: var(--green);
     }
+
     &--amber {
       color: var(--amber);
     }
+
     &--muted {
       color: var(--text-muted);
     }
   }
 
   .s-sep {
-    color: var(--border);
+    color: var(--dp-border-soft);
   }
 
   // 走势图
@@ -515,48 +544,73 @@
 
   .chart-range {
     font-size: 11px;
-    color: var(--teal);
+    font-weight: 600;
+    color: var(--el-color-primary);
   }
 
   .spend-chart {
     display: block;
     width: 100%;
     height: 80px;
+    color: var(--el-color-primary);
   }
 
-  // 底部
+  .spend-chart__stop--top {
+    stop-color: var(--el-color-primary);
+    stop-opacity: 0.22;
+  }
+
+  .spend-chart__stop--bottom {
+    stop-color: var(--el-color-primary);
+    stop-opacity: 0;
+  }
+
   .panel-footer {
     display: flex;
     flex-shrink: 0;
     gap: 8px;
     padding: 12px 16px;
-    background: var(--bg-hd);
-    border-top: 1px solid var(--border);
+    background: var(--dp-header-bg);
+    border-top: 1px solid var(--dp-border-soft);
   }
 
   .footer-btn {
     flex: 1;
-    height: 32px !important;
+    height: 34px !important;
     font-size: 12px !important;
-    border-radius: 7px !important;
+    border-radius: 8px !important;
+    transition:
+      color var(--duration-fast) var(--ease-out),
+      background-color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-fast) var(--ease-out),
+      filter var(--duration-fast) var(--ease-out) !important;
 
     &--primary {
-      color: #fff !important;
-      background: var(--teal) !important;
-      border: none !important;
+      font-weight: 600 !important;
+      color: var(--el-color-white) !important;
+      background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--el-color-primary) 92%, black 8%),
+        color-mix(in srgb, var(--el-color-primary) 78%, black 22%)
+      ) !important;
+      border: 1px solid color-mix(in srgb, var(--el-color-primary) 38%, transparent) !important;
+      box-shadow: 0 6px 16px color-mix(in srgb, var(--el-color-primary) 26%, transparent) !important;
+
       &:hover {
-        filter: brightness(1.1);
+        filter: brightness(1.05);
+        box-shadow: 0 8px 20px color-mix(in srgb, var(--el-color-primary) 32%, transparent) !important;
       }
     }
 
     &--secondary {
       color: var(--text-secondary) !important;
       background: transparent !important;
-      border: 1px solid var(--border) !important;
+      border: 1px solid var(--dp-border-soft) !important;
 
       &:hover {
-        color: var(--text-primary) !important;
-        border-color: rgb(255 255 255 / 15%) !important;
+        color: var(--el-color-primary) !important;
+        border-color: color-mix(in srgb, var(--el-color-primary) 42%, transparent) !important;
       }
     }
   }

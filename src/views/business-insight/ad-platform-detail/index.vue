@@ -1,14 +1,143 @@
 <script setup lang="ts">
-  import { computed, ref, onMounted, onUnmounted, nextTick } from 'vue'
-  import { useRouter } from 'vue-router'
-  import * as echarts from 'echarts'
+  import { computed, ref, onMounted, onUnmounted, onActivated, nextTick, watch } from 'vue'
+  import { Search } from '@element-plus/icons-vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
+  import { storeToRefs } from 'pinia'
+  import { useRoute, useRouter } from 'vue-router'
+  import { useI18n } from 'vue-i18n'
+  import { ElMessage } from 'element-plus'
+  import { echarts } from '@/plugins/echarts'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
+  import {
+    fetchAdPlatformDetailAiInsights,
+    fetchAdPlatformDetailOverviewKpis,
+    fetchAdPlatformDetailOverviewTrend,
+    fetchAdPlatformDetailTableApps
+  } from '@/api/ad-platform-detail'
+  import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
+  import { buildAppSelectionRequestBody } from '@/utils/app-id-request'
+  import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
+  import type {
+    AdPlatformDetailAiInsightItem,
+    AdPlatformDetailAppRow,
+    AdPlatformDetailKpiItem
+  } from './types'
 
   const router = useRouter()
+  const route = useRoute()
+
+  const { t, te } = useI18n()
+  const tr = (key: string, fallback: string) => (te(key) ? t(key) : fallback)
+
+  const cockpitMetaStore = useCockpitMetaFilterStore()
+  const { data: cockpitMeta } = storeToRefs(cockpitMetaStore)
+
+  function toUiFilterValue(value: string): string {
+    return value === '' || value === 'all' ? 'all' : value
+  }
+
+  function toApiFilterValue(value: string): string {
+    const v = String(value ?? '').trim()
+    return v === '' || v.toLowerCase() === 'all' ? '' : value
+  }
+
+  function normalizeMetaOptions(list: CockpitMetaOptionItem[]): CockpitMetaOptionItem[] {
+    const normalized = list.map((o) => ({
+      ...o,
+      value: toUiFilterValue(o.value)
+    }))
+    const deduped = normalized.filter(
+      (item, idx, arr) => arr.findIndex((x) => x.value === item.value) === idx
+    )
+    if (deduped.some((o) => o.value === 'all')) return deduped
+    return [{ label: '全部', value: 'all' }, ...deduped]
+  }
+
+  function fallbackMetaOptions(label: string): CockpitMetaOptionItem[] {
+    return [{ label, value: 'all' }]
+  }
+
+  const appBarOptions = computed(() => {
+    const list = cockpitMeta.value?.appOptions
+    return list?.length ? normalizeMetaOptions(list) : fallbackMetaOptions('全部')
+  })
+
+  /** 跳过「全部」占位（all / 空），用于首次默认选中 */
+  function firstSelectableAppId(): string | null {
+    for (const o of appBarOptions.value) {
+      const v = String(o.value ?? '').trim()
+      if (v && v.toLowerCase() !== 'all') return v
+    }
+    return null
+  }
+
+  const appFilterSettingApps = computed(() => {
+    const settingApps = cockpitMeta.value?.settingApps ?? []
+    const appIdSet = new Set(
+      appBarOptions.value
+        .map((item) => String(item.value ?? '').trim())
+        .filter((v) => v && v !== 'all')
+    )
+    if (appIdSet.size === 0) return settingApps
+    return settingApps.filter((item) => appIdSet.has(String(item.sAppId ?? '').trim()))
+  })
+
+  /** 国家下拉：去掉 meta 中占位「全部」，首项由模板 ElOption value="" 提供 */
+  const countryOptionsForSelect = computed(() =>
+    (cockpitMeta.value?.countryOptions ?? []).filter((o) => {
+      const v = String(o.value ?? '')
+        .trim()
+        .toLowerCase()
+      return v !== '' && v !== 'all'
+    })
+  )
+
+  function onCountryFilterUpdate(v: string | undefined | null) {
+    countryFilter.value = v ?? ''
+  }
+
+  /**
+   * 路由 query：优先 `source`（广告平台，如收入概览平台表跳转 `?source=Google`），
+   * 兼容历史 `sourceLabel`。
+   */
+  function queryStringParam(v: unknown): string {
+    if (v === undefined || v === null) return ''
+    if (Array.isArray(v)) return typeof v[0] === 'string' ? v[0] : ''
+    return typeof v === 'string' ? v : ''
+  }
+
+  function safeDecodeURIComponent(s: string): string {
+    try {
+      return decodeURIComponent(s)
+    } catch {
+      return s
+    }
+  }
+
+  function platformDisplayNameFromRoute(): string {
+    const src = safeDecodeURIComponent(queryStringParam(route.query.source).trim())
+    if (src) return src
+    return safeDecodeURIComponent(queryStringParam(route.query.sourceLabel).trim())
+  }
+
+  // const adPlatformPerformanceHeading = computed(() => {
+  //   const raw = platformDisplayNameFromRoute()
+  //   return raw ? `${raw}表现详情` : '广告平台表现详情'
+  // })
 
   function goToAppAdPlatformPerformance(row: AppRow) {
+    const source = queryStringParam(route.query.source).trim()
+    const sourceLabel = queryStringParam(route.query.sourceLabel).trim()
     router.push({
       name: 'AppAdPlatformPerformance',
-      query: { app: row.app }
+      query: {
+        'platform-name': route.query['platform-name'],
+        app: row.app,
+        appId: row.appId,
+        ...(source ? { source } : sourceLabel ? { sourceLabel } : {})
+      }
     })
   }
 
@@ -23,6 +152,8 @@
   }
 
   interface AppRow {
+    /** 自有应用 ID，与子页接口请求体 `appId` 一致 */
+    appId: string
     app: string
     revenue: string
     revenueShare: string
@@ -38,32 +169,34 @@
   }
 
   // ─── State ───────────────────────────────────────────────────────────────────
-  const dateRange = ref('最近30天')
-  const appFilter = ref('全部')
-  const countryFilter = ref('全部国家')
+  const INITIAL_CUSTOM_DATE_RANGE = (() => {
+    const end = cloneAppDate(getAppNow())
+    end.setHours(0, 0, 0, 0)
+    const start = cloneAppDate(end)
+    start.setDate(end.getDate() - 29)
+    return [start, end] as [Date, Date]
+  })()
+
+  const customDateRange = ref<[Date, Date] | []>([...INITIAL_CUSTOM_DATE_RANGE])
+  /** 与 meta `appOptions` 的 value 对齐，「全部应用」为 `""` */
+  const appFilter = ref<string | string[]>([])
+  /** 与 meta `countryOptions` 的 value 对齐（多为小写 ISO2），「全部」为 `""` */
+  const countryFilter = ref('')
   const activeMetric = ref<'revenue' | 'ecpm' | 'fillRate'>('revenue')
-  const pendingQuery = ref(false)
+  /** 请求进行中（含首屏），用于骨架/遮罩与按钮 loading */
+  const pendingQuery = ref(true)
+  /** 避免并发重复请求；勿用 pendingQuery 作互斥，否则首屏 pendingQuery=true 会拦掉 runQuery */
+  const queryInFlight = ref(false)
 
   const appliedFilters = ref({
-    dateRange: dateRange.value,
+    startDate: formatYYYYMMDD(INITIAL_CUSTOM_DATE_RANGE[0]),
+    endDate: formatYYYYMMDD(INITIAL_CUSTOM_DATE_RANGE[1]),
     appFilter: appFilter.value,
     countryFilter: countryFilter.value
   })
 
-  const isQueryDirty = computed(() => {
-    return (
-      appliedFilters.value.dateRange !== dateRange.value ||
-      appliedFilters.value.appFilter !== appFilter.value ||
-      appliedFilters.value.countryFilter !== countryFilter.value
-    )
-  })
-
-  const dateOptions = ['最近7天', '最近30天', '最近90天', '自定义']
-  const appOptions = ['全部', 'Weather8', 'PhoneTracker2', 'BatteryMax']
-  const countryOptions = ['全部国家', '中国', '美国', '德国', '日本', '东南亚']
-
   // ─── KPI Cards ───────────────────────────────────────────────────────────────
-  const kpiCards: KpiCard[] = [
+  const INITIAL_KPI_CARDS: KpiCard[] = [
     {
       label: '总收入',
       value: '$1.25M',
@@ -98,8 +231,12 @@
     }
   ]
 
+  const kpiCards = ref<KpiCard[]>(
+    INITIAL_KPI_CARDS.map((c) => ({ ...c, sparkData: [...c.sparkData] }))
+  )
+
   // ─── AI Insights ─────────────────────────────────────────────────────────────
-  const aiInsights: AiInsight[] = [
+  const INITIAL_AI_INSIGHTS: AiInsight[] = [
     {
       title: '应用表现差异',
       content:
@@ -119,9 +256,12 @@
     }
   ]
 
+  const aiInsights = ref<AiInsight[]>([...INITIAL_AI_INSIGHTS])
+
   // ─── Table Data ───────────────────────────────────────────────────────────────
-  const tableData: AppRow[] = [
+  const INITIAL_TABLE: AppRow[] = [
     {
+      appId: 'app-weather8',
       app: 'Weather8',
       revenue: '$850K',
       revenueShare: '75%',
@@ -130,6 +270,7 @@
       impressions: '302M'
     },
     {
+      appId: 'app-phonetracker2',
       app: 'PhoneTracker2',
       revenue: '$620K',
       revenueShare: '68%',
@@ -138,6 +279,7 @@
       impressions: '81M'
     },
     {
+      appId: 'app-batterymax',
       app: 'BatteryMax',
       revenue: '$380K',
       revenueShare: '52%',
@@ -146,6 +288,7 @@
       impressions: '302M'
     },
     {
+      appId: 'app-cleanmaster',
       app: 'CleanMaster',
       revenue: '$180K',
       revenueShare: '38%',
@@ -154,6 +297,7 @@
       impressions: '81M'
     },
     {
+      appId: 'app-speedbooster',
       app: 'SpeedBooster',
       revenue: '$125K',
       revenueShare: '29%',
@@ -162,6 +306,7 @@
       impressions: '302M'
     },
     {
+      appId: 'app-vpn-shield',
       app: 'VPN Shield',
       revenue: '$850K',
       revenueShare: '75%',
@@ -170,6 +315,7 @@
       impressions: '81M'
     },
     {
+      appId: 'app-file-manager',
       app: 'File Manager',
       revenue: '$620K',
       revenueShare: '61%',
@@ -179,11 +325,13 @@
     }
   ]
 
+  const tableData = ref<AppRow[]>([...INITIAL_TABLE])
+
   // ─── Chart ───────────────────────────────────────────────────────────────────
   const chartRef = ref<HTMLElement>()
-  let chartInstance: echarts.ECharts | null = null
+  let chartInstance: ReturnType<typeof echarts.init> | null = null
 
-  const xDates = [
+  const chartCategories = ref([
     '10月1日',
     '10月4日',
     '10月7日',
@@ -194,29 +342,242 @@
     '10月21日',
     '10月24日',
     '10月28日'
-  ]
+  ])
 
-  const revenueData = [17000, 19500, 22000, 28000, 35000, 42500, 38000, 36000, 37500, 39000]
-  const ecpmData = [3.1, 3.2, 3.0, 3.35, 3.45, 3.5, 3.3, 3.25, 3.35, 3.4]
-  const fillData = [96.5, 95, 95.5, 96, 97, 93, 94, 93.5, 95, 97.5]
+  const revenueSeries = ref([17000, 19500, 22000, 28000, 35000, 42500, 38000, 36000, 37500, 39000])
+  const ecpmSeriesRaw = ref([3.1, 3.2, 3.0, 3.35, 3.45, 3.5, 3.3, 3.25, 3.35, 3.4])
+  const fillSeriesRaw = ref([96.5, 95, 95.5, 96, 97, 93, 94, 93.5, 95, 97.5])
+
+  function resolveDateRangeLabel(label: string): { startDate: string; endDate: string } {
+    const end = cloneAppDate(getAppNow())
+    end.setHours(0, 0, 0, 0)
+    const start = cloneAppDate(end)
+    let days = 30
+    if (label === '最近7天') days = 7
+    else if (label === '最近90天') days = 90
+    start.setDate(end.getDate() - (days - 1))
+    return { startDate: formatYYYYMMDD(start), endDate: formatYYYYMMDD(end) }
+  }
+
+  function resolveDateRangeParams(): { startDate: string; endDate: string } {
+    if (customDateRange.value.length === 2) {
+      const [start, end] = customDateRange.value
+      return {
+        startDate: formatYYYYMMDD(start),
+        endDate: formatYYYYMMDD(end)
+      }
+    }
+    return resolveDateRangeLabel('最近30天')
+  }
+
+  function mapKpiItemToCard(item: AdPlatformDetailKpiItem): KpiCard {
+    return {
+      label: item.label,
+      value: item.valueText,
+      change: item.changeText,
+      positive: item.positive,
+      color: item.color,
+      sparkData: [...item.chartData]
+    }
+  }
+
+  function sparkPolylinePoints(data: number[], w = 80, h = 28): string {
+    if (!data.length) return ''
+    const min = Math.min(...data)
+    const max = Math.max(...data)
+    return data
+      .map((v, i) => {
+        const x = (i / (data.length - 1 || 1)) * w
+        const y = h - 2 - ((v - min) / (max - min || 1)) * (h - 4)
+        return `${x},${y}`
+      })
+      .join(' ')
+  }
+
+  function formatUsdTable(n: number): string {
+    if (n >= 1_000_000) {
+      return `$${(n / 1_000_000).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      })}M`
+    }
+    if (n >= 1_000) {
+      return `$${(n / 1_000).toLocaleString('en-US', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      })}K`
+    }
+    return `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  }
+
+  function formatImpressionShort(n: number): string {
+    if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}B`
+    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(0)}M`
+    if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`
+    return String(Math.round(n))
+  }
+
+  function mapAppRecordToRow(r: AdPlatformDetailAppRow): AppRow {
+    return {
+      appId: r.appId,
+      app: r.app,
+      revenue: formatUsdTable(r.revenue),
+      revenueShare: `${r.percent.toLocaleString('en-US', {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1
+      })}%`,
+      ecpm: `$${r.d_ecpm.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      })}`,
+      fillRate: `${r.d_fill_rate.toLocaleString('en-US', {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1
+      })}%`,
+      impressions: formatImpressionShort(r.n_impression)
+    }
+  }
+
+  function mapAiItemToInsight(item: AdPlatformDetailAiInsightItem): AiInsight {
+    return {
+      title: item.title,
+      content: item.content,
+      highlights: [...item.highlights]
+    }
+  }
 
   async function runQuery() {
-    if (pendingQuery.value) return
+    if (queryInFlight.value) return
+    queryInFlight.value = true
     pendingQuery.value = true
     try {
-      // TODO: 接真实接口时，把请求放到这里。
-      // 当前页面为静态 mock 展示，先只记录「已应用筛选」用于控制查询触发时机。
+      const { startDate, endDate } = resolveDateRangeParams()
+      const src = platformDisplayNameFromRoute()
+      const appSelection = buildAppSelectionRequestBody(appFilter.value, appFilterSettingApps.value)
+      const body = {
+        startDate,
+        endDate,
+        appId: appSelection.appIds[0] ?? '',
+        appIds: appSelection.appIds,
+        apps: appSelection.apps,
+        countryCode: toApiFilterValue(countryFilter.value),
+        ...(src ? { source: src } : {})
+      }
+
+      const [kpiR, trendR, tableR, aiR] = await Promise.allSettled([
+        fetchAdPlatformDetailOverviewKpis(body),
+        fetchAdPlatformDetailOverviewTrend(body),
+        fetchAdPlatformDetailTableApps(body),
+        fetchAdPlatformDetailAiInsights(body)
+      ])
+
+      if (kpiR.status === 'fulfilled') {
+        const kpis = Array.isArray(kpiR.value.kpis) ? kpiR.value.kpis : []
+        kpiCards.value = kpis.map(mapKpiItemToCard)
+      } else {
+        console.error(kpiR.reason)
+        ElMessage.error('KPI 加载失败')
+      }
+
+      if (trendR.status === 'fulfilled') {
+        const t = trendR.value
+        chartCategories.value = Array.isArray(t.categories) ? [...t.categories] : []
+        revenueSeries.value = Array.isArray(t.revenue) ? [...t.revenue] : []
+        ecpmSeriesRaw.value = Array.isArray(t.d_ecpm) ? [...t.d_ecpm] : []
+        fillSeriesRaw.value = Array.isArray(t.d_fill_rate) ? [...t.d_fill_rate] : []
+      } else {
+        console.error(trendR.reason)
+        ElMessage.error('核心指标趋势加载失败')
+      }
+
+      if (tableR.status === 'fulfilled') {
+        const records = Array.isArray(tableR.value.records) ? tableR.value.records : []
+        tableData.value = records.map(mapAppRecordToRow)
+      } else {
+        console.error(tableR.reason)
+        ElMessage.error('应用细分表加载失败')
+      }
+
+      if (aiR.status === 'fulfilled') {
+        const insights = Array.isArray(aiR.value.insights) ? aiR.value.insights : []
+        aiInsights.value = insights.map(mapAiItemToInsight)
+      } else {
+        console.error(aiR.reason)
+        ElMessage.error('AI 洞察加载失败')
+      }
+
       appliedFilters.value = {
-        dateRange: dateRange.value,
+        startDate,
+        endDate,
         appFilter: appFilter.value,
         countryFilter: countryFilter.value
       }
+
+      await nextTick()
+      chartInstance?.setOption(buildChartOption(), true)
     } finally {
       pendingQuery.value = false
+      queryInFlight.value = false
     }
   }
 
   function buildChartOption() {
+    const metric = activeMetric.value
+
+    const metricConfig = {
+      revenue: {
+        name: '收入',
+        color: '#38bdf8',
+        areaHigh: 'rgba(56,189,248,0.25)',
+        areaLow: 'rgba(56,189,248,0.02)',
+        data: revenueSeries.value,
+        yAxisName: '收入 ($USD)',
+        yAxisFormatter: (v: number) => `$${(v / 1000).toFixed(0)}k`,
+        tooltipFormatter: (idx: number) => {
+          const v = revenueSeries.value[idx] ?? 0
+          return `<span style="color:#38bdf8">●</span> 收入: <b style="color:#fff">$${v.toLocaleString()}</b>`
+        }
+      },
+      ecpm: {
+        name: 'eCPM',
+        color: '#a78bfa',
+        areaHigh: 'rgba(167,139,250,0.20)',
+        areaLow: 'rgba(167,139,250,0.02)',
+        data: ecpmSeriesRaw.value,
+        yAxisName: 'eCPM ($)',
+        yAxisFormatter: (v: number) =>
+          `$${v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        tooltipFormatter: (idx: number) => {
+          const v = ecpmSeriesRaw.value[idx] ?? 0
+          const txt = v.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          })
+          return `<span style="color:#a78bfa">●</span> eCPM: <b style="color:#fff">$${txt}</b>`
+        }
+      },
+      fillRate: {
+        name: '填充率',
+        color: '#34d399',
+        areaHigh: 'rgba(52,211,153,0.15)',
+        areaLow: 'rgba(52,211,153,0.02)',
+        data: fillSeriesRaw.value,
+        yAxisName: '填充率 (%)',
+        yAxisFormatter: (v: number) =>
+          `${v.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`,
+        tooltipFormatter: (idx: number) => {
+          const v = fillSeriesRaw.value[idx] ?? 0
+          const txt = v.toLocaleString('en-US', {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1
+          })
+          return `<span style="color:#34d399">●</span> 填充率: <b style="color:#fff">${txt}%</b>`
+        }
+      }
+    }
+
+    const cfg = metricConfig[metric]
+
     return {
       backgroundColor: 'transparent',
       tooltip: {
@@ -228,23 +589,20 @@
         padding: [12, 16],
         textStyle: { color: '#e2e8f0', fontSize: 13 },
         formatter(params: any[]) {
-          const date = params[0].axisValue
-          const rev = params.find((p: any) => p.seriesName === '收入')
-          const ecpm = params.find((p: any) => p.seriesName === 'eCPM')
-          const fill = params.find((p: any) => p.seriesName === '填充率')
+          const p0 = params[0]
+          const idx = typeof p0?.dataIndex === 'number' ? p0.dataIndex : 0
+          const date = p0?.axisValue ?? ''
           return `
-          <div style="font-weight:600;margin-bottom:8px;color:#94a3b8">${date}</div>
-          ${rev ? `<div style="margin:4px 0"><span style="color:#38bdf8">●</span> 收入: <b style="color:#fff">$${rev.value.toLocaleString()}</b></div>` : ''}
-          ${ecpm ? `<div style="margin:4px 0"><span style="color:#a78bfa">●</span> eCPM: <b style="color:#fff">$${ecpm.value}</b></div>` : ''}
-          ${fill ? `<div style="margin:4px 0"><span style="color:#34d399">●</span> 填充率: <b style="color:#fff">${fill.value}%</b></div>` : ''}
-        `
+            <div style="font-weight:600;margin-bottom:8px;color:#94a3b8">${date}</div>
+            <div style="margin:4px 0">${cfg.tooltipFormatter(idx)}</div>
+          `
         }
       },
       legend: { show: false },
-      grid: { top: 20, right: 70, bottom: 30, left: 80, containLabel: false },
+      grid: { top: 20, right: 20, bottom: 30, left: 80, containLabel: false },
       xAxis: {
         type: 'category',
-        data: xDates,
+        data: chartCategories.value,
         axisLine: { lineStyle: { color: '#2e3a50' } },
         axisTick: { show: false },
         axisLabel: { color: '#64748b', fontSize: 12 },
@@ -253,34 +611,17 @@
       yAxis: [
         {
           type: 'value',
-          name: '收入 ($USD)',
+          name: cfg.yAxisName,
           nameTextStyle: { color: '#64748b', fontSize: 11 },
           axisLine: { show: false },
           axisTick: { show: false },
-          axisLabel: {
-            color: '#64748b',
-            fontSize: 11,
-            formatter: (v: number) => `$${(v / 1000).toFixed(0)}k`
-          },
-          splitLine: { lineStyle: { color: '#1e2a3a', type: 'dashed' } },
-          min: 0,
-          max: 50000
-        },
-        {
-          type: 'value',
-          name: 'eCPM/填充',
-          nameTextStyle: { color: '#64748b', fontSize: 11 },
-          axisLine: { show: false },
-          axisTick: { show: false },
-          axisLabel: { color: '#64748b', fontSize: 11 },
-          splitLine: { show: false },
-          min: 88,
-          max: 100
+          axisLabel: { color: '#64748b', fontSize: 11, formatter: cfg.yAxisFormatter },
+          splitLine: { lineStyle: { color: '#1e2a3a', type: 'dashed' } }
         }
       ],
       series: [
         {
-          name: '收入',
+          name: cfg.name,
           type: 'line',
           smooth: true,
           symbol: 'circle',
@@ -288,73 +629,31 @@
           showSymbol: false,
           emphasis: {
             showSymbol: true,
-            itemStyle: { color: '#38bdf8', borderColor: '#fff', borderWidth: 2 }
+            itemStyle: { color: cfg.color, borderColor: '#fff', borderWidth: 2 }
           },
-          lineStyle: { color: '#38bdf8', width: 2.5 },
-          itemStyle: { color: '#38bdf8' },
+          lineStyle: { color: cfg.color, width: 2.5 },
+          itemStyle: { color: cfg.color },
           areaStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: 'rgba(56,189,248,0.25)' },
-              { offset: 1, color: 'rgba(56,189,248,0.02)' }
+              { offset: 0, color: cfg.areaHigh },
+              { offset: 1, color: cfg.areaLow }
             ])
           },
-          data: revenueData,
-          yAxisIndex: 0,
-          z: 3
-        },
-        {
-          name: 'eCPM',
-          type: 'line',
-          smooth: true,
-          symbol: 'circle',
-          symbolSize: 6,
-          showSymbol: false,
-          emphasis: {
-            showSymbol: true,
-            itemStyle: { color: '#a78bfa', borderColor: '#fff', borderWidth: 2 }
-          },
-          lineStyle: { color: '#a78bfa', width: 2.5 },
-          itemStyle: { color: '#a78bfa' },
-          areaStyle: {
-            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: 'rgba(167,139,250,0.20)' },
-              { offset: 1, color: 'rgba(167,139,250,0.02)' }
-            ])
-          },
-          data: ecpmData.map((v) => v * 10000), // 映射到左轴显示
-          yAxisIndex: 0,
-          z: 2
-        },
-        {
-          name: '填充率',
-          type: 'line',
-          smooth: true,
-          symbol: 'circle',
-          symbolSize: 6,
-          showSymbol: false,
-          emphasis: {
-            showSymbol: true,
-            itemStyle: { color: '#34d399', borderColor: '#fff', borderWidth: 2 }
-          },
-          lineStyle: { color: '#34d399', width: 2.5 },
-          itemStyle: { color: '#34d399' },
-          areaStyle: {
-            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: 'rgba(52,211,153,0.15)' },
-              { offset: 1, color: 'rgba(52,211,153,0.02)' }
-            ])
-          },
-          data: fillData.map((v) => v * 450), // 映射到左轴
-          yAxisIndex: 0,
-          z: 4
+          data: cfg.data,
+          yAxisIndex: 0
         }
       ]
     }
   }
 
+  watch(activeMetric, () => {
+    chartInstance?.setOption(buildChartOption(), true)
+  })
+
   function initChart() {
     if (!chartRef.value) return
     chartInstance = echarts.init(chartRef.value, undefined, { renderer: 'canvas' })
+    if (!chartInstance) return
     chartInstance.setOption(buildChartOption())
   }
 
@@ -362,11 +661,65 @@
     chartInstance?.resize()
   }
 
+  let hasInitialized = false
+  let lastParamKey = ''
+
+  function currentParamKey() {
+    return [
+      route.query.source ?? '',
+      route.query.sourceLabel ?? '',
+      route.query['platform-name'] ?? ''
+    ].join('|')
+  }
+
+  // 同页内参数切换（source/platform-name 变化）
+  watch(
+    () => ({
+      name: route.name,
+      source: route.query.source,
+      sourceLabel: route.query.sourceLabel,
+      platformName: route.query['platform-name']
+    }),
+    (newVal, oldVal) => {
+      if (!hasInitialized) return
+      if (newVal.name !== 'AdPlatformDetail') return
+      if (
+        newVal.source !== oldVal.source ||
+        newVal.sourceLabel !== oldVal.sourceLabel ||
+        newVal.platformName !== oldVal.platformName
+      ) {
+        lastParamKey = currentParamKey()
+        runQuery()
+      }
+    }
+  )
+
   onMounted(async () => {
+    await cockpitMetaStore.ensureLoaded()
     await nextTick()
+    const firstId = firstSelectableAppId()
+    if (firstId) {
+      const cur = appFilter.value
+      const empty =
+        cur == null ||
+        (Array.isArray(cur) && cur.length === 0) ||
+        (typeof cur === 'string' && !String(cur).trim())
+      if (empty) appFilter.value = [firstId]
+    }
     initChart()
     window.addEventListener('resize', handleResize)
+    lastParamKey = currentParamKey()
     await runQuery()
+    hasInitialized = true
+  })
+
+  // keep-alive 重新激活时，若参数已变则重新请求
+  onActivated(() => {
+    const key = currentParamKey()
+    if (key !== lastParamKey) {
+      lastParamKey = key
+      runQuery()
+    }
   })
 
   onUnmounted(() => {
@@ -393,28 +746,62 @@
 
 <template>
   <div class="admob-dashboard">
-    <div class="admob-page-fx" aria-hidden="true"></div>
     <!-- ── Page body ──────────────────────────────────────────────── -->
     <div class="page-body">
       <!-- Page header -->
       <div class="page-header">
-        <div class="filters filters-panel">
+        <div class="filters apd-filter-panel">
+          <h2 class="filter-detail-heading">{{
+            (route.query['platform-name'] ?? '') + ' 广告平台详情'
+          }}</h2>
           <div class="filter-field">
-            <span class="filter-label">日期范围</span>
-            <el-select v-model="dateRange" size="default" class="filter-select">
-              <el-option v-for="o in dateOptions" :key="o" :label="o" :value="o" />
-            </el-select>
+            <AppDatePicker
+              v-model="customDateRange"
+              type="daterange"
+              :shortcuts="dateRangeShortcuts"
+              unlink-panels
+              range-separator="～"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              class="apd-filter-date"
+              popper-class="apd-filter__popper"
+            />
           </div>
           <div class="filter-field">
-            <span class="filter-label">App选择</span>
-            <el-select v-model="appFilter" size="default" class="filter-select">
-              <el-option v-for="o in appOptions" :key="o" :label="o" :value="o" />
-            </el-select>
+            <AppPlatformSearchSelect
+              v-model="appFilter"
+              class="apd-filter-select apd-filter-select--app"
+              mode="app"
+              placeholder="全部"
+              search-placeholder="搜索类别/应用名称/应用简称"
+              empty-selection-label="全部"
+              select-all-label="全部"
+              :setting-apps="appFilterSettingApps"
+              :height="32"
+              :min-width="150"
+              :max-width="150"
+              input-class="apd-filter-select__input"
+              dropdown-class="apd-filter__popper"
+            />
           </div>
           <div class="filter-field">
-            <span class="filter-label">国家</span>
-            <el-select v-model="countryFilter" size="default" class="filter-select">
-              <el-option v-for="o in countryOptions" :key="o" :label="o" :value="o" />
+            <el-select
+              :model-value="countryFilter"
+              size="default"
+              class="apd-filter-select"
+              popper-class="apd-filter__popper"
+              filterable
+              clearable
+              @update:model-value="onCountryFilterUpdate"
+              placeholder="国家"
+            >
+              <el-option :label="tr('adPerformance.filterAll', '全部')" value="" />
+              <el-option
+                v-for="opt in countryOptionsForSelect"
+                :key="String(opt.value)"
+                :label="opt.label"
+                :value="opt.value"
+              />
             </el-select>
           </div>
 
@@ -422,8 +809,10 @@
             type="primary"
             round
             plain
+            :icon="Search"
+            class="apd-query-btn"
             :loading="pendingQuery"
-            :disabled="pendingQuery || !isQueryDirty"
+            :disabled="pendingQuery"
             @click="runQuery"
           >
             查询
@@ -432,160 +821,235 @@
       </div>
 
       <!-- ── Main content grid ───────────────────────────────────── -->
-      <div class="main-grid">
-        <!-- Left column -->
-        <div class="left-col">
-          <!-- KPI cards -->
-          <div class="kpi-row">
-            <div
-              v-for="card in kpiCards"
-              :key="card.label"
-              class="kpi-card"
-              :style="{ '--accent': card.color }"
-            >
-              <div class="kpi-top">
-                <span class="kpi-label">{{ card.label }}</span>
-                <div class="kpi-spark">
-                  <svg viewBox="0 0 80 28" preserveAspectRatio="none">
-                    <defs>
-                      <linearGradient :id="`g-${card.label}`" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" :stop-color="card.color" stop-opacity="0.6" />
-                        <stop offset="100%" :stop-color="card.color" stop-opacity="0" />
-                      </linearGradient>
-                    </defs>
-                    <polyline
-                      :points="
-                        card.sparkData
-                          .map((v, i) => {
-                            const min = Math.min(...card.sparkData)
-                            const max = Math.max(...card.sparkData)
-                            const x = (i / (card.sparkData.length - 1)) * 80
-                            const y = 26 - ((v - min) / (max - min || 1)) * 24
-                            return `${x},${y}`
-                          })
-                          .join(' ')
-                      "
-                      fill="none"
-                      :stroke="card.color"
-                      stroke-width="1.8"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
+      <div class="content-wrap">
+        <!-- 鱼骨屏骨架（任意请求进行中：首屏 / 点击查询等） -->
+        <div v-if="pendingQuery" class="fishbone-skeleton" aria-hidden="true">
+          <div class="fishbone-skeleton__left">
+            <div class="fishbone-skeleton__kpis">
+              <div v-for="i in 4" :key="i" class="fishbone-card">
+                <div class="fishbone-line fishbone-line--sm" />
+                <div class="fishbone-line fishbone-line--lg" />
+                <div class="fishbone-bones" />
+              </div>
+            </div>
+            <div class="fishbone-panel">
+              <div class="fishbone-panel__header">
+                <div class="fishbone-line fishbone-line--md" />
+                <div class="fishbone-chip-row">
+                  <span v-for="i in 3" :key="i" class="fishbone-chip" />
                 </div>
               </div>
-              <div class="kpi-value" :style="{ color: card.color }">{{ card.value }}</div>
-              <div class="kpi-change" :class="card.positive ? 'pos' : 'neg'">
-                <svg width="12" height="12" viewBox="0 0 12 12">
-                  <path v-if="card.positive" d="M6 2l4 6H2l4-6z" fill="currentColor" />
-                  <path v-else d="M6 10L2 4h8L6 10z" fill="currentColor" />
+              <div class="fishbone-chart" />
+            </div>
+          </div>
+          <div class="fishbone-skeleton__right">
+            <div class="fishbone-panel">
+              <div class="fishbone-panel__header">
+                <div class="fishbone-line fishbone-line--md" />
+              </div>
+              <div class="fishbone-ai">
+                <div v-for="i in 3" :key="i" class="fishbone-ai__card">
+                  <div class="fishbone-line fishbone-line--sm" />
+                  <div class="fishbone-line fishbone-line--row" />
+                  <div class="fishbone-line fishbone-line--row2" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="content-body">
+          <div class="main-grid" :class="{ 'is-loading': pendingQuery }">
+            <!-- Left column -->
+            <div class="left-col">
+              <!-- KPI cards -->
+              <div class="kpi-row">
+                <div
+                  v-for="card in kpiCards"
+                  :key="card.label"
+                  class="kpi-card"
+                  :style="{ '--accent': card.color }"
+                >
+                  <div class="kpi-top">
+                    <span class="kpi-label">{{ card.label }}</span>
+                    <div class="kpi-spark">
+                      <svg viewBox="0 0 80 28" preserveAspectRatio="none">
+                        <defs>
+                          <linearGradient :id="`g-${card.label}`" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" :stop-color="card.color" stop-opacity="0.6" />
+                            <stop offset="100%" :stop-color="card.color" stop-opacity="0" />
+                          </linearGradient>
+                        </defs>
+                        <polyline
+                          :points="sparkPolylinePoints(card.sparkData)"
+                          fill="none"
+                          :stroke="card.color"
+                          stroke-width="1.8"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="kpi-value" :style="{ color: card.color }">{{ card.value }}</div>
+                  <div class="kpi-change" :class="card.positive ? 'pos' : 'neg'">
+                    <svg width="12" height="12" viewBox="0 0 12 12">
+                      <path v-if="card.positive" d="M6 2l4 6H2l4-6z" fill="currentColor" />
+                      <path v-else d="M6 10L2 4h8L6 10z" fill="currentColor" />
+                    </svg>
+                    {{ card.change }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Chart card -->
+              <div class="chart-card">
+                <div class="chart-header">
+                  <span class="section-title">核心指标趋势</span>
+                  <div class="metric-btns">
+                    <button
+                      :class="['metric-btn', activeMetric === 'revenue' && 'active-revenue']"
+                      @click="activeMetric = 'revenue'"
+                      >收入</button
+                    >
+                    <button
+                      :class="['metric-btn', activeMetric === 'ecpm' && 'active-ecpm']"
+                      @click="activeMetric = 'ecpm'"
+                      >eCPM</button
+                    >
+                    <button
+                      :class="['metric-btn', activeMetric === 'fillRate' && 'active-fill']"
+                      @click="activeMetric = 'fillRate'"
+                      >填充率</button
+                    >
+                  </div>
+                </div>
+                <div ref="chartRef" class="chart-canvas" />
+              </div>
+            </div>
+
+            <!-- Right column: AI Insights -->
+            <div class="ai-panel">
+              <div class="ai-header">
+                <span class="section-title">AI洞察与建议</span>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" class="ai-icon">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5" />
+                  <path
+                    d="M8 12s1-3 4-3 4 3 4 3-1 3-4 3-4-3-4-3z"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  />
+                  <circle cx="12" cy="12" r="2" fill="currentColor" />
+                  <path
+                    d="M12 2v2M12 20v2M2 12h2M20 12h2"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                  />
                 </svg>
-                {{ card.change }}
               </div>
-            </div>
-          </div>
-
-          <!-- Chart card -->
-          <div class="chart-card">
-            <div class="chart-header">
-              <span class="section-title">核心指标趋势</span>
-              <div class="metric-btns">
-                <button
-                  :class="['metric-btn', activeMetric === 'revenue' && 'active-revenue']"
-                  @click="activeMetric = 'revenue'"
-                  >收入</button
-                >
-                <button
-                  :class="['metric-btn', activeMetric === 'ecpm' && 'active-ecpm']"
-                  @click="activeMetric = 'ecpm'"
-                  >eCPM</button
-                >
-                <button
-                  :class="['metric-btn', activeMetric === 'fillRate' && 'active-fill']"
-                  @click="activeMetric = 'fillRate'"
-                  >填充率</button
-                >
+              <div class="ai-insights">
+                <template v-if="aiInsights.length">
+                  <div v-for="(ins, i) in aiInsights" :key="i" class="insight-item">
+                    <div class="insight-title">{{ ins.title }}</div>
+                    <!-- eslint-disable-next-line vue/no-v-html -->
+                    <div class="insight-body" v-html="highlightText(ins.content, ins.highlights)" />
+                  </div>
+                </template>
+                <div v-else class="ai-empty">
+                  <svg
+                    width="36"
+                    height="36"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    class="ai-empty__icon"
+                  >
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="9"
+                      stroke="currentColor"
+                      stroke-width="1.2"
+                      stroke-dasharray="3 2"
+                    />
+                    <path
+                      d="M9 10h.01M15 10h.01M9 14s1 2 3 2 3-2 3-2"
+                      stroke="currentColor"
+                      stroke-width="1.4"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                  <span class="ai-empty__text">暂无 AI 洞察</span>
+                </div>
               </div>
-            </div>
-            <div ref="chartRef" class="chart-canvas" />
-          </div>
-        </div>
+            </div> </div
+          ><!-- /main-grid -->
 
-        <!-- Right column: AI Insights -->
-        <div class="ai-panel">
-          <div class="ai-header">
-            <span class="section-title">AI洞察与建议</span>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" class="ai-icon">
-              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5" />
-              <path
-                d="M8 12s1-3 4-3 4 3 4 3-1 3-4 3-4-3-4-3z"
-                stroke="currentColor"
-                stroke-width="1.5"
-              />
-              <circle cx="12" cy="12" r="2" fill="currentColor" />
-              <path
-                d="M12 2v2M12 20v2M2 12h2M20 12h2"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-              />
-            </svg>
-          </div>
-          <div class="ai-insights">
-            <div v-for="(ins, i) in aiInsights" :key="i" class="insight-item">
-              <div class="insight-title">{{ ins.title }}</div>
-              <!-- eslint-disable-next-line vue/no-v-html -->
-              <div class="insight-body" v-html="highlightText(ins.content, ins.highlights)" />
+          <!-- ── Table ───────────────────────────────────────────────── -->
+          <div class="table-card" :class="{ 'is-loading': pendingQuery }">
+            <div class="table-head">
+              <div class="section-title section-title--glow">按应用表现细分</div>
+            </div>
+            <div class="table-scroll">
+              <el-table :data="tableData" style="width: 100%" :row-class-name="() => 'admob-row'">
+                <el-table-column prop="app" label="应用" sortable min-width="160" align="left" />
+                <el-table-column
+                  prop="revenue"
+                  label="总收入"
+                  sortable
+                  min-width="110"
+                  align="left"
+                />
+                <el-table-column
+                  prop="revenueShare"
+                  label="收入占比"
+                  sortable
+                  min-width="110"
+                  align="left"
+                />
+                <el-table-column prop="ecpm" label="eCPM" sortable min-width="110" align="left" />
+                <el-table-column
+                  prop="fillRate"
+                  label="填充率"
+                  sortable
+                  min-width="110"
+                  align="left"
+                />
+                <el-table-column
+                  prop="impressions"
+                  label="展示次数"
+                  sortable
+                  min-width="120"
+                  align="left"
+                />
+                <el-table-column label="操作" min-width="120" align="center">
+                  <template #default="{ row }">
+                    <el-button
+                      size="small"
+                      class="detail-btn"
+                      round
+                      @click="goToAppAdPlatformPerformance(row)"
+                    >
+                      查看详情
+                    </el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
             </div>
           </div>
+          <!-- /table-card -->
         </div>
+        <!-- /content-body -->
       </div>
-
-      <!-- ── Table ───────────────────────────────────────────────── -->
-      <div class="table-card">
-        <div class="table-head">
-          <div class="section-title section-title--glow">按应用表现细分</div>
-        </div>
-        <div class="table-scroll">
-          <el-table :data="tableData" style="width: 100%" :row-class-name="() => 'admob-row'">
-            <el-table-column prop="app" label="应用" sortable min-width="160" align="left" />
-            <el-table-column prop="revenue" label="总收入" sortable min-width="110" align="left" />
-            <el-table-column
-              prop="revenueShare"
-              label="收入占比"
-              sortable
-              min-width="110"
-              align="left"
-            />
-            <el-table-column prop="ecpm" label="eCPM" sortable min-width="110" align="left" />
-            <el-table-column prop="fillRate" label="填充率" sortable min-width="110" align="left" />
-            <el-table-column
-              prop="impressions"
-              label="展示次数"
-              sortable
-              min-width="120"
-              align="left"
-            />
-            <el-table-column label="操作" min-width="120" align="center">
-              <template #default="{ row }">
-                <el-button
-                  size="small"
-                  class="detail-btn"
-                  round
-                  @click="goToAppAdPlatformPerformance(row)"
-                >
-                  查看详情
-                </el-button>
-              </template>
-            </el-table-column>
-          </el-table>
-        </div>
-      </div>
+      <!-- /content-wrap -->
     </div>
   </div>
 </template>
 
 <style scoped lang="scss">
+  @use '../../user-growth/styles/app-platform-select-ad-theme.scss' as apSelect;
+  @use '../../user-growth/styles/filter-bar-theme.scss' as filterTheme;
+
   // ─── CSS Variables ────────────────────────────────────────────────────────────
   .admob-dashboard {
     --bg-base: var(--default-bg-color);
@@ -658,30 +1122,10 @@
       mask-image: linear-gradient(to bottom, black 0%, black 22%, transparent 48%);
     }
 
-    > *:not(.admob-page-fx) {
+    > * {
       position: relative;
       z-index: 1;
     }
-  }
-
-  .admob-page-fx {
-    position: absolute;
-    inset: -12% -12% 52%;
-    z-index: 0;
-    pointer-events: none;
-    background: conic-gradient(
-      from 0deg at 50% 50%,
-      transparent 0deg,
-      color-mix(in srgb, var(--art-primary) 12%, transparent) 55deg,
-      color-mix(in srgb, var(--art-success) 9%, transparent) 200deg,
-      transparent 285deg,
-      color-mix(in srgb, var(--art-warning) 7%, transparent) 330deg,
-      transparent 360deg
-    );
-    opacity: 0.8;
-    mask-image: linear-gradient(to bottom, black 0%, black 46%, transparent 82%);
-    animation: admob-fx-spin 52s linear infinite;
-    will-change: transform;
   }
 
   @keyframes admob-aurora-drift {
@@ -693,12 +1137,6 @@
     100% {
       opacity: 1;
       transform: scale(1.04) translate(1%, -0.8%);
-    }
-  }
-
-  @keyframes admob-fx-spin {
-    to {
-      transform: rotate(360deg);
     }
   }
 
@@ -756,6 +1194,202 @@
     padding: 24px 28px;
   }
 
+  // ─── Content wrap (鱼骨屏容器) ────────────────────────────────────────────────
+  .content-wrap {
+    position: relative;
+  }
+
+  .content-body {
+    position: relative;
+  }
+
+  .is-loading {
+    pointer-events: none;
+    visibility: hidden;
+  }
+
+  // ─── 鱼骨屏骨架 ───────────────────────────────────────────────────────────────
+  .fishbone-skeleton {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 16px;
+  }
+
+  .fishbone-skeleton__left,
+  .fishbone-skeleton__right {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+  }
+
+  .fishbone-skeleton__kpis {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(8px, 1.2vw, 12px);
+  }
+
+  .fishbone-card,
+  .fishbone-panel {
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(
+        circle at 20% 10%,
+        color-mix(in srgb, var(--art-primary) 10%, transparent) 0%,
+        transparent 58%
+      ),
+      linear-gradient(180deg, var(--bg-card) 0%, var(--bg-card2) 100%);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 18%, var(--default-border));
+    border-radius: 16px;
+    box-shadow:
+      0 12px 40px rgb(0 0 0 / 44%),
+      inset 0 1px 0 color-mix(in srgb, var(--art-primary) 10%, transparent);
+  }
+
+  .fishbone-card {
+    min-height: 110px;
+    padding: 18px 16px 12px;
+  }
+
+  .fishbone-panel {
+    padding: 16px;
+  }
+
+  .fishbone-panel__header {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .fishbone-line,
+  .fishbone-chip,
+  .fishbone-dot {
+    position: relative;
+    overflow: hidden;
+    background: rgb(255 255 255 / 6%);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 12%, transparent);
+    border-radius: 9999px;
+  }
+
+  .fishbone-line::after,
+  .fishbone-chip::after,
+  .fishbone-dot::after {
+    position: absolute;
+    inset: -2px;
+    content: '';
+    background: linear-gradient(
+      120deg,
+      transparent 0%,
+      color-mix(in srgb, var(--art-primary) 22%, transparent) 40%,
+      color-mix(in srgb, var(--art-success) 18%, transparent) 55%,
+      transparent 70%
+    );
+    transform: translateX(-80%);
+    animation: fishbone-shimmer 1.25s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)) infinite;
+  }
+
+  .fishbone-line--sm {
+    width: 34%;
+    height: 10px;
+    margin-bottom: 10px;
+  }
+
+  .fishbone-line--md {
+    width: 42%;
+    height: 12px;
+  }
+
+  .fishbone-line--lg {
+    width: 66%;
+    height: 18px;
+    margin-bottom: 12px;
+  }
+
+  .fishbone-bones {
+    height: 24px;
+    background-image: repeating-linear-gradient(
+      120deg,
+      rgb(255 255 255 / 4%) 0,
+      rgb(255 255 255 / 4%) 10px,
+      transparent 10px,
+      transparent 18px
+    );
+    border: 1px solid color-mix(in srgb, var(--art-primary) 10%, transparent);
+    border-radius: 12px;
+    opacity: 0.9;
+  }
+
+  .fishbone-chip-row {
+    display: inline-flex;
+    gap: 6px;
+  }
+
+  .fishbone-chip {
+    width: 56px;
+    height: 20px;
+  }
+
+  .fishbone-chart {
+    height: clamp(200px, 22vw, 260px);
+    background-image:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--art-primary) 7%, transparent) 0%,
+        transparent 100%
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent 0,
+        transparent 32px,
+        rgb(255 255 255 / 3%) 32px,
+        rgb(255 255 255 / 3%) 33px
+      );
+    border: 1px solid color-mix(in srgb, var(--art-primary) 12%, transparent);
+    border-radius: 14px;
+  }
+
+  .fishbone-line--row {
+    width: 100%;
+    height: 10px;
+  }
+
+  .fishbone-line--row2 {
+    width: 100%;
+    height: 10px;
+    opacity: 0.78;
+  }
+
+  .fishbone-ai {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .fishbone-ai__card {
+    padding: 10px 12px;
+    background: rgb(255 255 255 / 2.5%);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 14%, var(--default-border));
+    border-radius: 10px;
+  }
+
+  @keyframes fishbone-shimmer {
+    0% {
+      opacity: 0.85;
+      transform: translateX(-85%);
+    }
+
+    100% {
+      opacity: 1;
+      transform: translateX(85%);
+    }
+  }
+
   .page-header {
     margin-bottom: 22px;
   }
@@ -767,151 +1401,110 @@
     color: var(--text-1);
   }
 
-  .filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    align-items: center;
+  .filter-detail-heading {
+    padding-right: var(--space-4, 16px);
+    margin: 0;
+    margin-right: auto;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--el-text-color-primary);
+    white-space: nowrap;
   }
 
-  .filters-panel {
-    padding: 10px 14px;
-    overflow: hidden;
-    background:
-      radial-gradient(
-        circle at 20% 10%,
-        color-mix(in srgb, var(--art-primary) 16%, transparent) 0%,
-        transparent 58%
-      ),
-      radial-gradient(
-        circle at 82% 16%,
-        color-mix(in srgb, var(--art-success) 10%, transparent) 0%,
-        transparent 52%
-      ),
-      linear-gradient(180deg, rgb(0 0 0 / 22%) 0%, rgb(0 0 0 / 10%) 100%);
-    border: 1px solid color-mix(in srgb, var(--art-primary) 18%, var(--default-border));
-    border-radius: 16px;
-    box-shadow:
-      0 12px 40px rgb(0 0 0 / 44%),
-      0 0 0 1px color-mix(in srgb, var(--art-primary) 10%, transparent),
-      inset 0 1px 0 color-mix(in srgb, var(--art-primary) 10%, transparent);
-    transition:
-      box-shadow 0.35s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
-      border-color 0.3s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
+  .filters.apd-filter-panel {
+    @include filterTheme.filter-panel(10px 14px);
+    @include filterTheme.filter-panel-children;
+    @include filterTheme.filter-row(10px);
 
-    &:hover {
-      border-color: color-mix(in srgb, var(--art-primary) 32%, var(--default-border));
-      box-shadow:
-        0 12px 40px rgb(0 0 0 / 44%),
-        0 0 0 1px color-mix(in srgb, var(--art-primary) 18%, transparent),
-        inset 0 1px 0 color-mix(in srgb, var(--art-primary) 12%, transparent),
-        0 0 48px color-mix(in srgb, var(--art-primary) 14%, transparent);
-    }
-
-    > * {
-      position: relative;
-      z-index: 1;
-    }
-
-    &::after {
-      position: absolute;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-      content: '';
-      background-image:
-        linear-gradient(
-          color-mix(in srgb, var(--art-primary) 5%, transparent) 1px,
-          transparent 1px
-        ),
-        linear-gradient(
-          90deg,
-          color-mix(in srgb, var(--art-primary) 5%, transparent) 1px,
-          transparent 1px
-        );
-      background-size: 20px 20px;
-      opacity: 0.55;
-      mask-image: radial-gradient(ellipse 80% 70% at 50% 36%, black 0%, transparent 72%);
-    }
+    min-width: 0;
   }
 
-  .filter-field {
-    display: flex;
+  .filters.apd-filter-panel > .filter-field {
+    display: inline-flex;
     gap: 8px;
     align-items: center;
-    min-height: 32px;
+    min-height: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
   }
 
   .filter-label {
     font-size: 13px;
-    color: var(--text-2);
+    color: var(--el-text-color-secondary);
     white-space: nowrap;
   }
 
-  .filter-select {
-    width: 150px;
-
-    :deep(.el-select__wrapper) {
-      color: var(--text-1);
-      background: rgb(0 0 0 / 22%) !important;
-      border-color: color-mix(in srgb, var(--art-primary) 22%, transparent) !important;
-      border-radius: 10px;
-      box-shadow: none !important;
-      transition:
-        border-color 0.2s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
-        box-shadow 0.25s var(--ease-out, cubic-bezier(0, 0, 0.2, 1));
-
-      &:hover {
-        border-color: color-mix(in srgb, var(--art-primary) 44%, transparent) !important;
-        box-shadow:
-          0 0 0 1px color-mix(in srgb, var(--art-primary) 12%, transparent) inset,
-          0 0 20px color-mix(in srgb, var(--art-primary) 12%, transparent);
-      }
-    }
-
-    :deep(.el-select__selected-item) {
-      color: var(--text-1);
-    }
-
-    :deep(.el-select__caret) {
-      color: var(--text-2);
-    }
+  .apd-filter-select:not(.apd-filter-select--app) {
+    @include filterTheme.filter-select-size(150px, 150px, 150px);
   }
 
-  .filter-query-btn {
-    min-height: 34px;
-    padding: 0 16px;
+  .filters.apd-filter-panel :deep(.apd-filter-date) {
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
+  }
+
+  @include filterTheme.date-trigger('.filters.apd-filter-panel', '.apd-filter-date', 280px);
+  @include filterTheme.element-select-trigger('.apd-filter-select');
+  @include apSelect.apply-app-platform-select-ad-theme(
+    '.filters.apd-filter-panel',
+    'apd-filter-select__input',
+    'apd-filter__popper',
+    150px,
+    150px,
+    150px
+  );
+  @include filterTheme.select-popper('apd-filter__popper');
+  @include filterTheme.app-platform-popper('apd-filter__popper');
+  @include filterTheme.date-picker-popper('apd-filter__popper');
+
+  :global(.apd-filter__popper.el-popper),
+  :global(.apd-filter__popper.el-select__popper),
+  :global(.apd-filter__popper.el-picker__popper) {
+    z-index: 4000 !important;
+  }
+
+  :deep(.apd-filter-select:not(.apd-filter-select--app)),
+  :deep(.apd-filter-select__input) {
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
+  }
+
+  .filters.apd-filter-panel :deep(.apd-query-btn.el-button) {
+    height: 36px;
+    padding: 0 18px;
     margin-left: 4px;
     font-weight: 600;
-    letter-spacing: 0.2px;
-    border: 1px solid color-mix(in srgb, var(--art-primary) 38%, transparent);
-    box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--art-primary) 10%, transparent) inset,
-      0 10px 28px color-mix(in srgb, var(--art-primary) 10%, transparent);
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: none;
     transition:
-      transform 0.25s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
+      border-color 0.2s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
       box-shadow 0.25s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
-      border-color 0.2s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
+      transform 0.25s var(--ease-out, cubic-bezier(0, 0, 0.2, 1));
+  }
 
-    &:hover:not(.is-disabled) {
-      border-color: color-mix(in srgb, var(--art-primary) 56%, transparent);
-      box-shadow:
-        0 0 0 1px color-mix(in srgb, var(--art-primary) 16%, transparent) inset,
-        0 0 22px color-mix(in srgb, var(--art-primary) 18%, transparent),
-        0 12px 38px color-mix(in srgb, var(--art-primary) 12%, transparent);
-      transform: translateY(-1px);
-    }
+  .filters.apd-filter-panel :deep(.apd-query-btn.el-button:hover:not(.is-disabled)) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
+  }
 
-    &:active:not(.is-disabled) {
-      transition-duration: 0.14s;
-      transform: translateY(0);
-    }
-
-    &:focus-visible {
-      box-shadow:
-        0 0 0 2px color-mix(in srgb, var(--art-primary) 38%, transparent),
-        0 0 0 4px color-mix(in srgb, var(--art-primary) 16%, transparent);
-    }
+  .filters.apd-filter-panel :deep(.apd-query-btn.el-button:focus-visible) {
+    outline: none;
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--el-color-primary) 35%, transparent),
+      0 0 0 4px color-mix(in srgb, var(--el-color-primary) 18%, transparent);
   }
 
   // ─── Main grid ───────────────────────────────────────────────────────────────
@@ -1127,13 +1720,9 @@
       animation: none;
     }
 
-    .admob-page-fx {
-      animation: none;
-    }
-
     .back-btn,
     .metric-btn,
-    .filters-panel,
+    .apd-filter-panel,
     .kpi-card,
     .chart-card,
     .ai-panel,
@@ -1227,6 +1816,25 @@
     gap: 0;
   }
 
+  .ai-empty {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 0;
+    color: var(--text-3);
+
+    &__icon {
+      opacity: 0.4;
+    }
+
+    &__text {
+      font-size: 13px;
+      opacity: 0.6;
+    }
+  }
+
   .insight-item {
     padding: 14px 0;
     border-bottom: 1px solid var(--border);
@@ -1302,7 +1910,8 @@
   }
 
   .table-scroll {
-    overflow: auto hidden;
+    max-height: 520px;
+    overflow: auto;
     -webkit-overflow-scrolling: touch;
 
     &::-webkit-scrollbar {

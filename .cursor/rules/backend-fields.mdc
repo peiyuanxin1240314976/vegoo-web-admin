@@ -1,156 +1,732 @@
 ---
+
 description: 后端数据字段表与业务概念，定义类型、API、表格列、筛选器时须与此一致
+
 alwaysApply: true
+
 ---
+
+
 
 # 后端字段规范（数据字典）
 
+
+
 与后端接口、报表、用户增长等模块相关的字段命名与业务含义须遵循下表。定义 TypeScript 类型、API 入参/出参、表格列、筛选器选项时，**遇到以下概念必须使用表中给出的字段名与语义**。
 
-## 字段前缀约定
 
-| 前缀 | 含义 | 示例 |
-|------|------|------|
+
+### 关键字字典（analysis 域指标 · 与本文并存）
+
+**新开发**的 **`com.vegoo.datacenter.analysis`**（或同构 mock）中**指标类**响应字段（金额、计数、ROI、收入、百分比、环比同比等），除本文表格外还须遵守 **`docs/关键字字典规则.md`**（禁用裸 **`roi`** / **`roiPct`** / **`revenue`**；**`*Pct`** / **`*Ratio`** 后缀等）。HTTP 筛选维度与 cockpit、**string/int** 取舍、分页键名等见 **`docs/关键字字典规则-前端落地边界.md`**，不得与本文「统一筛选维度」在**同一请求体**内混用两种口径。存量接口 **不强制** 一次性回迁。完整约束见 **`keyword-dictionary-analysis.mdc`**。
+
+
+
+### 接口契约与 HTTP JSON 命名（硬性 · 全量键名）
+
+
+
+凡 **`mock/backend-api/*.json`** 中的 **`sampleRequest`、`sampleResponse`、`fieldDescription.request` / `fieldDescription.response`** 以及 **`fieldDescription` 内嵌对象类型**所涉业务字段键名，及 **`src/api` / 页面 `types` 中与上述契约对齐的联调类型字段名**，**必须为小驼峰 camelCase**，**禁止**出现 **下划线 `_`**（含 **snake_case** 与 **`s_` / `n_` / `t_` / `d_` 前缀式**命名）。
+
+
+
+- **新建 / 修订契约**：键名 **零容忍** 下划线；**不得**把数仓物理字段名（如 `s_app_id`、`date_start`、`request_quantity`）原样写入 JSON 契约。
+
+- **存量契约**：凡键名含 `_`，整理时须迁移为驼峰（如 `date_start` → `startDate`，`s_country_code` → `countryCode`，`request_quantity` → `requestQuantity`），并在 Skill 交付物中单列迁移项。
+
+- **本文件表格**中仍可能出现的 **`snake_case` 或 `s_*`/`n_*` 写法**：多指 **数仓 / 离线表 / 历史文档口径**；落 **接口契约** 时须改写为 **同语义 camelCase**（下划线分段转驼峰：`foo_bar_baz` → `fooBarBaz`）。
+
+- **网关统一包裹层**（如 `code`、`message`、`data`）若固定为蛇形，以网关规范为准；**业务体（通常为 `data` 内对象）**仍须 camelCase。
+
+
+
+## 数仓字段前缀（离线表 · 仅概念对照）
+
+
+
+以下前缀用于 **数仓 / 离线表物理字段** 的语义说明，**不得**作为 **`mock/backend-api` 或 HTTP 业务 JSON** 的键名照抄使用。
+
+
+
+| 前缀 | 含义 | 示例（仅数仓） |
+
+|------|------|----------------|
+
 | `t_` | 时间/日期 | `t_date` |
+
 | `s_` | 字符串/ID | `s_app_id`, `s_ad_account_id`, `s_campaign_id`, `s_country_code` |
+
 | `n_` | 数值/枚举 | `n_platform`, `n_source`, `n_ad_type` |
+
 | `d_` | 时间类型或 bit 类型 | 按后端具体表定义 |
+
+
 
 ## 表字段与业务概念
 
-### 时间与维度
+
+
+下文各表中的字段名：凡含 **下划线** 或 **数仓前缀** 者，在 **接口契约与联调 JSON** 中须按 **「接口契约与 HTTP JSON 命名」** 改写为 **camelCase**；表中保留旧名处多指 **历史文档或数仓语义对照**。
+
+
+
+### 接口请求 · 日期范围（入参）
+
+
+
+凡需传递**一段时间范围**的 **API 请求体 / 筛选入参**（`mock/backend-api` 的 `sampleRequest`、`fieldDescription.request`、页面 `types` 入参），**统一使用**下列键名：
+
+
 
 | 字段 | 业务概念 |
+
 |------|----------|
-| `date` | 日期 |
-| `year` | 年 |
-| `month` | 月 |
-| `hour` | 小时 |
-| `initial_date` | 初始日期（买量日期） |
+
+| `startDate` | 查询/筛选起始日期（含） |
+
+| `endDate` | 查询/筛选结束日期（含） |
+
+
+
+- 值格式：推荐 **`YYYY-MM-DD` 字符串**；若模块 `README` 或后端另有说明（如时区），键名仍为 `startDate` / `endDate`。
+
+- **勿**用 `date`、`year`、`month`、`hour`、`initial_date` 等作为「日期范围」入参的替代键名；存量契约若仍用别名，整理时在 Skill 交付物中单列 **「迁移为 startDate/endDate」**。
+
+- **与数仓/响应字段区分**：下文「数据维度与字段关系」中的 **`t_date`** 等为 **数仓行级时间维度**；写入 **契约** 时须用驼峰（如行上的业务日期常用 **`date`**，与 `startDate`/`endDate` 入参区分），**不得**使用 `t_date` 作 JSON 键名。
+
+
+
+### 接口请求 · 统一筛选维度键名（全局 POST 请求体，硬性）
+
+
+
+凡 **HTTP 请求体（通常为 POST JSON）** 中与顶栏/筛选区联动的 **维度入参**，**必须**使用下表键名（**camelCase**），**禁止**下划线或数仓风格键名（如 `s_app_id`、`s_country_code`、`n_platform`）。**响应体与列表行**在 **契约 JSON** 中同样 **只许 camelCase**，见上文 **「接口契约与 HTTP JSON 命名」**。
+
+
+
+| 键名 | 业务概念 | 说明 |
+
+|------|----------|------|
+
+| `appId` | 应用 | `string`，自有应用 ID；「全部」`""`（见「接口请求 · 应用筛选（appId）」） |
+
+| `platform` | 终端平台（安卓 / iOS 等） | `string`；**键名必须为 `platform`（全小写）**，不得写作 `platForm`、`platfrom`、`n_platform` 等作为请求体键名 |
+
+| `source` | 广告平台（渠道） | `string` 枚举；与 `n_source` 语义对齐（见「应用与平台」）；「全部」`""` |
+
+| `countryCode` | 国家代码 | `string`，ISO 3166-1 alpha-2 **小写**；业务语义同 `s_country_code`；「全部」`""` |
+
+| `account` | 广告账户 | `string`，广告主/广告账户 ID；业务语义同 `s_ad_account_id` / `ad_account`；「全部」`""` |
+
+
+
+- **与页面一致（勿凑全量键）**：上表定义的是「**一旦出现该维度，键名与类型必须这样写**」，**不是**要求每个模块的请求体都包含全部五键。`mock/backend-api` 的 `fieldDescription.request`、`sampleRequest` 以及实际 `request.post` 的 body **只应包含本页顶栏/筛选区或该接口业务上真实存在的维度**（及日期、分页等）。某页若无终端平台或广告账户筛选，则契约与入参中 **不要** 写 `platform`、`account` 等仅占位用的字段；若后端单独约定某接口必传固定值，须在契约 `apiSuggestion` 中说明，仍避免与「页面无此筛选项」相矛盾。
+
+- **存量契约**：若仍使用 `s_app_id`、`s_country_code` 等旧键名，整理时须在 Skill 交付物中单列 **「迁移为 appId / countryCode / …」**，新接口一律按上表。
+
+- **与 `meta-filter-options` 联动**：下拉 `value` 与上表入参一致；`platformOptions` 的 `value` 与请求体 **`platform`** 一致。
+
+
+
+### 接口请求 · 筛选「全部」
+
+
+
+凡需表示「**全部应用」「全部广告平台」「全部国家**」等**不限定该维度**的 **API 请求体 / 筛选入参**（`mock/backend-api` 的 `sampleRequest`、`fieldDescription.request`、页面 `types` 入参），**统一使用空字符串 `""`**，**不要**传字面量 `"all"`。
+
+
+
+- **字符串类字段**（如 **`appId`**、**`platform`**、**`source`**、**`countryCode`**、**`account`** 等）：选「全部」时传 **`""`**；`sampleRequest` 中应写 `"appId": ""`、`"countryCode": ""` 等形式，而非 `"all"`。（应用维度见下文「接口请求 · 应用筛选（appId）」。）
+
+- **下拉选项 `value`**：UI 层仍可用 `value: "all"` 表示「全部」选中态（与 `meta-filter-options` 的 `options` 一致）；**在调用 `request.post` 前**须映射为 `""` 再提交（与 `comprehensive-analysis` 的 `buildApiParams` 一致）。
+
+
+
+### 接口请求 · 筛选字段类型（枚举 string）
+
+
+
+与后端约定：**凡出现在 HTTP 请求体（通常为 POST JSON）中的「筛选 / 维度映射」字段**——即与顶栏筛选、`meta-filter-options` 联动、由用户选择某一枚举项后提交给后端的入参——**类型一律为 `string`**，**不要**使用 JSON number。
+
+
+
+- **适用范围（典型）**：请求体中的 **`source`**（广告平台）、**`platform`**（终端平台）、**`countryCode`**、**`appId`**、**`account`** 及后续同类「选枚举值」筛选字段；**键名以「接口请求 · 统一筛选维度键名」为准**，类型一律 **`string`**，除非模块契约单独约定。
+
+- **契约与示例**：`mock/backend-api` 中 `fieldDescription.request` 的 `type` 须为 **`string`**；`sampleRequest` 须写 `\"source\": \"1\"` 这类形式（与 `source` 枚举对齐），**禁止**写 JSON number；**键名须 camelCase**，**勿**使用 `n_source` 等带下划线键名。
+
+- **TypeScript**：页面 `types.ts`、`src/types/api/api.d.ts`、API `fetch*` 的入参类型中，上述字段声明为 **`string`**（可选字段仍 `?: string`）；**属性名与契约键名一致（驼峰）**。
+
+- **「不限」与空串**：与上一节「筛选「全部」」一致，不限定时传 **`\"\"`** 或按模块约定省略；**勿**用数字 `0` 代替「全部」除非该模块契约明确约定。
+
+- **与数仓/明细字段区分**：数仓物理列可能为数值型枚举等；**契约层**筛选维度仍用 **`string` + camelCase 键名**（如响应中的平台维度字段用驼峰命名，类型与后端对齐时在 `fieldDescription` 中写明）。
+
+
+
+### 接口请求 · 应用筛选（appId）
+
+
+
+凡 **HTTP 请求体** 中需要按「**应用**」维度筛选、或与 `meta-filter-options` 的 `appOptions` 联动提交的应用条件，**统一使用键名 `appId`**（**`string`**，自有应用 ID）。
+
+
+
+- **禁止**仅以 `app`、`appPackage` 作为**唯一**应用筛选字段；二者可为历史兼容或展示用别名，但须在模块契约中注明 **以 `appId` 为准**，且 **`sampleRequest` / `fieldDescription.request` 须出现 `appId`**。
+
+- **「全部应用」**：`appId` 传 **`""`**（与「接口请求 · 筛选「全部」」一致）；提交前将 UI `all` 映射为 `""`。
+
+- **与数据字典**：`appId` 与 `s_app_id` 业务语义一致；**新建或修订契约**时请求体**只许**使用 **`appId`**，**不得**再使用 `s_app_id` 作为请求键名。存量若仍用 `s_app_id`，按「接口请求 · 统一筛选维度键名」迁移。
+
+- **响应体 / 列表行**：可出现 `appPackage`、应用名等展示字段（均为 camelCase）；**筛选入参**与上述规则无关时不在此限。
+
+
 
 ### 应用与平台
 
+
+
 | 字段 | 业务概念 |
+
 |------|----------|
-| `platform` | 终端平台：安卓 / iOS |
-| `appId` / `s_app_id` | 应用 ID（自有 ID），含不同部署版本与联动平台 |
-| `app_store` | 应用商店 |
-| `app_version` / `version` | 版本 |
-| `source` / `n_source` | 广告平台：1-Google, 2-Facebook, 3-Unity, 4-AppLovin, 5-IronSource, 6-AdColony, 7-Pangle |
-| `media_source` | 媒体来源 |
-| `channel` | 广告平台 |
+
+| `platform` | 终端平台：安卓 / iOS；**HTTP 请求体**键名必须为 **`platform`**（勿写 `platForm` / `n_platform` 等） |
+
+| `appPackage` | 应用包名（展示、导出列、明细行等）；**不作**接口筛选主键，筛选应用须用 **`appId`**（见「接口请求 · 应用筛选（appId）」） |
+
+| `app` | 历史兼容字段，语义同 `appPackage`；**不作**应用筛选主键 |
+
+| `appId` | 应用 ID（自有 ID）；**请求/响应契约**均用此驼峰键名（`string`）；数仓物理列常为 `s_app_id`，**不得**写入契约 JSON |
+
+| `appStore` | 应用商店（契约）；历史叙述或数仓可能为 `app_store` |
+
+| `appVersion` / `version` | 版本（契约用 `appVersion` 或 `version`，勿 `app_version`） |
+
+| `source` | 广告平台（渠道）；**契约**中筛选与行维度键名；枚举 1–7 同数仓 `n_source` 口径，**string**（见「接口请求 · 筛选字段类型（枚举 string）」） |
+
+| `mediaSource` | 媒体来源（契约）；勿 `media_source` |
+
+| `channel` | 广告平台（展示/历史别名）；**新契约筛选入参**优先 `source` |
+
+
 
 ### 广告层级
 
+
+
 | 字段 | 业务概念 |
+
 |------|----------|
-| `ad_account` / `s_ad_account_id` | 广告账号 |
-| `campaign` / `s_campaign_id` | 广告系列 |
-| `group` / `s_group_id` | 广告组 |
-| `ad_network` / `s_ad_network_type` | 广告网络 |
-| `ad_type` / `n_ad_type` | 广告类型（仅收入表 `t_ad_revenue_detail`） |
-| `ad_unit` / `s_ad_unit_id` | 广告单元（仅收入表 `t_ad_revenue_detail`） |
+
+| `account` | 广告账户 ID；**筛选入参**（`string`）；行数据契约可用 **`accountId`** 等同义驼峰，勿 `s_ad_account_id` |
+
+| `campaignId` | 广告系列 ID（契约）；数仓 `s_campaign_id` |
+
+| `groupId` | 广告组 ID（契约）；数仓 `s_group_id` |
+
+| `adNetworkType` | 广告网络类型（契约）；数仓 `s_ad_network_type` |
+
+| `adType` | 广告类型（契约，如收入明细）；数仓 `n_ad_type` |
+
+| `adUnitId` | 广告单元 ID（契约）；数仓 `s_ad_unit_id` |
+
+
 
 ### 地域
 
+
+
 | 字段 | 业务概念 |
+
 |------|----------|
-| `country_code` / `s_country_code` | 国家代码 |
+
+| `countryCode` | 国家代码；**请求与响应契约**统一此驼峰键名；ISO 3166-1 alpha-2 小写；数仓常为 `s_country_code`，**不得**写入契约 JSON |
+
+
+
+### 指标与行为等字段（契约层驼峰）
+
+
+
+下文「消耗与展示」「收入与价值」「用户与行为」「订单与支付」等表中，若字段名仍为 **snake_case**（如 `active_user_count`、`request_quantity`），表示 **历史文档或数仓口径**；写入 **`mock/backend-api` 与联调类型** 时须改为 **camelCase**（`activeUserCount`、`requestQuantity`），规则同 **「接口契约与 HTTP JSON 命名」**。
+
+
 
 ### 消耗与展示
 
+
+
 | 字段 | 业务概念 |
+
 |------|----------|
+
 | `cost` | 花费 |
+
 | `impressions` | 展示次数 |
+
 | `clicks` | 点击量 |
+
 | `installs` | 安装量 |
+
 | `from` | 数据来源 |
+
 | `budget` | 预算 |
+
+
 
 ### 收入与价值
 
+
+
 | 字段 | 业务概念 |
+
 |------|----------|
+
 | `revenue` | 收入 |
+
 | `request_quantity` | 请求数量 |
+
 | `filled_request` | 填充数量 |
+
 | `firebase_ad_revenue` | Firebase 记录的 Ad_Impression 累计广告价值 |
+
 | `ad_revenue` | 广告价值 |
+
 | `lap_revenue` | 内购价值（含订阅） |
+
 | `subscription_revenue` | 订阅收入 |
+
 | `current_ar` | 当前广告价值 |
+
 | `current_arp` | 当前广告+内购价值 |
+
 | `current_far` | 当前 Firebase 广告价值 |
+
 | `ar1` | 1 日广告价值 |
+
 | `arp1` | 1 日广告+内购价值 |
+
 | `far1` | 1 日 Firebase 广告价值 |
 
+
+ 
 ### 用户与行为
 
+
+
 | 字段 | 业务概念 |
+
 |------|----------|
+
 | `active_user_count` | 活跃用户数 |
+
 | `new_user_count` | 新增用户数 |
+
 | `sessions` | 总会话次数 |
+
 | `event_count` | 事件数 |
+
 | `avg_play_time` | 人均使用时长（秒） |
+
 | `user_count_day1` | day1 留存用户数 |
+
 | `register_user_count` | 注册用户数 |
+
 | `day0` | 当日活跃用户 |
+
 | `day1` | 次留（第二天留存） |
+
 | `day7` | 7 日留存 |
+
 | `mau` | 月活跃用户 |
+
 | `play_time` | 用户每天游戏时长（分钟） |
+
+
 
 ### 订单与支付
 
+
+
 | 字段 | 业务概念 |
+
 |------|----------|
+
 | `amount` | 实收金额（已去除平台抽成） |
+
 | `money` | 金额（未去除平台抽成） |
+
 | `quantity` | 数量 |
+
 | `sku` | 商品 |
+
 | `order` | 订单 |
+
+| `orderId` | 订单号（业务侧唯一标识，`string`）；契约键名；数仓常为 `s_order_id` |
+
+| `userDisplayId` | 用户展示 ID（列表/详情）；勿 `user_display_id` |
+
 | `times` | 订阅次数 |
-| `payment_platform` | 支付平台 |
+
+| `paymentPlatform` | 支付平台（契约）；勿 `payment_platform` |
+
 | `product` | 商品 |
+
+
 
 ### 其他
 
+
+
+| 字段 | 业务概念 |
+
+|------|----------|
+
+| `notification` | 通知 |
+
+| `advertising` | 用户广告 |
+
+| `detailApp` | 整体回收明细：响应行可选字段，与页内「应用」子筛 `value` 对齐（如 `weather5`）；未拆行时可省略。**请求**（如 `overall-tab/detail-records`）中作子筛时 `''` 表示全部，非空与行字段及下拉 value 一致。 |
+
+| `detailChannel` | 整体回收明细：响应行可选字段，与页内「广告平台」子筛 `value` 对齐（如 `google`、`facebook`）；未拆维度时可省略。**请求**（`detail-records`）中作子筛时 `''` 表示全部。 |
+
+
+
+### 前端展示与契约结构字段（必须入表）
+
+以下字段多为「页面展示/组件结构」或「契约响应体结构」字段名。根据本项目规则：**只要字段在契约 / types / API 中出现，且不在本表已有条目中，就必须在此补齐**，避免出现“接口已在用但字段表缺失”的灰区。
+
+#### 通用结构/容器字段
+
 | 字段 | 业务概念 |
 |------|----------|
-| `notification` | 通知 |
-| `advertising` | 用户广告 |
+| `items` | 列表数据项数组（非分页时也可用）。 |
+| `tab` | 经营报告「侧栏应用列表」等接口请求体：与页面二级 Tab 对齐的 `string` 枚举键（如 `summary`、`adPlatform`、`byCountry`、`platformCountry`、`campaigns`），用于侧栏卡片次要指标口径。 |
+| `appIds` | 经营报告等顶栏「应用」**多选**（POST body 键名）：`string[]`，元素为自有应用 ID（与 `appId` 筛选维度一致）；**空数组 `[]` 表示不限**。与侧栏选中行的 `appId`（详情入参）区分。 |
+| `compareAppIds` | 经营报告**对比模式**（`*-06/07/08`）勾选的应用 id 列表：`string[]`（最多 5 个）；与顶栏范围 `appIds` 分列，避免同请求体内键名冲突。 |
+| `platformList` | 经营报告顶栏「终端平台」多选：`string[]`，元素与 `platform` 入参取值域一致；**`[]` 表示不限**（替代单笔 `platform` 字符串）。 |
+| `sourceList` | 经营报告顶栏「广告平台」多选：`string[]`，元素与 `source` 枚举 string 一致；**`[]` 表示不限**。 |
+| `countryCodeList` | 经营报告顶栏「国家」多选：`string[]`，小写 ISO 3166-1 alpha-2；**`[]` 表示不限**。 |
+| `records` | 列表/表格主数据数组（分页接口常见键名，与 `items` 并存时以模块契约为准）。 |
+| `current` | 当前页码（分页，一般从 1 起）。 |
+| `size` | 每页条数（分页）。 |
+| `total` | 符合条件的总条数（分页）。 |
+| `downloadUrl` | 导出/下载类接口返回的短时有效文件 URL。 |
+| `BizIconUploadData` | （TS）公共 **`POST` `/api/v1/datacenter/biz/icon/upload`** 解包后业务体：`contentType`、`downloadUrl`（可访问地址）、`iconName`、**`size`（文件字节，与分页 `size` 不同义）**；`iconKey` 为存储键（可映射为下游 `iconFileKey`）。**Query** `iconKey`：非文件参数，为业务分组（如当前路由 `name`），与 **响应体** `data.iconKey` 同名不同位。见 `src/api/biz-icon-upload.ts`。 |
+| `fileId` | 异步导出任务或生成文件的 ID（与 `downloadUrl` 二选一或并存依模块约定）。 |
+| `expiredAt` | 失效时间类展示（如凭据异常弹窗）；约定格式见各模块契约，可为 `YYYY-MM-DD HH:mm:ss` 或占位符。 |
+| `keyword` | 关键字搜索入参（多列模糊匹配时统一使用该字段名）。 |
+| `detail` | 详情主体对象（弹窗/抽屉/详情页的主数据）。 |
+| `series` | 图表序列数组（每项一条曲线/柱状序列）。 |
+| `channels` | 按广告平台拆分的行数组（实时数据详情中的平台分布）。 |
+| `hourLabels` | 小时/时段横轴标签数组（与各序列等长）。 |
+| `costSeries` | 与 `hourLabels` 对齐的花费序列（USD）。 |
+| `roiPercentSeries` | 与 `hourLabels` 对齐的 ROI 序列（百分比数值）。 |
+| `categories` | 图表横轴类别标签数组（与各数据序列等长，如趋势图日期段）。 |
+| `highlights` | 洞察/说明正文中需前端高亮的关键词 `string[]`。 |
+| `d_fill_rate` | 填充率百分比数值（0–100，非 0–1）。 |
+| `valueText` | KPI/卡片主指标的预格式化展示文案（与纯数值派生展示二选一以模块契约为准）。 |
+| `changeText` | 环比/同比等变化量的展示文案（可含符号与百分号）。 |
+| `positive` | 指标变化是否为正向（用于涨跌配色等 UI）。 |
+| `dataSourceLabel` | 数据来源展示文案（如 `Open Exchange`，用于 KPI/卡片静态文案后端下发场景）。 |
+| `insights` | AI/分析洞察项数组（元素字段见各模块 `mock/backend-api`）。 |
+| `formatType` | 广告位/表格行上的版位类型键（如 `banner`、`interstitial`、`rewarded`），用于标签样式与分支展示。 |
+| `waterfallByTab` | 瀑布流配置按 Tab（广告形式）分组的映射；键为 `banner`、`interstitial`、`rewarded`、`other` 等与 UI Tab 一致。 |
+| `network` | 广告网络展示名（表格/瀑布流等 UI，与 `ad_network` 语义对应）。 |
+| `adPlatform`（应用分配列表/详情） | 与同行 **`source`**（广告平台 **string** 枚举）配对的**展示文案**；筛选与 POST 主键仍用 **`source`**（及 cockpit `sourceOptions`）。 |
+| `text` | 段落类正文纯文案（如部分 AI 洞察卡片的 `text` 字段）。 |
+| `CockpitMetaFilterOptionsData` | （TS 响应体类型）公用 **`GET`** `.../analysis/cockpit/meta-filter-options`（无参）业务体；定义见 `src/types/cockpit-meta-filter.ts`。**与同构顶栏配套时**：页面 **直接读** **`useCockpitMetaFilterStore().data`**（或 `useCockpitMetaFilterOptions().cockpitMeta`）；业务 **POST** 请求体维度键名须符合上文 **「接口请求 · 统一筛选维度键名」**（`appId` / `platform` / `source` / `countryCode` / `account`）。勿在各模块 `mock/backend-api` 再建重复契约 JSON，仅在 README 标注并引用 **`paid-analysis/mock/backend-api/README.md` 附录 A**（见 `api-contract-and-mock-conventions.mdc`）。 |
+| `CockpitMetaOptionItem` | （TS 类型）上述 meta 中单项 `{ label, value }`；定义见 `src/types/cockpit-meta-filter.ts`。 |
+| `PaidAnalysisChannelTabOverviewData` | （TS）付费分析 channel Tab 概览接口体；契约 `02-tab-channel-overview.json`（`views/user-growth/paid-analysis/mock/backend-api/` 根目录扁平）。 |
+| `PaidAnalysisChannelTabTablesData` | （TS）channel Tab 表格接口体；契约 `02-tab-channel-tables.json`（同目录根扁平）。 |
+| `PaidAnalysisChannelTabChartsData` | （TS）channel Tab 图表接口体；契约 `02-tab-channel-charts.json`。 |
+| `PaidAnalysisChannelTabData` | （TS）上述三段响应在客户端合并后的交叉类型。 |
+| `PaidAnalysisProductRankingRow` | （TS）付费分析商品排行表行；契约 `03-tab-product-ranking.json`。 |
+| `PaidAnalysisProductPaidDateSummaryRow` | （TS）按付费日汇总局单行；契约 `03-tab-product-charts.json`。 |
+| `PaidAnalysisProductTabOverviewData` | （TS）product Tab KPI 接口体；`03-tab-product-overview.json`。 |
+| `PaidAnalysisProductTabRankingData` | （TS）product Tab `productRows` 接口体；`03-tab-product-ranking.json`。 |
+| `PaidAnalysisProductTabChartsData` | （TS）product Tab 图例与图表接口体；`03-tab-product-charts.json`。 |
+| `PaidAnalysisProductTabData` | （TS）product Tab 三段响应合并后的交叉类型。 |
+| `totalApplications` | 应用管理顶部统计接口：当前筛选条件下应用总条数（整数；与列表分页 `total` 口径一致）。 |
+| `iosCount` | 应用管理顶部统计：终端平台为 iOS 的应用数（整数）。 |
+| `androidCount` | 应用管理顶部统计：终端平台为 Android 的应用数（整数）。 |
+| `pendingCount` | 应用管理顶部统计：待处理条数；本页与 UI「待处理」一致，口径为状态「禁用」的应用数（整数）。 |
+| `PerfConfigOverviewKpi` | （TS）绩效配置顶栏 KPI 响应体；契约 `views/config-management/perf-config/mock/backend-api/06-perf-config-overview-kpi.json`。内含 **`total`**（当前筛选下配置总行数，与列表分页 `total` 口径一致）、**`published`** / **`draft`** / **`archived`**（按激活版本 `status` 聚合的条数，整数）。 |
+| `flagIconUrl` | 配置管理·国家：国旗**图标**展示用 URL（`string`）；先经 `POST .../country/flag-icon/upload` 等上传能力得到地址后写入国家创建/更新/列表；空字符串表示未配置；勿用国旗 emoji 替代持久化字段。 |
+| `CountryOverviewKpi` | （TS）国家管理顶栏 KPI 响应体；契约 `views/config-management/country-management/mock/backend-api/09-country-overview-kpi.json`。内含 **`total`**（当前筛选下国家总数）、**`currencies`**（非空 `currency` 去重数）、**`mainMarkets`**（`isMainMarket=true` 条数）、**`noCurrency`**（`currency` 为空条数）。 |
+| `CountryRegionDistributionItem` | （TS）国家管理地区分布图单项；契约 `views/config-management/country-management/mock/backend-api/10-country-region-distribution.json`。含 **`region`**、**`count`**、**`percent`**。 |
+| `CountryMainMarketShareItem` | （TS）国家管理主要市场占比图单项；契约 `views/config-management/country-management/mock/backend-api/11-country-main-market-share.json`。含 **`countryCode`**、**`countryName`**、**`sharePercent`**。 |
+| `ExchangeRateOverviewKpi` / `ExchangeRateTrendPoint` | （TS）汇率管理左列 KPI 与右列走势图响应体；契约 `views/config-management/exchange-rate-management/mock/backend-api/07-exchange-rate-overview-kpi.json` 与 `08-exchange-rate-trend.json`。前者含 **`total`**、**`abnormal`**、**`lastSyncTime`**；后者含 **`date`**、**`rate`**。 |
+| `CostCoefficientOverviewKpi` | （TS）成本系数管理 KPI 响应体；契约 `views/config-management/cost-coefficient/mock/backend-api/06-cost-coefficient-overview-kpi.json`。内含 **`total`**（配置总条数）、**`active`**（已启用条数）、**`platforms`**（平台覆盖数）、**`monthChanges`**（本月变更次数）。 |
+
+#### 下拉/筛选选项字段
+
+| 字段 | 业务概念 |
+|------|----------|
+| `appOptions` | 应用筛选下拉选项数组。 |
+| `platformOptions` | 终端平台筛选项数组（`label`/`value`，值与 `platform` 入参一致）。 |
+| `conversionTypeOptions` | **广告平台转化类型**筛选项数组（`value` 与 `platformConversionType` / `conversionType` 筛选一致）。 |
+| `statusOptions` | 映射等业务**状态**筛选项数组（如启用/重复/未映射）。 |
+| `options` | 通用配置项数组（元素多为 `{ label, value }`；如转化展示分类等 meta 接口）。 |
+| `sourceOptions` | 广告平台筛选下拉选项数组。 |
+| `pairOptions` | 汇率管理同步弹窗中的货币对选项数组（项为 `{ label, value }`，`value` 如 `USD/EUR`）。 |
+| `countryOptions` | 国家筛选下拉选项数组（`value` 为小写 ISO 3166-1 alpha-2）。 |
+| `timezoneOptions` | 国家管理等页面的时区下拉选项数组（值如 `GMT+8`）。 |
+| `regionOptions` | 国家管理等页面的地区下拉选项数组（如 `亚太`、`欧洲`、`北美`、`其他`）。 |
+| `currencyOptions` | 国家管理、汇率管理等页面的货币下拉选项数组（国家管理可为 `USD - 美元`，汇率管理可为 `USD`）。 |
+| `label` | 选项展示文案。 |
+| `value` | 选项值（UI 中「全部」常用 `all`；**提交接口入参时**须按上文「接口请求 · 筛选「全部」」映射为 `""`）。 |
+
+#### UI 展示字段（实时数据模块常用）
+
+| 字段 | 业务概念 |
+|------|----------|
+| `id` | 前端展示用主键（在实时数据中常与 **`appId`** 对齐）；契约须 camelCase |
+| `name` | 展示名称（应用名/平台名/图例名等）。 |
+| `iconText` | 图标区展示字符（emoji/字母等），纯展示字段。 |
+| `iconBg` | 图标背景色（CSS 颜色字符串），纯展示字段。 |
+| `iconColor` | 小圆点/标记颜色（CSS 颜色字符串），纯展示字段。 |
+| `color` | 图表颜色（CSS 颜色字符串），纯展示字段。 |
+| `isLive` | 是否“实时刷新/在线”状态（影响 UI 标识）。 |
+| `hasWarning` | 是否存在预警状态（影响 UI 标识）。 |
+| `warningBadge` | 预警角标文案（如超额、低活跃）。 |
+| `launchLabel` | 卡片状态文案（如实时/展开明细）。 |
+| `chartData` | 火花图/迷你趋势序列数组（长度由产品约定）。 |
+| `chartColor` | 火花图主色（CSS 颜色字符串）。 |
+| `actionTag` | 操作标签文案（如“选择”）。 |
+| `actionTagType` | 操作标签类型（如 `cyan/orange/gray/red`）。 |
+| `trendCompareLabel` | KPI 卡片趋势角标**对比期文案**（如 vs昨日）；可选，与 `trendText`（变化幅度展示）配合使用。 |
+
+#### KPI/业务指标（实时数据模块）
+
+| 字段 | 业务概念 |
+|------|----------|
+| `onlineApps` | 在线应用数（整数）。 |
+| `totalApps` | 应用总数（整数）。 |
+| `todaySpend` | 今日花费（USD；与 `cost` 同语义但为 KPI 命名）。 |
+| `spend` | 花费（USD；与 `cost` 同语义，实时数据 UI 历史字段名）。 |
+| `spendChange` | 花费环比/同比展示文案（已含符号或百分号）。 |
+| `spendUp` | 花费变化方向（上升/下降）。 |
+| `cpi` | CPI（Cost Per Install，USD/安装；与 `cost`、`installs` 共同派生的指标）。 |
+| `cpiChange` | CPI 变化展示文案。 |
+| `cpiUp` | CPI 变化方向（上升/下降）。 |
+| `activeSeries` | 活跃广告系列数量（整数）。 |
+| `budgetProgress` | 预算进度（0-100）。 |
+| `budgetDaysLeft` | 预算耗尽预估文案（如“~5天后”）。 |
+| `estimatedProfit` | 预估利润（USD，可为负；展示口径由产品定义）。 |
+| `balance` | 账户/余额（USD；展示口径由产品定义）。 |
+| `ctr` | 点击率（百分比数值，如 3.2 表示 3.2%）。 |
+| `cvr` | 转化率（百分比数值）。 |
+| `roi` | ROI（百分比数值；口径需在模块契约说明）。 |
+| `roiTotal` | 总 ROI（百分比数值；如广告系列详情广告组列表「总 ROI」列）。 |
+| `roiAvg` | ROI 均值（百分比数值）。 |
+| `roiTarget` | ROI 目标/阈值（百分比数值）。 |
+| `roiGood` | ROI 是否达标（用于样式）。 |
+| `roiColor` | ROI 展示色（CSS 颜色字符串）。 |
+| `roi1d` | 1 日 ROI（百分比数值）。 |
+| `roi3d` | 3 日 ROI（百分比数值）。 |
+| `warningApps` | 预警应用数（整数）。 |
+
+#### 小时序列字段（实时数据详情）
+
+| 字段 | 业务概念 |
+|------|----------|
+| `hourlyData` | 小时/时段花费序列（USD）。 |
+| `hourlyRoi` | 小时/时段 ROI 序列（百分比数值）。 |
+
+#### 人员绩效（列表页 / 概览）
+
+| 字段 | 业务概念 |
+|------|----------|
+| `personOptions` | 人员绩效列表：人员筛选项（`label`/`value`；「全部」`value` 为 `""`）。 |
+| `appCategoryOptions` | 人员绩效列表：应用分类筛选项（与请求 `appFilter` 取值对齐）。 |
+| `personFilter` | **请求**：人员筛选（`""` 表示全部；非空与 `personOptions.value` 或人员 id 对齐）。 |
+| `appFilter` | **请求**：应用分类筛选（`""` 表示全部）。 |
+| `statusFilter` | **请求**：达标状态筛选（`""` / `达标` / `未达标`；与列表 Chip 文案一致）。 |
+| `sortField` | **请求**：列表排序字段（如 `adSpend`；空为默认序）。 |
+| `sortAsc` | **请求**：是否升序（与 `sortField` 联用）。 |
+| `surname` | 人员绩效列表行：姓氏（头像旁单字）。 |
+| `avatarBg` | 人员绩效列表行：头像背景色（CSS 颜色字符串）。 |
+| `levelClass` | 人员绩效列表行：职级样式（`senior` / `mid` / `junior`）。 |
+| `adSpend` | 人员绩效列表行：广告支出（USD）。 |
+| `agentCost` | 人员绩效列表行：代投消耗（USD）。 |
+| `minCost` | 人员绩效列表行：最低消耗（USD）。 |
+| `minProfit` | 人员绩效列表行：最低利润（USD，可负）。 |
+| `estProfit` | 人员绩效列表行：预估利润（USD，可负；与 `estimatedProfit` 同语义）。 |
+| `roi1` | 人员绩效：1 日 ROI（百分比数值，如 93 表示 93%）。 |
+| `roi3` | 人员绩效：3 日 ROI（百分比数值）。 |
+| `roi7` | 人员绩效：7 日 ROI（百分比数值）。 |
+| `reportDate` | 人员绩效列表行：数据归属日期（`YYYY-MM-DD`）。 |
+| `totals` | 人员绩效列表响应：当前筛选下全量合计（表尾行；结构见模块契约 `PerformanceListTotals`）。 |
+| `avgRoi1` | 人员绩效概览：首日 ROI 均值（百分比数值）。 |
+| `failCount` | 人员绩效概览：未达标关注人数（口径以模块契约为准）。 |
+| `failNames` | 人员绩效概览：未达标关注人员姓名列表。 |
+| `roiStatusLabel` | 人员绩效概览：ROI 达标结论文案（如 达标 / 未达标）。 |
+| `adSpendWeekOverWeekText` | 人员绩效概览：广告支出环比展示文案（已含符号，可选）。 |
+| `estProfitWeekOverWeekText` | 人员绩效概览：预估利润环比展示文案（可选）。 |
+
+#### 人员绩效对比页
+
+| 字段 | 业务概念 |
+|------|----------|
+| `staffIds` | **请求**：对比页当前已选人员 ID 列表（顺序与 UI 标签一致）。 |
+| `excludeIds` | **请求**：对比候选接口中需排除的人员 ID（已在对比条中）。 |
+| `totalAd` | 对比页 KPI：广告支出合计（USD）。 |
+| `totalProfit` | 对比页 KPI：预估利润合计（USD，可负）。 |
+| `avgRoi` | 对比页 KPI：首日 ROI 均值（百分比数值）。 |
+| `roiPassLabel` | 对比页 KPI：ROI 达标结论短文案（可选）。 |
+| `failName` | 对比页 KPI：未达标人员姓名字符串（多人顿号连接，与 `failCount` 口径一致）。 |
+| `radarIndicators` | 对比雷达：轴定义数组（`name` + `max`），与 `radarSeries.values` 下标对齐。 |
+| `radarSeries` | 对比雷达：每人一条轮廓（`id`、`name`、`values`）。 |
+| `roiTrend` | 对比图：首日 ROI 折线序列数组（每人 `id`/`name`/`values`，与 `dates` 等长）。 |
+| `adSpendTrend` | 对比图：广告支出趋势序列（结构同折线序列）。 |
+| `profitBars` | 对比图：预估利润条形（`id`、`name`、`value` USD）。 |
+| `roiRefLines` | 对比 ROI 图：参考线定义（如达标线/最低要求，`name` + `value` 百分比数值）。 |
+| `r1` | 对比排名表：第一名展示文案（预格式化字符串）。 |
+| `r2` | 对比排名表：第二名展示文案。 |
+| `r3` | 对比排名表：第三名展示文案。 |
+
+#### 转化管理（映射列表 + 转化数据 Tab）
+
+| 字段 | 业务概念 |
+|------|----------|
+| `conversionId` | 广告平台侧**转化 ID**（接口与 Mock 一律 **string**，避免长整型精度问题）。 |
+| `conversionName` | 广告平台侧**转化名称**（原始事件名，可能较长）。 |
+| `conversionType` | **筛选入参**：平台转化类型（空串表示全部；取值口径与 `platformConversionType` 一致）。 |
+| `adPlatform` | **广告平台**入参/表单历史字段，语义同 `source`；新契约优先使用 `source`。 |
+| `platformConversionType` | **广告平台转化类型**（展示/色条用；收敛枚举：`PHONE_CALL_LEAD`、`DOWNLOAD`、`PURCHASE`、`ADD_TO_CART`、`PAGE_VIEW`、`BEGIN_CHECKOUT`；亦可返回其它字符串，前端默认样式兜底）。 |
+| `systemDisplayName` | **系统内展示名称**（业务映射后的简称；与 `conversionName` 成对出现）。 |
+| `mccAccount` | **MCC / 经理账户**标识（列表、弹窗、树表维度）。 |
+| `billingType` | **计费类型**（如 `CPA`、`CPI`、`CPE`；**空字符串** 表示未知/不适用）。 |
+| `conversionDisplayType` | **转化展示分类**（与 `platformConversionType` 不同维度）：`paid` / `activation` / `behavior` / `revenue`。 |
+| `remarks` | 映射**备注**（编辑保存）。 |
+| `status` | **映射状态**：`enabled` 启用、`duplicate` 重复、`unmapped` 未映射。 |
+| `mappingStats` | **映射状态统计**对象（内含 `mapped`、`duplicate`、`unmapped` 等**条数计数**；勿与单行 `status` 混为一谈）。 |
+| `platformStats` | **终端分布统计**对象（如 `android`、`ios` 条数或占比，以契约为准）。 |
+| `typeDistribution` | **转化类型分布**数组（环形图等；项含 `name`、`value` 占比、`count` 可选）。 |
+| `tableRows` | **转化数据明细**树表根数组（`group`→`account`→`conversion`）。 |
+| `level` | 树表**层级**：`group` 账户组、`account` 账户、`conversion` 转化行。 |
+| `accountGroupName` | **账户组名称**（树表维度）。 |
+| `accountName` | **广告账户名称**（树表维度）。 |
+| `children` | **子节点**数组（树表嵌套；父行收起/展开用）。 |
+| `conversionCount` | **转化次数**（树表行指标或 KPI 子项；合计/单行依上下文）。 |
+| `conversionValue` | **转化价值**（金额等价值口径见模块契约，常 USD）。 |
+| `share` | **占比**（0–100；对应次数或价值占比以契约为准）。 |
+| `trendPoints` | **迷你趋势**序列（无时间轴点列，如长度 14，用于表格内 sparkline）。 |
+| `kpi` | **KPI 汇总区**对象（如 `conversionCount`/`conversionValue`/`averageValue`/`activeTypeCount` 等子指标，子结构多为 `{ value, deltaPercent }`）。 |
+| `averageValue` | **平均价值**类 KPI 子指标（如总价值/总次数）。 |
+| `activeTypeCount` | **活跃转化类型数**（KPI 子项，整数）。 |
+| `deltaPercent` | 指标相对对比期的**变化百分比**（可正可负；常见于 KPI 子项）。 |
+| `sidePanels` | 转化数据 Tab **右侧面板**容器（类型分布、Top10、趋势、账户占比等）。 |
+| `valueTrend30d` | **多日价值/指标趋势**数组（产品可约定 30 日；项含日期字符串与 `value`；日期键名 **`date`**，非筛选用的 `startDate`/`endDate`）。 |
+| `top10` | **Top10 排行**数组（项多为名称 + 数值，口径见契约）。 |
+| `accountShare` | **账户维度占比**数组（列表项含账户名与 `segments`）。 |
+| `segments` | **分段占比**数组（如 `{ type, percent }`；`type` 常为转化类型名；同一账户内 `percent` 合计约 100）。 |
+| `createdAt` | **创建时间**（ISO 8601 字符串；详情/审计扩展）。 |
+| `updatedAt` | **更新时间**（ISO 8601 字符串）。 |
+
+#### 旧版 Mock 图表结构字段（仍在 types 中出现）
+
+> 说明：`RealtimeBottomSeries` 旧结构使用固定应用 key（如 `weather5`），属于历史展示结构字段名。只要仍在 `types.ts` 中出现，就必须在字段表中登记。
+
+| 字段 | 业务概念 |
+|------|----------|
+| `weather5` | 旧版底部图：Weather5 应用的花费序列 key。 |
+| `phonetracker` | 旧版底部图：PhoneTracker 应用的花费序列 key。 |
+| `bloodsugar2` | 旧版底部图：BloodSugar2 应用的花费序列 key。 |
+| `phonetracker2` | 旧版底部图：PhoneTracker2 应用的花费序列 key。 |
+
 
 ## 数据维度与字段关系
 
-- **时间**: `t_date`
+
+
+以下为 **数仓 / 离线模型** 上的维度字段（`s_*` / `n_*` / `t_*`），**仅供血缘与语义对照**。**接口契约**中对应关系示例：**`s_app_id` → `appId`**，**`n_platform` → `platform`**，**`n_source` → `source`**（或行内维度用业务约定驼峰），**`s_country_code` → `countryCode`**，**`s_ad_account_id` → `account` / `accountId`**，**`t_date` → `date`** 等；**禁止**在 `mock/backend-api` 中继续使用左侧数仓键名。
+
+
+
+- **时间**: `t_date`（行级/报表维度字段；**筛选入参**的日期范围见上文 **「接口请求 · 日期范围」** 之 `startDate` / `endDate`）
+
 - **应用**: `s_app_id`
+
 - **终端平台**: `n_platform`
+
 - **广告平台（渠道）**: `n_source`
+
 - **广告账号**: `s_ad_account_id`
+
 - **广告系列**: `s_campaign_id`
+
 - **广告组**: `s_group_id`
+
 - **广告网络**: `s_ad_network_type`
+
 - **应用版本**: `app_version`
+
 - **国家代码**: `s_country_code`
+
 - **广告类型**: `n_ad_type`（仅存在于收入表 `t_ad_revenue_detail`）
+
 - **广告单元**: `s_ad_unit_id`（仅存在于收入表 `t_ad_revenue_detail`）
+
+
 
 **层级关系（一对多）：**
 
+
+
 - `n_ad_type` ↔ `s_ad_unit_id` 一对多
+
 - `(s_app_id, n_platform)` 作为准唯一键 ↔ `s_country_code` 一对多
+
 - `(s_app_id, n_platform)` 作为准唯一键 ↔ `n_source` 一对多
+
 - `n_source` ↔ `s_ad_account_id` 一对多
+
 - `n_source` ↔ `s_ad_network_type` 一对多
+
 - `s_ad_account_id` ↔ `s_campaign_id` 一对多
+
 - `s_campaign_id` ↔ `s_group_id` 一对多
+
+
 
 ## 使用说明
 
-- 在 `src/types/api/api.d.ts` 或页面 `types.ts` 中定义接口类型时，字段名与上表一致。
-- 表格列 `prop`、筛选表单项 `v-model` 绑定的字段、请求参数名，优先使用上表中的字段名（如 `s_source` 对应后端 `n_source` 时以实际接口为准，但业务概念对应「广告平台」）。
+
+
+- 在 `src/types/api/api.d.ts` 或页面 `types.ts` 中定义接口类型时，**凡与 `mock/backend-api` 契约对齐的字段名**须 **camelCase、无下划线**，并与 **「接口契约与 HTTP JSON 命名」** 一致。
+
+- 表格列 `prop`、筛选表单项 `v-model`：可与组件内部状态一致；**提交 HTTP JSON** 时须映射为契约规定的驼峰键名（含 **`appId` / `platform` / `source` / `countryCode` / `account`** 等）。
+
 - 文案与 i18n：展示给用户的标签、筛选项文案使用表中的「业务概念」列（如「广告系列」「国家代码」），保持与后端字段表一致。
-- 国家代码需展示国旗时：仅用 `s_country_code`（ISO 3166-1 alpha-2），前端用依赖 `flag-icons` 映射为 `fi fi-xx` 样式类；**不要**在接口/Mock 中返回国旗 emoji 或图片 URL（详见 `project-conventions.mdc`「国旗与 flag-icons」）。
+
+- 国家代码需展示国旗时：契约/响应字段用 **`countryCode`**（ISO 3166-1 alpha-2）；前端用 `flag-icons` 映射为 `fi fi-xx`；**不要**在接口/Mock 中返回国旗 emoji 或图片 URL（详见 `project-conventions.mdc`「国旗与 flag-icons」）。
+
+
+
+## 维护与对齐约定
+
+
+
+- **单一事实来源**：新增或调整业务字段含义时，**须先**在本文件增改并对齐，**再**同步 `mock/backend-api` 契约、`types.ts`、`src/api`；禁止长期「契约一套、字典无条目」。
+
+- **强制收口（新增字段必须进字段表）**：从现在开始，**无论什么字段**，只要出现在以下任一处且在本文件表格中找不到**契约层 camelCase 语义**对应条目，均视为“新增字段”，必须**先**在本文件补充条目（字段名 + 业务概念/语义）后，才允许落到代码与契约中：
+  - `mock/backend-api/*.json` 的 `fieldDescription.request` / `fieldDescription.response` / 其引用的嵌套类型字段；以及 `sampleRequest` / `sampleResponse` 中出现的字段名（**须无下划线**）
+  - 页面 `types.ts` / `src/types/api/api.d.ts` 中的接口入参/出参字段名
+  - `src/api/**` 的请求参数（POST body）与响应体字段名（含解包后的业务体）
+
+- **契约键名**：凡落入上述 JSON 契约的键名 **不得含 `_`**；与表中历史 snake_case 同行时，以 **驼峰形式** 写入字段表（或在该行 `description` 中写明契约键名）。
+
+  该规则的目标是杜绝「接口/契约/类型已经在用，但字段表缺失」导致的联调歧义与后续重构成本。
+
+  **验收口径**：做模块契约整理或新增接口时，必须能在本文件中“逐字段查到对应条目”；查不到的字段即为未完工项。
+
+- **筛选入参类型**：凡属「筛选 / 维度映射」入参，须符合 **「接口请求 · 统一筛选维度键名」** 以及 **「接口请求 · 筛选「全部」」**、**「接口请求 · 筛选字段类型（枚举 string）」**、**「接口请求 · 应用筛选（appId）」**；契约 `sampleRequest`、页面类型与之一致。
+
+- **复用优先**：与表中已有业务概念相同则 **必须使用** 表内字段名；确属新维度再在表中新增一行。
+
+- **别名与历史名**：可在契约 `fieldDescription.description` 中注明「同某标准字段」；整理契约时由 `module-api-contract-audit` Skill 交付物单列合并建议。
+
+- **与契约分工**：本文件不写 Tab/按钮级功能点；**具体 UI 落点**写在各契约的 `interaction` 与 `fieldDescription` 中。
+
+
+

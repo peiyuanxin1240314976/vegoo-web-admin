@@ -1,39 +1,76 @@
 {
-  "_comment": "人员绩效对比 - 指标排名表。",
+  "_comment": "人员绩效对比页 - 右侧「指标排名」表。每行一个指标维度，r1/r2/r3 为已格式化的展示文案（含姓名与数值），与当前 Vue 表格一致。",
   "fieldDescription": {
     "request": {
-      "startDate": { "type": "string", "required": true, "description": "开始日期，YYYY-MM-DD。" },
-      "endDate": { "type": "string", "required": true, "description": "结束日期，YYYY-MM-DD。" },
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "开始日期，YYYY-MM-DD（含）。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": true,
+        "description": "结束日期，YYYY-MM-DD（含）。"
+      },
       "staffIds": {
         "type": "string[]",
         "required": true,
-        "description": "参与对比的人员 ID 列表。"
+        "description": "参与对比的人员 ID；排名仅在该集合内计算。"
       }
     },
     "response": {
       "rows": {
-        "type": "Array<{ metric: string; r1: string; r2: string; r3: string }>",
+        "type": "ComparisonRankingRow[]",
         "required": true,
-        "description": "排名表行数据。"
+        "description": "排名行；指标种类与顺序建议固定便于前端表头对齐。"
       }
+    },
+    "ComparisonRankingRow": {
+      "metric": {
+        "type": "string",
+        "required": true,
+        "description": "指标名称（如 广告支出、首日ROI）。"
+      },
+      "r1": { "type": "string", "required": true, "description": "第一名展示文案。" },
+      "r2": { "type": "string", "required": true, "description": "第二名展示文案。" },
+      "r3": { "type": "string", "required": true, "description": "第三名展示文案。" }
     }
   },
   "sampleRequest": {
-    "startDate": "2026-03-20",
-    "endDate": "2026-03-26",
+    "startDate": "2026-03-28",
+    "endDate": "2026-04-04",
     "staffIds": ["zhang3", "li4", "wang5", "zhao6"]
   },
   "sampleResponse": {
     "rows": [
       { "metric": "广告支出", "r1": "赵六 $52,100", "r2": "张三 $49,279", "r3": "李四 $37,838" },
-      { "metric": "首日ROI", "r1": "赵六 96%", "r2": "张三 93%", "r3": "李四 88%" }
+      { "metric": "首日ROI", "r1": "赵六 96%", "r2": "张三 93%", "r3": "李四 88%" },
+      { "metric": "预估利润", "r1": "赵六 +$15,600", "r2": "张三 +$12,400", "r3": "李四 +$6,800" },
+      { "metric": "最低利润", "r1": "赵六 +$9,800", "r2": "张三 +$8,200", "r3": "李四 +$3,200" },
+      { "metric": "绩效得分", "r1": "赵六 96分", "r2": "张三 94分", "r3": "李四 88分" }
     ]
   },
   "api": {
-    "url": "POST /api/user-growth/performance-analysis/comparison-rankings",
+    "url": "POST /api/v1/datacenter/analysis/user-growth/performance-analysis/comparison-rankings",
     "method": "POST",
     "priority": "P0",
     "requestBody": "startDate, endDate, staffIds",
     "responseBody": "rows"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "若对比人数不足 3，r2/r3 可用「—」或重复规则由产品定；须在 fieldDescription 或 README 写明。"
+    ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "对比页右侧排名区随主数据刷新",
+        "detail": "与 comparison-overview 同参；人员变化时重拉。",
+        "prerequisite": "staffIds 非空。"
+      }
+    ],
+    "defaultSelection": "无。",
+    "dedupe": "可与 overview、charts 并行。"
   }
 }

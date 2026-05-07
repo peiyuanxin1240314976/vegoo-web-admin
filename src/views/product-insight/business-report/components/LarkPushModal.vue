@@ -1,120 +1,139 @@
 <template>
-  <div v-if="visible" class="modal-overlay" @click.self="$emit('close')">
-    <transition name="modal-fade" appear>
-      <div class="modal-box">
-        <div class="modal-header">
-          <div class="modal-title">
-            <span class="lark-icon">🔔</span>
-            飞书推送配置
+  <Teleport to="body">
+    <div v-if="visible" class="modal-overlay" @click.self="$emit('close')">
+      <transition name="modal-fade" appear>
+        <div class="modal-box">
+          <div class="modal-header">
+            <div class="modal-title">
+              <span class="lark-icon">🔔</span>
+              飞书推送配置
+            </div>
+            <span class="modal-subtitle">配置报告自动推送规则和目标</span>
+            <button class="modal-close" @click="$emit('close')">✕</button>
           </div>
-          <span class="modal-subtitle">配置报告自动推送规则和目标</span>
-          <button class="modal-close" @click="$emit('close')">✕</button>
+
+          <div class="modal-body">
+            <!-- Section 1: Push Targets -->
+            <div class="section">
+              <div class="section-num">1. 推送目标</div>
+              <div class="field-row">
+                <label class="field-label">推送群组</label>
+                <div class="tags-row">
+                  <span v-for="g in config.groups" :key="g.id" class="tag tag-blue">
+                    💬 {{ g.name }} <span class="tag-remove" @click="removeGroup(g.id)">×</span>
+                  </span>
+                  <button class="tag-add" @click="addGroup">+ 添加群组</button>
+                </div>
+              </div>
+              <div class="field-row">
+                <label class="field-label">指定人员</label>
+                <div class="tags-row">
+                  <span v-for="p in config.persons" :key="p.id" class="tag tag-gray">
+                    👤 {{ p.name }} <span class="tag-remove" @click="removePerson(p.id)">×</span>
+                  </span>
+                  <button class="tag-add" @click="addPerson">+ 添加人员</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section 2: Push Rules -->
+            <div class="section">
+              <div class="section-num">2. 推送规则</div>
+              <div class="rule-rows">
+                <!-- Daily -->
+                <div class="rule-row">
+                  <span class="rule-type">日报</span>
+                  <el-select v-model="config.daily.day" size="small" class="rule-select">
+                    <el-option value="每天" label="每天" />
+                    <el-option value="工作日" label="工作日" />
+                  </el-select>
+                  <span class="rule-label">时间：</span>
+                  <el-select v-model="config.daily.time" size="small" class="rule-select-time">
+                    <el-option v-for="t in timeOptions" :key="t" :value="t" :label="t" />
+                  </el-select>
+                  <span class="rule-toggle-label">工作日展示</span>
+                  <el-switch v-model="config.daily.workdayOnly" size="small" />
+                </div>
+                <!-- Weekly -->
+                <div class="rule-row">
+                  <span class="rule-type">周报</span>
+                  <el-select v-model="config.weekly.day" size="small" class="rule-select">
+                    <el-option value="每周一" label="每周一" />
+                    <el-option value="每周五" label="每周五" />
+                  </el-select>
+                  <span class="rule-label">时间：</span>
+                  <el-select v-model="config.weekly.time" size="small" class="rule-select-time">
+                    <el-option v-for="t in timeOptions" :key="t" :value="t" :label="t" />
+                  </el-select>
+                  <span class="rule-toggle-label">包含周环比</span>
+                  <el-switch v-model="config.weekly.showChange" size="small" />
+                </div>
+                <!-- Monthly -->
+                <div class="rule-row">
+                  <span class="rule-type">月报</span>
+                  <el-select v-model="config.monthly.day" size="small" class="rule-select">
+                    <el-option value="每月 1 日" label="每月 1 日" />
+                    <el-option value="每月 2 日" label="每月 2 日" />
+                  </el-select>
+                  <span class="rule-label">时间：</span>
+                  <el-select v-model="config.monthly.time" size="small" class="rule-select-time">
+                    <el-option v-for="t in timeOptions" :key="t" :value="t" :label="t" />
+                  </el-select>
+                  <span class="rule-toggle-label">包含费用抄扣明细</span>
+                  <el-switch v-model="config.monthly.showFee" size="small" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Section 3: Push Content -->
+            <div class="section">
+              <div class="section-num">3. 推送内容</div>
+              <div class="checkbox-grid">
+                <el-checkbox v-model="config.content.summary" label="汇总表" />
+                <el-checkbox v-model="config.content.adPlatform" label="广告平台表" />
+                <el-checkbox v-model="config.content.byCountry" label="分国家汇总表" />
+                <el-checkbox v-model="config.content.platformCountry" label="广告平台分国家表" />
+                <el-checkbox v-model="config.content.campaigns" label="在投广告系列表" />
+              </div>
+              <p class="push-hint">飞书推送以消息卡片形式发送，包含数据摘要和 Excel 附件</p>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <el-button @click="$emit('close')">取消</el-button>
+            <el-button :loading="props.saving" @click="saveConfig">保存配置</el-button>
+            <el-button type="primary" :loading="props.pushing" @click="pushNow"
+              >立即推送一次</el-button
+            >
+          </div>
         </div>
-
-        <div class="modal-body">
-          <!-- Section 1: Push Targets -->
-          <div class="section">
-            <div class="section-num">1. 推送目标</div>
-            <div class="field-row">
-              <label class="field-label">推送群组</label>
-              <div class="tags-row">
-                <span v-for="g in config.groups" :key="g.id" class="tag tag-blue">
-                  💬 {{ g.name }} <span class="tag-remove" @click="removeGroup(g.id)">×</span>
-                </span>
-                <button class="tag-add" @click="addGroup">+ 添加群组</button>
-              </div>
-            </div>
-            <div class="field-row">
-              <label class="field-label">指定人员</label>
-              <div class="tags-row">
-                <span v-for="p in config.persons" :key="p.id" class="tag tag-gray">
-                  👤 {{ p.name }} <span class="tag-remove" @click="removePerson(p.id)">×</span>
-                </span>
-                <button class="tag-add" @click="addPerson">+ 添加人员</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Section 2: Push Rules -->
-          <div class="section">
-            <div class="section-num">2. 推送规则</div>
-            <div class="rule-rows">
-              <!-- Daily -->
-              <div class="rule-row">
-                <span class="rule-type">日报</span>
-                <el-select v-model="config.daily.day" size="small" class="rule-select">
-                  <el-option value="每天" label="每天" />
-                  <el-option value="工作日" label="工作日" />
-                </el-select>
-                <span class="rule-label">时间：</span>
-                <el-select v-model="config.daily.time" size="small" class="rule-select-time">
-                  <el-option v-for="t in timeOptions" :key="t" :value="t" :label="t" />
-                </el-select>
-                <span class="rule-toggle-label">工作日展示</span>
-                <el-switch v-model="config.daily.workdayOnly" size="small" />
-              </div>
-              <!-- Weekly -->
-              <div class="rule-row">
-                <span class="rule-type">周报</span>
-                <el-select v-model="config.weekly.day" size="small" class="rule-select">
-                  <el-option value="每周一" label="每周一" />
-                  <el-option value="每周五" label="每周五" />
-                </el-select>
-                <span class="rule-label">时间：</span>
-                <el-select v-model="config.weekly.time" size="small" class="rule-select-time">
-                  <el-option v-for="t in timeOptions" :key="t" :value="t" :label="t" />
-                </el-select>
-                <span class="rule-toggle-label">包含周环比</span>
-                <el-switch v-model="config.weekly.showChange" size="small" />
-              </div>
-              <!-- Monthly -->
-              <div class="rule-row">
-                <span class="rule-type">月报</span>
-                <el-select v-model="config.monthly.day" size="small" class="rule-select">
-                  <el-option value="每月 1 日" label="每月 1 日" />
-                  <el-option value="每月 2 日" label="每月 2 日" />
-                </el-select>
-                <span class="rule-label">时间：</span>
-                <el-select v-model="config.monthly.time" size="small" class="rule-select-time">
-                  <el-option v-for="t in timeOptions" :key="t" :value="t" :label="t" />
-                </el-select>
-                <span class="rule-toggle-label">包含费用抄扣明细</span>
-                <el-switch v-model="config.monthly.showFee" size="small" />
-              </div>
-            </div>
-          </div>
-
-          <!-- Section 3: Push Content -->
-          <div class="section">
-            <div class="section-num">3. 推送内容</div>
-            <div class="checkbox-grid">
-              <el-checkbox v-model="config.content.summary" label="汇总表" />
-              <el-checkbox v-model="config.content.adPlatform" label="广告平台表" />
-              <el-checkbox v-model="config.content.byCountry" label="分国家汇总表" />
-              <el-checkbox v-model="config.content.platformCountry" label="广告平台分国家表" />
-              <el-checkbox v-model="config.content.campaigns" label="在投广告系列表" />
-            </div>
-            <p class="push-hint">飞书推送以消息卡片形式发送，包含数据摘要和 Excel 附件</p>
-          </div>
-        </div>
-
-        <div class="modal-footer">
-          <el-button @click="$emit('close')">取消</el-button>
-          <el-button @click="saveConfig">保存配置</el-button>
-          <el-button type="primary" @click="pushNow">立即推送一次</el-button>
-        </div>
-      </div>
-    </transition>
-  </div>
+      </transition>
+    </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
-  import { reactive } from 'vue'
-  import { ElMessage } from 'element-plus'
+  import { reactive, watch } from 'vue'
   import type { LarkPushConfig, LarkTarget } from '../types'
 
-  defineProps<{ visible: boolean }>()
-  const emit = defineEmits<{ (e: 'close'): void; (e: 'save', config: LarkPushConfig): void }>()
+  const props = withDefaults(
+    defineProps<{
+      visible: boolean
+      modelValue?: LarkPushConfig | null
+      saving?: boolean
+      pushing?: boolean
+    }>(),
+    {
+      modelValue: null,
+      saving: false,
+      pushing: false
+    }
+  )
+  const emit = defineEmits<{
+    (e: 'close'): void
+    (e: 'save', config: LarkPushConfig): void
+    (e: 'push', config: LarkPushConfig): void
+  }>()
 
   const timeOptions = ['07:00', '08:00', '09:00', '10:00', '11:00', '12:00']
 
@@ -139,6 +158,19 @@
     }
   })
 
+  function cloneConfig(payload: LarkPushConfig): LarkPushConfig {
+    return JSON.parse(JSON.stringify(payload)) as LarkPushConfig
+  }
+
+  watch(
+    () => props.modelValue,
+    (v) => {
+      if (!v) return
+      Object.assign(config, cloneConfig(v))
+    },
+    { immediate: true, deep: true }
+  )
+
   const removeGroup = (id: string) => {
     config.groups = config.groups.filter((x) => x.id !== id)
   }
@@ -154,13 +186,10 @@
     config.persons.push({ id: newId, name: '新成员' } as LarkTarget)
   }
   const saveConfig = () => {
-    emit('save', config)
-    ElMessage.success('推送配置已保存')
-    emit('close')
+    emit('save', cloneConfig(config))
   }
   const pushNow = () => {
-    ElMessage({ message: '推送成功！已发送至飞书群', type: 'success', duration: 2500 })
-    emit('close')
+    emit('push', cloneConfig(config))
   }
 </script>
 

@@ -1,0 +1,85 @@
+{
+  "_comment": "付费分析 - 导出订单（顶栏或订单 Tab）。P2。",
+  "fieldDescription": {
+    "request": {
+      "startDate": { "type": "string", "required": true, "description": "导出范围起。" },
+      "endDate": { "type": "string", "required": true, "description": "导出范围止。" },
+      "appId": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "应用 ID；与 meta appOptions.value 一致；空为全部。"
+      },
+      "platform": { "type": "string", "required": false, "default": "", "description": "终端。" },
+      "s_country_code": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "国家。"
+      },
+      "n_source": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "广告平台。"
+      },
+      "keyword": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "与列表一致。"
+      },
+      "format": {
+        "type": "string",
+        "required": false,
+        "default": "xlsx",
+        "enum": ["xlsx", "csv"],
+        "description": "导出格式。"
+      }
+    },
+    "response": {
+      "downloadUrl": {
+        "type": "string",
+        "required": true,
+        "description": "短时有效下载地址；或二者之一见 fileId。"
+      },
+      "fileId": {
+        "type": "string",
+        "required": false,
+        "description": "异步导出任务 id（若走任务制）。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "startDate": "2026-02-05",
+    "endDate": "2026-03-05",
+    "appId": "",
+    "platform": "",
+    "s_country_code": "",
+    "n_source": "",
+    "keyword": "",
+    "format": "xlsx"
+  },
+  "sampleResponse": {
+    "downloadUrl": "https://example-cdn.internal/export/paid-orders-20260305.xlsx",
+    "fileId": ""
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/user-growth/paid-analysis/export/orders",
+    "method": "POST",
+    "priority": "P2",
+    "requestBody": "startDate, endDate, appId?, platform?, s_country_code?, n_source?, keyword?, format?",
+    "responseBody": "export result"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户点击导出",
+        "detail": "IAPAnalysis.vue onExportClick；IAPOrderTab 导出按钮。当前前端未接。",
+        "prerequisite": "权限与异步导出队列由后端控制。"
+      }
+    ],
+    "defaultSelection": "format 默认 xlsx。",
+    "dedupe": "导出任务提交需防连点。"
+  }
+}

@@ -1,27 +1,37 @@
 <script setup lang="ts">
   import { ref, computed, watch } from 'vue'
+  import { storeToRefs } from 'pinia'
+  import { ElMessage } from 'element-plus'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
+  import { fetchAuditConfirm, fetchAuditRerun } from './api/text-management'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import type { AppContent } from './types'
 
   const props = defineProps<{
     appContent: AppContent
+    auditWordLists?: {
+      bannedWords: string[]
+      brandWords: string[]
+    }
   }>()
 
   const emit = defineEmits<{
     'update:appContent': [val: AppContent]
     auditPass: []
+    appChange: [appId: string]
   }>()
 
   // ─── Local editable state ────────────────────────────────────────────────────
-  const appName = ref(props.appContent.appName)
-  const shortDesc = ref(props.appContent.shortDesc)
-  const fullDesc = ref(props.appContent.fullDesc)
+  const appName = ref(props.appContent.appName ?? '')
+  const shortDesc = ref(props.appContent.shortDesc ?? '')
+  const fullDesc = ref(props.appContent.fullDesc ?? '')
 
   watch(
     () => props.appContent,
     (v) => {
-      appName.value = v.appName
-      shortDesc.value = v.shortDesc
-      fullDesc.value = v.fullDesc
+      appName.value = v.appName ?? ''
+      shortDesc.value = v.shortDesc ?? ''
+      fullDesc.value = v.fullDesc ?? ''
     },
     { deep: true }
   )
@@ -36,21 +46,8 @@
   })
 
   // ─── Word lists (configurable, would come from API in production) ─────────────
-  const BANNED_WORDS_DB = ref<string[]>(['fucking', 'shit', 'damn', 'bitch', 'crap', 'asshole'])
-  const BRAND_WORDS_DB = ref<string[]>([
-    'Facebook',
-    'TikTok',
-    'Disney',
-    'Google',
-    'Apple',
-    'Amazon',
-    'Microsoft',
-    'YouTube',
-    'Instagram',
-    'Twitter',
-    'WhatsApp',
-    'Netflix'
-  ])
+  const BANNED_WORDS_DB = computed(() => props.auditWordLists?.bannedWords ?? [])
+  const BRAND_WORDS_DB = computed(() => props.auditWordLists?.brandWords ?? [])
 
   // ─── Issue status tracking ────────────────────────────────────────────────────
   type IssueStatus = 'pending' | 'ignored' | 'located'
@@ -146,7 +143,9 @@
 
   // Run on mount and on content change
   runAudit()
-  watch([appName, shortDesc, fullDesc], runAudit, { debounce: 400 } as any)
+  watch([appName, shortDesc, fullDesc, BANNED_WORDS_DB, BRAND_WORDS_DB], runAudit, {
+    deep: true
+  })
 
   // ─── Adjacent word check ──────────────────────────────────────────────────────
   function checkAdjacent(text: string, word: string): boolean {
@@ -201,7 +200,22 @@
   }
 
   // ─── Confirm all ─────────────────────────────────────────────────────────────
-  const confirmAll = () => {
+  const confirmAll = async () => {
+    try {
+      await fetchAuditConfirm({
+        appContent: {
+          appName: appName.value,
+          shortDesc: shortDesc.value,
+          fullDesc: fullDesc.value
+        },
+        repeatWords: repeatIssues.value.filter((i) => i.status === 'pending').map((i) => i.word),
+        bannedWords: bannedIssues.value.filter((i) => i.status === 'pending').map((i) => i.word),
+        brandWords: brandIssues.value.filter((i) => i.status === 'pending').map((i) => i.word)
+      })
+    } catch {
+      ElMessage.error('审核确认接口失败，请检查后重试')
+      return
+    }
     repeatIssues.value.forEach((i) => {
       i.status = 'ignored'
       ignoredRepeat.value.add(i.word)
@@ -216,7 +230,19 @@
     })
   }
 
-  const reAudit = () => {
+  const reAudit = async () => {
+    try {
+      await fetchAuditRerun({
+        appContent: {
+          appName: appName.value,
+          shortDesc: shortDesc.value,
+          fullDesc: fullDesc.value
+        }
+      })
+    } catch {
+      ElMessage.error('重新审核接口失败，请检查后重试')
+      return
+    }
     ignoredRepeat.value.clear()
     ignoredBanned.value.clear()
     ignoredBrand.value.clear()
@@ -279,8 +305,28 @@
     fullDescRef.value.focus()
   }
 
-  // ─── App switcher (demo) ──────────────────────────────────────────────────────
-  const currentApp = ref('PeopleSearch - People Finder')
+  // ─── App switcher（cockpit settingApps，与全局 AppPlatformSearchSelect 一致）────────
+  const cockpitMetaFilterStore = useCockpitMetaFilterStore()
+  const { data: cockpitMeta } = storeToRefs(cockpitMetaFilterStore)
+  const settingAppsForSelect = computed(() => cockpitMeta.value?.settingApps ?? [])
+  const selectedAppId = ref('')
+  const selectedAppLabel = computed(() => {
+    const id = selectedAppId.value.trim()
+    if (!id) return appName.value || '--'
+    const hit = settingAppsForSelect.value.find((a) => String(a.sAppId ?? '').trim() === id)
+    if (!hit) return appName.value || '--'
+    const name = String(hit.sAppName ?? '').trim()
+    const platform = String(hit.platformName ?? '').trim()
+    return platform ? `${name} (${platform})` : name || id
+  })
+
+  if (!cockpitMetaFilterStore.data) {
+    void cockpitMetaFilterStore.ensureLoaded()
+  }
+
+  watch(selectedAppId, (val) => {
+    emit('appChange', val || '')
+  })
 </script>
 
 <template>
@@ -294,10 +340,26 @@
         <span class="label">当前应用：</span>
         <div class="app-chip">
           <span class="app-icon">📱</span>
-          {{ currentApp }}
-          <span class="arrow">▾</span>
+          <div class="tm-text-review-app-select-wrap">
+            <AppPlatformSearchSelect
+              v-model="selectedAppId"
+              mode="app"
+              input-class="tm-text-review-app-select__trigger"
+              placeholder="请选择应用"
+              search-placeholder="搜索类别/应用名称/应用简称"
+              all-label="全部应用"
+              :setting-apps="settingAppsForSelect"
+              :height="32"
+              :width="220"
+              :min-width="180"
+              :max-width="260"
+              :radius="6"
+              clearable
+              :show-platform-suffix="true"
+            />
+          </div>
         </div>
-        <span class="switch-link">切换应用</span>
+        <span class="switch-link">{{ selectedAppLabel }}</span>
       </div>
 
       <!-- App name -->
@@ -583,9 +645,39 @@
         border-color: #3de8c4;
       }
 
-      .arrow {
-        font-size: 11px;
+      .tm-text-review-app-select-wrap {
+        flex: 1;
+        width: 220px;
+        min-width: 0;
+        max-width: 100%;
+      }
+
+      :deep(.tm-text-review-app-select__trigger.app-platform-search-select) {
+        min-height: 28px !important;
+        padding: 2px 8px !important;
+        font-size: 13px !important;
+        color: #e6edf3 !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+      }
+
+      :deep(.tm-text-review-app-select__trigger .app-platform-search-select__text) {
+        font-size: 13px;
+        color: #e6edf3;
+      }
+
+      :deep(.tm-text-review-app-select__trigger .app-platform-search-select__text.is-placeholder) {
         color: #8b949e;
+      }
+
+      :deep(.tm-text-review-app-select__trigger .app-platform-search-select__suffix) {
+        color: #3de8c4;
+      }
+
+      :deep(.tm-text-review-app-select__trigger:hover),
+      :deep(.tm-text-review-app-select__trigger.is-open) {
+        background: rgb(255 255 255 / 4%) !important;
       }
     }
 

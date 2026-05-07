@@ -12,7 +12,10 @@ export function setupAfterEachGuard(router: Router) {
   const { scrollToTop } = useCommon()
 
   router.afterEach(() => {
-    scrollToTop()
+    // 布局主滚动条在 #app-main .layout-content 上，且路由过渡后 DOM 可能晚一拍，延后重置避免仍停在底部
+    nextTick(() => {
+      scrollToTop()
+    })
 
     // 路由切换后自动收起所有浮层（弹窗/抽屉等），避免残留遮罩或滚动锁定
     mittBus.emit('closeOverlays')
@@ -21,10 +24,7 @@ export function setupAfterEachGuard(router: Router) {
     const settingStore = useSettingStore()
     if (settingStore.showNprogress) {
       NProgress.done()
-      // 确保进度条完全移除，避免残影
-      setTimeout(() => {
-        NProgress.remove()
-      }, 600)
+      NProgress.remove()
     }
 
     // 关闭 loading 效果

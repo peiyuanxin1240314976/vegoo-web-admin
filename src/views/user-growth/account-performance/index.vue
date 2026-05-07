@@ -7,41 +7,64 @@
     >
       <div class="ac-perf-filter-panel">
         <div class="ap-filters">
-          <ElSelect v-model="draftSource" placeholder="广告平台" class="ap-filter-select">
+          <AppPlatformSearchSelect
+            v-model="draftAppId"
+            mode="app"
+            placeholder="应用"
+            search-placeholder="搜索类别/应用名称/应用简称"
+            :setting-apps="metaSettingApps"
+            :height="36"
+            :min-width="200"
+            :max-width="240"
+            input-class="ap-filter-select"
+            dropdown-class="ap-filter-popper"
+          />
+
+          <ElSelect
+            :model-value="draftSource"
+            placeholder="广告平台"
+            class="ap-filter-select"
+            popper-class="ap-filter-popper"
+            clearable
+            @update:model-value="onDraftSourceUpdate"
+          >
+            <ElOption :label="tr('adPerformance.filterAll', '全部')" value="" />
             <ElOption
-              v-for="opt in metaAdPlatformOptions"
+              v-for="opt in metaAdPlatformOptionsForSelect"
               :key="opt.value"
               :label="opt.label"
               :value="opt.value"
             />
           </ElSelect>
-          <ElSelect v-model="draftPlatform" placeholder="应用" class="ap-filter-select">
+
+          <ElSelect
+            :model-value="draftFilterOwner"
+            placeholder="负责人"
+            class="ap-filter-select"
+            popper-class="ap-filter-popper"
+            clearable
+            @update:model-value="onDraftFilterOwnerUpdate"
+          >
+            <ElOption :label="tr('adPerformance.filterAll', '全部')" value="" />
             <ElOption
-              v-for="opt in metaAppOptions"
+              v-for="opt in ownerOptionsForSelect"
               :key="opt.value"
               :label="opt.label"
               :value="opt.value"
             />
           </ElSelect>
-          <ElSelect v-model="draftFilterOwner" placeholder="广告账户" class="ap-filter-select">
-            <ElOption
-              v-for="opt in metaAccountOptions"
-              :key="opt.value"
-              :label="opt.label"
-              :value="opt.value"
-            />
-          </ElSelect>
-          <ElDatePicker
+          <AppDatePicker
             v-model="draftDateRange"
             type="daterange"
+            :shortcuts="dateRangeShortcuts"
             range-separator="~"
             start-placeholder="开始日期"
             end-placeholder="结束日期"
             value-format="YYYY-MM-DD"
             class="ap-date-picker"
           />
-          <ElButton round type="primary" :disabled="!isFilterDirty" @click="onQuery">查询</ElButton>
-          <ElButton round type="primary" @click="onExport">导出</ElButton>
+          <ElButton round type="primary" :icon="Search" plain @click="onQuery">查询</ElButton>
+          <!-- <ElButton round type="primary" plain @click="onExport">导出</ElButton> -->
         </div>
       </div>
     </div>
@@ -89,12 +112,12 @@
 
     <!-- 主体：左侧表格 + 右侧图表 -->
     <ElRow :gutter="16" class="ap-body ac-perf-entry-3">
-      <!-- 左侧：应用×平台×账户明细表（min-width:0 让列可收缩，表格内部横向滚动） -->
+      <!-- 左侧：应用×广告平台×账户明细表（min-width:0 让列可收缩，表格内部横向滚动） -->
       <ElCol :xs="24" :md="16" :lg="17" :xl="17" class="ap-table-col">
         <ElCard class="ap-table-card" shadow="never">
           <template #header>
             <div class="flex items-center">
-              <span class="ap-table-title">应用 × 平台 × 账户明细</span>
+              <span class="ap-table-title">应用 × 广告平台 × 账户明细</span>
               <div class="date-range-box">
                 <div
                   class="date-range-slider"
@@ -126,14 +149,17 @@
                 :dark="isDark"
                 @click="toggleExpandAll"
               >
-                {{ expandAll ? '收起全部' : '展开全部' }}
+                {{ isAllExpanded ? '收起全部' : '展开全部' }}
               </ElButton>
               <!-- <ElButton size="default" color="#13deb9" plain :dark="isDark">自定义列</ElButton> -->
               <ElInput
-                v-model="tableSearch"
-                :placeholder="'Q 搜索' + modelValue"
+                v-model="currentDraftKeys"
+                :placeholder="currentSearchPlaceholder"
                 clearable
                 class="ap-table-search"
+                @blur="commitTableSearch"
+                @clear="commitTableSearch"
+                @keyup.enter="commitTableSearch"
               />
             </div>
           </template>
@@ -177,15 +203,17 @@
               v-else-if="modelValue === '账户'"
               :date-range="appliedDateRange"
               :source="appliedSource"
-              :platform="appliedPlatform"
+              :selected-app-id="appliedAppId"
               :filter-owner="appliedFilterOwner"
+              :keys="accountAppliedKeys"
             />
             <PlatformPerformancePlaceholder
               v-else
               :date-range="appliedDateRange"
               :source="appliedSource"
-              :platform="appliedPlatform"
+              :selected-app-id="appliedAppId"
               :filter-owner="appliedFilterOwner"
+              :keys="platformAppliedKeys"
             />
           </div>
         </ElCard>
@@ -255,13 +283,20 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, onMounted, watch, watchEffect } from 'vue'
+  import { ref, computed, onMounted, onActivated, onDeactivated, watch, watchEffect } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { storeToRefs } from 'pinia'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import { useChart } from '@/hooks/core/useChart'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import { useSettingStore } from '@/store/modules/setting'
   import request from '@/utils/http'
-  import { AD_PERFORMANCE_BASE } from '@/views/user-growth/ad-performance/config/api-base'
-  import type { AdPerformanceMetaFilterResponse } from '@/views/user-growth/ad-performance/types'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
+  import { Search } from '@element-plus/icons-vue'
+  import { useI18n } from 'vue-i18n'
+  import { formatYYYYMMDD, getAppNow } from '@/utils/app-now'
+  import { buildAppSelectionRequestBody } from '@/utils/app-id-request'
+  import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
   import { ACCOUNT_PERFORMANCE_API_BASE } from '@/views/user-growth/account-performance/config/api-base'
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore Vetur 对 <script setup> 的误报：.vue 无 default export
@@ -285,27 +320,64 @@
 
   defineOptions({ name: 'AccountPerformance' })
 
+  const { t, te } = useI18n()
+  const tr = (key: string, fallback: string) => (te(key) ? t(key) : fallback)
+
   const settingStore = useSettingStore()
   const { isDark } = storeToRefs(settingStore)
+  const cockpitMetaStore = useCockpitMetaFilterStore()
+  const { data: cockpitMeta } = storeToRefs(cockpitMetaStore)
 
   const mock = ref(MOCK_ACCOUNT_PERFORMANCE)
   const draftSource = ref('')
-  const draftPlatform = ref('')
+  const draftAppId = ref<string | string[]>([])
   /** 顶部第三项：对接 meta accountOptions，请求体仍走 ownerId 字段名 */
   const draftFilterOwner = ref('')
-  const draftDateRange = ref<[string, string]>([...MOCK_ACCOUNT_PERFORMANCE.dateRange])
+  function buildDefaultDateRange(): [string, string] {
+    const today = formatYYYYMMDD(getAppNow())
+    return [today, today]
+  }
+  const draftDateRange = ref<[string, string]>(buildDefaultDateRange())
 
   /** 点击“查询”后才会更新 applied，并触发请求 */
   const appliedSource = ref('')
-  const appliedPlatform = ref('')
+  const appliedAppId = ref<string | string[]>([])
   const appliedFilterOwner = ref('')
-  const appliedDateRange = ref<[string, string]>([...MOCK_ACCOUNT_PERFORMANCE.dateRange])
+  const appliedDateRange = ref<[string, string]>(buildDefaultDateRange())
 
-  const metaAdPlatformOptions = ref<AdPerformanceMetaFilterResponse['adPlatformOptions']>([])
-  const metaAppOptions = ref<AdPerformanceMetaFilterResponse['appOptions']>([])
-  const metaAccountOptions = ref<NonNullable<AdPerformanceMetaFilterResponse['accountOptions']>>([])
-  const tableSearch = ref('')
-  const expandAll = ref(false)
+  /** 顶栏「广告平台」与公用 cockpit `sourceOptions`（n_source）对齐 */
+  const metaAdPlatformOptions = computed<CockpitMetaOptionItem[]>(
+    () => cockpitMeta.value?.sourceOptions ?? []
+  )
+  /** 与广告成效筛选一致：首项单独「全部」，列表内去掉空 value，避免重复 */
+  const metaAdPlatformOptionsForSelect = computed(() =>
+    metaAdPlatformOptions.value.filter((o) => String(o.value ?? '').trim() !== '')
+  )
+  const metaSettingApps = computed(() => cockpitMeta.value?.settingApps ?? [])
+  const firstMetaAppId = computed(() => String(metaSettingApps.value[0]?.sAppId ?? '').trim())
+  const hasSelectedDraftApp = computed(() =>
+    Array.isArray(draftAppId.value)
+      ? draftAppId.value.length > 0
+      : !!String(draftAppId.value).trim()
+  )
+  const ownerOptions = ref<Array<{ label: string; value: string }>>([])
+  const ownerOptionsForSelect = computed(() =>
+    ownerOptions.value.filter((o) => String(o.value ?? '').trim() !== '')
+  )
+
+  function onDraftSourceUpdate(v: string | undefined | null) {
+    draftSource.value = v ?? ''
+  }
+
+  function onDraftFilterOwnerUpdate(v: string | undefined | null) {
+    draftFilterOwner.value = v ?? ''
+  }
+  const appDraftKeys = ref('')
+  const appAppliedKeys = ref('')
+  const platformDraftKeys = ref('')
+  const platformAppliedKeys = ref('')
+  const accountDraftKeys = ref('')
+  const accountAppliedKeys = ref('')
   const expandedRowKeys = ref<string[]>([])
 
   // 模板内禁止写 `as any`，这里预先放宽签名给子组件透传
@@ -314,7 +386,7 @@
   const getNameStyleAny = getNameStyle as any
   const rangeOptions: { value: string; label: string }[] = [
     { value: '应用', label: '应用' },
-    { value: '平台', label: '平台' },
+    { value: '广告平台', label: '广告平台' },
     { value: '账户', label: '账户' }
   ]
 
@@ -323,25 +395,48 @@
   const modelValue = ref(rangeOptions[0].value)
   const rangeIndex = computed(() => rangeOptions.findIndex((o) => o.value === modelValue.value))
 
+  const currentDraftKeys = computed({
+    get: () => {
+      if (modelValue.value === '应用') return appDraftKeys.value
+      if (modelValue.value === '广告平台') return platformDraftKeys.value
+      return accountDraftKeys.value
+    },
+    set: (value: string) => {
+      if (modelValue.value === '应用') appDraftKeys.value = value
+      else if (modelValue.value === '广告平台') platformDraftKeys.value = value
+      else accountDraftKeys.value = value
+    }
+  })
+
+  const currentSearchPlaceholder = computed(() => {
+    if (modelValue.value === '应用') return '搜索应用'
+    if (modelValue.value === '广告平台') return '搜索广告平台'
+    return '搜索账户'
+  })
+
   function selectRange(value: string) {
     modelValue.value = value
   }
 
-  const isFilterDirty = computed(() => {
-    const [ds, de] = draftDateRange.value || ['', '']
-    const [as, ae] = appliedDateRange.value || ['', '']
-    return (
-      String(draftSource.value ?? '') !== String(appliedSource.value ?? '') ||
-      String(draftPlatform.value ?? '') !== String(appliedPlatform.value ?? '') ||
-      String(draftFilterOwner.value ?? '') !== String(appliedFilterOwner.value ?? '') ||
-      String(ds ?? '') !== String(as ?? '') ||
-      String(de ?? '') !== String(ae ?? '')
-    )
-  })
+  function commitTableSearch() {
+    if (modelValue.value === '应用') {
+      const next = appDraftKeys.value.trim()
+      if (next === appAppliedKeys.value) return
+      appAppliedKeys.value = next
+      appCurrentPage.value = 1
+      void loadAppTableTree()
+      return
+    }
+    if (modelValue.value === '广告平台') {
+      platformAppliedKeys.value = platformDraftKeys.value.trim()
+      return
+    }
+    accountAppliedKeys.value = accountDraftKeys.value.trim()
+  }
 
   function applyFilters() {
     appliedSource.value = draftSource.value ?? ''
-    appliedPlatform.value = draftPlatform.value ?? ''
+    appliedAppId.value = draftAppId.value ?? []
     appliedFilterOwner.value = draftFilterOwner.value ?? ''
     appliedDateRange.value = [...draftDateRange.value]
 
@@ -349,18 +444,22 @@
     appCurrentPage.value = 1
   }
 
-  function onQuery() {
+  /** KPI / 图表 / 预警 / 应用表 并行请求，互不阻塞 */
+  async function onQuery() {
     applyFilters()
-    void loadKpiCards()
-    void loadChannelSpend()
-    void loadUsageBuckets()
-    void loadDay1RoiTrend()
-    void loadTodaySpendPace()
-    void loadAlerts()
-    if (modelValue.value === '应用') void loadAppTableTree()
+    const parallel: Promise<unknown>[] = [
+      loadKpiCards(),
+      loadChannelSpend(),
+      loadUsageBuckets(),
+      loadDay1RoiTrend(),
+      loadTodaySpendPace(),
+      loadAlerts()
+    ]
+    if (modelValue.value === '应用') parallel.push(loadAppTableTree())
+    await Promise.all(parallel)
   }
 
-  // 应用×平台×账户明细树形表：独立请求 + 局部骨架屏
+  // 应用×广告平台×账户明细树形表：独立请求 + 局部骨架屏
   const appTableTreeFallback = mock.value.tableTree
   const appTableTree = ref<AccountDetailRow[]>(appTableTreeFallback)
   const appTableLoading = ref(false)
@@ -391,29 +490,38 @@
   })
 
   async function loadMetaFilterOptions() {
+    await cockpitMetaStore.ensureLoaded()
+
     try {
-      const data = await request.post<AdPerformanceMetaFilterResponse>({
-        url: `${AD_PERFORMANCE_BASE}/meta-filter-options`,
+      const res = await request.post<{
+        data?: {
+          ownerOptions?: Array<{ id?: string; name?: string }>
+        }
+        ownerOptions?: Array<{ id?: string; name?: string }>
+      }>({
+        url: '/api/v1/datacenter/analysis/account-performance/meta-filter-options',
         data: {}
       })
-      metaAdPlatformOptions.value = Array.isArray(data.adPlatformOptions)
-        ? data.adPlatformOptions
-        : []
-      metaAppOptions.value = Array.isArray(data.appOptions) ? data.appOptions : []
-      metaAccountOptions.value = Array.isArray(data.accountOptions) ? data.accountOptions : []
+
+      const rawOwnerOptions = Array.isArray(res?.ownerOptions)
+        ? res.ownerOptions
+        : Array.isArray(res?.data?.ownerOptions)
+          ? res.data.ownerOptions
+          : []
+      const list = Array.isArray(rawOwnerOptions) ? rawOwnerOptions : []
+      ownerOptions.value = list
+        .map((item) => ({
+          label: String(item?.name ?? '').trim(),
+          value: String(item?.id ?? '').trim()
+        }))
+        .filter((item) => item.label && item.value)
     } catch {
-      metaAdPlatformOptions.value = []
-      metaAppOptions.value = []
-      metaAccountOptions.value = []
+      ownerOptions.value = []
     }
   }
 
   const filteredAppRoots = computed(() => {
-    let list = appTableTree.value
-    const kw = tableSearch.value?.trim()
-    if (kw) list = filterTreeByName(list, kw)
-    // 根节点期望是 app，兜底仍按 type=app 过滤，避免接口变化
-    return list.filter((r) => r.type === 'app')
+    return appTableTree.value.filter((r) => r.type === 'app')
   })
 
   const pagedAppRoots = computed(() => {
@@ -441,10 +549,10 @@
           currentPage: 0,
           dateEnd,
           dateStart,
-          kw: '',
+          keys: appAppliedKeys.value,
           ownerId: appliedFilterOwner.value,
           pageSize: 0,
-          platform: appliedPlatform.value,
+          ...buildAppSelectionRequestBody(appliedAppId.value),
           source: appliedSource.value
         }
       })
@@ -459,28 +567,19 @@
     }
   }
 
+  /** 仅 Tab 切回「应用」时拉表；筛选生效只在「查询」里 applyFilters + loadAppTableTree，避免与 watch(applied*) 重复请求 */
   let appTableDebounceTimer: ReturnType<typeof setTimeout> | null = null
-  watch(
-    [modelValue, appliedDateRange, appliedSource, appliedPlatform, appliedFilterOwner],
-    () => {
-      if (modelValue.value !== '应用') return
-
-      // 切换到「应用」或筛选条件变化时，立即进入 loading 态
-      // 避免 debounce 这段时间内渲染旧 DOM
-      appTableLoading.value = true
-      appCurrentPage.value = 1
-
-      if (appTableDebounceTimer) clearTimeout(appTableDebounceTimer)
-      appTableDebounceTimer = setTimeout(() => {
-        void loadAppTableTree()
-      }, 300)
-    },
-    { deep: true }
-  )
-
-  watch(tableSearch, () => {
-    if (modelValue.value !== '应用') return
+  watch(modelValue, (v) => {
+    if (v !== '应用') {
+      resetExpandedRows()
+      return
+    }
+    appTableLoading.value = true
     appCurrentPage.value = 1
+    if (appTableDebounceTimer) clearTimeout(appTableDebounceTimer)
+    appTableDebounceTimer = setTimeout(() => {
+      void loadAppTableTree()
+    }, 300)
   })
 
   // KPI 卡片：独立请求并用局部骨架屏避免整页等待
@@ -523,7 +622,7 @@
           kw: '',
           ownerId: appliedFilterOwner.value,
           pageSize: 0,
-          platform: appliedPlatform.value,
+          ...buildAppSelectionRequestBody(appliedAppId.value),
           source: appliedSource.value
         }
       })
@@ -540,18 +639,7 @@
     }
   }
 
-  // 仅 KPI 联动筛选条件，避免其它模块（表格/图表）未联动造成认知不一致
-  let kpiDebounceTimer: ReturnType<typeof setTimeout> | null = null
-  watch(
-    [appliedDateRange, appliedSource, appliedPlatform, appliedFilterOwner],
-    () => {
-      if (kpiDebounceTimer) clearTimeout(kpiDebounceTimer)
-      kpiDebounceTimer = setTimeout(() => {
-        void loadKpiCards()
-      }, 300)
-    },
-    { deep: true }
-  )
+  // KPI/图表：不在此 watch(applied*) —— 与 onQuery 内 applyFilters 重复触发双倍请求；筛选仅通过「查询」生效
 
   // 广告平台消耗分布：独立请求 + 局部骨架屏避免整页等待
   const channelSpend = ref<ChannelSpendItem[]>([])
@@ -577,7 +665,7 @@
           kw: '',
           ownerId: appliedFilterOwner.value,
           pageSize: 0,
-          platform: appliedPlatform.value,
+          ...buildAppSelectionRequestBody(appliedAppId.value),
           source: appliedSource.value
         }
       })
@@ -594,19 +682,6 @@
       }
     }
   }
-
-  // 只联动右侧该张图，避免其它区域（表格/图表）在 KPI 未就绪时来回闪烁
-  let channelDebounceTimer: ReturnType<typeof setTimeout> | null = null
-  watch(
-    [appliedDateRange, appliedSource, appliedPlatform, appliedFilterOwner],
-    () => {
-      if (channelDebounceTimer) clearTimeout(channelDebounceTimer)
-      channelDebounceTimer = setTimeout(() => {
-        void loadChannelSpend()
-      }, 300)
-    },
-    { deep: true }
-  )
 
   // 账户预算使用率分布：独立请求 + 局部骨架屏
   const usageBuckets = ref<BudgetUsageBucket[]>([])
@@ -632,7 +707,7 @@
           kw: '',
           ownerId: appliedFilterOwner.value,
           pageSize: 0,
-          platform: appliedPlatform.value,
+          ...buildAppSelectionRequestBody(appliedAppId.value),
           source: appliedSource.value
         }
       })
@@ -649,18 +724,6 @@
       }
     }
   }
-
-  let usageDebounceTimer: ReturnType<typeof setTimeout> | null = null
-  watch(
-    [appliedDateRange, appliedSource, appliedPlatform, appliedFilterOwner],
-    () => {
-      if (usageDebounceTimer) clearTimeout(usageDebounceTimer)
-      usageDebounceTimer = setTimeout(() => {
-        void loadUsageBuckets()
-      }, 300)
-    },
-    { deep: true }
-  )
 
   // 首日ROI趋势（7天）：独立请求 + 局部骨架屏
   const roiTrend = ref<Day1RoiTrendItem[]>([])
@@ -686,7 +749,7 @@
           kw: '',
           ownerId: appliedFilterOwner.value,
           pageSize: 0,
-          platform: appliedPlatform.value,
+          ...buildAppSelectionRequestBody(appliedAppId.value),
           source: appliedSource.value
         }
       })
@@ -703,18 +766,6 @@
       }
     }
   }
-
-  let roiTrendDebounceTimer: ReturnType<typeof setTimeout> | null = null
-  watch(
-    [appliedDateRange, appliedSource, appliedPlatform, appliedFilterOwner],
-    () => {
-      if (roiTrendDebounceTimer) clearTimeout(roiTrendDebounceTimer)
-      roiTrendDebounceTimer = setTimeout(() => {
-        void loadDay1RoiTrend()
-      }, 300)
-    },
-    { deep: true }
-  )
 
   type TableRowWithMeta = AccountDetailRow & { __appId?: string }
 
@@ -744,7 +795,7 @@
   /** 背景透明度（plain） */
   const ROW_BG_ALPHA_LIGHT = 0.14
   const ROW_BG_ALPHA_DARK = 0.22
-  /** “应用/平台”名称字体透明度（强调） */
+  /** “应用/广告平台”名称字体透明度（强调） */
   const NAME_TEXT_ALPHA_LIGHT = 0.95
   const NAME_TEXT_ALPHA_DARK = 0.92
 
@@ -773,8 +824,10 @@
 
   function ensureAppRowColors() {
     const next = { ...appRowBaseColorMap.value }
-    const appIds = (appTableTree.value || []).filter((r) => r.type === 'app').map((r) => r.id)
-    for (const id of appIds) {
+    const rootAppRowIds = (appTableTree.value || [])
+      .filter((r) => r.type === 'app')
+      .map((r) => r.id)
+    for (const id of rootAppRowIds) {
       if (next[id]) continue
       const base = BASE_RGB_COLORS[hashStringToIndex(id, BASE_RGB_COLORS.length)]
       next[id] = base
@@ -798,7 +851,7 @@
   const WHITE_VALUE_COLUMNS = new Set(['广告支出', '预算', '使用率', 'CPI', '安装数'])
 
   function getCellStyle({ row, column }: { row: TableRowWithMeta; column: { label?: string } }) {
-    // stripe 的底色在 td 上，使用 cell-style 才能稳定覆盖到二级平台行
+    // stripe 的底色在 td 上，使用 cell-style 才能稳定覆盖到二级广告平台行
     const base = getRowStyle({ row })
     if (row.type === 'account') return base
 
@@ -818,25 +871,6 @@
     return { color: rgba(base, getNameTextAlpha()), fontWeight: 600 }
   }
 
-  watchEffect(() => {
-    if (!expandAll.value) return
-    expandedRowKeys.value = collectExpandableRowKeys(tableData.value)
-  })
-
-  function filterTreeByName(rows: AccountDetailRow[], keyword: string): AccountDetailRow[] {
-    const lower = keyword.toLowerCase()
-    return rows
-      .map((row) => {
-        if (row.name.toLowerCase().includes(lower)) return row
-        if (row.children?.length) {
-          const filtered = filterTreeByName(row.children, keyword)
-          if (filtered.length) return { ...row, children: filtered }
-        }
-        return null
-      })
-      .filter(Boolean) as AccountDetailRow[]
-  }
-
   function collectExpandableRowKeys(rows: AccountDetailRow[]): string[] {
     const keys: string[] = []
     const walk = (list: AccountDetailRow[]) => {
@@ -851,9 +885,19 @@
     return keys
   }
 
+  const isAllExpanded = computed(() => {
+    const allKeys = collectExpandableRowKeys(tableData.value)
+    if (!allKeys.length) return false
+    const expanded = new Set(expandedRowKeys.value.map((k) => String(k)))
+    return allKeys.every((key) => expanded.has(String(key)))
+  })
+
+  function resetExpandedRows() {
+    expandedRowKeys.value = []
+  }
+
   function toggleExpandAll() {
-    expandAll.value = !expandAll.value
-    expandedRowKeys.value = expandAll.value ? collectExpandableRowKeys(tableData.value) : []
+    expandedRowKeys.value = isAllExpanded.value ? [] : collectExpandableRowKeys(tableData.value)
   }
 
   /** 操作列：展开 / 收起当前行的下一级（树节点） */
@@ -862,7 +906,6 @@
     const id = String(row.id)
     const open = expandedRowKeys.value.includes(id)
     if (open) {
-      expandAll.value = false
       expandedRowKeys.value = expandedRowKeys.value.filter((k) => k !== id)
     } else {
       expandedRowKeys.value = [...expandedRowKeys.value, id]
@@ -907,9 +950,9 @@
     return k?.value ?? '$0'
   })
 
-  function onExport() {
-    console.log('导出', appliedDateRange.value)
-  }
+  // function onExport() {
+  //   console.log('导出', appliedDateRange.value)
+  // }
 
   // --- 广告平台消耗环形图 ---
   const channelChart = useChart()
@@ -1076,7 +1119,7 @@
           kw: '',
           ownerId: appliedFilterOwner.value,
           pageSize: 0,
-          platform: appliedPlatform.value,
+          ...buildAppSelectionRequestBody(appliedAppId.value),
           source: appliedSource.value
         }
       })
@@ -1094,18 +1137,6 @@
     }
   }
 
-  let paceDebounceTimer: ReturnType<typeof setTimeout> | null = null
-  watch(
-    [appliedDateRange, appliedSource, appliedPlatform, appliedFilterOwner],
-    () => {
-      if (paceDebounceTimer) clearTimeout(paceDebounceTimer)
-      paceDebounceTimer = setTimeout(() => {
-        void loadTodaySpendPace()
-      }, 300)
-    },
-    { deep: true }
-  )
-
   // 预警事项：暂无真实数据，不请求接口（避免开发环境 mock 仍展示）；联调后恢复 request 赋值
   const alerts = ref<AccountAlertItem[]>([])
   const alertsLoading = ref(false)
@@ -1115,18 +1146,6 @@
     if (!dateStart || !dateEnd) return
     alerts.value = []
   }
-
-  let alertsDebounceTimer: ReturnType<typeof setTimeout> | null = null
-  watch(
-    [appliedDateRange, appliedSource, appliedPlatform, appliedFilterOwner],
-    () => {
-      if (alertsDebounceTimer) clearTimeout(alertsDebounceTimer)
-      alertsDebounceTimer = setTimeout(() => {
-        void loadAlerts()
-      }, 300)
-    },
-    { deep: true }
-  )
 
   function renderPaceChart() {
     if (paceLoading.value) return
@@ -1190,13 +1209,25 @@
   }
 
   onMounted(() => {
-    void loadMetaFilterOptions()
-    renderAllCharts()
-    // 首次进入：自动提交一次默认筛选（等价于用户点一次“查询”）
-    onQuery()
+    void (async () => {
+      await loadMetaFilterOptions()
+      if (!hasSelectedDraftApp.value && firstMetaAppId.value) {
+        draftAppId.value = firstMetaAppId.value
+      }
+      // 让出首帧给布局与骨架，再初始化空图表
+      await new Promise<void>((r) => requestAnimationFrame(() => r()))
+      renderAllCharts()
+      await onQuery()
+    })()
+  })
 
-    // 默认初始化：如果初始就是「应用」，首次进入页面也需要拉取 table-tree
-    if (modelValue.value === '应用') void loadAppTableTree()
+  // 路由切出/切回时，统一重置父层展开 keys，避免按钮文案与当前列表展示不一致
+  onDeactivated(() => {
+    resetExpandedRows()
+  })
+
+  onActivated(() => {
+    resetExpandedRows()
   })
 
   /* 深色/浅色切换时重绘图表，保证坐标轴、图例、边框等颜色正确 */
@@ -1210,6 +1241,8 @@
 
 <style scoped lang="scss">
   @use '../ad-performance/styles/ap-card-fx.scss' as *;
+  @use '../styles/app-platform-select-ad-theme.scss' as apSelect;
+  @use '../styles/filter-bar-theme.scss' as filterTheme;
 
   .account-performance-page {
     position: relative;
@@ -1295,7 +1328,7 @@
       padding: 0;
       margin-left: 8px;
       background: color-mix(in srgb, var(--default-box-color) 55%, transparent);
-      border: 1px solid color-mix(in srgb, var(--art-primary) 22%, transparent);
+      border: 1px solid color-mix(in srgb, var(--el-color-primary) 22%, transparent);
       border-radius: 10px;
 
       @media (width <=768px) {
@@ -1311,8 +1344,8 @@
       pointer-events: none;
       background: linear-gradient(
         92deg,
-        color-mix(in srgb, var(--art-primary) 95%, transparent),
-        color-mix(in srgb, var(--art-primary) 88%, transparent)
+        color-mix(in srgb, var(--el-color-primary) 95%, transparent),
+        color-mix(in srgb, var(--el-color-primary) 88%, transparent)
       );
       border-radius: 6px;
       transition: transform var(--duration-normal, 0.25s) var(--ease-out);
@@ -1339,11 +1372,11 @@
       transition: color var(--duration-fast, 0.2s) var(--ease-out);
 
       &:hover {
-        color: var(--art-primary);
+        color: var(--el-color-primary);
       }
 
       &.active {
-        color: #fff;
+        color: var(--el-color-white);
       }
     }
   }
@@ -1450,18 +1483,16 @@
   }
 
   .ac-perf-filter-panel {
-    position: relative;
-    padding: 14px 16px;
-    overflow: hidden;
-    border-radius: 12px;
+    @include filterTheme.filter-panel;
 
-    @include ap-neon-bg;
-    @include ap-card-mesh;
-    @include ap-panel-hover;
+    overflow: visible;
 
     .ap-filters {
       position: relative;
       z-index: 1;
+      flex-wrap: wrap;
+      align-items: center;
+      overflow: visible;
     }
   }
 
@@ -1470,52 +1501,151 @@
   }
 
   .ap-filters {
-    display: flex;
-    flex-wrap: nowrap;
-    gap: 12px;
-    align-items: center;
-    max-width: 100%;
-    overflow: auto hidden;
-    -webkit-overflow-scrolling: touch;
-
-    &::-webkit-scrollbar {
-      height: 6px;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background: color-mix(in srgb, var(--default-border) 60%, transparent);
-      border-radius: 9999px;
-    }
-
-    &::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    @media (width <=768px) {
-      gap: 8px;
-    }
+    @include filterTheme.filter-row;
   }
 
   .ap-filter-select {
-    flex: 0 0 auto;
-    width: 150px;
-    min-width: 100px;
+    @include filterTheme.filter-select-size;
+  }
+
+  @include apSelect.apply-app-platform-select-ad-theme(
+    '.ap-filters',
+    'ap-filter-select',
+    'ap-filter-popper',
+    240px,
+    200px,
+    240px
+  );
+
+  .ap-filters :deep(.ap-filter-select .el-select__wrapper) {
+    min-height: 36px;
+    padding: 4px 12px;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: none;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      background 0.2s ease;
+  }
+
+  .ap-filters :deep(.ap-filter-select .el-select__wrapper:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
+  }
+
+  .ap-filters :deep(.ap-filter-select .el-select__wrapper.is-focused) {
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent);
+  }
+
+  .ap-filters :deep(.ap-filter-select .el-select__selected-item),
+  .ap-filters :deep(.ap-filter-select .el-select__selected-item .el-select__placeholder),
+  .ap-filters :deep(.app-platform-search-select.ap-filter-select .app-platform-search-select__text),
+  .ap-filters :deep(.app-platform-search-select.ap-filter-select .app-platform-search-select__tag),
+  .ap-filters
+    :deep(.app-platform-search-select.ap-filter-select .app-platform-search-select__more) {
+    color: var(--el-text-color-primary);
+  }
+
+  .ap-filters :deep(.ap-filter-select .el-select__placeholder.is-transparent),
+  .ap-filters :deep(.ap-filter-select .el-select__selected-item.is-transparent),
+  .ap-filters
+    :deep(
+      .app-platform-search-select.ap-filter-select .app-platform-search-select__text.is-placeholder
+    ) {
+    color: var(--el-text-color-placeholder);
+  }
+
+  .ap-filters :deep(.ap-filter-select .el-select__caret),
+  .ap-filters :deep(.ap-filter-select .el-select__suffix),
+  .ap-filters :deep(.ap-filter-select .el-select__icon) {
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+  }
+
+  @include filterTheme.select-popper('ap-filter-popper');
+  @include filterTheme.app-platform-popper('ap-filter-popper');
+
+  .ap-date-picker {
+    flex: 0 0 200px;
+    width: 250px;
+    min-width: 250px;
     max-width: 100%;
 
     @media (width <=768px) {
-      flex: 0 0 auto;
+      flex: 1 1 100%;
+      width: 100%;
       min-width: 0;
     }
   }
 
-  .ap-date-picker {
-    flex: 0 0 auto;
-    width: 200px;
-    max-width: 100%;
+  .ap-filters :deep(.ap-date-picker.el-date-editor.el-date-editor--daterange .el-range-input),
+  .ap-filters :deep(.ap-date-picker.el-date-editor.el-date-editor--daterange .el-range-separator) {
+    color: var(--el-text-color-primary);
+  }
 
-    @media (width <=768px) {
-      width: 100%;
-      min-width: 0;
+  .ap-filters
+    :deep(.ap-date-picker.el-date-editor.el-date-editor--daterange .el-range-input::placeholder) {
+    color: var(--el-text-color-placeholder);
+  }
+
+  .ap-filters :deep(.ap-date-picker.el-date-editor.el-date-editor--daterange) {
+    flex: 0 0 250px !important;
+    width: 250px !important;
+    min-width: 250px !important;
+    max-width: 250px !important;
+
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-datepicker-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    border-radius: var(--el-border-radius-base, 4px) !important;
+    box-shadow: none !important;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      background 0.2s ease;
+  }
+
+  .ap-filters :deep(.ap-date-picker.el-date-editor.el-date-editor--daterange:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
+  }
+
+  .ap-filters :deep(.ap-date-picker.el-date-editor.el-date-editor--daterange.is-active),
+  .ap-filters :deep(.ap-date-picker.el-date-editor.el-date-editor--daterange:focus-within) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
+  }
+
+  .ap-filters :deep(.ap-date-picker.el-date-editor.el-date-editor--daterange .el-range__icon),
+  .ap-filters
+    :deep(.ap-date-picker.el-date-editor.el-date-editor--daterange .el-range__close-icon) {
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+  }
+
+  @media (width <=768px) {
+    .ap-filters :deep(.ap-date-picker.el-date-editor.el-date-editor--daterange) {
+      flex: 1 1 100% !important;
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: 100% !important;
     }
   }
 
@@ -1534,6 +1664,15 @@
 
     @include ap-neon-bg;
     @include ap-panel-hover;
+
+    &:hover,
+    &:active {
+      transform: none !important;
+    }
+
+    &:active {
+      transition-duration: var(--duration-fast);
+    }
 
     --kpi-accent-rgb: 16, 185, 129;
 
@@ -1739,6 +1878,15 @@
     @include ap-card-mesh;
     @include ap-panel-hover;
 
+    &:hover,
+    &:active {
+      transform: none !important;
+    }
+
+    &:active {
+      transition-duration: var(--duration-fast);
+    }
+
     :deep(.el-card__header) {
       position: relative;
       z-index: 1;
@@ -1909,6 +2057,15 @@
     @include ap-neon-bg;
     @include ap-card-mesh;
     @include ap-panel-hover;
+
+    &:hover,
+    &:active {
+      transform: none !important;
+    }
+
+    &:active {
+      transition-duration: var(--duration-fast);
+    }
 
     :deep(.el-card__header) {
       position: relative;
@@ -2134,6 +2291,18 @@
   @media (width <= 768px) {
     .account-performance-page {
       padding-bottom: 16px;
+    }
+  }
+
+  /* 与驾驶舱一致：窄屏去掉装饰层，降低合成与持续动画开销 */
+  @media (width <= 992px) {
+    .account-performance-page::before,
+    .account-performance-page::after {
+      content: none;
+    }
+
+    .ac-perf-page-fx {
+      display: none;
     }
   }
 

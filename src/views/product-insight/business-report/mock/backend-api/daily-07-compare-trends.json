@@ -1,0 +1,80 @@
+{
+  "_comment": "日报-对比模式-趋势图数据。",
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/report/daily/compare-trends",
+    "method": "POST",
+    "priority": "P0"
+  },
+  "interaction": {
+    "triggers": [
+      { "moment": "卡片加载后并行", "detail": "加载趋势图（收入 + 用户）" },
+      {
+        "moment": "对比模式右上角切换日期/开关",
+        "detail": "独立于顶部筛选栏，参数变化后重拉趋势图"
+      }
+    ]
+  },
+  "sampleRequest": {
+    "startDate": "2026-04-09",
+    "endDate": "2026-04-09",
+    "appId": "",
+    "appIds": [],
+    "platformList": [],
+    "sourceList": [],
+    "countryCodeList": [],
+    "account": "",
+    "compareAppIds": ["overall", "health", "ai"],
+    "compareEnabled": true,
+    "compareStartDate": "2026-04-08",
+    "compareEndDate": "2026-04-08"
+  },
+  "sampleResponse": {
+    "labels": ["04-03", "04-04", "04-05", "04-06", "04-07", "04-08", "04-09"],
+    "revenueSeries": [
+      {
+        "id": "overall",
+        "name": "整体",
+        "color": "#00D4A1",
+        "values": [12100, 13200, 13900, 14100, 14500, 15000, 15230]
+      },
+      {
+        "id": "health",
+        "name": "健康",
+        "color": "#FF6B9D",
+        "values": [3100, 3400, 3600, 3700, 3820, 3980, 4120]
+      },
+      {
+        "id": "ai",
+        "name": "AI应用",
+        "color": "#8B5CF6",
+        "values": [2100, 2240, 2390, 2480, 2590, 2750, 2910]
+      }
+    ],
+    "userSeries": [
+      {
+        "id": "overall",
+        "name": "整体",
+        "color": "#00D4A1",
+        "values": [703000, 721000, 738000, 752000, 761000, 774000, 783000]
+      },
+      {
+        "id": "health",
+        "name": "健康",
+        "color": "#FF6B9D",
+        "values": [252000, 261000, 272000, 281000, 286000, 290000, 292000]
+      },
+      {
+        "id": "ai",
+        "name": "AI应用",
+        "color": "#8B5CF6",
+        "values": [126000, 131000, 136000, 139000, 141000, 143000, 144000]
+      }
+    ]
+  },
+  "apiSuggestion": {
+    "notes": [
+      "趋势横轴 labels 与请求 endDate 联动，示例采用真实日期标签而非 D-6 / D0 占位。",
+      "compareEnabled=false 时可返回当前期序列（不叠加对比影响），保持图形可读。"
+    ]
+  }
+}

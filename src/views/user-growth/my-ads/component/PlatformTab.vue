@@ -352,13 +352,13 @@
     transition:
       color 0.2s ease,
       background 0.2s ease,
-      transform 0.2s ease;
+      box-shadow 0.2s ease;
   }
 
   .toggle-btn:not(.active):hover {
     color: var(--text-primary);
     background: rgb(0 212 170 / 8%);
-    transform: translateY(-1px);
+    box-shadow: 0 10px 24px rgb(0 0 0 / 22%);
   }
 
   .toggle-btn.active {

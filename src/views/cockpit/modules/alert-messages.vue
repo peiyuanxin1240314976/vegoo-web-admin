@@ -78,52 +78,87 @@
 
 <style scoped lang="scss">
   .alert-empty {
-    font-size: 13px;
-    color: var(--el-text-color-secondary);
+    font-size: 12px;
+    color: rgb(148 163 184 / 78%);
+    letter-spacing: 0.02em;
   }
 
   .cockpit-alerts {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 16px;
+    gap: 8px;
+    margin-bottom: 10px;
   }
 
   .alert-block {
+    --alert-theme: var(--theme-color, var(--art-primary, var(--el-color-primary, #3b82f6)));
+
     display: flex;
     flex: 1;
     align-items: center;
     min-width: 0;
-    min-height: 48px;
-    padding: 12px 16px;
-    border-radius: 10px;
+    min-height: 42px;
+    padding: 9px 12px;
+    background:
+      linear-gradient(180deg, rgb(9 16 34 / 92%), rgb(7 12 26 / 88%)),
+      radial-gradient(
+        circle at top,
+        color-mix(in srgb, var(--alert-theme) 10%, transparent),
+        transparent 62%
+      );
+    backdrop-filter: blur(14px);
+    border: 1px solid color-mix(in srgb, var(--alert-theme) 22%, transparent);
+    border-radius: 14px;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 6%),
+      0 10px 24px rgb(2 6 23 / 20%),
+      0 0 0 1px rgb(24 36 72 / 48%);
   }
 
   .alert-block--metrics {
     flex: 0 0 59%;
-    color: var(--el-text-color-primary);
+    color: rgb(226 232 240 / 92%);
 
     .metrics-inner {
       display: flex;
       flex-wrap: wrap;
-      gap: 4px 8px;
+      gap: 2px 10px;
+      align-content: center;
       align-items: center;
-      font-size: 13px;
+      width: 100%;
+      min-height: 22px;
+      font-size: 12px;
+      line-height: 1;
     }
 
     .metric-sep {
-      color: var(--el-text-color-secondary);
+      position: relative;
+      align-self: center;
+      width: 1px;
+      height: 15px;
+      overflow: hidden;
+      font-size: 0;
+      color: transparent;
       user-select: none;
-      opacity: 0.8;
+      background: linear-gradient(180deg, transparent, rgb(96 165 250 / 34%), transparent);
+      opacity: 0.9;
     }
 
     .metric-item {
       display: inline-flex;
-      gap: 4px;
+      gap: 5px;
       align-items: center;
+      min-width: 0;
+      min-height: 22px;
     }
 
     .metric-label {
+      display: inline-flex;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1;
+      color: rgb(226 232 240 / 88%);
       white-space: nowrap;
     }
 
@@ -131,31 +166,39 @@
       display: inline-flex;
       gap: 2px;
       align-items: center;
+      min-height: 18px;
       font-size: 12px;
-      font-weight: 500;
+      font-weight: 600;
+      line-height: 1;
 
       &.down {
-        color: var(--el-color-danger);
+        color: #f87171;
       }
 
       &.up {
-        color: var(--el-color-success);
+        color: #34d399;
+      }
+
+      :deep(.el-icon) {
+        font-size: 11px;
+        transform: translateY(0.5px);
       }
     }
   }
 
   .alert-block--list {
     flex: 0 0 40%;
-    flex-flow: row wrap;
-    gap: 8px 16px;
-    background: rgb(140 100 60 / 25%);
-    border: 1px solid rgb(180 130 80 / 35%);
+    justify-content: center;
+    min-height: 42px;
+    text-align: center;
 
     .alert-item {
       display: inline-flex;
       gap: 8px;
       align-items: center;
+      min-height: 22px;
       font-size: 13px;
+      line-height: 1;
       color: var(--el-text-color-primary);
       white-space: nowrap;
 

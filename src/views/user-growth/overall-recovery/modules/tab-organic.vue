@@ -452,7 +452,8 @@
     loading.value = true
     try {
       const res = await fetchOrganicTabData({
-        dateRange: props.filter.dateRange,
+        startDate: props.filter.startDate,
+        endDate: props.filter.endDate,
         s_app_id: props.filter.s_app_id,
         source: props.filter.source,
         s_country_code: props.filter.s_country_code
@@ -498,8 +499,20 @@
     border-left: 3px solid #10b981;
     border-radius: 12px;
     box-shadow: 0 0 20px rgb(16 185 129 / 12%);
+    transition:
+      border-color 0.28s var(--ease-default),
+      box-shadow 0.36s var(--ease-out),
+      filter 0.28s var(--ease-out);
 
     @include ap-neon-bg;
+
+    &:hover {
+      filter: brightness(1.02);
+      box-shadow:
+        0 18px 56px rgb(0 0 0 / 40%),
+        0 0 32px rgb(16 185 129 / 10%),
+        0 0 70px rgb(34 211 238 / 8%);
+    }
   }
 
   /* KPI */
@@ -528,6 +541,19 @@
     @include ap-neon-bg;
 
     border-radius: 14px;
+    transition:
+      border-color 0.28s var(--ease-default),
+      box-shadow 0.36s var(--ease-out),
+      filter 0.28s var(--ease-out);
+
+    &:hover {
+      filter: brightness(1.02);
+      border-color: rgb(96 165 250 / 50%);
+      box-shadow:
+        0 18px 56px rgb(0 0 0 / 48%),
+        0 0 48px rgb(59 130 246 / 12%),
+        0 0 90px rgb(34 211 238 / 10%);
+    }
 
     &--accent {
       border-left: 3px solid #10b981;
@@ -586,6 +612,19 @@
     @include ap-neon-bg;
 
     border-radius: 14px;
+    transition:
+      border-color 0.28s var(--ease-default),
+      box-shadow 0.36s var(--ease-out),
+      filter 0.28s var(--ease-out);
+
+    &:hover {
+      filter: brightness(1.01);
+      border-color: rgb(96 165 250 / 55%);
+      box-shadow:
+        0 18px 56px rgb(0 0 0 / 48%),
+        0 0 48px rgb(59 130 246 / 12%),
+        0 0 90px rgb(34 211 238 / 10%);
+    }
 
     :deep(.el-card__header) {
       display: flex;
@@ -797,6 +836,19 @@
     background: color-mix(in srgb, var(--default-bg-color) 85%, transparent);
     border: 1px solid color-mix(in srgb, var(--art-success) 18%, var(--default-border));
     border-radius: 10px;
+    transition:
+      border-color 0.28s var(--ease-default),
+      box-shadow 0.36s var(--ease-out),
+      filter 0.28s var(--ease-out);
+
+    &:hover {
+      filter: brightness(1.02);
+      border-color: color-mix(in srgb, var(--art-success) 32%, var(--default-border));
+      box-shadow:
+        0 14px 42px rgb(0 0 0 / 28%),
+        0 0 24px rgb(16 185 129 / 10%),
+        0 0 54px rgb(34 211 238 / 8%);
+    }
 
     &__header {
       display: flex;

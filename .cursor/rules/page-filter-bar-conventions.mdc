@@ -1,0 +1,16 @@
+---
+description: >-
+  页面顶栏/筛选条：凡涉及筛选、顶栏维度、AppPlatformSearchSelect、AppDatePicker、cockpit Pinia、ElSelect「全部」与 POST 入参映射时必须遵守；
+  本规则 alwaysApply，无需 @。完整条文见 docs/page-filter-bar-conventions.md
+alwaysApply: true
+---
+
+# 页面顶栏筛选（摘要）
+
+## 适用方式（Agent）
+
+- 本规则为 **`alwaysApply: true`**。对话或任务涉及 **页面顶栏、筛选条、筛选器、与驾驶舱同构维度**（应用、日期、广告平台、国家、终端平台等）的 **开发、重构或接口/契约中与筛选入参一致的部分** 时，**必须**遵守 **`docs/page-filter-bar-conventions.md`** 与下文摘要；**无需**在对话中 `@page-filter-bar-conventions.mdc` 或 `@` 本文件。需要核对细节时用工具 **Read** 打开上述 **`docs/`** 文档即可。
+
+完整规则、自检清单与字段约定交叉引用见仓库 **`docs/page-filter-bar-conventions.md`**。
+
+要点：**应用**用 `AppPlatformSearchSelect`；**日期**用 `AppDatePicker`；广告平台 / 国家 / 终端平台等选项来自 **`useCockpitMetaFilterStore().data`**，勿另造整页 meta；`ElSelect` 首项「全部」`value=""`，列表过滤重复「全部」项，`clearable` 与 `update` 归一 `''`，POST 与 `backend-fields`、模块契约一致。

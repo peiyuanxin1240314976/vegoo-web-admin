@@ -6,12 +6,12 @@
       "appOptions": {
         "type": "SelectOption[]",
         "required": true,
-        "description": "应用下拉，value 为 s_app_id。"
+        "description": "应用下拉（历史字段）；收入概览页应用多选已改用驾驶舱 settingApps + 组件 AppPlatformSearchSelect。"
       },
       "platformOptions": {
         "type": "SelectOption[]",
         "required": true,
-        "description": "终端平台：all / android / ios。"
+        "description": "终端平台（历史字段）；收入概览页不再展示，请求固定 platform 空串。"
       },
       "countryOptions": {
         "type": "SelectOption[]",

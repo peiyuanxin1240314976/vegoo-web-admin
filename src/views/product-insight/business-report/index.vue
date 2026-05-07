@@ -3,19 +3,6 @@
     <div class="br-page-fx" aria-hidden="true"></div>
     <!-- ─────────────────────────────── TOP HEADER ────────────── -->
     <header class="br-header">
-      <div class="header-left">
-        <button v-if="showBackBtn" class="back-btn" @click="handleBack">‹</button>
-        <span class="header-logo">
-          <svg v-if="period === 'daily'" width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <rect x="1" y="8" width="3" height="9" rx="1" fill="#00D4A1" />
-            <rect x="6" y="5" width="3" height="12" rx="1" fill="#4A9EF5" />
-            <rect x="11" y="2" width="3" height="15" rx="1" fill="#8B5CF6" />
-            <rect x="16" y="0" width="2" height="17" rx="1" fill="#FB923C" opacity="0.5" />
-          </svg>
-        </span>
-        <h1 class="header-title">经营报告</h1>
-      </div>
-
       <div class="period-toggle">
         <button
           v-for="p in periods"
@@ -28,21 +15,18 @@
       </div>
 
       <div class="header-right">
-        <template v-if="period === 'monthly'">
-          <span class="compare-mode-label">对比模式</span>
-          <button
-            :class="['toggle-pill', { active: compareMode }]"
-            @click="compareMode = !compareMode"
-          >
-            <span class="toggle-knob" />
-          </button>
-        </template>
+        <span class="compare-mode-label">对比模式</span>
+        <button
+          :class="['toggle-pill', { active: compareMode }]"
+          @click="compareMode = !compareMode"
+        >
+          <span class="toggle-knob" />
+        </button>
 
-        <button class="header-btn lark-btn" @click="showLarkModal = true">
+        <button class="header-btn lark-btn" @click="openLarkModal">
           <span class="lark-icon">✈</span> 飞书推送
         </button>
-        <button class="header-btn export-btn"> <span>↑</span> 导出 </button>
-        <button class="header-btn icon-btn">⚙</button>
+        <!-- <button class="header-btn export-btn"> <span>↑</span> 导出 </button> -->
       </div>
     </header>
 
@@ -51,48 +35,83 @@
       <template v-if="!compareMode">
         <div class="filter-group">
           <span class="filter-label">应用：</span>
-          <select class="filter-select">
-            <option>全部</option>
-            <option>健康</option>
-            <option>天气</option>
-            <option>AI应用</option>
-          </select>
+          <AppPlatformSearchSelect
+            v-model="barAppId"
+            mode="app"
+            class="br-filter-app-select"
+            input-class="br-filter-app-select__input"
+            placeholder="应用"
+            search-placeholder="搜索类别/应用名称/应用简称"
+            all-label="全部应用"
+            :dropdown-class="brFilterSelectPopperClass"
+            :setting-apps="settingAppsForSelect"
+            :height="28"
+            :min-width="100"
+            :max-width="140"
+            :show-platform-suffix="true"
+          />
         </div>
 
-        <div class="filter-group">
-          <span class="filter-label">平台：</span>
-          <div class="pill-group">
-            <button
-              v-for="p in platforms"
-              :key="p"
-              :class="['pill', { active: activePlatforms.includes(p) }]"
-              @click="togglePlatform(p)"
-            >
-              {{ p }}
-            </button>
-          </div>
-        </div>
-
-        <div class="filter-group">
+        <div class="filter-group filter-group--tab">
           <template v-if="activeTab === 'adPlatform'">
             <span class="filter-label">广告平台：</span>
-            <div class="pill-group scrollable">
-              <button
-                v-for="ap in adPlatforms"
-                :key="ap"
-                :class="['pill', { active: activeAdPlatforms.includes(ap) }]"
-                @click="toggleAdPlatform(ap)"
+            <ElSelect
+              size="small"
+              :popper-class="brFilterSelectPopperClass"
+              class="br-filter-el-select br-filter-el-select--source"
+              :model-value="barSourceValues"
+              multiple
+              collapse-tags
+              :max-collapse-tags="1"
+              placeholder="全部广告平台"
+              @update:model-value="onBarSourceUpdate"
+            >
+              <ElOption
+                v-for="opt in sourceBarOptions"
+                :key="opt.value === '' ? '__all_src__' : opt.value"
+                :label="opt.label"
+                :value="opt.value"
               >
-                <span v-if="ap !== '全部'" class="ap-dot" :style="{ background: apColors[ap] }" />
-                {{ ap }}
-              </button>
-            </div>
+                <span class="br-source-opt">
+                  <span
+                    v-if="opt.value !== ''"
+                    class="ap-dot"
+                    :style="{ background: sourceAccentColor(opt) }"
+                  />
+                  {{ opt.label }}
+                </span>
+              </ElOption>
+            </ElSelect>
           </template>
           <template v-else-if="activeTab === 'campaigns'">
             <span class="filter-label">广告平台：</span>
-            <select class="filter-select">
-              <option>全部</option>
-            </select>
+            <ElSelect
+              size="small"
+              :popper-class="brFilterSelectPopperClass"
+              class="br-filter-el-select br-filter-el-select--source"
+              :model-value="barSourceValues"
+              multiple
+              collapse-tags
+              :max-collapse-tags="1"
+              placeholder="全部广告平台"
+              @update:model-value="onBarSourceUpdate"
+            >
+              <ElOption
+                v-for="opt in sourceBarOptions"
+                :key="opt.value === '' ? '__all_src__' : opt.value"
+                :label="opt.label"
+                :value="opt.value"
+              >
+                <span class="br-source-opt">
+                  <span
+                    v-if="opt.value !== ''"
+                    class="ap-dot"
+                    :style="{ background: sourceAccentColor(opt) }"
+                  />
+                  {{ opt.label }}
+                </span>
+              </ElOption>
+            </ElSelect>
             <span class="filter-label ml-8">状态：</span>
             <div class="pill-group">
               <button
@@ -105,74 +124,229 @@
               </button>
             </div>
             <span class="filter-label ml-8">国家：</span>
-            <select class="filter-select">
-              <option>全部</option>
-            </select>
+            <ElSelect
+              size="small"
+              :popper-class="brFilterSelectPopperClass"
+              class="br-filter-el-select br-filter-el-select--country"
+              :model-value="barCountryValues"
+              multiple
+              collapse-tags
+              :max-collapse-tags="1"
+              placeholder="全部国家"
+              @update:model-value="onBarCountryUpdate"
+            >
+              <ElOption
+                v-for="opt in countryBarOptions"
+                :key="opt.value === '' ? '__all_cty__' : opt.value"
+                :label="opt.label"
+                :value="opt.value"
+              >
+                <span class="br-country-opt">
+                  <span
+                    v-if="countryFlagClass(opt.value)"
+                    :class="countryFlagClass(opt.value)"
+                    class="br-fi"
+                  />
+                  {{ opt.label }}
+                </span>
+              </ElOption>
+            </ElSelect>
           </template>
           <template v-else-if="activeTab === 'byCountry'">
             <span class="filter-label">国家：</span>
-            <div class="pill-group scrollable">
-              <button
-                v-for="c in selectedCountries"
-                :key="c.code"
-                :class="['pill', 'country-pill', { active: true }]"
+            <ElSelect
+              size="small"
+              :popper-class="brFilterSelectPopperClass"
+              class="br-filter-el-select br-filter-el-select--country"
+              :model-value="barCountryValues"
+              multiple
+              collapse-tags
+              :max-collapse-tags="1"
+              placeholder="全部国家"
+              @update:model-value="onBarCountryUpdate"
+            >
+              <ElOption
+                v-for="opt in countryBarOptions"
+                :key="opt.value === '' ? '__all_cty__' : opt.value"
+                :label="opt.label"
+                :value="opt.value"
               >
-                {{ c.flag }} {{ c.name }}
-              </button>
-              <button class="pill">+{{ 22 - selectedCountries.length }} 个</button>
-            </div>
+                <span class="br-country-opt">
+                  <span
+                    v-if="countryFlagClass(opt.value)"
+                    :class="countryFlagClass(opt.value)"
+                    class="br-fi"
+                  />
+                  {{ opt.label }}
+                </span>
+              </ElOption>
+            </ElSelect>
           </template>
           <template v-else-if="activeTab === 'platformCountry'">
             <span class="filter-label">广告平台：</span>
-            <div class="pill-group scrollable">
-              <button
-                v-for="ap in platformCountryPills"
-                :key="ap"
-                :class="['pill', 'bracket-pill', { active: true }]"
+            <ElSelect
+              size="small"
+              :popper-class="brFilterSelectPopperClass"
+              class="br-filter-el-select br-filter-el-select--source"
+              :model-value="barSourceValues"
+              multiple
+              collapse-tags
+              :max-collapse-tags="1"
+              placeholder="全部广告平台"
+              @update:model-value="onBarSourceUpdate"
+            >
+              <ElOption
+                v-for="opt in sourceBarOptions"
+                :key="opt.value === '' ? '__all_src__' : opt.value"
+                :label="opt.label"
+                :value="opt.value"
               >
-                {{ ap }}
-              </button>
-            </div>
+                <span class="br-source-opt">
+                  <span
+                    v-if="opt.value !== ''"
+                    class="ap-dot"
+                    :style="{ background: sourceAccentColor(opt) }"
+                  />
+                  {{ opt.label }}
+                </span>
+              </ElOption>
+            </ElSelect>
             <span class="filter-label ml-8">国家：</span>
-            <select class="filter-select">
-              <option>全部</option>
-            </select>
+            <ElSelect
+              size="small"
+              :popper-class="brFilterSelectPopperClass"
+              class="br-filter-el-select br-filter-el-select--country"
+              :model-value="barCountryValues"
+              multiple
+              collapse-tags
+              :max-collapse-tags="1"
+              placeholder="全部国家"
+              @update:model-value="onBarCountryUpdate"
+            >
+              <ElOption
+                v-for="opt in countryBarOptions"
+                :key="opt.value === '' ? '__all_cty__' : opt.value"
+                :label="opt.label"
+                :value="opt.value"
+              >
+                <span class="br-country-opt">
+                  <span
+                    v-if="countryFlagClass(opt.value)"
+                    :class="countryFlagClass(opt.value)"
+                    class="br-fi"
+                  />
+                  {{ opt.label }}
+                </span>
+              </ElOption>
+            </ElSelect>
           </template>
           <template v-else>
             <span class="filter-label">广告平台：</span>
-            <select class="filter-select">
-              <option>全部</option>
-            </select>
+            <ElSelect
+              size="small"
+              :popper-class="brFilterSelectPopperClass"
+              class="br-filter-el-select br-filter-el-select--source"
+              :model-value="barSourceValues"
+              multiple
+              collapse-tags
+              :max-collapse-tags="1"
+              placeholder="全部广告平台"
+              @update:model-value="onBarSourceUpdate"
+            >
+              <ElOption
+                v-for="opt in sourceBarOptions"
+                :key="opt.value === '' ? '__all_src__' : opt.value"
+                :label="opt.label"
+                :value="opt.value"
+              >
+                <span class="br-source-opt">
+                  <span
+                    v-if="opt.value !== ''"
+                    class="ap-dot"
+                    :style="{ background: sourceAccentColor(opt) }"
+                  />
+                  {{ opt.label }}
+                </span>
+              </ElOption>
+            </ElSelect>
           </template>
         </div>
       </template>
 
       <template v-else>
         <div class="filter-group">
-          <span class="filter-label">平台：</span>
-          <div class="pill-group">
-            <button
-              v-for="p in platforms"
-              :key="p"
-              :class="['pill', { active: activePlatforms.includes(p) }]"
-              @click="togglePlatform(p)"
-            >
-              {{ p }}
-            </button>
-          </div>
-        </div>
-        <div class="filter-group">
           <span class="filter-label">广告平台：</span>
-          <select class="filter-select">
-            <option>全部</option>
-          </select>
+          <ElSelect
+            size="small"
+            :popper-class="brFilterSelectPopperClass"
+            class="br-filter-el-select br-filter-el-select--source"
+            :model-value="barSourceValues"
+            multiple
+            collapse-tags
+            :max-collapse-tags="1"
+            placeholder="全部广告平台"
+            @update:model-value="onBarSourceUpdate"
+          >
+            <ElOption
+              v-for="opt in sourceBarOptions"
+              :key="opt.value === '' ? '__all_src__' : opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            >
+              <span class="br-source-opt">
+                <span
+                  v-if="opt.value !== ''"
+                  class="ap-dot"
+                  :style="{ background: sourceAccentColor(opt) }"
+                />
+                {{ opt.label }}
+              </span>
+            </ElOption>
+          </ElSelect>
         </div>
       </template>
 
       <div class="date-nav">
-        <button class="nav-arrow" @click="prevDate">‹</button>
-        <span class="date-display">{{ currentDateLabel }}</span>
-        <button class="nav-arrow" @click="nextDate">›</button>
+        <AppDatePicker
+          v-if="period === 'daily'"
+          v-model="reportDayYmd"
+          type="date"
+          value-format="YYYY-MM-DD"
+          format="YYYY-MM-DD"
+          placeholder="选择日期"
+          size="small"
+          :clearable="false"
+          class="br-date-picker br-date-picker--daily"
+          :popper-class="brDatePickerPopperClass"
+        />
+        <template v-else-if="period === 'weekly'">
+          <div class="br-week-picker-shell">
+            <span class="br-week-picker-shell__label">{{ weekRangeDash }}</span>
+            <AppDatePicker
+              v-model="reportWeekStartYmd"
+              type="week"
+              value-format="YYYY-MM-DD"
+              format="YYYY-MM-DD"
+              placeholder="选择周"
+              size="small"
+              :clearable="false"
+              class="br-date-picker br-date-picker--week-shell"
+              :popper-class="brDatePickerPopperClass"
+            />
+          </div>
+        </template>
+        <AppDatePicker
+          v-else
+          v-model="reportMonthYm"
+          type="month"
+          value-format="YYYY-MM"
+          format="YYYY-MM"
+          placeholder="选择月份"
+          size="small"
+          :clearable="false"
+          class="br-date-picker br-date-picker--month"
+          :popper-class="brDatePickerPopperClass"
+        />
       </div>
 
       <div class="compare-toggle">
@@ -183,7 +357,7 @@
         >
           <span class="toggle-knob" />
         </button>
-        <span v-if="compareEnabled" class="compare-date">对比：{{ compareDate }}</span>
+        <span v-if="compareEnabled" class="compare-date">对比：{{ comparePeriodText }}</span>
       </div>
     </div>
 
@@ -201,20 +375,26 @@
 
     <!-- ──────────────────────────── MAIN CONTENT ────────────── -->
     <div :class="['br-content', { 'no-sidebar': compareMode && period === 'monthly' }]">
-      <!-- Monthly compare mode: no sidebar -->
-      <template v-if="compareMode && period === 'monthly'">
+      <!-- Compare mode: no sidebar -->
+      <template v-if="compareMode">
         <main v-loading="contentLoading" class="br-main br-main--compare">
-          <MonthlyCompareMode />
+          <MonthlyCompareMode
+            :period="period"
+            :start-date="reportRange.startDate"
+            :end-date="reportRange.endDate"
+            :compare-start-date="compareRange.startDate"
+            :compare-end-date="compareRange.endDate"
+          />
         </main>
       </template>
 
       <!-- Each period×tab combination has its own completely independent sidebar + content -->
       <template v-else>
-        <aside class="br-sidebar">
+        <aside v-loading="sidebarLoading" class="br-sidebar">
           <div class="sidebar-card">
             <AppSidebar
               :key="`${period}-${activeTab}`"
-              :app-list="currentAppList"
+              :app-list="sidebarAppList"
               :selected-id="selectedAppId"
               :show-field="tabShowField"
               :tab="activeTab"
@@ -249,7 +429,15 @@
       </template>
     </div>
 
-    <LarkPushModal :visible="showLarkModal" @close="showLarkModal = false" />
+    <LarkPushModal
+      :visible="showLarkModal"
+      :model-value="larkConfig"
+      :saving="larkSaving"
+      :pushing="larkPushing"
+      @close="showLarkModal = false"
+      @save="handleLarkSave"
+      @push="handleLarkPushNow"
+    />
 
     <Transition name="fade">
       <div v-if="switching" class="page-transition" />
@@ -258,24 +446,41 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, provide, watch } from 'vue'
+  import 'flag-icons/css/flag-icons.min.css'
+  import { storeToRefs } from 'pinia'
+  import { ref, computed, provide, watch, onMounted } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
+  import { ElMessage } from 'element-plus'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
+  import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
+  import { toAppIdsRequestBody } from '@/utils/app-id-request'
+  import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
   import type {
+    AppListItem,
     ReportPeriod,
     ReportQueryParams,
+    ReportAppListQueryParams,
+    ReportTopBarFilterArrays,
     ReportTab,
     SummaryResponse,
     AdPlatformResponse,
     ByCountryResponse,
     PlatformCountryResponse,
-    CampaignsResponse
+    CampaignsResponse,
+    LarkPushConfig
   } from './types'
   import { businessReportContextKey } from './composables/business-report-context'
   import {
+    getReportAppList,
     getSummary,
     getAdPlatform,
     getByCountry,
     getPlatformCountry,
-    getCampaigns
+    getCampaigns,
+    getLarkConfig,
+    saveLarkConfig,
+    pushReportNow
   } from './reportService'
 
   import AppSidebar from './components/AppSidebar.vue'
@@ -300,20 +505,210 @@
   import MonthlyCampaigns from './components/MonthlyCampaigns.vue'
   import MonthlyCompareMode from './components/MonthlyCompareMode.vue'
 
-  import { appList, weeklyAppList } from './mockData'
-
   defineOptions({ name: 'BusinessReport' })
 
-  const platformCountryPills = [
-    '全部',
-    'Google',
-    'Facebook',
-    'Unity',
-    'Mintegral',
-    'TikTok'
-  ] as const
+  const metaStore = useCockpitMetaFilterStore()
+  const { data: cockpitMeta } = storeToRefs(metaStore)
 
+  const settingAppsForSelect = computed(() => cockpitMeta.value?.settingApps ?? [])
+
+  function fallbackMetaOptions(label: string): CockpitMetaOptionItem[] {
+    return [{ label, value: '' }]
+  }
+
+  const sourceBarOptions = computed(() => {
+    const list = cockpitMeta.value?.sourceOptions
+    return list?.length ? list : fallbackMetaOptions('全部广告平台')
+  })
+  const countryBarOptions = computed(() => {
+    const list = cockpitMeta.value?.countryOptions
+    return list?.length ? list : fallbackMetaOptions('全部国家')
+  })
+
+  /**
+   * 空数组 [] 表示不限，对应后端全局数据。
+   * meta「全部」项 value 为 ''；仅选全部、清空、或在已选具体项时再选全部 → 均归一为 []。
+   */
+  function normalizeMetaMulti(prev: string[], next: string[]): string[] {
+    if (next.length === 0) return []
+    const nonAll = next.filter((v) => v !== '')
+    const hasAllToken = next.includes('')
+    const prevWasGlobal = prev.length === 0
+    if (nonAll.length === 0) return []
+    if (hasAllToken && nonAll.length > 0) {
+      if (prevWasGlobal) return nonAll
+      return []
+    }
+    return nonAll
+  }
+
+  /** 单选应用；空串 = 不限，对应 `appIds: []` */
+  const barAppId = ref<string | string[]>([])
+  const barSourceValues = ref<string[]>([])
+  const barCountryValues = ref<string[]>([])
+
+  /** 顶栏筛选 → 报告 POST 体；终端平台 UI 已隐藏，`platformList` 固定不限 */
+  const topBarFilters = computed<ReportTopBarFilterArrays>(() => ({
+    appIds: toAppIdsRequestBody(barAppId.value),
+    platformList: [],
+    sourceList: [...barSourceValues.value],
+    countryCodeList: [...barCountryValues.value]
+  }))
+  function onBarSourceUpdate(v: string[]) {
+    barSourceValues.value = normalizeMetaMulti([...barSourceValues.value], v)
+  }
+  function onBarCountryUpdate(v: string[]) {
+    barCountryValues.value = normalizeMetaMulti([...barCountryValues.value], v)
+  }
+
+  const SOURCE_DOT_BY_VALUE: Record<string, string> = {
+    '1': '#4285F4',
+    '2': '#1877F2',
+    '3': '#222C37',
+    '4': '#6C3AD6',
+    '5': '#00A3E0',
+    '6': '#FF6B6B',
+    '7': '#000000'
+  }
+
+  function sourceAccentColor(opt: CockpitMetaOptionItem): string {
+    if (opt.value && SOURCE_DOT_BY_VALUE[opt.value]) return SOURCE_DOT_BY_VALUE[opt.value]
+    const lb = opt.label.toLowerCase()
+    if (lb.includes('google')) return '#4285F4'
+    if (lb.includes('facebook') || lb.includes('meta')) return '#1877F2'
+    if (lb.includes('unity')) return '#222C37'
+    if (lb.includes('applovin')) return '#6C3AD6'
+    if (lb.includes('ironsource')) return '#00A3E0'
+    if (lb.includes('tiktok') || lb.includes('pangle')) return '#010101'
+    if (lb.includes('snap')) return '#FFFC00'
+    if (lb.includes('mintegral')) return '#E8770E'
+    return 'rgb(255 255 255 / 35%)'
+  }
+
+  function countryFlagClass(value: string): string | null {
+    if (!value || value.length !== 2) return null
+    let c = value.toLowerCase()
+    if (c === 'uk') c = 'gb'
+    if (!/^[a-z]{2}$/.test(c)) return null
+    return `fi fi-${c}`
+  }
+
+  function formatLarkPushAtText(input?: string): string | null {
+    if (!input) return null
+    // 后端可能直接返回展示文本，优先原样展示
+    if (!/^\d{4}-\d{2}-\d{2}T/.test(input)) return input
+    const date = new Date(input)
+    if (Number.isNaN(date.getTime())) return input
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(
+      date.getDate()
+    ).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(
+      date.getMinutes()
+    ).padStart(2, '0')}`
+  }
+
+  function reportName(periodKey: ReportPeriod): string {
+    return periodKey === 'daily' ? '日报' : periodKey === 'weekly' ? '周报' : '月报'
+  }
+
+  async function ensureLarkConfigLoaded() {
+    if (larkConfig.value || larkLoading.value) return
+    larkLoading.value = true
+    try {
+      larkConfig.value = await getLarkConfig()
+    } catch (error) {
+      console.error('[BusinessReport] getLarkConfig(silent)', error)
+    } finally {
+      larkLoading.value = false
+    }
+  }
+
+  function getLastPushText(periodKey: ReportPeriod): string {
+    const pushAt = formatLarkPushAtText(larkConfig.value?.lastPushAt) ?? '--'
+    const target = larkConfig.value?.lastPushTarget || `经营${reportName(periodKey)}`
+    return `上次推送：${pushAt} 飞书群《${target}》`
+  }
+
+  onMounted(() => {
+    void metaStore.ensureLoaded()
+    void ensureLarkConfigLoaded()
+  })
+
+  const brFilterSelectPopperClass = 'br-filter-el-select__popper'
+  const brDatePickerPopperClass = 'br-date-picker__popper'
+
+  function parseYmdLocal(ymd: string): Date {
+    const [y, m, d] = ymd.split('-').map((x) => Number(x))
+    return new Date(y, m - 1, d, 12, 0, 0, 0)
+  }
+
+  function addDays(d: Date, n: number): Date {
+    const x = cloneAppDate(d)
+    x.setDate(x.getDate() + n)
+    return x
+  }
+
+  /** 自然周：周一至周日（与「当周周一～周日」口径一致） */
+  function mondayOfWeekContaining(d: Date): Date {
+    const c = cloneAppDate(d)
+    c.setHours(12, 0, 0, 0)
+    const wd = c.getDay()
+    const diff = wd === 0 ? -6 : 1 - wd
+    c.setDate(c.getDate() + diff)
+    c.setHours(0, 0, 0, 0)
+    return c
+  }
+
+  function normalizeWeekStartYmd(ymd: string): string {
+    return formatYYYYMMDD(mondayOfWeekContaining(parseYmdLocal(ymd)))
+  }
+
+  function prevMonthYm(ym: string): string {
+    const [y, m] = ym.split('-').map(Number)
+    const d = new Date(y, m - 2, 1)
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+  }
+
+  const appAnchorDate = getAppNow()
   const period = ref<ReportPeriod>('daily')
+  const reportDayYmd = ref(formatYYYYMMDD(appAnchorDate))
+  const reportWeekStartYmd = ref(formatYYYYMMDD(mondayOfWeekContaining(appAnchorDate)))
+  const reportMonthYm = ref(formatYYYYMMDD(appAnchorDate).slice(0, 7))
+
+  const weekRangeDash = computed(() => {
+    const ws = parseYmdLocal(reportWeekStartYmd.value)
+    const we = addDays(ws, 6)
+    return `${formatYYYYMMDD(ws)} - ${formatYYYYMMDD(we)}`
+  })
+
+  watch(reportWeekStartYmd, (v) => {
+    if (!v) return
+    const n = normalizeWeekStartYmd(v)
+    if (n !== v) reportWeekStartYmd.value = n
+  })
+
+  function syncReportDatesWhenPeriodChanges(next: ReportPeriod) {
+    const cur = period.value
+    if (next === 'daily') {
+      if (cur === 'weekly') {
+        reportDayYmd.value = formatYYYYMMDD(parseYmdLocal(reportWeekStartYmd.value))
+      } else if (cur === 'monthly') {
+        reportDayYmd.value = `${reportMonthYm.value}-01`
+      }
+    } else if (next === 'weekly') {
+      if (cur === 'daily') {
+        reportWeekStartYmd.value = normalizeWeekStartYmd(reportDayYmd.value)
+      } else if (cur === 'monthly') {
+        reportWeekStartYmd.value = normalizeWeekStartYmd(`${reportMonthYm.value}-01`)
+      }
+    } else if (next === 'monthly') {
+      if (cur === 'daily') {
+        reportMonthYm.value = reportDayYmd.value.slice(0, 7)
+      } else if (cur === 'weekly') {
+        reportMonthYm.value = reportWeekStartYmd.value.slice(0, 7)
+      }
+    }
+  }
+
   const activeTab = ref<ReportTab>('summary')
   const compareMode = ref(false)
   const switching = ref(false)
@@ -336,6 +731,7 @@
     if (p === period.value) return
     switching.value = true
     await new Promise((r) => setTimeout(r, 150))
+    syncReportDatesWhenPeriodChanges(p)
     period.value = p
     compareMode.value = false
     activeTab.value = 'summary'
@@ -346,97 +742,33 @@
     activeTab.value = tab
   }
 
-  const showBackBtn = computed(() => activeTab.value !== 'summary')
-  function handleBack() {
-    activeTab.value = 'summary'
-  }
-
-  const platforms = ['全部', '安卓', 'iOS', '网站']
-  const activePlatforms = ref(['全部'])
-
-  function togglePlatform(p: string) {
-    if (p === '全部') {
-      activePlatforms.value = ['全部']
-    } else {
-      const idx = activePlatforms.value.indexOf(p)
-      activePlatforms.value = activePlatforms.value.filter((x) => x !== '全部')
-      if (idx >= 0) {
-        activePlatforms.value.splice(activePlatforms.value.indexOf(p), 1)
-        if (activePlatforms.value.length === 0) activePlatforms.value = ['全部']
-      } else {
-        activePlatforms.value.push(p)
-      }
-    }
-  }
-
-  const adPlatforms = [
-    '全部',
-    'Google',
-    'Facebook',
-    'Unity',
-    'Mintegral',
-    'TikTok',
-    'Snapchat',
-    'Kwai',
-    'Bigo'
-  ]
-  const activeAdPlatforms = ref(['全部'])
-  const apColors: Record<string, string> = {
-    Google: '#4285F4',
-    Facebook: '#1877F2',
-    Unity: '#222C37',
-    Mintegral: '#E8770E',
-    TikTok: '#010101',
-    Snapchat: '#FFFC00',
-    Kwai: '#FF6B00',
-    Bigo: '#00A651'
-  }
-
-  function toggleAdPlatform(ap: string) {
-    if (ap === '全部') {
-      activeAdPlatforms.value = ['全部']
-      return
-    }
-    activeAdPlatforms.value = activeAdPlatforms.value.filter((x) => x !== '全部')
-    const idx = activeAdPlatforms.value.indexOf(ap)
-    if (idx >= 0) {
-      activeAdPlatforms.value.splice(idx, 1)
-      if (activeAdPlatforms.value.length === 0) activeAdPlatforms.value = ['全部']
-    } else {
-      activeAdPlatforms.value.push(ap)
-    }
-  }
+  // const showBackBtn = computed(() => activeTab.value !== 'summary')
+  // function handleBack() {
+  //   activeTab.value = 'summary'
+  // }
 
   const campaignStatuses = ['在投中', '已暂停', '全部']
   const activeStatus = ref('在投中')
 
-  const selectedCountries = [
-    { code: 'US', name: '美国', flag: '🇺🇸' },
-    { code: 'DE', name: '德国', flag: '🇩🇪' },
-    { code: 'JP', name: '日本', flag: '🇯🇵' },
-    { code: 'KR', name: '韩国', flag: '🇰🇷' },
-    { code: 'BR', name: '巴西', flag: '🇧🇷' }
-  ]
-
-  const currentDateLabel = computed(() => {
-    if (period.value === 'monthly') return '2025年12月'
-    if (period.value === 'weekly') return '2026年第10周 （3/9-3/15）'
-    return '2026年3月13日'
-  })
   const compareEnabled = ref(true)
   const compareLabelLeft = computed(() =>
     period.value === 'monthly' ? '对比上月' : period.value === 'weekly' ? '对比上周' : '对比昨日'
   )
-  const compareDate = computed(() =>
-    period.value === 'monthly'
-      ? '2025年11月'
-      : period.value === 'weekly'
-        ? '第9周 （3/2-3/8）'
-        : '2026年3月12日'
-  )
 
-  function prevDate() {}
-  function nextDate() {}
+  /** 对比期文案：随当前所选日/周/月实时变化（格式 YYYY-MM-DD / 周区间 / YYYY-MM） */
+  const comparePeriodText = computed(() => {
+    if (!compareEnabled.value) return ''
+    if (period.value === 'daily') {
+      return formatYYYYMMDD(addDays(parseYmdLocal(reportDayYmd.value), -1))
+    }
+    if (period.value === 'weekly') {
+      const ws = parseYmdLocal(reportWeekStartYmd.value)
+      const pStart = addDays(ws, -7)
+      const pEnd = addDays(pStart, 6)
+      return `${formatYYYYMMDD(pStart)} - ${formatYYYYMMDD(pEnd)}`
+    }
+    return prevMonthYm(reportMonthYm.value)
+  })
 
   // Per-tab independent app selection state: key = `${period}-${tab}`
   const selectedAppIds = ref<Record<string, string>>({})
@@ -446,7 +778,10 @@
   )
 
   function selectApp(id: string) {
-    selectedAppIds.value[`${period.value}-${activeTab.value}`] = id
+    const key = `${period.value}-${activeTab.value}`
+    if ((selectedAppIds.value[key] ?? 'overall') === id) return
+    selectedAppIds.value[key] = id
+    void refreshReportDetail()
   }
 
   // Composite key for independent period×tab right-side content
@@ -458,14 +793,12 @@
   const byCountry = ref<ByCountryResponse | null>(null)
   const platformCountry = ref<PlatformCountryResponse | null>(null)
   const campaigns = ref<CampaignsResponse | null>(null)
+  const campaignsCurrentPage = ref(1)
+  const campaignsPageSize = ref(20)
 
-  // 侧栏应用列表：优先使用 summary 接口返回的 appList
-  const currentAppList = computed(() => {
-    const fromApi = summary.value?.appList
-    if (fromApi && fromApi.length > 0) return fromApi
-    if (period.value === 'weekly') return weeklyAppList
-    return appList
-  })
+  /** 侧栏列表：仅由 app-list 接口更新，与右侧详情解耦 */
+  const sidebarAppList = ref<AppListItem[]>([])
+  const sidebarLoading = ref(false)
 
   // Each tab shows a different secondary metric in the sidebar
   const tabShowField = computed((): 'dau' | 'mau' | 'adSpend' => {
@@ -474,36 +807,209 @@
     return 'dau'
   })
   const showLarkModal = ref(false)
-  provide('openPushModal', () => {
+  const larkConfig = ref<LarkPushConfig | null>(null)
+  const larkLoading = ref(false)
+  const larkSaving = ref(false)
+  const larkPushing = ref(false)
+
+  async function openLarkModal() {
     showLarkModal.value = true
+    try {
+      await ensureLarkConfigLoaded()
+    } catch (error) {
+      ElMessage.error('加载飞书配置失败')
+      console.error('[BusinessReport] getLarkConfig', error)
+    }
+  }
+
+  async function handleLarkSave(config: LarkPushConfig) {
+    larkSaving.value = true
+    try {
+      await saveLarkConfig(config)
+      larkConfig.value = config
+      ElMessage.success('推送配置已保存')
+      showLarkModal.value = false
+    } catch (error) {
+      ElMessage.error('保存失败，请稍后重试')
+      console.error('[BusinessReport] saveLarkConfig', error)
+    } finally {
+      larkSaving.value = false
+    }
+  }
+
+  async function handleLarkPushNow(config: LarkPushConfig) {
+    larkPushing.value = true
+    try {
+      await pushReportNow(config)
+      const now = getAppNow()
+      larkConfig.value = {
+        ...config,
+        lastPushAt: now.toISOString(),
+        lastPushTarget: config.groups[0]?.name || `经营${reportName(period.value)}`
+      }
+      ElMessage.success('推送成功，已发送至飞书群')
+      showLarkModal.value = false
+    } catch (error) {
+      ElMessage.error('推送失败，请稍后重试')
+      console.error('[BusinessReport] pushReportNow', error)
+    } finally {
+      larkPushing.value = false
+    }
+  }
+
+  provide('openPushModal', () => {
+    void openLarkModal()
+  })
+
+  const reportRange = computed(() => {
+    if (period.value === 'daily') {
+      return { startDate: reportDayYmd.value, endDate: reportDayYmd.value }
+    }
+    if (period.value === 'weekly') {
+      const ws = parseYmdLocal(reportWeekStartYmd.value)
+      return {
+        startDate: formatYYYYMMDD(ws),
+        endDate: formatYYYYMMDD(addDays(ws, 6))
+      }
+    }
+    return {
+      startDate: `${reportMonthYm.value}-01`,
+      endDate: formatYYYYMMDD(
+        new Date(
+          Number(reportMonthYm.value.slice(0, 4)),
+          Number(reportMonthYm.value.slice(5, 7)),
+          0
+        )
+      )
+    }
+  })
+
+  const compareRange = computed(() => {
+    if (period.value === 'daily') {
+      const d = addDays(parseYmdLocal(reportDayYmd.value), -1)
+      const ymd = formatYYYYMMDD(d)
+      return { startDate: ymd, endDate: ymd }
+    }
+    if (period.value === 'weekly') {
+      const ws = parseYmdLocal(reportWeekStartYmd.value)
+      const pStart = addDays(ws, -7)
+      return {
+        startDate: formatYYYYMMDD(pStart),
+        endDate: formatYYYYMMDD(addDays(pStart, 6))
+      }
+    }
+    const cur = new Date(
+      Number(reportMonthYm.value.slice(0, 4)),
+      Number(reportMonthYm.value.slice(5, 7)) - 1,
+      1
+    )
+    const prevStart = new Date(cur.getFullYear(), cur.getMonth() - 1, 1)
+    const prevEnd = new Date(cur.getFullYear(), cur.getMonth(), 0)
+    return {
+      startDate: formatYYYYMMDD(prevStart),
+      endDate: formatYYYYMMDD(prevEnd)
+    }
   })
 
   provide(businessReportContextKey, {
     loading,
+    period,
+    reportRange,
+    refreshReport: refreshReportDetail,
+    getLastPushText,
+    topBarFilters,
+    sidebarAppList,
     summary,
     adPlatform,
     byCountry,
     platformCountry,
-    campaigns
+    campaigns,
+    setCampaignsPage
   })
+
+  function buildSidebarParams(): ReportAppListQueryParams {
+    return {
+      period: period.value,
+      startDate: reportRange.value.startDate,
+      endDate: reportRange.value.endDate,
+      tab: activeTab.value,
+      account: '',
+      ...topBarFilters.value
+    }
+  }
 
   function buildReportParams(): ReportQueryParams {
     const id = selectedAppId.value
+    const campaignsPaginationParams =
+      activeTab.value === 'campaigns'
+        ? {
+            currentPage: campaignsCurrentPage.value,
+            pageSize: campaignsPageSize.value
+          }
+        : {}
     return {
       period: period.value,
-      appId: id === 'overall' ? undefined : id
+      startDate: reportRange.value.startDate,
+      endDate: reportRange.value.endDate,
+      appId: id === 'overall' ? '' : id,
+      account: '',
+      ...topBarFilters.value,
+      ...campaignsPaginationParams
     }
   }
 
   let reportRequestSeq = 0
-  async function refreshReportData() {
+  let sidebarRequestSeq = 0
+
+  function setCampaignsPage(page: number) {
+    const next = page > 0 ? page : 1
+    if (campaignsCurrentPage.value === next) return
+    campaignsCurrentPage.value = next
+    void refreshReportDetail()
+  }
+
+  async function refreshSidebarAppList(resetSelectionToOverall: boolean) {
+    if (compareMode.value) return
+    const seq = ++sidebarRequestSeq
+    const selectionKey = `${period.value}-${activeTab.value}`
+    const selectionAtStart = selectedAppIds.value[selectionKey] ?? 'overall'
+    sidebarLoading.value = true
+    try {
+      const { items } = await getReportAppList(buildSidebarParams())
+      if (seq !== sidebarRequestSeq) return
+      sidebarAppList.value = items
+
+      if (resetSelectionToOverall) {
+        const current = selectedAppIds.value[selectionKey] ?? 'overall'
+        if (current === selectionAtStart) {
+          selectedAppIds.value[selectionKey] = 'overall'
+        }
+      }
+
+      const ids = new Set(items.map((i) => i.id))
+      let sel = selectedAppIds.value[selectionKey] ?? 'overall'
+      if (!ids.has(sel)) {
+        sel = ids.has('overall') ? 'overall' : (items[0]?.id ?? 'overall')
+        selectedAppIds.value[selectionKey] = sel
+      }
+
+      await refreshReportDetail()
+    } catch (e) {
+      console.error('[BusinessReport] refreshSidebarAppList', e)
+    } finally {
+      if (seq === sidebarRequestSeq) sidebarLoading.value = false
+    }
+  }
+
+  async function refreshReportDetail() {
+    if (compareMode.value) return
     const seq = ++reportRequestSeq
     const params = buildReportParams()
     const tab = activeTab.value
     loading.value = true
     try {
       const sum = await getSummary(params)
-      if (seq !== reportRequestSeq) return
+      if (compareMode.value || seq !== reportRequestSeq) return
       summary.value = sum
 
       if (tab !== 'adPlatform') adPlatform.value = null
@@ -513,29 +1019,61 @@
 
       if (tab === 'adPlatform') {
         const r = await getAdPlatform(params)
-        if (seq !== reportRequestSeq) return
+        if (compareMode.value || seq !== reportRequestSeq) return
         adPlatform.value = r
       } else if (tab === 'byCountry') {
         const r = await getByCountry(params)
-        if (seq !== reportRequestSeq) return
+        if (compareMode.value || seq !== reportRequestSeq) return
         byCountry.value = r
       } else if (tab === 'platformCountry') {
         const r = await getPlatformCountry(params)
-        if (seq !== reportRequestSeq) return
+        if (compareMode.value || seq !== reportRequestSeq) return
         platformCountry.value = r
       } else if (tab === 'campaigns') {
         const r = await getCampaigns(params)
-        if (seq !== reportRequestSeq) return
+        if (compareMode.value || seq !== reportRequestSeq) return
         campaigns.value = r
       }
     } catch (e) {
-      console.error('[BusinessReport] refreshReportData', e)
+      console.error('[BusinessReport] refreshReportDetail', e)
     } finally {
       if (seq === reportRequestSeq) loading.value = false
     }
   }
 
-  watch([period, selectedAppId, activeTab], refreshReportData, { immediate: true })
+  watch(
+    [
+      period,
+      activeTab,
+      reportDayYmd,
+      reportWeekStartYmd,
+      reportMonthYm,
+      barAppId,
+      barSourceValues,
+      barCountryValues
+    ],
+    (now, prev) => {
+      if (compareMode.value) return
+      campaignsCurrentPage.value = 1
+      const first = !prev
+      const onlyTabChanged =
+        !first &&
+        now[0] === prev![0] &&
+        now[1] !== prev![1] &&
+        now[2] === prev![2] &&
+        now[3] === prev![3] &&
+        now[4] === prev![4] &&
+        now[5] === prev![5] &&
+        now[6] === prev![6] &&
+        now[7] === prev![7]
+      void refreshSidebarAppList(!onlyTabChanged)
+    },
+    { deep: true, immediate: true }
+  )
+
+  watch(compareMode, (on) => {
+    if (!on) void refreshSidebarAppList(true)
+  })
 
   const contentLoading = computed(() => loading.value)
 </script>
@@ -547,7 +1085,9 @@
     --rp-border: rgb(255 255 255 / 6%);
     --rp-text: rgb(255 255 255 / 85%);
     --rp-muted: rgb(255 255 255 / 40%);
-    --rp-accent: #00d4a1;
+
+    /* 与 AppPlatformSearchSelect、系统主题一致（--theme-color / --art-primary） */
+    --rp-accent: var(--theme-color, var(--art-primary, #00d4a1));
   }
 
   * {
@@ -764,12 +1304,12 @@
 
   .lark-btn {
     color: var(--rp-accent);
-    background: rgb(0 212 161 / 12%);
-    border-color: rgb(0 212 161 / 30%);
+    background: color-mix(in srgb, var(--rp-accent) 12%, transparent);
+    border-color: color-mix(in srgb, var(--rp-accent) 30%, transparent);
   }
 
   .lark-btn:hover {
-    background: rgb(0 212 161 / 20%);
+    background: color-mix(in srgb, var(--rp-accent) 20%, transparent);
   }
 
   .export-btn {
@@ -780,11 +1320,6 @@
 
   .export-btn:hover {
     background: rgb(74 158 245 / 20%);
-  }
-
-  .icon-btn {
-    padding: 5px 8px;
-    font-size: 14px;
   }
 
   .lark-icon {
@@ -906,7 +1441,7 @@
 
   .pill.active {
     color: var(--rp-accent);
-    background: rgb(0 212 161 / 12%);
+    background: color-mix(in srgb, var(--rp-accent) 12%, transparent);
     border-color: var(--rp-accent);
   }
 
@@ -1022,6 +1557,7 @@
     display: flex;
     flex: 1;
     min-width: 0;
+    min-height: 0;
   }
 
   .br-sidebar {
@@ -1032,6 +1568,10 @@
   }
 
   .sidebar-card {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    max-height: calc(100vh - 190px);
     overflow: hidden;
     background: rgb(255 255 255 / 3%);
     border: 1px solid rgb(255 255 255 / 7%);
@@ -1074,13 +1614,13 @@
     color: var(--rp-accent);
     cursor: pointer;
     background: none;
-    border: 1px solid rgb(0 212 161 / 30%);
+    border: 1px solid color-mix(in srgb, var(--rp-accent) 30%, transparent);
     border-radius: 5px;
     transition: all 0.2s;
   }
 
   .compare-mode-btn:hover {
-    background: rgb(0 212 161 / 8%);
+    background: color-mix(in srgb, var(--rp-accent) 8%, transparent);
   }
 
   .status-lark {
@@ -1142,5 +1682,313 @@
     .br-page-fx {
       animation: none;
     }
+  }
+</style>
+
+<style scoped lang="scss">
+  .filter-group--tab {
+    flex: 1;
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+
+  .br-filter-el-select {
+    min-width: 118px;
+  }
+
+  .br-filter-el-select--app {
+    min-width: 100px;
+    max-width: 120px;
+  }
+
+  .br-filter-app-select {
+    min-width: 100px;
+    max-width: 140px;
+  }
+
+  :deep(.br-filter-app-select) {
+    min-height: 28px !important;
+    padding: 2px 8px !important;
+    font-size: 12px !important;
+
+    /* 与 AppPlatformSearchSelect 默认态一致：主题色描边 + 浅主题底 */
+    background: color-mix(in srgb, var(--rp-accent) 6%, transparent) !important;
+    border: 1px solid var(--rp-accent) !important;
+    border-radius: 6px !important;
+    box-shadow: none !important;
+  }
+
+  :deep(.br-filter-app-select:hover),
+  :deep(.br-filter-app-select.is-open) {
+    background: rgb(255 255 255 / 8%) !important;
+    border-color: var(--rp-accent) !important;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--rp-accent) 22%, transparent) !important;
+  }
+
+  :deep(.br-filter-app-select .app-platform-search-select__text) {
+    font-size: 12px;
+    color: var(--rp-text);
+  }
+
+  :deep(.br-filter-app-select .app-platform-search-select__text.is-placeholder) {
+    color: rgb(255 255 255 / 35%);
+  }
+
+  :deep(.br-filter-app-select .app-platform-search-select__suffix) {
+    color: var(--rp-accent);
+  }
+
+  .br-filter-el-select--source {
+    min-width: 110px;
+    max-width: 130px;
+  }
+
+  .br-filter-el-select--country {
+    min-width: 110px;
+    max-width: 130px;
+  }
+
+  /* EP 2.11+：Select 触发器为 .el-select__wrapper，不再使用 .el-input__wrapper */
+  :deep(.br-filter-el-select) {
+    --el-input-focus-border-color: var(--rp-accent);
+    --el-border-color-hover: color-mix(in srgb, var(--rp-accent) 45%, transparent);
+    --el-color-primary: var(--rp-accent);
+    --el-border-color-focus: var(--rp-accent);
+
+    vertical-align: middle;
+  }
+
+  :deep(.br-filter-el-select .el-select__wrapper) {
+    gap: 4px;
+    min-height: 28px;
+    padding: 2px 8px;
+    font-size: 12px;
+
+    /* 默认态与「应用」同级：主题描边 */
+    background: color-mix(in srgb, var(--rp-accent) 6%, transparent);
+    border: 1px solid var(--rp-accent);
+    border-radius: 6px;
+    box-shadow: none;
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+
+  :deep(.br-filter-el-select .el-select__placeholder) {
+    font-size: 12px;
+    color: rgb(255 255 255 / 35%);
+  }
+
+  :deep(.br-filter-el-select .el-select__input) {
+    font-size: 12px;
+    color: var(--rp-text);
+  }
+
+  :deep(.br-filter-el-select .el-select__caret) {
+    color: var(--rp-accent);
+  }
+
+  :deep(.br-filter-el-select .el-select__wrapper.is-focused) {
+    border-color: var(--rp-accent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--rp-accent) 22%, transparent);
+  }
+
+  :deep(.br-filter-el-select .el-select__wrapper.is-hovering),
+  :deep(.br-filter-el-select .el-select__wrapper:hover) {
+    border-color: var(--rp-accent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--rp-accent) 18%, transparent);
+  }
+
+  /* 旧版 Select 仍包一层 Input 时的兜底（一般 EP 2.11 不会命中） */
+  :deep(.br-filter-el-select .el-input__wrapper) {
+    min-height: 28px;
+    padding: 2px 8px;
+    font-size: 12px;
+    background: color-mix(in srgb, var(--rp-accent) 6%, transparent);
+    border: 1px solid var(--rp-accent);
+    border-radius: 6px;
+    box-shadow: none;
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+
+  :deep(.br-filter-el-select .el-input__inner) {
+    font-size: 12px;
+    color: var(--rp-text);
+  }
+
+  :deep(.br-filter-el-select .el-input__wrapper.is-focus) {
+    border-color: var(--rp-accent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--rp-accent) 22%, transparent);
+  }
+
+  :deep(.br-filter-el-select .el-input__wrapper:hover) {
+    border-color: var(--rp-accent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--rp-accent) 18%, transparent);
+  }
+
+  :deep(.br-filter-el-select .el-tag) {
+    height: 20px;
+    padding: 0 6px;
+    font-size: 11px;
+    line-height: 18px;
+    color: var(--rp-accent);
+    background: color-mix(in srgb, var(--rp-accent) 12%, transparent);
+    border-color: var(--rp-accent);
+  }
+
+  :deep(.br-filter-el-select .el-tag .el-tag__close) {
+    color: var(--rp-accent);
+  }
+
+  .br-source-opt,
+  .br-country-opt {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .br-fi {
+    flex-shrink: 0;
+    width: 1.15em;
+    line-height: 1;
+    background-size: cover;
+  }
+
+  .br-date-picker {
+    min-width: 120px;
+  }
+
+  .br-date-picker--daily {
+    width: 148px;
+  }
+
+  .br-date-picker--month {
+    width: 118px;
+  }
+
+  /** 周报：输入框内展示「周一～周日」整段区间，避免 week 类型只显示周一 */
+  .br-week-picker-shell {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    width: min(100%, 268px);
+    min-width: 220px;
+    max-width: 268px;
+  }
+
+  .br-week-picker-shell__label {
+    position: absolute;
+    top: 50%;
+    right: 28px;
+    left: 10px;
+    z-index: 2;
+    overflow: hidden;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.25;
+    color: var(--rp-text);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    pointer-events: none;
+    transform: translateY(-50%);
+  }
+
+  .br-week-picker-shell :deep(.br-date-picker--week-shell) {
+    width: 100%;
+  }
+
+  .br-week-picker-shell :deep(.br-date-picker--week-shell .el-input__wrapper) {
+    width: 100%;
+    padding-right: 28px;
+    padding-left: 10px;
+  }
+
+  .br-week-picker-shell :deep(.br-date-picker--week-shell .el-input__inner) {
+    color: transparent !important;
+    text-shadow: none;
+    caret-color: transparent;
+  }
+
+  .br-week-picker-shell :deep(.br-date-picker--week-shell .el-input__inner::placeholder) {
+    color: transparent;
+  }
+
+  :deep(.br-date-picker .el-input__wrapper) {
+    padding: 2px 10px;
+    font-size: 12px;
+    background: rgb(255 255 255 / 6%);
+    border: 1px solid var(--rp-border);
+    border-radius: 6px;
+    box-shadow: none;
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+
+  :deep(.br-date-picker .el-input__inner) {
+    font-size: 12px;
+    color: var(--rp-text);
+  }
+
+  :deep(.br-date-picker .el-input__prefix-inner) {
+    color: rgb(255 255 255 / 45%);
+  }
+
+  :deep(.br-date-picker .el-input__wrapper.is-focus) {
+    border-color: var(--rp-accent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--rp-accent) 22%, transparent);
+  }
+
+  :deep(.br-date-picker .el-input__wrapper:hover) {
+    border-color: color-mix(in srgb, var(--rp-accent) 35%, transparent);
+  }
+</style>
+
+<style lang="scss">
+  .br-filter-el-select__popper.el-select__popper {
+    background: #0d1529 !important;
+    border: 1px solid rgb(255 255 255 / 10%) !important;
+  }
+
+  .br-filter-el-select__popper .el-select-dropdown__item {
+    height: auto;
+    min-height: 30px;
+    padding: 6px 12px;
+    font-size: 12px;
+    line-height: 1.3;
+    color: rgb(255 255 255 / 88%);
+  }
+
+  .br-filter-el-select__popper .el-select-dropdown__item.is-hovering,
+  .br-filter-el-select__popper .el-select-dropdown__item:hover {
+    background: color-mix(in srgb, var(--rp-accent) 12%, transparent);
+  }
+
+  .br-filter-el-select__popper .el-select-dropdown__item.is-selected {
+    font-weight: 600;
+    color: var(--rp-accent);
+  }
+
+  .br-filter-el-select__popper.app-platform-search-select__popper {
+    background: #0d1529 !important;
+    border: 1px solid rgb(255 255 255 / 10%) !important;
+  }
+
+  .br-date-picker__popper.el-picker__popper {
+    --el-datepicker-text-color: rgb(255 255 255 / 88%);
+    --el-datepicker-off-text-color: rgb(255 255 255 / 32%);
+    --el-datepicker-header-text-color: rgb(255 255 255 / 75%);
+    --el-datepicker-bg-color: #0d1529;
+    --el-datepicker-inner-border-color: rgb(255 255 255 / 10%);
+    --el-datepicker-inrange-bg-color: color-mix(in srgb, var(--rp-accent) 12%, transparent);
+    --el-datepicker-inrange-hover-bg-color: color-mix(in srgb, var(--rp-accent) 18%, transparent);
+    --el-datepicker-active-color: var(--rp-accent);
+    --el-datepicker-hover-text-color: var(--rp-accent);
+    --el-datepicker-icon-color: rgb(255 255 255 / 45%);
+
+    background: #0d1529 !important;
+    border: 1px solid rgb(255 255 255 / 10%) !important;
   }
 </style>

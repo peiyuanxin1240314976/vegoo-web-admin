@@ -137,7 +137,7 @@
     border-radius: 8px;
 
     &:hover .cct5__img-placeholder {
-      transform: scale(1.03);
+      filter: brightness(1.06);
     }
   }
 
@@ -158,7 +158,7 @@
       color-mix(in srgb, var(--art-primary) 25%, var(--default-box-color)),
       color-mix(in srgb, var(--art-success) 20%, var(--default-box-color))
     );
-    transition: transform 0.2s ease;
+    transition: filter 0.2s ease;
   }
 
   .cct5__play-btn {

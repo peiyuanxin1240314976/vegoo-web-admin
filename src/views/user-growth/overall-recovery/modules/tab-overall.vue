@@ -110,16 +110,39 @@
         <div class="panel-header-row">
           <span>整体回收明细数据</span>
           <div class="detail-filters">
-            <ElSelect v-model="detailApp" size="small" style="width: 100px">
-              <ElOption label="全部" value="all" />
-              <ElOption label="Weather5" value="weather5" />
+            <ElSelect
+              v-model="detailApp"
+              size="small"
+              class="or-detail-select or-detail-select--app"
+            >
+              <ElOption
+                v-for="opt in appOptions"
+                :key="opt.value === '' ? '__or_detail_all_app__' : opt.value"
+                :label="opt.label"
+                :value="opt.value"
+              />
             </ElSelect>
-            <ElSelect v-model="detailChannel" size="small" style="width: 90px">
-              <ElOption label="全部" value="all" />
-              <ElOption label="Google" value="google" />
-              <ElOption label="Facebook" value="facebook" />
+            <ElSelect
+              v-model="detailChannel"
+              size="small"
+              class="or-detail-select or-detail-select--src"
+            >
+              <ElOption
+                v-for="opt in sourceOptions"
+                :key="opt.value === '' ? '__or_detail_all_src__' : opt.value"
+                :label="opt.label"
+                :value="opt.value"
+              />
             </ElSelect>
-            <ElButton size="small" type="primary" plain>导出</ElButton>
+            <ElButton
+              size="small"
+              class="or-detail-btn or-detail-btn--search"
+              :icon="Search"
+              @click="onDetailSearch"
+            >
+              检索
+            </ElButton>
+            <ElButton size="small" class="or-detail-btn or-detail-btn--export">导出</ElButton>
           </div>
         </div>
       </template>
@@ -215,18 +238,35 @@
   import { useChart } from '@/hooks/core/useChart'
   import type { EChartsOption } from '@/plugins/echarts'
   import type { OverallRecoveryFilterState, OverallTabData } from '../types'
-  import { fetchOverallTabData } from '@/api/user-growth'
-  import { Top, Bottom } from '@element-plus/icons-vue'
+  import { useOverallRecoveryFilters } from '../composables/useOverallRecoveryFilters'
+  import { fetchOverallTabData, fetchOverallTabDetailRecords } from '@/api/user-growth'
+  import { Bottom, Search, Top } from '@element-plus/icons-vue'
 
   defineOptions({ name: 'OrTabOverall' })
 
   const props = defineProps<{ filter: OverallRecoveryFilterState }>()
 
+  const { appOptions, sourceOptions } = useOverallRecoveryFilters()
+
   const tabData = ref<OverallTabData | null>(null)
   const loading = ref(false)
   let loadSeq = 0
-  const detailApp = ref('all')
-  const detailChannel = ref('all')
+  const detailApp = ref('')
+  const detailChannel = ref('')
+
+  async function onDetailSearch() {
+    if (!tabData.value) return
+    loading.value = true
+    try {
+      const res = await fetchOverallTabDetailRecords(props.filter, {
+        detailApp: detailApp.value,
+        detailChannel: detailChannel.value
+      })
+      tabData.value.detailRows = res.detailRows
+    } finally {
+      loading.value = false
+    }
+  }
 
   const curveChart = useChart()
   const volumeChart = useChart()
@@ -343,13 +383,16 @@
     loading.value = true
     try {
       const res = await fetchOverallTabData({
-        dateRange: props.filter.dateRange,
+        startDate: props.filter.startDate,
+        endDate: props.filter.endDate,
         s_app_id: props.filter.s_app_id,
         source: props.filter.source,
         s_country_code: props.filter.s_country_code
       })
       if (seq !== loadSeq) return
       tabData.value = res
+      detailApp.value = ''
+      detailChannel.value = ''
       await nextTick()
       if (seq !== loadSeq) return
       curveChart.initChart(buildCurveOption())
@@ -402,6 +445,19 @@
     @include ap-neon-bg;
 
     border-radius: 14px;
+    transition:
+      border-color 0.28s var(--ease-default),
+      box-shadow 0.36s var(--ease-out),
+      filter 0.28s var(--ease-out);
+
+    &:hover {
+      filter: brightness(1.02);
+      border-color: rgb(96 165 250 / 50%);
+      box-shadow:
+        0 18px 56px rgb(0 0 0 / 48%),
+        0 0 48px rgb(59 130 246 / 12%),
+        0 0 90px rgb(34 211 238 / 10%);
+    }
 
     &__title {
       margin-bottom: 6px;
@@ -497,6 +553,19 @@
     @include ap-neon-bg;
 
     border-radius: 14px;
+    transition:
+      border-color 0.28s var(--ease-default),
+      box-shadow 0.36s var(--ease-out),
+      filter 0.28s var(--ease-out);
+
+    &:hover {
+      filter: brightness(1.01);
+      border-color: rgb(96 165 250 / 55%);
+      box-shadow:
+        0 18px 56px rgb(0 0 0 / 48%),
+        0 0 48px rgb(59 130 246 / 12%),
+        0 0 90px rgb(34 211 238 / 10%);
+    }
 
     :deep(.el-card__header) {
       display: flex;
@@ -634,6 +703,78 @@
     display: flex;
     gap: 8px;
     align-items: center;
+  }
+
+  :deep(.or-detail-select) {
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 32px;
+  }
+
+  :deep(.or-detail-select .el-select__wrapper) {
+    min-height: 32px;
+    padding: 0 10px;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: none;
+  }
+
+  :deep(.or-detail-select .el-select__wrapper:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
+  }
+
+  :deep(.or-detail-select .el-select__wrapper.is-focused) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
+  }
+
+  :deep(.or-detail-select .el-select__caret) {
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+  }
+
+  .or-detail-select--app {
+    min-width: 112px;
+  }
+
+  .or-detail-select--src {
+    min-width: 120px;
+  }
+
+  .or-detail-btn {
+    min-height: 32px;
+    padding: 0 14px;
+    font-size: 12px;
+    color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    border-radius: var(--el-border-radius-base, 4px) !important;
+    box-shadow: none !important;
+  }
+
+  .or-detail-btn:hover {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 8%,
+      transparent
+    ) !important;
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
   }
 
   /* ROI 单元格 */

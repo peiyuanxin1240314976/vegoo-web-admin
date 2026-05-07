@@ -38,6 +38,22 @@
         "shortDescLimit": 80,
         "fullDescLimit": 4000,
         "selected": false
+      },
+      {
+        "id": "5",
+        "lang": "德语",
+        "langCode": "de",
+        "status": "over_limit",
+        "appName": "Personensuche, Personenfinder und Smart-Suche",
+        "shortDesc": "KI-Personensuche, Personen nach Name finden",
+        "fullDesc": "Informationen aus mehreren offenen Quellen...",
+        "appNameCount": 31,
+        "shortDescCount": 65,
+        "fullDescCount": 2234,
+        "appNameLimit": 30,
+        "shortDescLimit": 80,
+        "fullDescLimit": 4000,
+        "selected": false
       }
     ],
     "step1Done": false,

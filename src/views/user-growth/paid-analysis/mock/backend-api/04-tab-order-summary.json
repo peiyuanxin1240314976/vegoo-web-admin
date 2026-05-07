@@ -1,0 +1,278 @@
+{
+  "_comment": "付费分析 - 「订单明细」Tab 汇总区（KPI、应用×平台表、按日汇总、两侧图表）。不含分页列表。对应 types.ts: PaidAnalysisOrderTabSummaryData + PaidAnalysisFilterBody。",
+  "fieldDescription": {
+    "request": {
+      "startDate": { "type": "string", "required": true, "description": "日期范围起。" },
+      "endDate": { "type": "string", "required": true, "description": "日期范围止。" },
+      "appId": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "应用 ID；与 meta appOptions.value 一致；空为全部。"
+      },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "终端平台。"
+      },
+      "s_country_code": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "国家。"
+      },
+      "n_source": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "广告平台。"
+      }
+    },
+    "response": {
+      "kpis": { "type": "array", "required": true, "description": "订单 KPI 卡片。" },
+      "appPlatformRows": {
+        "type": "array",
+        "required": true,
+        "description": "应用×平台汇总主表。"
+      },
+      "dailyRows": { "type": "array", "required": true, "description": "按日汇总。" },
+      "hourAmounts": {
+        "type": "array",
+        "required": true,
+        "description": "24 小时金额序列（USD，与整点区间对齐）。"
+      },
+      "productTypeShare": { "type": "array", "required": true, "description": "商品类型订单占比。" }
+    },
+    "AppPlatformRow": {
+      "platform": {
+        "type": "string",
+        "required": true,
+        "enum": ["iOS", "Android", "--"],
+        "description": "终端展示；汇总行用 --。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "startDate": "2026-02-05",
+    "endDate": "2026-03-05",
+    "appId": "",
+    "platform": "",
+    "s_country_code": "",
+    "n_source": ""
+  },
+  "sampleResponse": {
+    "kpis": [
+      {
+        "label": "订单总量",
+        "value": "9,749笔",
+        "trendUp": true,
+        "trendRef": "",
+        "subNotes": "今日新增342笔",
+        "color": "#22d3ee"
+      },
+      {
+        "label": "订单成功率",
+        "value": "95.2%",
+        "trendUp": false,
+        "trendRef": "",
+        "subNotes": "失败247笔",
+        "color": "#10b981"
+      },
+      {
+        "label": "退款率",
+        "value": "1.9%",
+        "trendUp": false,
+        "trendRef": "",
+        "subNotes": "退款185笔",
+        "color": "#f59e0b"
+      },
+      {
+        "label": "订单总金额",
+        "value": "$284,520",
+        "trendUp": true,
+        "trendRef": "8.4% vs.上月",
+        "subNotes": "",
+        "color": "#3b82f6"
+      }
+    ],
+    "appPlatformRows": [
+      {
+        "appName": "汇总",
+        "platform": "--",
+        "totalSubscriptions": "28,xxx",
+        "paid": "16,xxx",
+        "sub": "15,xxx",
+        "iap": 296,
+        "renew": 9,
+        "refund": 14,
+        "cancel": 0,
+        "rPaid": "$85,xxx",
+        "rSub": "$76,xxx",
+        "rIap": "$89,xxx",
+        "rRenew": "$6x,xxx"
+      },
+      {
+        "appName": "PhoneTracker",
+        "platform": "Android",
+        "totalSubscriptions": "28,xxx",
+        "paid": "16,xxx",
+        "sub": "15,xxx",
+        "iap": 296,
+        "renew": 9,
+        "refund": 14,
+        "cancel": 0,
+        "rPaid": "$85,xxx",
+        "rSub": "$76,xxx",
+        "rIap": "$89,xxx",
+        "rRenew": "$6x,xxx"
+      },
+      {
+        "appName": "YearCam",
+        "platform": "iOS",
+        "totalSubscriptions": "14,xxx",
+        "paid": "7,xxx",
+        "sub": "15,xxx",
+        "iap": 116,
+        "renew": 8,
+        "refund": 0,
+        "cancel": 0,
+        "rPaid": "$75,xxx",
+        "rSub": "$66,xxx",
+        "rIap": "$89,xxx",
+        "rRenew": "$6x,xxx"
+      },
+      {
+        "appName": "PhoneTracker2",
+        "platform": "iOS",
+        "totalSubscriptions": "14,xxx",
+        "paid": "7,xxx",
+        "sub": "1,xxx",
+        "iap": 72,
+        "renew": 0,
+        "refund": 14,
+        "cancel": 0,
+        "rPaid": "$85,xxx",
+        "rSub": "$29,xxx",
+        "rIap": "$89,xxx",
+        "rRenew": "$6x,xxx"
+      },
+      {
+        "appName": "AgeCam",
+        "platform": "Android",
+        "totalSubscriptions": "14,xxx",
+        "paid": "6,xxx",
+        "sub": "5,xxx",
+        "iap": 5,
+        "renew": 0,
+        "refund": 3,
+        "cancel": 0,
+        "rPaid": "$86,xxx",
+        "rSub": "$69,xxx",
+        "rIap": "$89,xxx",
+        "rRenew": "$6x,xxx"
+      },
+      {
+        "appName": "AgeCam",
+        "platform": "iOS",
+        "totalSubscriptions": "11,xxx",
+        "paid": "2,xxx",
+        "sub": "4,xxx",
+        "iap": 4,
+        "renew": 0,
+        "refund": 2,
+        "cancel": 0,
+        "rPaid": "$75,xxx",
+        "rSub": "$75,xxx",
+        "rIap": "$89,xxx",
+        "rRenew": "$6x,xxx"
+      }
+    ],
+    "dailyRows": [
+      {
+        "t_date": "2026-02-25",
+        "paidRevenueLabel": "$4,103",
+        "paidUsers": 118,
+        "payRateLabel": "90.5%",
+        "orders": 136,
+        "adSpendLabel": "$2,750",
+        "cpa": 0.03,
+        "newUsers": 1,
+        "renewRateLabel": "20%"
+      },
+      {
+        "t_date": "2026-02-26",
+        "paidRevenueLabel": "$4,103",
+        "paidUsers": 75,
+        "payRateLabel": "80.2%",
+        "orders": 39,
+        "adSpendLabel": "$1,888",
+        "cpa": 0.04,
+        "newUsers": 6,
+        "renewRateLabel": "20%"
+      },
+      {
+        "t_date": "2026-02-29",
+        "paidRevenueLabel": "$4,103",
+        "paidUsers": 19,
+        "payRateLabel": "70.0%",
+        "orders": 19,
+        "adSpendLabel": "$4,780",
+        "cpa": 0.04,
+        "newUsers": 1,
+        "renewRateLabel": "20%"
+      },
+      {
+        "t_date": "2026-03-01",
+        "paidRevenueLabel": "$4,103",
+        "paidUsers": 102,
+        "payRateLabel": "89.9%",
+        "orders": 155,
+        "adSpendLabel": "$1,480",
+        "cpa": 0.04,
+        "newUsers": 8,
+        "renewRateLabel": "20%"
+      },
+      {
+        "t_date": "2026-03-05",
+        "paidRevenueLabel": "$4,103",
+        "paidUsers": 58,
+        "payRateLabel": "60.6%",
+        "orders": 75,
+        "adSpendLabel": "$1,788",
+        "cpa": 0.06,
+        "newUsers": 20,
+        "renewRateLabel": "6%"
+      }
+    ],
+    "hourAmounts": [
+      200, 180, 120, 100, 80, 90, 200, 400, 600, 1200, 1800, 2200, 3000, 4000, 5000, 6000, 7200,
+      8400, 9000, 10200, 11000, 12840, 9000, 5000
+    ],
+    "productTypeShare": [
+      { "name": "Annual", "percent": 42, "color": "#22d3ee" },
+      { "name": "Monthly", "percent": 28, "color": "#3b82f6" },
+      { "name": "Lifetime", "percent": 18, "color": "#8b5cf6" },
+      { "name": "Coins", "percent": 8, "color": "#f59e0b" },
+      { "name": "Other", "percent": 4, "color": "#475569" }
+    ]
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/user-growth/paid-analysis/tab-order-summary",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "startDate, endDate, appId?, platform?, s_country_code?, n_source?",
+    "responseBody": "PaidAnalysisOrderTabSummaryData"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "订单 Tab 首屏或检索",
+        "detail": "进入「订单明细」拉取 KPI/汇总/图表；可与 order-list 并行。",
+        "prerequisite": "日期范围与顶栏一致（订单 Tab 内二次筛选另传 05）。"
+      }
+    ],
+    "defaultSelection": "按日表默认高亮行可由前端根据 endDate 决定，不必单独接口。",
+    "dedupe": "与 05 共用筛选对象，避免参数漂移。"
+  }
+}

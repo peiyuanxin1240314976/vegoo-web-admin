@@ -1,47 +1,160 @@
-﻿<script setup lang="ts">
-  import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
-  import * as echarts from 'echarts'
+<script setup lang="ts">
+  import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
+  import { useI18n } from 'vue-i18n'
+  import { echarts } from '@/plugins/echarts'
+  import { LanguageEnum } from '@/enums/appEnum'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import AppDetailModal from './AppDetailModal.vue'
-  import type { AppCard, AppDetailData } from '../types'
-  import { useRealtimeDashboardMock } from '../composables/useRealtimeDashboardMock'
+  import type { AppDetailData, RealtimeAppCardRow } from '../types'
+  import { useRealtimeDashboard } from '../composables/useRealtimeDashboard'
+  import {
+    readRealtimeAutoRefreshMinutes,
+    writeRealtimeAutoRefreshMinutes,
+    REALTIME_AUTO_REFRESH_MIN_MINUTES,
+    REALTIME_AUTO_REFRESH_MAX_MINUTES
+  } from '../utils/auto-refresh-storage'
+  import { Search } from '@element-plus/icons-vue'
 
   defineOptions({ name: 'RealtimeDataDashboard' })
 
-  const { apps, kpiData, bottomSeries } = useRealtimeDashboardMock()
+  const { t, locale } = useI18n()
+
+  const {
+    apps,
+    kpiData,
+    hourlyComparison,
+    filterAppId,
+    filterSourceUi,
+    settingApps,
+    sourceSelectOptions,
+    filterOptionsLoading,
+    dashboardLoading,
+    loadFilterOptions,
+    loadDashboard,
+    loadAppDetail
+  } = useRealtimeDashboard()
 
   // ===== Modal =====
   const showModal = ref(false)
   const selectedApp = ref<AppDetailData | null>(null)
 
-  function openDetail(app: AppCard) {
-    selectedApp.value = app.detail
+  async function openDetail(app: RealtimeAppCardRow) {
+    const detail = await loadAppDetail(app.id)
+    if (!detail) return
+    selectedApp.value = detail
     showModal.value = true
   }
 
-  // ===== Countdown =====
-  const nextRefreshDisplay = ref('15:10:23')
-  let countdownSecs = 50 * 60
-  let countdownTimer: ReturnType<typeof setInterval> | null = null
+  // ===== Auto refresh =====
+  const autoRefreshMinutes = ref(readRealtimeAutoRefreshMinutes())
+  const nextRefreshAt = ref(0)
+  const pauseRemainingMs = ref<number | null>(null)
+  const nextRefreshDisplay = ref('00:00')
+  let refreshTickTimer: ReturnType<typeof setInterval> | null = null
+  let autoRefreshInFlight = false
 
-  function startCountdown() {
-    countdownTimer = setInterval(() => {
-      countdownSecs--
-      if (countdownSecs < 0) countdownSecs = 50 * 60
-      const m = Math.floor(countdownSecs / 60)
-      const s = countdownSecs % 60
-      nextRefreshDisplay.value = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
-    }, 1000)
+  const autoRefreshDialogVisible = ref(false)
+  const dialogMinutes = ref(autoRefreshMinutes.value)
+
+  /** 首屏骨架；结束后与原先一致初始化图表 */
+  const showContentSkeleton = ref(true)
+
+  const lastUpdatedAt = ref<Date | null>(null)
+
+  function touchLastUpdated() {
+    lastUpdatedAt.value = new Date()
+  }
+
+  const lastUpdateTimeStr = computed(() => {
+    if (!lastUpdatedAt.value) return t('realtimeDashboard.header.waiting')
+    const loc = locale.value === LanguageEnum.ZH ? 'zh-CN' : 'en-US'
+    return new Intl.DateTimeFormat(loc, {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    }).format(lastUpdatedAt.value)
+  })
+
+  function formatCountdown(totalSec: number) {
+    const m = Math.floor(totalSec / 60)
+    const s = totalSec % 60
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+  }
+
+  function scheduleNextRefreshFromNow() {
+    nextRefreshAt.value = Date.now() + autoRefreshMinutes.value * 60 * 1000
+  }
+
+  function onVisibilityChange() {
+    if (document.hidden) {
+      pauseRemainingMs.value = Math.max(0, nextRefreshAt.value - Date.now())
+    } else if (pauseRemainingMs.value != null) {
+      nextRefreshAt.value = Date.now() + pauseRemainingMs.value
+      pauseRemainingMs.value = null
+    }
+  }
+
+  function refreshTick() {
+    if (document.hidden) {
+      const ms = pauseRemainingMs.value ?? Math.max(0, nextRefreshAt.value - Date.now())
+      const sec = Math.max(0, Math.ceil(ms / 1000))
+      nextRefreshDisplay.value = formatCountdown(sec)
+      return
+    }
+
+    const remMs = nextRefreshAt.value - Date.now()
+    const sec = Math.max(0, Math.ceil(remMs / 1000))
+    nextRefreshDisplay.value = formatCountdown(sec)
+
+    if (remMs <= 0 && !autoRefreshInFlight && !showContentSkeleton.value) {
+      autoRefreshInFlight = true
+      void applyFilters().finally(() => {
+        autoRefreshInFlight = false
+      })
+    }
+  }
+
+  function startRefreshTimer() {
+    if (refreshTickTimer) clearInterval(refreshTickTimer)
+    refreshTickTimer = setInterval(refreshTick, 1000)
+  }
+
+  function openAutoRefreshDialog() {
+    dialogMinutes.value = autoRefreshMinutes.value
+    autoRefreshDialogVisible.value = true
+  }
+
+  function confirmAutoRefreshDialog() {
+    writeRealtimeAutoRefreshMinutes(dialogMinutes.value)
+    autoRefreshMinutes.value = readRealtimeAutoRefreshMinutes()
+    scheduleNextRefreshFromNow()
+    autoRefreshDialogVisible.value = false
   }
 
   // ===== Sparkline charts =====
-  const sparklineEls = ref<(HTMLDivElement | null)[]>(new Array(apps.value.length).fill(null))
-  const sparklineInstances: echarts.ECharts[] = []
+  const sparklineEls = ref<(HTMLDivElement | null)[]>([])
+  const sparklineInstances: Array<ReturnType<typeof echarts.init>> = []
+
+  watch(
+    () => apps.value.length,
+    (n) => {
+      sparklineEls.value = new Array(Math.max(0, n)).fill(null)
+    },
+    { immediate: true }
+  )
 
   function setSparkRef(el: unknown, idx: number) {
     sparklineEls.value[idx] = el as HTMLDivElement | null
   }
 
+  function disposeSparklines() {
+    sparklineInstances.forEach((c) => c.dispose())
+    sparklineInstances.length = 0
+  }
+
   function initSparklines() {
+    disposeSparklines()
     apps.value.forEach((app, idx) => {
       const el = sparklineEls.value[idx]
       if (!el) return
@@ -73,13 +186,49 @@
 
   // ===== Bottom chart =====
   const bottomChartEl = ref<HTMLDivElement | null>(null)
-  let bottomChart: echarts.ECharts | null = null
+  let bottomChart: ReturnType<typeof echarts.init> | null = null
 
-  const HOURS = ['0:00', '2:00', '4:00', '6:00', '8:00', '10:00', '12:00', '14:00']
+  function disposeBottomChart() {
+    bottomChart?.dispose()
+    bottomChart = null
+  }
 
   function initBottomChart() {
     if (!bottomChartEl.value) return
+    disposeBottomChart()
     bottomChart = echarts.init(bottomChartEl.value, null, { renderer: 'canvas' })
+    if (!bottomChart) return
+    const hc = hourlyComparison.value
+    if (!hc?.series?.length) {
+      bottomChart.setOption({
+        backgroundColor: 'transparent',
+        title: {
+          text: t('realtimeDashboard.chart.empty'),
+          left: 'center',
+          top: 'center',
+          textStyle: { color: '#4a5a72', fontSize: 12 }
+        }
+      })
+      return
+    }
+
+    const maxCost = Math.max(1, ...hc.series.flatMap((s) => s.costSeries))
+    const yMax = Math.max(250, Math.ceil(maxCost / 250) * 250)
+    const yInterval = Math.max(50, Math.round(yMax / 4))
+
+    const roiVals = hc.roiPercentSeries ?? []
+    const maxRoi = Math.max(100, ...roiVals, 1)
+    const roiAxisMax = Math.ceil(maxRoi / 50) * 50
+    const roiInterval = Math.max(25, Math.round(roiAxisMax / 4))
+
+    const barSeries = hc.series.map((s) => ({
+      name: s.name,
+      type: 'bar' as const,
+      data: s.costSeries,
+      itemStyle: { color: s.color, borderRadius: [2, 2, 0, 0] },
+      barMaxWidth: 14
+    }))
+
     bottomChart.setOption({
       backgroundColor: 'transparent',
       animation: false,
@@ -92,7 +241,7 @@
       },
       xAxis: {
         type: 'category',
-        data: HOURS,
+        data: hc.hourLabels,
         axisLine: { lineStyle: { color: '#1e2d42' } },
         axisLabel: { color: '#4a5a72', fontSize: 11 },
         axisTick: { show: false }
@@ -101,8 +250,8 @@
         {
           type: 'value',
           min: 0,
-          max: 1000,
-          interval: 250,
+          max: yMax,
+          interval: yInterval,
           axisLabel: { color: '#4a5a72', fontSize: 11, formatter: (v: number) => `$${v}` },
           splitLine: { lineStyle: { color: '#151f30', type: 'dashed' } },
           axisLine: { show: false },
@@ -111,8 +260,8 @@
         {
           type: 'value',
           min: 0,
-          max: 150,
-          interval: 50,
+          max: roiAxisMax,
+          interval: roiInterval,
           axisLabel: { color: '#4a5a72', fontSize: 11, formatter: (v: number) => `${v}%` },
           splitLine: { show: false },
           axisLine: { show: false },
@@ -120,39 +269,12 @@
         }
       ],
       series: [
+        ...barSeries,
         {
-          name: 'Weather5',
-          type: 'bar',
-          data: bottomSeries.weather5,
-          itemStyle: { color: '#00cfc0', borderRadius: [2, 2, 0, 0] },
-          barMaxWidth: 14
-        },
-        {
-          name: 'PhoneTracker',
-          type: 'bar',
-          data: bottomSeries.phonetracker,
-          itemStyle: { color: '#ffa040', borderRadius: [2, 2, 0, 0] },
-          barMaxWidth: 14
-        },
-        {
-          name: 'BloodSugar2',
-          type: 'bar',
-          data: bottomSeries.bloodsugar2,
-          itemStyle: { color: '#4d9eff', borderRadius: [2, 2, 0, 0] },
-          barMaxWidth: 14
-        },
-        {
-          name: 'PhoneTracker2',
-          type: 'bar',
-          data: bottomSeries.phonetracker2,
-          itemStyle: { color: '#a855f7', borderRadius: [2, 2, 0, 0] },
-          barMaxWidth: 14
-        },
-        {
-          name: 'ROI',
+          name: t('realtimeDashboard.chart.roiSeries'),
           type: 'line',
           yAxisIndex: 1,
-          data: bottomSeries.roi,
+          data: roiVals,
           smooth: true,
           symbol: 'circle',
           symbolSize: 4,
@@ -169,26 +291,63 @@
     bottomChart?.resize()
   }
 
-  /** 首屏骨架（测试体验用）；结束后与原先一致初始化图表 */
-  const showContentSkeleton = ref(true)
+  function normalizeFilterModels() {
+    if (filterAppId.value == null || filterAppId.value === undefined) filterAppId.value = []
+    if (filterSourceUi.value == null || filterSourceUi.value === undefined) {
+      filterSourceUi.value = ''
+    }
+  }
+
+  async function applyFilters() {
+    normalizeFilterModels()
+    if (showContentSkeleton.value) return
+    await loadDashboard()
+    touchLastUpdated()
+    scheduleNextRefreshFromNow()
+    await nextTick()
+    disposeSparklines()
+    initSparklines()
+    initBottomChart()
+  }
+
+  async function onManualRefresh() {
+    await applyFilters()
+  }
+
+  async function onQuery() {
+    await applyFilters()
+  }
+
+  watch(locale, () => {
+    void nextTick(() => {
+      initBottomChart()
+    })
+  })
 
   // ===== Lifecycle =====
   onMounted(() => {
-    startCountdown()
     window.addEventListener('resize', onResize)
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    void loadFilterOptions()
     window.setTimeout(() => {
-      showContentSkeleton.value = false
-      nextTick(() => {
+      void (async () => {
+        await loadDashboard()
+        touchLastUpdated()
+        scheduleNextRefreshFromNow()
+        showContentSkeleton.value = false
+        await nextTick()
         initSparklines()
         initBottomChart()
-      })
+        startRefreshTimer()
+      })()
     }, 520)
   })
 
   onBeforeUnmount(() => {
-    if (countdownTimer) clearInterval(countdownTimer)
-    sparklineInstances.forEach((c) => c.dispose())
-    bottomChart?.dispose()
+    if (refreshTickTimer) clearInterval(refreshTickTimer)
+    document.removeEventListener('visibilitychange', onVisibilityChange)
+    disposeSparklines()
+    disposeBottomChart()
     window.removeEventListener('resize', onResize)
   })
 
@@ -203,46 +362,74 @@
 
 <template>
   <div class="dashboard dashboard--ap-fx art-full-height">
-    <div class="rtd-page-fx" aria-hidden="true"></div>
-    <!-- ===== Header ===== -->
-    <div class="top-header rtd-entry-1">
-      <div class="breadcrumb">
-        <!-- <span class="bc-parent">用户增长</span>
-        <span class="bc-sep">›</span>
-        <span class="bc-current">实时数据</span> -->
-        <!-- <div class="bc-subtitle">按需要调整匹配产品的最新广告投战数据</div> -->
-      </div>
-      <div class="header-actions">
-        <span class="last-update">⏱ 最后更新：14:40:20</span>
-        <button class="btn-refresh">↻ 手动刷新</button>
-        <button class="btn-auto">⚙ 设置自动刷新</button>
-      </div>
-    </div>
-
-    <!-- ===== Alert Banner ===== -->
-    <div class="alert-banner rtd-entry-2">
-      <div class="banner-left">
+    <!-- ===== 顶栏：提示 + 最后更新 / 刷新 / 倒计时（单行） ===== -->
+    <div class="top-header rtd-toolbar rtd-entry-1">
+      <div class="toolbar-hint">
         <span class="banner-icon">⚠</span>
-        <span class="banner-text"> 实时数据每 30 分钟自动更新一次，如需额外需新数据请点击 </span>
-        <button class="banner-link">手动刷新</button>
-        <span class="banner-shortcut">《快捷》</span>
+        <span class="banner-text">
+          {{ t('realtimeDashboard.banner.autoRefreshHint', { minutes: autoRefreshMinutes }) }}
+        </span>
+        <button class="banner-link" type="button" @click="onManualRefresh">
+          {{ t('realtimeDashboard.banner.manualRefresh') }}
+        </button>
+        <span class="banner-shortcut">{{ t('realtimeDashboard.banner.shortcut') }}</span>
       </div>
-      <div class="banner-right">
-        下次自动刷新：<span class="countdown">{{ nextRefreshDisplay }}</span>
+      <div class="toolbar-actions">
+        <span class="last-update">{{
+          t('realtimeDashboard.header.lastUpdate', { time: lastUpdateTimeStr })
+        }}</span>
+        <el-button type="primary" plain round @click="onManualRefresh">{{
+          t('realtimeDashboard.header.manualRefresh')
+        }}</el-button>
+        <el-button type="success" plain round @click="openAutoRefreshDialog">{{
+          t('realtimeDashboard.header.autoRefreshSettings')
+        }}</el-button>
+        <div class="toolbar-countdown">
+          {{ t('realtimeDashboard.banner.nextAutoRefresh')
+          }}<span class="countdown">{{ nextRefreshDisplay }}</span>
+        </div>
       </div>
     </div>
 
     <!-- ===== Filters ===== -->
-    <div class="filter-bar rtd-entry-3">
+    <div class="filter-bar rtd-entry-2">
       <div class="rtd-filter-panel">
-        <div class="filter-group">
-          <span class="filter-label">应用筛选：</span>
-          <button type="button" class="filter-btn">全部应用 ▾</button>
+        <div class="filter-group rtd-filter-field">
+          <AppPlatformSearchSelect
+            v-model="filterAppId"
+            mode="app"
+            class="rtd-filter-select"
+            :placeholder="t('realtimeDashboard.filters.allAppsPlaceholder')"
+            :search-placeholder="t('realtimeDashboard.filters.searchPlaceholder')"
+            :setting-apps="settingApps"
+            :height="36"
+            :min-width="200"
+            :max-width="240"
+            input-class="rtd-filter-select"
+            dropdown-class="rtd-filter-select-popper"
+          />
         </div>
-        <div class="filter-group">
-          <span class="filter-label">渠道筛选：</span>
-          <button type="button" class="filter-btn">全部渠道 ▾</button>
+        <div class="filter-group rtd-filter-field">
+          <ElSelect
+            v-model="filterSourceUi"
+            class="rtd-filter-select"
+            :placeholder="t('realtimeDashboard.filters.allPlatformsPlaceholder')"
+            clearable
+            filterable
+            :loading="filterOptionsLoading"
+            popper-class="rtd-filter-select-popper"
+          >
+            <ElOption
+              v-for="opt in sourceSelectOptions"
+              :key="'src-' + (opt.value || 'all')"
+              :label="opt.label"
+              :value="opt.value"
+            />
+          </ElSelect>
         </div>
+        <el-button type="primary" plain round :icon="Search" @click="onQuery">{{
+          t('realtimeDashboard.filters.query')
+        }}</el-button>
       </div>
     </div>
 
@@ -279,9 +466,9 @@
           </ElSkeleton>
         </div>
       </div>
-      <div class="bottom-section rtd-skel-bottom rtd-entry-6">
+      <div class="bottom-section rtd-skel-bottom rtd-entry-5">
         <div class="bottom-header">
-          <span class="bottom-title">实时小时消耗趋势对比</span>
+          <span class="bottom-title">{{ t('realtimeDashboard.skeleton.bottomTitle') }}</span>
         </div>
         <ElSkeleton animated>
           <template #template>
@@ -292,43 +479,53 @@
     </template>
     <template v-else>
       <!-- ===== Summary KPI Cards ===== -->
-      <div class="kpi-summary rtd-entry-4">
+      <div class="kpi-summary rtd-entry-3">
         <div class="summary-card">
-          <div class="sum-label">在线应用数</div>
-          <div class="sum-value">{{ kpiData.onlineApps }} <span class="sum-unit">个</span></div>
-          <div class="sum-sub">共 {{ kpiData.totalApps }} 个应用</div>
+          <div class="sum-label">{{ t('realtimeDashboard.kpi.onlineApps') }}</div>
+          <div class="sum-value"
+            >{{ kpiData.onlineApps }}
+            <span v-if="t('realtimeDashboard.kpi.unitCount')" class="sum-unit">{{
+              t('realtimeDashboard.kpi.unitCount')
+            }}</span></div
+          >
+          <div class="sum-sub">
+            {{ t('realtimeDashboard.kpi.totalApps', { n: kpiData.totalApps }) }}
+          </div>
         </div>
         <div class="summary-card">
-          <div class="sum-label">全应用今日花费</div>
+          <div class="sum-label">{{ t('realtimeDashboard.kpi.todaySpend') }}</div>
           <div class="sum-value">{{ fmtBigMoney(kpiData.todaySpend) }}</div>
           <div class="sum-sub">
-            周环比
+            {{ t('realtimeDashboard.kpi.wowChange') }}
             <span class="sum-up">{{ kpiData.spendChange }} ↑</span>
           </div>
         </div>
         <div class="summary-card">
-          <div class="sum-label">全应用实时ROI均值</div>
+          <div class="sum-label">{{ t('realtimeDashboard.kpi.roiAvg') }}</div>
           <div class="sum-value green-text">{{ kpiData.roiAvg }}%</div>
           <div class="sum-sub">
-            达标线 {{ kpiData.roiTarget }}%
-            <span class="badge-reach">达标</span>
+            {{ t('realtimeDashboard.kpi.roiTargetLine', { n: kpiData.roiTarget }) }}
+            <span class="badge-reach">{{ t('realtimeDashboard.kpi.badgeReach') }}</span>
           </div>
         </div>
         <div class="summary-card warning-card">
-          <div class="sum-label">预警应用</div>
+          <div class="sum-label">{{ t('realtimeDashboard.kpi.warningApps') }}</div>
           <div class="sum-value orange-text"
-            >{{ kpiData.warningApps }} <span class="sum-unit">个</span></div
+            >{{ kpiData.warningApps }}
+            <span v-if="t('realtimeDashboard.kpi.unitCount')" class="sum-unit">{{
+              t('realtimeDashboard.kpi.unitCount')
+            }}</span></div
           >
           <div class="sum-sub">
-            <span class="warn-tag">超预算</span>
+            <span class="warn-tag">{{ t('realtimeDashboard.kpi.warnOverBudget') }}</span>
             <span class="mx4">/</span>
-            <span class="warn-tag">低活跃</span>
+            <span class="warn-tag">{{ t('realtimeDashboard.kpi.warnLowActive') }}</span>
           </div>
         </div>
       </div>
 
       <!-- ===== App Cards Grid ===== -->
-      <div class="app-grid rtd-entry-5">
+      <div v-loading="dashboardLoading" class="app-grid rtd-entry-4">
         <div
           v-for="(app, idx) in apps"
           :key="app.id"
@@ -358,7 +555,7 @@
           <!-- Spend & Installs -->
           <div class="card-row2">
             <div class="cr-block">
-              <div class="cr-label">今日花费</div>
+              <div class="cr-label">{{ t('realtimeDashboard.card.todaySpend') }}</div>
               <div class="cr-value">
                 {{ fmtSpend(app.spend) }}
                 <span
@@ -371,7 +568,7 @@
               </div>
             </div>
             <div class="cr-block cr-right">
-              <div class="cr-label">今日安装</div>
+              <div class="cr-label">{{ t('realtimeDashboard.card.todayInstalls') }}</div>
               <div class="cr-value">{{ app.installs.toLocaleString() }}</div>
             </div>
           </div>
@@ -379,7 +576,7 @@
           <!-- CPI & Active -->
           <div class="card-row3">
             <div class="cr-block">
-              <div class="cr-label">实时CPI</div>
+              <div class="cr-label">{{ t('realtimeDashboard.card.liveCpi') }}</div>
               <div class="cr-value cpi-val">
                 ${{ app.cpi.toFixed(2) }}
                 <span v-if="app.cpiChange" class="change" :class="app.cpiUp ? 'chg-up' : 'chg-dn'"
@@ -388,8 +585,10 @@
               </div>
             </div>
             <div class="cr-block cr-right">
-              <div class="cr-label">活跃系列</div>
-              <div class="cr-value">{{ app.activeSeries }} 个</div>
+              <div class="cr-label">{{ t('realtimeDashboard.card.activeSeriesLabel') }}</div>
+              <div class="cr-value">{{
+                t('realtimeDashboard.card.activeSeries', { n: app.activeSeries })
+              }}</div>
             </div>
           </div>
 
@@ -399,7 +598,7 @@
           <!-- ROI Footer -->
           <div class="card-footer">
             <div class="roi-block">
-              <div class="roi-label">当前量目ROI</div>
+              <div class="roi-label">{{ t('realtimeDashboard.card.currentRoi') }}</div>
               <div class="roi-val" :style="{ color: app.roiColor }">{{ app.roi }}%</div>
             </div>
             <div class="action-tag" :class="`tag-${app.actionTagType}`">
@@ -410,27 +609,46 @@
       </div>
 
       <!-- ===== Bottom Chart ===== -->
-      <div class="bottom-section rtd-entry-6">
+      <div class="bottom-section rtd-entry-5">
         <div class="bottom-header">
-          <span class="bottom-title">实时小时消耗趋势对比</span>
+          <span class="bottom-title">{{ t('realtimeDashboard.chart.bottomTitle') }}</span>
           <div class="legend-list">
-            <span class="legend-item">
-              <span class="legend-dot" style="background: #00cfc0"></span>Weather5
-            </span>
-            <span class="legend-item">
-              <span class="legend-dot" style="background: #ffa040"></span>PhoneTracker
-            </span>
-            <span class="legend-item">
-              <span class="legend-dot" style="background: #4d9eff"></span>BloodSugar2
-            </span>
-            <span class="legend-item">
-              <span class="legend-dot" style="background: #a855f7"></span>PhoneTracker2
+            <span v-for="s in hourlyComparison?.series ?? []" :key="s.s_app_id" class="legend-item">
+              <span class="legend-dot" :style="{ background: s.color }"></span>{{ s.name }}
             </span>
           </div>
         </div>
         <div ref="bottomChartEl" class="bottom-chart"></div>
       </div>
     </template>
+
+    <ElDialog
+      v-model="autoRefreshDialogVisible"
+      :title="t('realtimeDashboard.dialog.title')"
+      width="420px"
+      destroy-on-close
+      align-center
+    >
+      <ElForm label-position="top">
+        <ElFormItem :label="t('realtimeDashboard.dialog.minutesLabel')">
+          <ElInputNumber
+            v-model="dialogMinutes"
+            :min="REALTIME_AUTO_REFRESH_MIN_MINUTES"
+            :max="REALTIME_AUTO_REFRESH_MAX_MINUTES"
+            :step="1"
+            controls-position="right"
+            style="width: 100%"
+          />
+        </ElFormItem>
+        <p class="rtd-auto-refresh-hint">{{ t('realtimeDashboard.dialog.hint') }}</p>
+      </ElForm>
+      <template #footer>
+        <ElButton @click="autoRefreshDialogVisible = false">{{ t('common.cancel') }}</ElButton>
+        <ElButton type="primary" @click="confirmAutoRefreshDialog">{{
+          t('common.confirm')
+        }}</ElButton>
+      </template>
+    </ElDialog>
 
     <!-- ===== Detail Modal ===== -->
     <AppDetailModal v-model="showModal" :app-data="selectedApp" />
@@ -439,6 +657,7 @@
 
 <style scoped lang="scss">
   @use '../../ad-performance/styles/ap-card-fx.scss' as ap;
+  @use '../../styles/filter-bar-theme.scss' as filterTheme;
 
   /* ===== Root（极光 + 网格，对齐广告成效底氛围） ===== */
   .dashboard--ap-fx {
@@ -474,30 +693,10 @@
       mask-image: linear-gradient(to bottom, black 0%, black 24%, transparent 52%);
     }
 
-    > *:not(.rtd-page-fx) {
+    > * {
       position: relative;
       z-index: 1;
     }
-  }
-
-  .rtd-page-fx {
-    position: absolute;
-    inset: -10% -10% 48%;
-    z-index: 0;
-    pointer-events: none;
-    background: conic-gradient(
-      from 0deg at 50% 50%,
-      transparent 0deg,
-      rgb(59 130 246 / 10%) 55deg,
-      rgb(16 185 129 / 8%) 120deg,
-      transparent 200deg,
-      rgb(6 182 212 / 7%) 280deg,
-      transparent 360deg
-    );
-    opacity: 0.78;
-    mask-image: linear-gradient(to bottom, black 0%, black 44%, transparent 80%);
-    animation: rtd-fx-spin 48s linear infinite;
-    will-change: transform;
   }
 
   @keyframes rtd-aurora-drift {
@@ -509,12 +708,6 @@
     100% {
       opacity: 1;
       transform: scale(1.03) translate(0.8%, -0.6%);
-    }
-  }
-
-  @keyframes rtd-fx-spin {
-    to {
-      transform: rotate(360deg);
     }
   }
 
@@ -571,11 +764,6 @@
     animation-delay: 0.1s;
   }
 
-  .rtd-entry-6 {
-    animation: rtd-slide-up 0.6s cubic-bezier(0, 0, 0.2, 1) both;
-    animation-delay: 0.12s;
-  }
-
   .rtd-skel-block {
     animation: rtd-skeleton-orbit 2.5s ease-in-out infinite;
   }
@@ -594,38 +782,39 @@
     background: #07090f;
   }
 
-  /* ===== Header ===== */
-  .top-header {
+  /* ===== 顶栏（提示 + 操作，单行可折行） ===== */
+  .top-header.rtd-toolbar {
     display: flex;
-    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 10px 20px;
+    align-items: center;
     justify-content: space-between;
-    padding: 18px 24px 10px;
+    padding: 10px 24px 12px;
     border-bottom: 1px solid rgb(96 165 250 / 16%);
   }
 
-  .breadcrumb {
+  .toolbar-hint {
     display: flex;
+    flex: 1 1 240px;
     flex-wrap: wrap;
-    gap: 6px;
-    align-items: baseline;
+    gap: 6px 8px;
+    align-items: center;
+    min-width: 0;
+    padding: 6px 12px;
+    font-size: 12px;
+    background: rgb(26 18 0 / 72%);
+    border: 1px solid #3a2a00;
+    border-radius: 10px;
   }
 
-  /* .bc-parent {
-    font-size: 17px;
-    font-weight: 500;
-    color: #6b7a99;
+  .toolbar-actions {
+    display: flex;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: flex-end;
   }
-
-  .bc-sep {
-    font-size: 16px;
-    color: #3a4a62;
-  }
-
-  .bc-current {
-    font-size: 17px;
-    font-weight: 700;
-    color: #e2ebf8;
-  } */
 
   .bc-subtitle {
     width: 100%;
@@ -635,17 +824,17 @@
     letter-spacing: 0.01em;
   }
 
-  .header-actions {
-    display: flex;
-    flex-shrink: 0;
-    gap: 10px;
-    align-items: center;
-  }
-
   .last-update {
     font-size: 12px;
     color: #4a5a72;
     white-space: nowrap;
+  }
+
+  .rtd-auto-refresh-hint {
+    margin: 0 0 4px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--el-text-color-secondary);
   }
 
   .btn-refresh {
@@ -662,15 +851,13 @@
     transition:
       background 0.2s ease,
       border-color 0.2s ease,
-      box-shadow 0.2s ease,
-      transform 0.18s ease;
+      box-shadow 0.2s ease;
   }
 
   .btn-refresh:hover {
     background: rgb(16 185 129 / 16%);
     border-color: #10b981;
     box-shadow: 0 0 20px rgb(16 185 129 / 22%);
-    transform: translateY(-1px);
   }
 
   .btn-auto {
@@ -684,38 +871,18 @@
     border-radius: 9999px;
     transition:
       background 0.2s ease,
-      border-color 0.2s ease,
-      transform 0.18s ease;
+      border-color 0.2s ease;
   }
 
   .btn-auto:hover {
     background: rgb(255 255 255 / 7%);
     border-color: rgb(96 165 250 / 38%);
-    transform: translateY(-1px);
-  }
-
-  /* ===== Alert Banner ===== */
-  .alert-banner {
-    display: flex;
-    gap: 20px;
-    align-items: center;
-    justify-content: space-between;
-    padding: 9px 24px;
-    font-size: 12px;
-    background: #1a1200;
-    border-top: 1px solid #3a2a00;
-    border-bottom: 1px solid #3a2a00;
-  }
-
-  .banner-left {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    align-items: center;
   }
 
   .banner-icon {
+    flex-shrink: 0;
     font-size: 13px;
+    line-height: 1;
     color: #f0b429;
   }
 
@@ -737,10 +904,12 @@
     color: #6b7a99;
   }
 
-  .banner-right {
-    flex-shrink: 0;
+  .toolbar-countdown {
+    padding-left: 4px;
+    font-size: 12px;
     color: #6b7a99;
     white-space: nowrap;
+    border-left: 1px solid rgb(96 165 250 / 22%);
   }
 
   .countdown {
@@ -750,52 +919,30 @@
     color: #e2ebf8;
   }
 
-  /* ===== Filters（霓虹条 + 广告成效绿色胶囊按钮） ===== */
+  /* ===== Filters（与顶栏霓虹面板一致：主色描边 + 胶囊选择器） ===== */
   .filter-bar {
-    padding: 10px 24px 14px;
-    border-bottom: 1px solid rgb(96 165 250 / 12%);
+    padding: 12px 24px 18px;
   }
 
   .rtd-filter-panel {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px 20px;
-    align-items: center;
-    padding: 10px 16px;
-    overflow: hidden;
-    border-radius: 16px;
-
-    @include ap.ap-neon-bg;
-    @include ap.ap-card-mesh;
-
-    transition:
-      box-shadow 0.35s cubic-bezier(0, 0, 0.2, 1),
-      border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-
-    &:hover {
-      border-color: rgb(96 165 250 / 48%);
-      box-shadow:
-        0 12px 40px rgb(0 0 0 / 44%),
-        0 0 0 1px rgb(96 165 250 / 22%),
-        inset 0 1px 0 rgb(186 230 253 / 14%),
-        0 0 40px rgb(59 130 246 / 12%);
-    }
-
-    .filter-group {
-      position: relative;
-      z-index: 1;
-    }
+    @include filterTheme.filter-panel(12px 16px);
+    @include filterTheme.filter-panel-children;
+    @include filterTheme.filter-row;
   }
 
   .filter-group {
+    position: relative;
+    z-index: 1;
     display: flex;
+    flex: 0 0 auto;
     gap: 8px;
     align-items: center;
   }
 
-  .filter-label {
-    font-size: 12px;
-    color: #94a3b8;
+  .rtd-filter-field {
+    gap: 8px;
+    align-items: center;
+    min-height: 36px;
   }
 
   .filter-btn {
@@ -803,28 +950,63 @@
     padding: 6px 16px;
     font-size: 12px;
     font-weight: 500;
-    color: #e2e8f0;
+    color: var(--theme-color, var(--art-primary, #3b82f6));
     cursor: pointer;
-    background: rgb(16 185 129 / 6%);
-    border: 1px solid rgb(16 185 129 / 28%);
-    border-radius: 9999px;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
     box-shadow: none;
     transition:
       border-color 0.22s ease,
       box-shadow 0.22s ease,
-      background 0.22s ease,
-      transform 0.18s ease;
+      background 0.22s ease;
   }
 
   .filter-btn:hover {
-    border-color: rgb(16 185 129 / 58%);
-    box-shadow: 0 0 14px rgb(16 185 129 / 16%);
-    transform: translateY(-1px);
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 14px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 16%, transparent);
   }
 
-  .filter-btn:active {
-    transform: translateY(0);
+  .rtd-filter-select {
+    @include filterTheme.filter-select-size;
+    @include filterTheme.app-platform-trigger('&');
+    @include filterTheme.element-select-trigger('&');
+
+    :deep(.app-platform-search-select) {
+      transition:
+        border-color var(--duration-fast, 150ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
+        box-shadow var(--duration-fast, 150ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
+        background var(--duration-fast, 150ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
+    }
+
+    :deep(.app-platform-search-select__text) {
+      font-size: 14px;
+      font-weight: 400;
+    }
+
+    :deep(.el-select__wrapper) {
+      transition:
+        border-color var(--duration-fast, 150ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
+        box-shadow var(--duration-fast, 150ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
+        background var(--duration-fast, 150ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
+    }
+
+    :deep(.el-select__placeholder) {
+      font-size: 14px;
+      font-weight: 400;
+    }
+
+    :deep(.el-select__selected-item),
+    :deep(.el-select__selected-item .el-select__placeholder) {
+      font-size: 14px;
+      font-weight: 400;
+    }
   }
+
+  @include filterTheme.select-popper('rtd-filter-select-popper');
+  @include filterTheme.app-platform-popper('rtd-filter-select-popper');
 
   .view-toggle {
     display: flex;
@@ -841,7 +1023,11 @@
     background: none;
     border: 1px solid #1a2840;
     border-radius: 4px;
-    transition: all 0.15s;
+    transition:
+      color 0.15s ease,
+      background 0.15s ease,
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
   }
 
   .toggle-btn.active {
@@ -869,6 +1055,16 @@
     @include ap.ap-neon-bg;
     @include ap.ap-card-mesh;
     @include ap.ap-panel-hover;
+
+    transition:
+      box-shadow 0.42s var(--ease-out),
+      border-color 0.32s var(--ease-default),
+      filter 0.32s var(--ease-default);
+
+    &:hover,
+    &:active {
+      transform: none !important;
+    }
   }
 
   .summary-card > * {
@@ -978,6 +1174,16 @@
     @include ap.ap-neon-bg;
     @include ap.ap-card-mesh;
     @include ap.ap-panel-hover;
+
+    transition:
+      box-shadow 0.42s var(--ease-out),
+      border-color 0.32s var(--ease-default),
+      filter 0.32s var(--ease-default);
+
+    &:hover,
+    &:active {
+      transform: none !important;
+    }
   }
 
   .app-card > * {
@@ -1212,6 +1418,16 @@
     @include ap.ap-neon-bg;
     @include ap.ap-card-mesh;
     @include ap.ap-panel-hover;
+
+    transition:
+      box-shadow 0.42s var(--ease-out),
+      border-color 0.32s var(--ease-default),
+      filter 0.32s var(--ease-default);
+
+    &:hover,
+    &:active {
+      transform: none !important;
+    }
   }
 
   .bottom-section > * {
@@ -1263,16 +1479,11 @@
       animation: none;
     }
 
-    .rtd-page-fx {
-      animation: none;
-    }
-
     .rtd-entry-1,
     .rtd-entry-2,
     .rtd-entry-3,
     .rtd-entry-4,
-    .rtd-entry-5,
-    .rtd-entry-6 {
+    .rtd-entry-5 {
       opacity: 1;
       transform: none;
       animation: none;
@@ -1302,3 +1513,5 @@
     }
   }
 </style>
+
+<!-- 下拉挂到 body，须单独块（与实时数据筛选视觉一致） -->

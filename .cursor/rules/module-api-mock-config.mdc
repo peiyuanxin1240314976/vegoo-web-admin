@@ -9,7 +9,8 @@ alwaysApply: true
 
 ## 1. 按契约写「正常接口调用」
 
-- 在对应页面目录维护 **`mock/backend-api/*.json`**（字段说明、`sampleRequest` / `sampleResponse`），契约归属与协作流程见 `api-contract-and-mock-conventions.mdc`。
+- 在对应页面目录维护 **`mock/backend-api/*.json`**（字段说明、`sampleRequest` / `sampleResponse`），契约归属与协作流程见 `api-contract-and-mock-conventions.mdc`。**凡明确要求生成新的 mock 契约时**，还须遵守 **`keyword-dictionary-analysis.mdc`** 与 **`docs/关键字字典规则*.md`**（默认 `alwaysApply`，无需 `@`；见 **`api-contract-and-mock-conventions.mdc`**「新建 mock 契约时的关键字字典」）。
+- **公用 cockpit 顶栏 `meta-filter-options`**（**`GET`** `.../analysis/cockpit/meta-filter-options`，无参）为 **全项目通用下拉**，与同构顶栏 **不** 对应任何模块内 `*.json`。页面开发时 **直接读** **`useCockpitMetaFilterStore().data`**（或 **`useCockpitMetaFilterOptions().cockpitMeta`**），勿在本页重复封装「再拉一遍 meta」。模块 `config` 若需 Mock 该 HTTP，仅在全局/统一分支处理即可；**文档层面**在 `mock/backend-api/README.md` 标注「无 JSON、数据见 Store、见付费分析附录 A」。细则见 **`api-contract-and-mock-conventions.mdc`**。
 - 在 **`src/api/<业务>.ts`**（或按业务拆分的 api 文件）中为每个契约提供 **`fetch*` 方法**：使用 `@/utils/http` 的 `request`，URL / 方法 / 请求体字段与 JSON 契约一致，泛型或类型引用页面 **`types.ts`**，**禁止**只在组件里写死 `axios` 路径而不走统一封装。
 - Mock 数据实现放在 **`src/views/.../mocks/`** 或与契约并行的 mock 模块中，由开关决定走 `request` 还是 mock 函数（见下）。
 
@@ -33,6 +34,7 @@ alwaysApply: true
 
 - **`src/api` 引用 `@/views/<模块>/config/...`** 在本仓库可接受（与现有 `iap-analysis.ts` 一致）；若团队希望 api 层不依赖 views，可将「是否 mock」判断上移到 **`composables`**，由 composable 调 `fetch` 或 `mockFetch`，config 仍放在 **模块目录下**。
 - 新增接口时：**先改契约 JSON → 再改 types / api / 模块 config 开关表 → 再改 mock 实现**。
+- 契约 JSON 键名须 **camelCase、无下划线**，并与 `backend-fields.mdc` **「接口契约与 HTTP JSON 命名」**一致；筛选入参另须符合 **「接口请求 · 统一筛选维度键名」**（`appId`、`platform`、`source`、`countryCode`、`account`）；**枚举维度用 string**、`sampleRequest` 勿写 number；「全部」用空字符串等规则见该文件对应小节。
 
 ## 5. 目录与文档
 

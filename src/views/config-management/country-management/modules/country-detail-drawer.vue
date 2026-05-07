@@ -10,7 +10,10 @@
       <!-- ── 头部 ─────────────────────────────────── -->
       <div class="drawer-header">
         <div class="header-left">
-          <div class="flag-box">{{ flagEmoji }}</div>
+          <div class="flag-box">
+            <img v-if="data?.flagIconUrl" :src="data.flagIconUrl" alt="" class="flag-img" />
+            <span v-else class="flag-fallback">{{ flagFallbackText }}</span>
+          </div>
           <div class="header-info">
             <div class="name-row">
               <span class="country-name">{{ data?.nameCn }}</span>
@@ -26,7 +29,12 @@
           </ElButton>
           <button class="close-btn" @click="handleClose">
             <svg viewBox="0 0 16 16" fill="none" width="14" height="14">
-              <path d="M2 2l12 12M14 2L2 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+              <path
+                d="M2 2l12 12M14 2L2 14"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+              />
             </svg>
           </button>
         </div>
@@ -157,10 +165,9 @@
     delete: [data: CountryItem]
   }>()
 
-  const flagEmoji = computed(() => {
-    const code = props.data?.code?.toUpperCase() ?? ''
-    if (code.length !== 2) return '🏳️'
-    return code.split('').map((c) => String.fromCodePoint(c.charCodeAt(0) + 127397)).join('')
+  const flagFallbackText = computed(() => {
+    const code = props.data?.code?.toUpperCase() ?? '?'
+    return code.length >= 2 ? code.slice(0, 2) : code
   })
 
   const handleClose = () => emit('update:visible', false)
@@ -232,9 +239,27 @@
   }
 
   .flag-box {
+    display: flex;
     flex-shrink: 0;
-    font-size: 44px;
-    line-height: 1;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 42px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+
+  .flag-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .flag-fallback {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-secondary);
   }
 
   .header-info {

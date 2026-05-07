@@ -30,7 +30,7 @@ export const MOCK_ACCOUNT_PERFORMANCE: AccountPerformanceMock = {
     },
     {
       type: 'installs',
-      label: '安装数',
+      label: '买量用户',
       value: '208,794',
       compare: '周环比 +12%',
       compareUp: true

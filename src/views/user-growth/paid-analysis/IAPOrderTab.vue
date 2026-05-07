@@ -1,754 +1,957 @@
 <template>
   <div class="order-tab">
-    <!-- ── KPI Cards ─────────────────────────────── -->
-    <div class="kpi-row">
-      <div
-        class="kpi-card"
-        v-for="(kpi, i) in kpiCards"
-        :key="i"
-        :style="{ '--accent': kpi.color }"
-      >
-        <div class="kpi-info">
-          <div class="kpi-label">{{ kpi.label }}</div>
-          <div class="kpi-value" :style="{ color: kpi.color }">{{ kpi.value }}</div>
-          <div class="kpi-meta">
-            <span :class="kpi.trendUp ? 'trend-up' : 'trend-down'" v-if="kpi.trendVal">
-              {{ kpi.trendUp ? '↑' : '↓' }}{{ kpi.trendVal }}
-            </span>
-            <span class="kpi-sub">{{ kpi.sub }}</span>
+    <div v-if="loadError" class="card" style="padding: 10px 12px; color: #f87171">
+      {{ loadError }}
+    </div>
+    <div v-else-if="loading" class="iap-tab-skeleton">
+      <div class="iap-tab-skeleton__kpis">
+        <div v-for="i in 4" :key="`order-kpi-${i}`" class="iap-tab-skeleton__kpi card">
+          <ElSkeleton animated :throttle="0">
+            <template #template>
+              <ElSkeletonItem variant="text" style="width: 44%; margin-bottom: 10px" />
+              <ElSkeletonItem variant="h3" style="width: 66%; margin-bottom: 8px" />
+              <ElSkeletonItem variant="text" style="width: 52%" />
+            </template>
+          </ElSkeleton>
+        </div>
+      </div>
+      <div class="card"><ElSkeleton animated :rows="3" /></div>
+      <div class="iap-tab-skeleton__grid">
+        <div class="card"><ElSkeleton animated :rows="8" /></div>
+        <div class="card"><ElSkeleton animated :rows="8" /></div>
+      </div>
+      <div class="iap-tab-skeleton__grid iap-tab-skeleton__grid--bottom">
+        <div class="card"><ElSkeleton animated :rows="10" /></div>
+        <div class="card"><ElSkeleton animated :rows="8" /></div>
+      </div>
+    </div>
+    <template v-else>
+      <!-- ── KPI Cards ─────────────────────────────── -->
+      <div class="kpi-row" :style="{ '--kpi-count': displayKpiCards.length }">
+        <div
+          class="kpi-card"
+          v-for="(kpi, i) in displayKpiCards"
+          :key="i"
+          :style="{ '--accent': kpi.color }"
+        >
+          <div class="kpi-info">
+            <div class="kpi-label">{{ kpi.label }}</div>
+            <div class="kpi-value" :style="{ color: kpi.color }">{{ kpi.value }}</div>
+            <div class="kpi-meta">
+              <span :class="kpi.trendUp ? 'trend-up' : 'trend-down'" v-if="kpi.trendVal">
+                {{ kpi.trendUp ? '↑' : '↓' }}{{ kpi.trendVal }}
+              </span>
+              <span class="kpi-sub">{{ kpi.sub }}</span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- ── Filters Row ────────────────────────────── -->
-    <div class="filter-row">
-      <div class="filter-item">
-        <span class="fl">日期范围:</span>
-        <span class="fv">2026-02-05 ~ 2026-03-05</span>
+      <!-- ── Filters Row ────────────────────────────── -->
+      <div class="filter-row">
+        <AppDatePicker
+          v-model="orderDateRange"
+          type="daterange"
+          :shortcuts="dateRangeShortcuts"
+          unlink-panels
+          value-format="YYYY-MM-DD"
+          format="YYYY-MM-DD"
+          range-separator="~"
+          start-placeholder="开始"
+          end-placeholder="结束"
+          class="fi-range"
+        />
+        <AppPlatformSearchSelect
+          v-model="fApp"
+          mode="app"
+          multiple
+          placeholder="应用"
+          search-placeholder="搜索应用"
+          class="fi-app-select"
+          input-class="fi-app-select__input"
+          dropdown-class="iap-order-filter-popper"
+          :setting-apps="settingAppsForSelect"
+          :height="36"
+          :min-width="200"
+          :max-width="280"
+          :max-display-tags="2"
+          auto-height
+          :auto-max-rows="2"
+        />
+        <el-select
+          v-model="fChannel"
+          size="small"
+          placeholder="广告平台"
+          clearable
+          filterable
+          class="fi-sel"
+          popper-class="iap-order-filter-popper"
+        >
+          <el-option label="全部" value="" />
+          <el-option
+            v-for="opt in sourceSelectOptions"
+            :key="String(opt.value)"
+            :label="opt.label"
+            :value="String(opt.value)"
+          />
+        </el-select>
+        <el-select
+          :model-value="fCountry"
+          size="small"
+          placeholder="国家"
+          class="fi-sel"
+          clearable
+          filterable
+          popper-class="iap-order-filter-popper"
+          @update:model-value="onOrderCountrySelect"
+        >
+          <el-option label="全部" value="" />
+          <el-option
+            v-for="opt in countrySelectOptionsForOrder"
+            :key="String(opt.value)"
+            :label="opt.label"
+            :value="String(opt.value)"
+          />
+        </el-select>
+        <el-select
+          v-model="fProduct"
+          size="small"
+          clearable
+          filterable
+          placeholder="商品"
+          class="fi-sel"
+        >
+          <el-option label="全部" value="all" />
+          <el-option label="年订" value="annual" />
+          <el-option label="月订" value="monthly" />
+        </el-select>
+        <el-select v-model="fStatus" size="small" clearable placeholder="状态" class="fi-sel">
+          <el-option label="全部" value="all" />
+          <el-option label="成功" value="success" />
+          <el-option label="退款" value="refund" />
+          <el-option label="失败" value="fail" />
+        </el-select>
+        <el-input
+          v-model="searchKw"
+          size="small"
+          placeholder="订单号/用户ID"
+          class="fi-search"
+          clearable
+          @keyup.enter="handleOrderSearch"
+        >
+          <template #prefix>
+            <ElIcon class="fi-search-icon"><Search /></ElIcon>
+          </template>
+        </el-input>
+        <div class="filter-row-actions">
+          <ElButton
+            type="primary"
+            plain
+            round
+            size="default"
+            :icon="Search"
+            @click="handleOrderSearch"
+            >搜索</ElButton
+          >
+          <!-- <ElButton type="primary" plain round size="default" class="export-btn-sm"
+            >↓ 导出数据</ElButton
+          > -->
+        </div>
       </div>
-      <el-select v-model="fApp" size="small" placeholder="App: 全部" class="fi-sel">
-        <el-option label="全部" value="all" /><el-option label="Weather5" value="w5" />
-      </el-select>
-      <el-select v-model="fChannel" size="small" placeholder="广告平台: 全部" class="fi-sel">
-        <el-option label="全部" value="all" /><el-option label="Google" value="google" />
-      </el-select>
-      <el-select v-model="fCountry" size="small" placeholder="国家: 全部" class="fi-sel">
-        <el-option label="全部" value="all" /><el-option label="US" value="us" />
-      </el-select>
-      <el-select v-model="fProduct" size="small" placeholder="商品: 全部" class="fi-sel">
-        <el-option label="全部" value="all" />
-      </el-select>
-      <el-select v-model="fStatus" size="small" placeholder="状态: 全部" class="fi-sel">
-        <el-option label="全部" value="all" /><el-option label="成功" value="ok" />
-      </el-select>
-      <el-input
-        v-model="searchKw"
-        size="small"
-        placeholder="Search: 订单号/用户ID"
-        class="fi-search"
-        prefix-icon="Search"
-        clearable
-      />
-      <el-button size="small" class="export-btn-sm">↓ 导出数据</el-button>
-    </div>
 
-    <!-- ── Main Content ───────────────────────────── -->
-    <div class="main-layout" :class="{ 'detail-open': !!selectedOrder }">
-      <div class="left-content">
-        <!-- Top Two-column -->
-        <div class="dual-grid">
-          <!-- App × Platform Summary -->
-          <div class="card">
-            <div class="card-hd">
-              应用 × 平台 订单汇总
-              <span class="card-note"
-                >注：安卓仅支持指定日期之后的数据，平台未配置的应用归入其他，总订阅数为截止到指定日期有效的订阅订单数量</span
-              >
-            </div>
-            <table class="dt sm-dt">
-              <thead>
-                <tr>
-                  <th rowspan="2">应用</th>
-                  <th rowspan="2">平台</th>
-                  <th rowspan="2">总订阅数</th>
-                  <th colspan="6">订单数量</th>
-                  <th colspan="4">收入 (USD)</th>
-                </tr>
-                <tr>
-                  <th>付费</th><th>订阅</th><th>内购</th> <th>续订</th><th>退款</th><th>取消</th>
-                  <th>付费</th><th>订阅</th><th>内购</th><th>续订</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="r in appPlatRows" :key="r.app + r.platform">
-                  <td class="ch-name">{{ r.app }}</td>
-                  <td
-                    ><span
-                      class="plat-tag"
-                      :class="
-                        r.platform === 'iOS'
-                          ? 'plat-ios'
-                          : r.platform === 'Android'
-                            ? 'plat-android'
-                            : ''
-                      "
-                      >{{ r.platform }}</span
-                    ></td
-                  >
-                  <td>{{ r.total }}</td>
-                  <td>{{ r.paid }}</td
-                  ><td>{{ r.sub }}</td
-                  ><td>{{ r.iap }}</td> <td>{{ r.renew }}</td
-                  ><td>{{ r.refund }}</td
-                  ><td>{{ r.cancel }}</td>
-                  <td class="val-cyan">{{ r.rPaid }}</td>
-                  <td>{{ r.rSub }}</td
-                  ><td>{{ r.rIap }}</td
-                  ><td>{{ r.rRenew }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Daily Summary -->
-          <div class="card">
-            <div class="card-hd">
-              按日期订单汇总
-              <div class="card-action">国家下钻: 全部 ▾</div>
-            </div>
-            <table class="dt sm-dt">
-              <thead>
-                <tr>
-                  <th>日期</th><th>付费收入</th><th>付费人数</th> <th>付费率</th><th>订单量</th
-                  ><th>广告支出</th> <th>CPA</th><th>新用户</th><th>续订率</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="r in dailyRows"
-                  :key="r.date"
-                  :class="{ 'row-selected': r.date === '2026-03-05' }"
+      <!-- ── Main Content ───────────────────────────── -->
+      <div class="main-layout" :class="{ 'detail-open': !!selectedOrder }">
+        <div class="left-content">
+          <!-- Top Two-column -->
+          <div class="dual-grid">
+            <!-- App × Platform Summary -->
+            <div class="card">
+              <div class="card-hd">
+                应用 × 平台 订单汇总
+                <span class="card-note"
+                  >注：安卓仅支持指定日期之后的数据，平台未配置的应用归入其他，总订阅数为截止到指定日期有效的订阅订单数量</span
                 >
-                  <td class="val-cyan cursor-pointer">{{ r.date }}</td>
-                  <td>{{ r.rev }}</td
-                  ><td>{{ r.users }}</td> <td>{{ r.payRate }}</td
-                  ><td>{{ r.orders }}</td> <td>{{ r.adSpend }}</td
-                  ><td>{{ r.cpa }}</td>
-                  <td>{{ r.newUsers }}</td>
-                  <td>
-                    <span
-                      class="reten-pill"
-                      :class="parseFloat(r.reten) >= 20 ? 'ret-high' : 'ret-low'"
+              </div>
+              <table class="dt sm-dt">
+                <thead>
+                  <tr>
+                    <th rowspan="2">应用</th>
+                    <th rowspan="2">平台</th>
+                    <th rowspan="2">总订阅数</th>
+                    <th colspan="6">订单数量</th>
+                    <th colspan="4">收入 (USD)</th>
+                  </tr>
+                  <tr>
+                    <th>付费</th><th>订阅</th><th>内购</th> <th>续订</th><th>退款</th><th>取消</th>
+                    <th>付费</th><th>订阅</th><th>内购</th><th>续订</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="r in filteredAppPlatRows" :key="r.appName + r.platform">
+                    <td class="ch-name">{{ r.appName }}</td>
+                    <td
+                      ><span
+                        class="plat-tag"
+                        :class="
+                          r.platform === 'iOS'
+                            ? 'plat-ios'
+                            : r.platform === 'Android'
+                              ? 'plat-android'
+                              : ''
+                        "
+                        >{{ r.platform }}</span
+                      ></td
                     >
-                      {{ r.reten }}
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-              <tfoot>
-                <tr class="total-row">
-                  <td>合计</td><td>$4,103</td><td>1,503</td> <td>90.0%</td><td>430</td>
-                  <td>$1,750</td><td>0.04</td><td>17</td>
-                  <td><span class="reten-pill ret-high">20%</span></td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        </div>
-
-        <!-- Order List + Charts Row -->
-        <div class="order-charts-grid">
-          <!-- Order List -->
-          <div class="card order-list-card">
-            <div class="list-header">
-              <span class="card-hd" style="margin: 0">订单列表</span>
-              <span class="record-count">Showing 1-8 of 9,749 records</span>
+                    <td>{{ r.totalSubscriptions }}</td>
+                    <td>{{ r.paid }}</td
+                    ><td>{{ r.sub }}</td
+                    ><td>{{ r.iap }}</td> <td>{{ r.renew }}</td
+                    ><td>{{ r.refund }}</td
+                    ><td>{{ r.cancel }}</td>
+                    <td class="val-cyan">{{ r.rPaid }}</td>
+                    <td>{{ r.rSub }}</td
+                    ><td>{{ r.rIap }}</td
+                    ><td>{{ r.rRenew }}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-            <table class="dt order-dt">
-              <thead>
-                <tr>
-                  <th>订单号</th><th>用户ID</th><th>应用</th> <th>商品</th><th>金额</th
-                  ><th>广告平台</th> <th>国家</th><th>下单时间</th><th>支付方式</th> <th>状态</th
-                  ><th>操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="r in orderRows"
-                  :key="r.id"
-                  :class="{ 'row-selected': selectedOrder?.id === r.id }"
-                >
-                  <td class="order-id" @click="selectOrder(r)">{{ r.id }}</td>
-                  <td class="val-blue">{{ r.userId }}</td>
-                  <td>{{ r.app }}</td>
-                  <td class="order-product">{{ r.product }}</td>
-                  <td>{{ r.amount }}</td>
-                  <td>{{ r.channel }}</td>
-                  <td>
-                    <span class="country-flag">{{ r.flag }}</span>
-                  </td>
-                  <td class="val-muted">{{ r.time }}</td>
-                  <td class="val-muted">{{ r.payMethod }}</td>
-                  <td>
-                    <span class="status-tag" :class="r.statusClass">{{ r.status }}</span>
-                  </td>
-                  <td>
-                    <span class="link-btn" @click="selectOrder(r)">查看</span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-            <div class="pagination">
-              <span class="page-btn">‹ 1</span>
-              <span class="page-cur">2</span>
-              <span class="page-btn">… 813 ›</span>
-              <span class="page-info">showing 1-8 of 9,749</span>
+
+            <!-- Daily Summary -->
+            <div class="card">
+              <div class="card-hd">
+                按日期订单汇总
+                <!-- <div class="card-action">国家下钻: 全部 ▾</div> -->
+              </div>
+              <table class="dt sm-dt">
+                <thead>
+                  <tr>
+                    <th>日期</th><th>付费收入</th><th>付费人数</th> <th>付费率</th><th>订单量</th
+                    ><th>广告支出</th> <th>CPA</th><th>新用户</th><th>续订率</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="r in filteredDailyRows"
+                    :key="r.date + '-' + r.users + '-' + r.orders"
+                    :class="{ 'row-selected': r.date === highlightDailyDate }"
+                  >
+                    <td class="val-cyan cursor-pointer">{{ r.date }}</td>
+                    <td>{{ r.rev }}</td
+                    ><td>{{ r.users }}</td> <td>{{ r.payRate }}</td
+                    ><td>{{ r.orders }}</td> <td>{{ r.adSpend }}</td
+                    ><td>{{ r.cpa }}</td>
+                    <td>{{ r.newUsers }}</td>
+                    <td>
+                      <span
+                        class="reten-pill"
+                        :class="parseFloat(r.reten) >= 20 ? 'ret-high' : 'ret-low'"
+                      >
+                        {{ r.reten }}
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+                <tfoot>
+                  <tr class="total-row">
+                    <td>合计</td><td>$4,103</td><td>1,503</td> <td>90.0%</td><td>430</td>
+                    <td>$1,750</td><td>0.04</td><td>17</td>
+                    <td><span class="reten-pill ret-high">20%</span></td>
+                  </tr>
+                </tfoot>
+              </table>
             </div>
           </div>
 
-          <!-- Right Charts -->
-          <div class="charts-col">
-            <div class="card">
-              <div class="card-hd">24小时订单金额分布</div>
-              <div ref="hourRef" style="height: 160px"></div>
+          <!-- Order List + Charts Row -->
+          <div class="order-charts-grid">
+            <!-- Order List -->
+            <div class="card order-list-card">
+              <div class="list-header">
+                <span class="card-hd" style="margin: 0">订单列表</span>
+                <span class="record-count">{{ orderListRangeText }}</span>
+              </div>
+              <table class="dt order-dt">
+                <thead>
+                  <tr>
+                    <th>订单号</th><th>用户ID</th><th>应用</th> <th>商品</th><th>金额</th
+                    ><th>广告平台</th> <th>国家</th><th>下单时间</th><th>支付方式</th> <th>状态</th
+                    ><th>操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="r in filteredOrderRows"
+                    :key="r.uid"
+                    :class="{ 'row-selected': selectedOrder?.uid === r.uid }"
+                  >
+                    <td class="order-id" @click="selectOrder(r)">{{ r.id }}</td>
+                    <td class="val-blue">{{ r.userId }}</td>
+                    <td>{{ r.app }}</td>
+                    <td class="order-product">{{ r.product }}</td>
+                    <td>{{ r.amount }}</td>
+                    <td>{{ r.channel }}</td>
+                    <td>
+                      <span
+                        v-if="r.countryCode"
+                        class="country-flag fi"
+                        :class="'fi-' + r.countryCode"
+                      />
+                    </td>
+                    <td class="val-muted">{{ r.time }}</td>
+                    <td class="val-muted">{{ r.payMethod }}</td>
+                    <td>
+                      <span class="status-tag" :class="r.statusClass">{{ r.status }}</span>
+                    </td>
+                    <td>
+                      <span class="link-btn" @click="selectOrder(r)">查看</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="pagination">
+                <span class="page-btn">‹ 1</span>
+                <span class="page-cur">2</span>
+                <span class="page-btn">… 813 ›</span>
+                <span class="page-info">showing 1-8 of 9,749</span>
+              </div>
             </div>
-            <div class="card">
-              <div class="card-hd">商品类型订单占比</div>
-              <div ref="typeRef" style="height: 160px"></div>
+
+            <!-- Right Charts -->
+            <div class="charts-col">
+              <div class="card">
+                <div class="card-hd">24小时订单金额分布</div>
+                <div ref="hourRef" style="height: 160px"></div>
+              </div>
+              <div class="card">
+                <div class="card-hd">商品类型订单占比</div>
+                <div ref="typeRef" style="height: 160px"></div>
+              </div>
             </div>
           </div>
         </div>
+
+        <!-- ── Order Detail Panel ────────────────── -->
+        <transition name="slide">
+          <div class="detail-panel" v-if="selectedOrder">
+            <div class="detail-header">
+              <div class="detail-title">
+                <el-icon><Document /></el-icon>
+                订单详情
+              </div>
+              <div class="detail-order-id">{{ selectedOrder.id }}</div>
+              <span class="close-btn" @click="selectedOrder = null">✕</span>
+            </div>
+
+            <div
+              class="pay-status"
+              :class="{
+                'pay-status--ok': selectedOrder.status === '成功',
+                'pay-status--refund': selectedOrder.status === '退款',
+                'pay-status--fail': selectedOrder.status === '失败'
+              }"
+            >
+              <span class="pay-ok-dot">{{ selectedOrder.status === '成功' ? '✓' : '!' }}</span>
+              <span class="pay-ok-text">{{
+                selectedOrder.status === '成功'
+                  ? '支付成功'
+                  : selectedOrder.status === '退款'
+                    ? '已退款'
+                    : '支付失败'
+              }}</span>
+              <span class="pay-amount">{{
+                selectedOrderDetail?.priceLabel ?? selectedOrder.amount
+              }}</span>
+            </div>
+
+            <div class="detail-sections">
+              <div v-if="selectedOrderDetailLoading" class="detail-section">
+                <div class="ds-title">加载中…</div>
+              </div>
+              <div class="detail-section">
+                <div class="ds-title">基本信息</div>
+                <div class="ds-grid">
+                  <div class="ds-row"
+                    ><span class="ds-k">订单号</span
+                    ><span class="ds-v">{{ selectedOrder.id }}</span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">用户ID</span
+                    ><span class="ds-v val-blue">{{ selectedOrder.userId }}</span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">应用</span
+                    ><span class="ds-v">{{
+                      selectedOrderDetail?.appName ?? selectedOrder.app
+                    }}</span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">平台</span
+                    ><span class="ds-v">{{ selectedOrderDetail?.platform ?? '--' }}</span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">商品</span
+                    ><span class="ds-v">{{
+                      selectedOrderDetail?.skuName ?? selectedOrder.product
+                    }}</span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">商品ID</span
+                    ><span class="ds-v val-muted">{{
+                      selectedOrderDetail?.skuId ?? '--'
+                    }}</span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">价格</span
+                    ><span class="ds-v">{{
+                      selectedOrderDetail?.priceLabel ?? selectedOrder.amount
+                    }}</span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">支付方式</span
+                    ><span class="ds-v">{{
+                      selectedOrderDetail?.paymentPlatform ?? selectedOrder.payMethod
+                    }}</span></div
+                  >
+                </div>
+              </div>
+
+              <div class="detail-section">
+                <div class="ds-title">广告平台与地区</div>
+                <div class="ds-grid">
+                  <div class="ds-row"
+                    ><span class="ds-k">广告平台</span
+                    ><span class="ds-v">{{
+                      selectedOrderDetail?.source ?? selectedOrder.channel
+                    }}</span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">国家/地区</span>
+                    <span class="ds-v ds-v--country">
+                      <span
+                        v-if="selectedOrderDetail?.s_country_code ?? selectedOrder.countryCode"
+                        class="fi mr-1"
+                        :class="
+                          'fi-' + (selectedOrderDetail?.s_country_code ?? selectedOrder.countryCode)
+                        "
+                      />
+                      {{
+                        (
+                          selectedOrderDetail?.s_country_code ?? selectedOrder.countryCode
+                        ).toUpperCase()
+                      }}
+                    </span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">时区</span
+                    ><span class="ds-v">{{ selectedOrderDetail?.timezoneLabel ?? '--' }}</span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">货币</span
+                    ><span class="ds-v">{{ selectedOrderDetail?.currency ?? 'USD' }}</span></div
+                  >
+                </div>
+              </div>
+
+              <div class="detail-section">
+                <div class="ds-title">时间信息</div>
+                <div class="ds-grid">
+                  <div class="ds-row"
+                    ><span class="ds-k">下单时间</span
+                    ><span class="ds-v">{{ selectedOrderDetail?.orderTime ?? '--' }}</span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">支付时间</span
+                    ><span class="ds-v">{{ selectedOrderDetail?.payTime ?? '--' }}</span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">订阅开始</span
+                    ><span class="ds-v">{{ selectedOrderDetail?.subStartDate ?? '--' }}</span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">订阅到期</span
+                    ><span class="ds-v">{{ selectedOrderDetail?.subEndDate ?? '--' }}</span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">首次付费</span
+                    ><span
+                      class="ds-v"
+                      :class="selectedOrderDetail?.isFirstPay ? 'val-green' : 'val-muted'"
+                      >{{ selectedOrderDetail?.isFirstPay ? '是' : '否' }}</span
+                    ></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">首次付费周期</span
+                    ><span class="ds-v"
+                      >{{ selectedOrderDetail?.firstPayCycleDays ?? 0 }}天</span
+                    ></div
+                  >
+                </div>
+              </div>
+
+              <div class="detail-section">
+                <div class="ds-title">订阅状态</div>
+                <div class="ds-grid">
+                  <div class="ds-row"
+                    ><span class="ds-k">订阅类型</span><span class="ds-v">年度订阅</span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">自动续费</span
+                    ><span class="ds-v val-green">已开启</span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">续费次数</span><span class="ds-v">0次（首次）</span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">预计续费日</span><span class="ds-v">2027-03-05</span></div
+                  >
+                </div>
+              </div>
+
+              <div class="detail-section">
+                <div class="ds-title">收入归因</div>
+                <div class="ds-grid">
+                  <div class="ds-row"
+                    ><span class="ds-k">归因广告平台</span><span class="ds-v">Google UAC</span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">Campaign</span
+                    ><span class="ds-v val-muted">Weather5_US_Annual_0305</span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">广告组</span
+                    ><span class="ds-v val-muted">AG_US_iOS_Annual</span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">归因模型</span><span class="ds-v">Last Click</span></div
+                  >
+                </div>
+              </div>
+            </div>
+
+            <div class="detail-footer">
+              <el-button size="small" class="detail-btn">‹ 上一条</el-button>
+              <el-button size="small" class="detail-btn">下一条 ›</el-button>
+              <el-button size="small" class="detail-btn-primary">复制订单号</el-button>
+              <el-button size="small" class="detail-btn-outline">导出此订单</el-button>
+            </div>
+          </div>
+        </transition>
       </div>
-
-      <!-- ── Order Detail Panel ────────────────── -->
-      <transition name="slide">
-        <div class="detail-panel" v-if="selectedOrder">
-          <div class="detail-header">
-            <div class="detail-title">
-              <el-icon><Document /></el-icon>
-              订单详情
-            </div>
-            <div class="detail-order-id">{{ selectedOrder.id }}</div>
-            <span class="close-btn" @click="selectedOrder = null">✕</span>
-          </div>
-
-          <div class="pay-status">
-            <span class="pay-ok-dot">✓</span>
-            <span class="pay-ok-text">支付成功</span>
-            <span class="pay-amount">$89.99 USD</span>
-          </div>
-
-          <div class="detail-sections">
-            <div class="detail-section">
-              <div class="ds-title">基本信息</div>
-              <div class="ds-grid">
-                <div class="ds-row"
-                  ><span class="ds-k">订单号</span
-                  ><span class="ds-v">{{ selectedOrder.id }}</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">用户ID</span
-                  ><span class="ds-v val-blue">{{ selectedOrder.userId }}</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">应用</span><span class="ds-v">Weather5</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">平台</span><span class="ds-v">iOS</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">商品</span
-                  ><span class="ds-v">Weather Premium Annual</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">商品ID</span
-                  ><span class="ds-v val-muted">weather_premium_annual</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">价格</span><span class="ds-v">$89.99 USD</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">支付方式</span><span class="ds-v">App Store</span></div
-                >
-              </div>
-            </div>
-
-            <div class="detail-section">
-              <div class="ds-title">广告平台与地区</div>
-              <div class="ds-grid">
-                <div class="ds-row"
-                  ><span class="ds-k">广告平台</span><span class="ds-v">Google</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">国家/地区</span><span class="ds-v">🇺🇸 美国 (US)</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">时区</span><span class="ds-v">PST (UTC-8)</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">货币</span><span class="ds-v">USD</span></div
-                >
-              </div>
-            </div>
-
-            <div class="detail-section">
-              <div class="ds-title">时间信息</div>
-              <div class="ds-grid">
-                <div class="ds-row"
-                  ><span class="ds-k">下单时间</span
-                  ><span class="ds-v">2026-03-05 14:32:18</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">支付时间</span
-                  ><span class="ds-v">2026-03-05 14:32:45</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">订阅开始</span><span class="ds-v">2026-03-05</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">订阅到期</span><span class="ds-v">2027-03-05</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">首次付费</span><span class="ds-v val-green">是</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">首次付费周期</span><span class="ds-v">2.1天</span></div
-                >
-              </div>
-            </div>
-
-            <div class="detail-section">
-              <div class="ds-title">订阅状态</div>
-              <div class="ds-grid">
-                <div class="ds-row"
-                  ><span class="ds-k">订阅类型</span><span class="ds-v">年度订阅</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">自动续费</span><span class="ds-v val-green">已开启</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">续费次数</span><span class="ds-v">0次（首次）</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">预计续费日</span><span class="ds-v">2027-03-05</span></div
-                >
-              </div>
-            </div>
-
-            <div class="detail-section">
-              <div class="ds-title">收入归因</div>
-              <div class="ds-grid">
-                <div class="ds-row"
-                  ><span class="ds-k">归因广告平台</span><span class="ds-v">Google UAC</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">Campaign</span
-                  ><span class="ds-v val-muted">Weather5_US_Annual_0305</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">广告组</span
-                  ><span class="ds-v val-muted">AG_US_iOS_Annual</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">归因模型</span><span class="ds-v">Last Click</span></div
-                >
-              </div>
-            </div>
-          </div>
-
-          <div class="detail-footer">
-            <el-button size="small" class="detail-btn">‹ 上一条</el-button>
-            <el-button size="small" class="detail-btn">下一条 ›</el-button>
-            <el-button size="small" class="detail-btn-primary">复制订单号</el-button>
-            <el-button size="small" class="detail-btn-outline">导出此订单</el-button>
-          </div>
-        </div>
-      </transition>
-    </div>
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, onUnmounted, watch } from 'vue'
-  import * as echarts from 'echarts'
+  import 'flag-icons/css/flag-icons.min.css'
+  import { Document, Search } from '@element-plus/icons-vue'
+  import { storeToRefs } from 'pinia'
+  import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
+  import type { CockpitMetaOptionItem, CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
+  import { echarts } from '@/plugins/echarts'
+  import { getAppTodayYYYYMMDD } from '@/utils/app-now'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
+  import type {
+    PaidAnalysisFilterBody,
+    PaidAnalysisOrderDetailData,
+    PaidAnalysisOrderListData,
+    PaidAnalysisOrderTabSummaryData
+  } from './types'
+  import {
+    fetchPaidAnalysisOrderDetail,
+    fetchPaidAnalysisOrderList,
+    fetchPaidAnalysisTabOrderSummary
+  } from '@/api/user-growth/paid-analysis'
 
   defineOptions({ name: 'IAPOrderTab' })
 
+  const metaStore = useCockpitMetaFilterStore()
+  const { data: cockpitMeta } = storeToRefs(metaStore)
+
+  function fallbackMetaOptions(label: string): CockpitMetaOptionItem[] {
+    return [{ label, value: '' }]
+  }
+
+  const appSelectOptions = computed(() => {
+    const list = cockpitMeta.value?.appOptions
+    return list?.length ? list : fallbackMetaOptions('全部')
+  })
+
+  const sourceSelectOptions = computed(() =>
+    (cockpitMeta.value?.sourceOptions ?? []).filter((o) => String(o.value ?? '').trim() !== '')
+  )
+
+  const countrySelectOptionsForOrder = computed(() =>
+    (cockpitMeta.value?.countryOptions ?? []).filter((o) => String(o.value ?? '').trim() !== '')
+  )
+
+  const settingAppsForSelect = computed<CockpitSettingAppItem[]>(() => {
+    const fromCockpit = cockpitMeta.value?.settingApps ?? []
+    if (fromCockpit.length) return fromCockpit
+
+    return appSelectOptions.value
+      .filter((opt) => opt.value !== '')
+      .map((opt, index) => ({
+        sAppId: String(opt.value ?? ''),
+        nPlatform: '',
+        platformName: '',
+        sAppName: String(opt.label ?? ''),
+        sAppShortName: String(opt.label ?? ''),
+        nCategory: `fallback-${index}`,
+        categoryName: '应用'
+      }))
+  })
+
+  /** 与公用 meta 一致：不限为 ''；兼容历史 'all' */
+  function isAllFilter(v: string) {
+    return v === '' || v === 'all'
+  }
+
   const props = defineProps<{
     filters: {
-      app: string
+      appId: string | string[]
       platform: string
       country: string
-      date: string
+      startDate: string
+      endDate: string
     }
     searchToken: number
   }>()
 
-  /* ── Filter State ─────────────────────────────── */
-  const fApp = ref('all'),
-    fChannel = ref('all'),
-    fCountry = ref('all')
-  const fProduct = ref('all'),
-    fStatus = ref('all'),
-    searchKw = ref('')
+  const loading = ref(false)
+  const loadError = ref('')
 
-  /* ── Order Detail ─────────────────────────────── */
   interface OrderRow {
+    uid: string
     id: string
     userId: string
     app: string
     product: string
     amount: string
     channel: string
-    flag: string
+    countryCode: string
     time: string
     payMethod: string
     status: string
     statusClass: string
+    sortDate: string
   }
+
+  interface AppliedOrderFilters {
+    dateStart: string
+    dateEnd: string
+    app: string[]
+    channel: string
+    country: string
+    product: string
+    status: string
+    keyword: string
+  }
+
+  const orderDateRange = ref<[string, string] | null>(null)
+  const fApp = ref<string[]>([])
+  const fChannel = ref('')
+  const fCountry = ref('')
+  const fProduct = ref('all')
+  const fStatus = ref('all')
+  const searchKw = ref('')
+
+  function normalizeAppFilterValue(v: string | string[]): string[] {
+    if (Array.isArray(v)) {
+      const out: string[] = []
+      const seen = new Set<string>()
+      for (const x of v) {
+        const id = String(x ?? '').trim()
+        if (!id || seen.has(id)) continue
+        seen.add(id)
+        out.push(id)
+      }
+      return out
+    }
+    const id = String(v ?? '').trim()
+    return id ? [id] : []
+  }
+
+  function isUnlimitedAppSelection(ids: string[]) {
+    return ids.length === 0
+  }
+
+  function onOrderCountrySelect(v: string | undefined | null) {
+    fCountry.value = v ?? ''
+  }
+
+  const applied = ref<AppliedOrderFilters>({
+    dateStart: '',
+    dateEnd: '',
+    app: [],
+    channel: '',
+    country: '',
+    product: 'all',
+    status: 'all',
+    keyword: ''
+  })
+
   const selectedOrder = ref<OrderRow | null>(null)
+  const selectedOrderDetail = ref<PaidAnalysisOrderDetailData | null>(null)
+  const selectedOrderDetailLoading = ref(false)
+
   function selectOrder(r: OrderRow) {
     selectedOrder.value = r
+    void loadOrderDetail(r.id)
   }
 
-  /* ── Refs ─────────────────────────────────────── */
   const hourRef = ref<HTMLElement | null>(null)
   const typeRef = ref<HTMLElement | null>(null)
-  const chartInstances: echarts.ECharts[] = []
+  const chartInstances: Array<ReturnType<typeof echarts.init>> = []
 
-  /* ── KPI ─────────────────────────────────────── */
-  const kpiCards = [
-    {
-      label: '订单总量',
-      value: '9,749笔',
-      trendUp: true,
-      trendVal: '',
-      sub: '今日新增342笔',
-      color: '#22d3ee'
-    },
-    {
-      label: '订单成功率',
-      value: '95.2%',
-      trendUp: false,
-      trendVal: '',
-      sub: '失败247笔',
-      color: '#10b981'
-    },
-    {
-      label: '退款率',
-      value: '1.9%',
-      trendUp: false,
-      trendVal: '',
-      sub: '退款185笔',
-      color: '#f59e0b'
-    },
-    {
-      label: '订单总金额',
-      value: '$284,520',
-      trendUp: true,
-      trendVal: '8.4% vs.上月',
-      sub: '',
-      color: '#3b82f6'
-    }
-  ]
+  const STATUS_KEY_MAP: Record<string, string> = {
+    success: '成功',
+    refund: '退款',
+    fail: '失败'
+  }
 
-  /* ── App × Platform ───────────────────────────── */
-  const appPlatRows = [
-    {
-      app: '汇总',
-      platform: '--',
-      total: '28,xxx',
-      paid: '16,xxx',
-      sub: '15,xxx',
-      iap: 296,
-      renew: 9,
-      refund: 14,
-      cancel: 0,
-      rPaid: '$85,xxx',
-      rSub: '$76,xxx',
-      rIap: '$89,xxx',
-      rRenew: '$6x,xxx'
-    },
-    {
-      app: 'PhoneTracker',
-      platform: 'Android',
-      total: '28,xxx',
-      paid: '16,xxx',
-      sub: '15,xxx',
-      iap: 296,
-      renew: 9,
-      refund: 14,
-      cancel: 0,
-      rPaid: '$85,xxx',
-      rSub: '$76,xxx',
-      rIap: '$89,xxx',
-      rRenew: '$6x,xxx'
-    },
-    {
-      app: 'YearCam',
-      platform: 'iOS',
-      total: '14,xxx',
-      paid: '7,xxx',
-      sub: '15,xxx',
-      iap: 116,
-      renew: 8,
-      refund: 0,
-      cancel: 0,
-      rPaid: '$75,xxx',
-      rSub: '$66,xxx',
-      rIap: '$89,xxx',
-      rRenew: '$6x,xxx'
-    },
-    {
-      app: 'PhoneTracker2',
-      platform: 'iOS',
-      total: '14,xxx',
-      paid: '7,xxx',
-      sub: '1,xxx',
-      iap: 72,
-      renew: 0,
-      refund: 14,
-      cancel: 0,
-      rPaid: '$85,xxx',
-      rSub: '$29,xxx',
-      rIap: '$89,xxx',
-      rRenew: '$6x,xxx'
-    },
-    {
-      app: 'AgeCam',
-      platform: 'Android',
-      total: '14,xxx',
-      paid: '6,xxx',
-      sub: '5,xxx',
-      iap: 5,
-      renew: 0,
-      refund: 3,
-      cancel: 0,
-      rPaid: '$86,xxx',
-      rSub: '$69,xxx',
-      rIap: '$89,xxx',
-      rRenew: '$6x,xxx'
-    },
-    {
-      app: 'AgeCam',
-      platform: 'iOS',
-      total: '11,xxx',
-      paid: '2,xxx',
-      sub: '4,xxx',
-      iap: 4,
-      renew: 0,
-      refund: 2,
-      cancel: 0,
-      rPaid: '$75,xxx',
-      rSub: '$75,xxx',
-      rIap: '$89,xxx',
-      rRenew: '$6x,xxx'
+  function syncDateRangeFromParentFilters() {
+    const today = getAppTodayYYYYMMDD()
+    let s = String(props.filters.startDate ?? '').trim() || today
+    let e = String(props.filters.endDate ?? '').trim() || today
+    if (s > e) {
+      const t = s
+      s = e
+      e = t
     }
-  ]
+    orderDateRange.value = [s, e]
+  }
 
-  /* ── Daily Rows ───────────────────────────────── */
-  const dailyRows = [
-    {
-      date: '2026-02-25',
-      rev: '$4,103',
-      users: 118,
-      payRate: '90.5%',
-      orders: 136,
-      adSpend: '$2,750',
-      cpa: 0.03,
-      newUsers: 1,
-      reten: '20%'
-    },
-    {
-      date: '2026-02-25',
-      rev: '$4,103',
-      users: 75,
-      payRate: '80.2%',
-      orders: 39,
-      adSpend: '$1,888',
-      cpa: 0.04,
-      newUsers: 6,
-      reten: '20%'
-    },
-    {
-      date: '2026-02-29',
-      rev: '$4,103',
-      users: 19,
-      payRate: '70.0%',
-      orders: 19,
-      adSpend: '$4,780',
-      cpa: 0.04,
-      newUsers: 1,
-      reten: '20%'
-    },
-    {
-      date: '2026-03-01',
-      rev: '$4,103',
-      users: 102,
-      payRate: '89.9%',
-      orders: 155,
-      adSpend: '$1,480',
-      cpa: 0.04,
-      newUsers: 8,
-      reten: '20%'
-    },
-    {
-      date: '2026-03-01',
-      rev: '$4,103',
-      users: 71,
-      payRate: '53.3%',
-      orders: 36,
-      adSpend: '$1,918',
-      cpa: 0.04,
-      newUsers: 4,
-      reten: '10%'
-    },
-    {
-      date: '2026-03-02',
-      rev: '$4,103',
-      users: 35,
-      payRate: '45.7%',
-      orders: 20,
-      adSpend: '$2,789',
-      cpa: 0.04,
-      newUsers: 4,
-      reten: '20%'
-    },
-    {
-      date: '2026-03-03',
-      rev: '$4,103',
-      users: 85,
-      payRate: '70.5%',
-      orders: 15,
-      adSpend: '$1,480',
-      cpa: 0.03,
-      newUsers: 1,
-      reten: '20%'
-    },
-    {
-      date: '2026-03-05',
-      rev: '$4,103',
-      users: 58,
-      payRate: '60.6%',
-      orders: 75,
-      adSpend: '$1,788',
-      cpa: 0.06,
-      newUsers: 20,
-      reten: '6%'
+  /** 列表行与 applied 日期区间比较用；优先解析展示文案中的 YYYY-MM-DD 或 MM-DD */
+  function ymdFromOrderTimeLabel(label: string, refYmd: string): string {
+    const fallback = refYmd || getAppTodayYYYYMMDD()
+    const iso = label.match(/(\d{4})-(\d{2})-(\d{2})/)
+    if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`
+    const mmdd = label.match(/^(\d{1,2})-(\d{1,2})\b/)
+    if (mmdd) {
+      const y = Number(fallback.slice(0, 4))
+      const mo = String(mmdd[1]).padStart(2, '0')
+      const da = String(mmdd[2]).padStart(2, '0')
+      return `${y}-${mo}-${da}`
     }
-  ]
+    return fallback
+  }
 
-  /* ── Order List ───────────────────────────────── */
-  const orderRows: OrderRow[] = [
-    {
-      id: 'ORD-20260305-8842',
-      userId: 'USR-284920',
-      app: 'Weather5',
-      product: 'Annual $89.99',
-      amount: '$89.99',
-      channel: 'Google',
-      flag: '🇺🇸',
-      time: '03-05 14:32',
-      payMethod: 'App Store',
-      status: '成功',
-      statusClass: 'st-ok'
-    },
-    {
-      id: 'ORD-20260305-8842',
-      userId: 'USR-284920',
-      app: 'Weather5',
-      product: 'Annual $89.99',
-      amount: '$89.99',
-      channel: 'Google',
-      flag: '🇺🇸',
-      time: '03-05 14:32',
-      payMethod: 'App Store',
-      status: '成功',
-      statusClass: 'st-ok'
-    },
-    {
-      id: 'ORD-20260305-8843',
-      userId: 'USR-284920',
-      app: 'Weather5',
-      product: 'Annual $89.99',
-      amount: '$89.99',
-      channel: 'Google',
-      flag: '🇺🇸',
-      time: '03-05 14:32',
-      payMethod: 'App Store',
-      status: '成功',
-      statusClass: 'st-ok'
-    },
-    {
-      id: 'ORD-20260305-8848',
-      userId: 'USR-284928',
-      app: 'Weather5',
-      product: 'Annual $89.99',
-      amount: '$89.99',
-      channel: 'Google',
-      flag: '🇩🇪',
-      time: '03-05 14:32',
-      payMethod: 'App Store',
-      status: '退款',
-      statusClass: 'st-refund'
-    },
-    {
-      id: 'ORD-20260305-8842',
-      userId: 'USR-284921',
-      app: 'Weather5',
-      product: 'Annual $89.99',
-      amount: '$89.99',
-      channel: 'Google',
-      flag: '🇯🇵',
-      time: '03-05 14:30',
-      payMethod: 'App Store',
-      status: '成功',
-      statusClass: 'st-ok'
-    },
-    {
-      id: 'ORD-20260305-8846',
-      userId: 'USR-284920',
-      app: 'Weather5',
-      product: 'Annual $89.99',
-      amount: '$89.99',
-      channel: 'Google',
-      flag: '🇰🇷',
-      time: '03-05 14:30',
-      payMethod: 'App Store',
-      status: '退款',
-      statusClass: 'st-refund'
-    },
-    {
-      id: 'ORD-20260305-8842',
-      userId: 'USR-284929',
-      app: 'Weather5',
-      product: 'Annual $89.99',
-      amount: '$89.99',
-      channel: 'Google',
-      flag: '🇨🇦',
-      time: '03-05 14:30',
-      payMethod: 'App Store',
-      status: '失败',
-      statusClass: 'st-fail'
-    },
-    {
-      id: 'ORD-20260305-8842',
-      userId: 'USR-284920',
-      app: 'Weather5',
-      product: 'Annual $89.99',
-      amount: '$89.99',
-      channel: 'Google',
-      flag: '🇨🇦',
-      time: '03-05 14:30',
-      payMethod: 'App Store',
-      status: '成功',
-      statusClass: 'st-ok'
+  function buildSummaryBody(): PaidAnalysisFilterBody {
+    const r = orderDateRange.value
+    const ps = String(props.filters.startDate ?? '').trim() || getAppTodayYYYYMMDD()
+    const pe = String(props.filters.endDate ?? '').trim() || getAppTodayYYYYMMDD()
+    const startDate = r?.[0] ?? ps
+    const endDate = r?.[1] ?? pe
+    return {
+      startDate,
+      endDate,
+      appId: props.filters.appId || '',
+      platform: props.filters.platform || '',
+      countryCode: props.filters.country || '',
+      source: ''
     }
-  ]
+  }
+
+  function buildListParams(): Parameters<typeof fetchPaidAnalysisOrderList>[0] {
+    const r = orderDateRange.value
+    const ps = String(props.filters.startDate ?? '').trim() || getAppTodayYYYYMMDD()
+    const pe = String(props.filters.endDate ?? '').trim() || getAppTodayYYYYMMDD()
+    const startDate = r?.[0] ?? ps
+    const endDate = r?.[1] ?? pe
+    return {
+      startDate,
+      endDate,
+      appId: isUnlimitedAppSelection(fApp.value) ? props.filters.appId || '' : fApp.value,
+      platform: props.filters.platform || '',
+      countryCode: isAllFilter(fCountry.value)
+        ? props.filters.country || ''
+        : fCountry.value.trim().toLowerCase(),
+      source: isAllFilter(fChannel.value) ? '' : fChannel.value,
+      keyword: searchKw.value.trim(),
+      productSku: isAllFilter(fProduct.value) ? '' : fProduct.value,
+      orderStatus: isAllFilter(fStatus.value) ? '' : fStatus.value,
+      current: 1,
+      size: 8
+    }
+  }
+
+  function pushAppliedFromForm() {
+    const r = orderDateRange.value
+    const ps = String(props.filters.startDate ?? '').trim() || getAppTodayYYYYMMDD()
+    const pe = String(props.filters.endDate ?? '').trim() || getAppTodayYYYYMMDD()
+    const dateStart = r?.[0] ?? ps
+    const dateEnd = r?.[1] ?? pe
+    applied.value = {
+      dateStart,
+      dateEnd,
+      app: [...fApp.value],
+      channel: fChannel.value,
+      country: fCountry.value,
+      product: fProduct.value,
+      status: fStatus.value,
+      keyword: searchKw.value.trim()
+    }
+  }
+
+  function handleOrderSearch() {
+    if (!orderDateRange.value?.[0]) {
+      syncDateRangeFromParentFilters()
+    }
+    pushAppliedFromForm()
+    selectedOrder.value = null
+    selectedOrderDetail.value = null
+    void loadAll()
+    nextTick(() => rebuildCharts())
+  }
+
+  const summary = ref<PaidAnalysisOrderTabSummaryData | null>(null)
+  const orderList = ref<PaidAnalysisOrderListData | null>(null)
+
+  const appPlatRows = computed(() => summary.value?.appPlatformRows ?? [])
+  const dailyRows = computed(() => summary.value?.dailyRows ?? [])
+
+  const orderRows = computed<OrderRow[]>(() => {
+    const records = orderList.value?.records ?? []
+    return records.map((r, idx) => {
+      const statusMap: Record<string, { label: string; cls: string }> = {
+        success: { label: '成功', cls: 'st-ok' },
+        refund: { label: '退款', cls: 'st-refund' },
+        fail: { label: '失败', cls: 'st-fail' }
+      }
+      const s = statusMap[r.status] ?? { label: String(r.status), cls: '' }
+      const refYmd =
+        String(props.filters.endDate ?? '').trim() ||
+        String(props.filters.startDate ?? '').trim() ||
+        getAppTodayYYYYMMDD()
+      const sortDate = ymdFromOrderTimeLabel(r.orderTimeLabel, refYmd)
+      return {
+        uid: `${r.s_order_id}-${idx}`,
+        id: r.s_order_id,
+        userId: r.user_display_id,
+        app: r.appName,
+        product: r.productBrief,
+        amount: r.amountLabel,
+        channel: r.sourceLabel,
+        countryCode: r.s_country_code,
+        sortDate,
+        time: r.orderTimeLabel,
+        payMethod: r.paymentMethod,
+        status: s.label,
+        statusClass: s.cls
+      }
+    })
+  })
+
+  function matchProductScope(product: string, f: string) {
+    if (isAllFilter(f)) return true
+    if (f === 'annual') return /annual|年|89\.99/i.test(product)
+    if (f === 'monthly') return /month|月|9\.99|6\.99/i.test(product)
+    return true
+  }
+
+  const filteredAppPlatRows = computed(() => {
+    const ids = applied.value.app
+    const rows = appPlatRows.value
+    const details = rows.filter((r) => r.appName !== '汇总')
+    if (isUnlimitedAppSelection(ids)) return rows
+    const names = new Set(
+      ids
+        .map(
+          (id) => settingAppsForSelect.value.find((a) => String(a.sAppId) === String(id))?.sAppName
+        )
+        .filter((n): n is string => Boolean(n))
+    )
+    if (names.size === 0) return []
+    return details.filter((r) => names.has(r.appName))
+  })
+
+  const filteredDailyRows = computed(() => {
+    const { dateStart, dateEnd } = applied.value
+    const rows = dailyRows.value.map((r) => ({
+      date: r.t_date,
+      rev: r.paidRevenueLabel,
+      users: r.paidUsers,
+      payRate: r.payRateLabel,
+      orders: r.orders,
+      adSpend: r.adSpendLabel,
+      cpa: r.cpa,
+      newUsers: r.newUsers,
+      reten: r.renewRateLabel
+    }))
+    if (!dateStart || !dateEnd) return rows
+    return rows.filter((r) => r.date >= dateStart && r.date <= dateEnd)
+  })
+
+  const highlightDailyDate = computed(() => applied.value.dateEnd || '')
+
+  const filteredOrderRows = computed(() => {
+    const a = applied.value
+    return orderRows.value.filter((r) => {
+      if (r.sortDate < a.dateStart || r.sortDate > a.dateEnd) return false
+      if (!isUnlimitedAppSelection(a.app)) {
+        const names = a.app
+          .map(
+            (id) =>
+              settingAppsForSelect.value.find((x) => String(x.sAppId) === String(id))?.sAppName
+          )
+          .filter((n): n is string => Boolean(n))
+        if (names.length > 0 && !names.includes(r.app)) return false
+      }
+      if (!isAllFilter(a.channel)) {
+        const lb = sourceSelectOptions.value.find(
+          (o) => String(o.value) === String(a.channel)
+        )?.label
+        if (lb && r.channel !== lb) return false
+      }
+      if (!isAllFilter(a.country)) {
+        const cc = a.country.trim().toLowerCase()
+        if (r.countryCode?.toLowerCase() !== cc) return false
+      }
+      if (!matchProductScope(r.product, a.product)) return false
+      if (!isAllFilter(a.status)) {
+        const want = STATUS_KEY_MAP[a.status]
+        if (!want || r.status !== want) return false
+      }
+      const kw = a.keyword.toLowerCase()
+      if (kw && !r.id.toLowerCase().includes(kw) && !r.userId.toLowerCase().includes(kw)) {
+        return false
+      }
+      return true
+    })
+  })
+
+  const displayKpiCards = computed(() => {
+    const k = summary.value?.kpis ?? []
+    return k.map((x) => ({
+      label: x.label,
+      value: x.value,
+      trendUp: x.trendUp,
+      trendVal: x.trendRef,
+      sub: x.subNotes,
+      color: x.color
+    }))
+  })
+
+  const orderListRangeText = computed(() => {
+    const total = orderList.value?.total ?? 0
+    if (!total) return '暂无数据'
+    return `共 ${total.toLocaleString('en-US')} 条（当前筛选）`
+  })
+
+  const hourAmounts = computed(() => summary.value?.hourAmounts ?? [])
 
   /* ── ECharts ──────────────────────────────────── */
   onMounted(() => {
+    void metaStore.ensureLoaded()
+    syncDateRangeFromParentFilters()
+    fApp.value = normalizeAppFilterValue(props.filters.appId)
+    fCountry.value = (props.filters.country || '').trim().toLowerCase()
+    pushAppliedFromForm()
+    void loadAll()
     initHourChart()
     initTypeChart()
   })
@@ -766,7 +969,14 @@
   watch(
     () => props.searchToken,
     () => {
-      rebuildCharts()
+      syncDateRangeFromParentFilters()
+      fApp.value = normalizeAppFilterValue(props.filters.appId)
+      fCountry.value = (props.filters.country || '').trim().toLowerCase()
+      pushAppliedFromForm()
+      selectedOrder.value = null
+      selectedOrderDetail.value = null
+      void loadAll()
+      nextTick(() => rebuildCharts())
     }
   )
 
@@ -775,10 +985,7 @@
     const c = echarts.init(hourRef.value)
     chartInstances.push(c)
     const hours = Array.from({ length: 24 }, (_, i) => `${i}-${i + 1}h`)
-    const data = [
-      200, 180, 120, 100, 80, 90, 200, 400, 600, 1200, 1800, 2200, 3000, 4000, 5000, 6000, 7200,
-      8400, 9000, 10200, 11000, 12840, 9000, 5000
-    ]
+    const data = hourAmounts.value.length ? hourAmounts.value : Array.from({ length: 24 }, () => 0)
     c.setOption({
       backgroundColor: 'transparent',
       grid: { top: 10, right: 10, bottom: 40, left: 44 },
@@ -816,7 +1023,7 @@
             data: [
               { xAxis: '13-14h', lineStyle: { color: '#ef444488', width: 1, type: 'dashed' } }
             ],
-            label: { formatter: '13-15h\n$12,840', color: '#ef4444', fontSize: 9 },
+            label: { formatter: '峰值时段', color: '#ef4444', fontSize: 9 },
             symbol: ['none', 'none']
           }
         }
@@ -828,10 +1035,18 @@
     if (!typeRef.value) return
     const c = echarts.init(typeRef.value)
     chartInstances.push(c)
+    const share = summary.value?.productTypeShare ?? []
+    const get = (name: string) => share.find((x) => x.name === name)?.percent ?? 0
+    const pOther = get('Other')
+    const pCoins = get('Coins')
+    const pLife = get('Lifetime')
+    const pMon = get('Monthly')
+    const pAnn = get('Annual')
+    const maxX = Math.min(80, Math.max(12, pAnn + 8))
     c.setOption({
       backgroundColor: 'transparent',
       grid: { top: 10, right: 10, bottom: 10, left: 60, containLabel: false },
-      xAxis: { show: false, max: 52 },
+      xAxis: { show: false, max: maxX },
       yAxis: {
         type: 'category',
         data: ['Other', 'Coins', 'Lifetime', 'Monthly', 'Annual'],
@@ -844,16 +1059,17 @@
           type: 'bar',
           barWidth: 12,
           data: [
-            { value: 4, itemStyle: { color: '#475569', borderRadius: [0, 3, 3, 0] } },
-            { value: 8, itemStyle: { color: '#f59e0b', borderRadius: [0, 3, 3, 0] } },
-            { value: 18, itemStyle: { color: '#8b5cf6', borderRadius: [0, 3, 3, 0] } },
-            { value: 28, itemStyle: { color: '#3b82f6', borderRadius: [0, 3, 3, 0] } },
-            { value: 42, itemStyle: { color: '#22d3ee', borderRadius: [0, 3, 3, 0] } }
+            { value: pOther, itemStyle: { color: '#475569', borderRadius: [0, 3, 3, 0] } },
+            { value: pCoins, itemStyle: { color: '#f59e0b', borderRadius: [0, 3, 3, 0] } },
+            { value: pLife, itemStyle: { color: '#8b5cf6', borderRadius: [0, 3, 3, 0] } },
+            { value: pMon, itemStyle: { color: '#3b82f6', borderRadius: [0, 3, 3, 0] } },
+            { value: pAnn, itemStyle: { color: '#22d3ee', borderRadius: [0, 3, 3, 0] } }
           ],
           label: {
             show: true,
             position: 'right',
-            formatter: (p: { dataIndex: number }) => ['4%', '8%', '18%', '28%', '42%'][p.dataIndex],
+            formatter: (p: { dataIndex: number }) =>
+              [`${pOther}%`, `${pCoins}%`, `${pLife}%`, `${pMon}%`, `${pAnn}%`][p.dataIndex],
             color: '#e2e8f5',
             fontSize: 11
           }
@@ -861,10 +1077,44 @@
       ]
     })
   }
+
+  async function loadAll() {
+    loadError.value = ''
+    chartInstances.forEach((c) => c.dispose())
+    chartInstances.length = 0
+    loading.value = true
+    try {
+      const [s, list] = await Promise.all([
+        fetchPaidAnalysisTabOrderSummary(buildSummaryBody()),
+        fetchPaidAnalysisOrderList(buildListParams())
+      ])
+      summary.value = s
+      orderList.value = list
+      loading.value = false
+      await nextTick()
+      rebuildCharts()
+    } catch (e) {
+      loadError.value = e instanceof Error ? e.message : String(e)
+    } finally {
+      if (loading.value) loading.value = false
+    }
+  }
+
+  async function loadOrderDetail(orderId: string) {
+    selectedOrderDetail.value = null
+    selectedOrderDetailLoading.value = true
+    try {
+      const res = await fetchPaidAnalysisOrderDetail({ s_order_id: orderId })
+      selectedOrderDetail.value = res.detail
+    } finally {
+      selectedOrderDetailLoading.value = false
+    }
+  }
 </script>
 
 <style scoped lang="scss">
   @use '../ad-performance/styles/ap-card-fx.scss' as *;
+  @use '../styles/filter-bar-theme.scss' as filterTheme;
 
   .order-tab {
     display: flex;
@@ -872,10 +1122,40 @@
     gap: 12px;
   }
 
+  .iap-tab-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .iap-tab-skeleton__kpis {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+
+  .iap-tab-skeleton__kpi {
+    padding: 16px 18px;
+  }
+
+  .iap-tab-skeleton__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .iap-tab-skeleton__grid--bottom {
+    grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+  }
+
+  .iap-tab-skeleton :deep(.el-skeleton) {
+    padding: 16px 18px;
+  }
+
   /* KPI */
   .kpi-row {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(min(6, max(1, var(--kpi-count, 1))), minmax(0, 1fr));
     gap: 12px;
   }
 
@@ -889,15 +1169,13 @@
     overflow: hidden;
     border-left: 3px solid var(--accent);
     border-radius: 14px;
-    transition:
-      transform 0.32s var(--ease-out),
-      box-shadow 0.36s var(--ease-out);
+    transition: box-shadow 0.36s var(--ease-out);
 
     &:hover {
       box-shadow:
         0 16px 48px rgb(0 0 0 / 45%),
-        0 0 40px color-mix(in srgb, var(--accent) 15%, transparent);
-      transform: translateY(-4px);
+        0 0 40px color-mix(in srgb, var(--accent) 15%, transparent),
+        0 0 72px color-mix(in srgb, var(--accent) 22%, transparent);
     }
   }
 
@@ -956,36 +1234,223 @@
       0 0 32px rgb(59 130 246 / 8%);
   }
 
-  .filter-item {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-    font-size: 12px;
-  }
-
-  .fl {
-    color: #6b7a99;
-  }
-
-  .fv {
-    font-weight: 500;
-    color: #e2e8f5;
-  }
-
   .fi-sel {
+    flex: 0 0 auto;
     width: 120px;
   }
 
+  .fi-app-select {
+    flex: 0 0 auto;
+    width: 220px;
+    min-width: 200px;
+    max-width: 240px;
+  }
+
+  @include filterTheme.app-platform-trigger('.fi-app-select');
+
   .fi-search {
-    width: 180px;
+    flex: 0 0 auto;
+    width: 200px;
+  }
+
+  :deep(.fi-range.el-date-editor),
+  :deep(.fi-range.el-date-editor--daterange) {
+    flex: 0 0 auto !important;
+    width: 272px !important;
+    min-width: 272px !important;
+    max-width: 272px !important;
+
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-input-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+
+    min-height: 36px;
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    border-radius: var(--el-border-radius-base, 4px) !important;
+    box-shadow: none !important;
+  }
+
+  :deep(.fi-range .el-input__wrapper),
+  :deep(.fi-range .el-range-editor.el-input__wrapper) {
+    padding: 0 12px;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  :deep(.fi-range:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
+  }
+
+  :deep(.fi-range.is-active),
+  :deep(.fi-range .el-input__wrapper.is-focus) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
+  }
+
+  :deep(.fi-range .el-range-input) {
+    font-size: 13px;
+    color: var(--el-text-color-primary);
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  :deep(.fi-range .el-range__icon),
+  :deep(.fi-range .el-range__close-icon) {
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+  }
+
+  :deep(.fi-sel) {
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
+  }
+
+  :deep(.fi-sel .el-select__wrapper),
+  :deep(.fi-sel .el-input__wrapper) {
+    min-height: 36px;
+    padding: 0 12px;
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    border-radius: var(--el-border-radius-base, 4px) !important;
+    box-shadow: none !important;
+  }
+
+  :deep(.fi-sel .el-select__wrapper:hover),
+  :deep(.fi-sel .el-input__wrapper:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
+  }
+
+  :deep(.fi-sel .el-select__wrapper.is-focused),
+  :deep(.fi-sel .el-input__wrapper.is-focus) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
+  }
+
+  :deep(.fi-sel .el-select__caret) {
+    color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+  }
+
+  :deep(.fi-sel .el-select__selected-item),
+  :deep(.fi-sel .el-select__placeholder) {
+    font-size: 13px;
+  }
+
+  :deep(.fi-search) {
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
+  }
+
+  :deep(.fi-search .el-input__wrapper) {
+    min-height: 36px;
+    padding: 0 12px;
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    border-radius: var(--el-border-radius-base, 4px) !important;
+    box-shadow: none !important;
+  }
+
+  :deep(.fi-search .el-input__inner) {
+    font-size: 13px;
+    color: var(--el-text-color-primary);
+  }
+
+  :deep(.fi-search .el-input__wrapper:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
+  }
+
+  :deep(.fi-search .el-input__wrapper.is-focus) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
+  }
+
+  .filter-row-actions {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-left: auto;
+  }
+
+  .order-search-btn {
+    font-size: 12px;
+    color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    border-radius: var(--el-border-radius-base, 4px) !important;
+  }
+
+  .fi-search-icon {
+    font-size: 14px;
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+  }
+
+  .country-flag.fi {
+    display: inline-block;
+    width: 1.1em;
+    line-height: 1;
+    vertical-align: middle;
+    border-radius: 2px;
   }
 
   .export-btn-sm {
-    margin-left: auto;
     font-size: 12px;
-    color: #8892a8 !important;
-    background: transparent !important;
-    border: 1px solid #1e2a44 !important;
+    color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    border-radius: var(--el-border-radius-base, 4px) !important;
   }
 
   /* Main Layout */
@@ -1023,7 +1488,8 @@
       border-color: rgb(96 165 250 / 55%);
       box-shadow:
         0 18px 56px rgb(0 0 0 / 48%),
-        0 0 48px rgb(59 130 246 / 12%);
+        0 0 48px rgb(59 130 246 / 12%),
+        0 0 90px rgb(34 211 238 / 10%);
     }
   }
 
@@ -1331,14 +1797,35 @@
     gap: 8px;
     align-items: center;
     padding: 10px 16px;
-    background: #0d2a1a;
     border-bottom: 1px solid #1a2240;
+  }
+
+  .pay-status--ok {
+    background: #0d2a1a;
+  }
+
+  .pay-status--refund {
+    background: #3b1c00;
+  }
+
+  .pay-status--fail {
+    background: #3b1c1c;
   }
 
   .pay-ok-dot {
     font-size: 14px;
     font-weight: 700;
     color: #10b981;
+  }
+
+  .pay-status--refund .pay-ok-dot,
+  .pay-status--refund .pay-ok-text {
+    color: #fb923c;
+  }
+
+  .pay-status--fail .pay-ok-dot,
+  .pay-status--fail .pay-ok-text {
+    color: #f87171;
   }
 
   .pay-ok-text {
@@ -1402,6 +1889,13 @@
     word-break: break-all;
   }
 
+  .ds-v--country {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
   .detail-footer {
     display: flex;
     flex-shrink: 0;
@@ -1442,24 +1936,6 @@
   .slide-leave-to {
     opacity: 0;
     transform: translateX(20px);
-  }
-
-  /* ── Element Plus overrides ───────────────────── */
-  :deep(.fi-sel .el-input__wrapper),
-  :deep(.fi-search .el-input__wrapper) {
-    background: #1a2240 !important;
-    border: 1px solid #2a3450 !important;
-    box-shadow: none !important;
-  }
-
-  :deep(.fi-sel .el-input__inner),
-  :deep(.fi-search .el-input__inner) {
-    font-size: 12px;
-    color: #e2e8f5 !important;
-  }
-
-  :deep(.fi-sel .el-select__caret) {
-    color: #5a6a8a !important;
   }
 
   /* Scrollbar */
@@ -1525,15 +2001,37 @@
       min-width: 0;
     }
 
+    .fi-app-select,
+    .fi-range,
     .fi-sel,
     .fi-search {
       flex: 1 1 calc(50% - 6px);
-      width: auto;
+      width: auto !important;
+      min-width: 0 !important;
+      max-width: 100% !important;
     }
 
-    .export-btn-sm {
+    .fi-app-select {
+      max-width: 100% !important;
+    }
+
+    :deep(.fi-range.el-date-editor),
+    :deep(.fi-range.el-date-editor--daterange) {
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: 100% !important;
+    }
+
+    .filter-row-actions {
       width: 100%;
       margin-left: 0;
     }
+
+    .filter-row-actions .el-button {
+      flex: 1 1 auto;
+    }
   }
+
+  @include filterTheme.select-popper('iap-order-filter-popper');
+  @include filterTheme.app-platform-popper('iap-order-filter-popper');
 </style>

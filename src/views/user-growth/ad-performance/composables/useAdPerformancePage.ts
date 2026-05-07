@@ -22,10 +22,20 @@ import { getAppTodayYYYYMMDD } from '@/utils/app-now'
 const defaultFilter: AdPerformanceFilter = {
   startDate: getAppTodayYYYYMMDD(),
   endDate: getAppTodayYYYYMMDD(),
-  app: '',
+  appId: [],
   adPlatform: '',
   account: '',
   country: ''
+}
+
+function getFirstAppId(meta: AdPerformanceMetaFilterResponse | null): string {
+  const first = (meta?.appOptions ?? []).find((item) => String(item.value ?? '').trim() !== '')
+  return String(first?.value ?? '').trim()
+}
+
+function hasSelectedApp(appId: AdPerformanceFilter['appId']): boolean {
+  if (Array.isArray(appId)) return appId.length > 0
+  return !!String(appId ?? '').trim()
 }
 
 function emptyPage(): AdPerformanceMock {
@@ -62,7 +72,9 @@ function emptyPage(): AdPerformanceMock {
 export function useAdPerformancePage() {
   const meta = ref<AdPerformanceMetaFilterResponse | null>(null)
   const page = ref<AdPerformanceMock>(emptyPage())
-  /** 全页面加载（首次 bootstrap / 刷新 / 筛选条件变更） */
+  /** 筛选 options 加载（不会阻塞其他接口） */
+  const metaLoading = ref(false)
+  /** 概览区域加载（KPI/趋势/分布/预警） */
   const loading = ref(false)
   /** 仅表格区域加载（Tab 切换 / 翻页 / 关键词搜索） */
   const tableLoading = ref(false)
@@ -88,10 +100,17 @@ export function useAdPerformancePage() {
   }
 
   async function loadMeta() {
+    metaLoading.value = true
     try {
       meta.value = await fetchAdPerformanceMetaFilterOptions()
+      const firstAppId = getFirstAppId(meta.value)
+      if (!hasSelectedApp(page.value.filter.appId) && firstAppId) {
+        page.value.filter = { ...page.value.filter, appId: [firstAppId] }
+      }
     } catch {
       ElMessage.error('加载筛选选项失败')
+    } finally {
+      metaLoading.value = false
     }
   }
 
@@ -136,6 +155,13 @@ export function useAdPerformancePage() {
     }
   }
 
+  function runOverview() {
+    loading.value = true
+    return loadOverview().finally(() => {
+      loading.value = false
+    })
+  }
+
   async function loadTable() {
     const seq = ++tableLoadSeq
     const q = tableQuery()
@@ -161,30 +187,32 @@ export function useAdPerformancePage() {
     }
   }
 
-  async function bootstrap() {
-    loading.value = true
-    await loadMeta()
-    await Promise.all([loadOverview(), loadTable()])
-    loading.value = false
+  function runTable() {
+    tableLoading.value = true
+    return loadTable().finally(() => {
+      tableLoading.value = false
+    })
   }
 
-  onMounted(() => {
-    bootstrap()
+  onMounted(async () => {
+    // options 下拉单独加载；其余接口并发发起，互不阻塞
+    await loadMeta()
+    void runOverview()
+    void runTable()
   })
 
   async function onFilterSearch(filter: AdPerformanceFilter) {
     page.value.filter = { ...filter }
     page.value.pagination = { ...page.value.pagination, current: 1 }
-    loading.value = true
-    await Promise.all([loadOverview(), loadTable()])
-    loading.value = false
+    void runOverview()
+    void runTable()
   }
 
   async function refreshAll() {
-    loading.value = true
+    // 与 filterSearch 一致：除 options 外其余请求互不阻塞
     await loadMeta()
-    await Promise.all([loadOverview(), loadTable()])
-    loading.value = false
+    void runOverview()
+    void runTable()
   }
 
   function onTableTabChange(tab: AdPerformanceTableTab) {
@@ -193,23 +221,17 @@ export function useAdPerformancePage() {
 
   async function onTableKeywordSearch() {
     page.value.pagination = { ...page.value.pagination, current: 1 }
-    tableLoading.value = true
-    await loadTable()
-    tableLoading.value = false
+    await runTable()
   }
 
   async function onPageChange(p: number) {
     page.value.pagination = { ...page.value.pagination, current: p }
-    tableLoading.value = true
-    await loadTable()
-    tableLoading.value = false
+    await runTable()
   }
 
   async function onPageSizeChange(size: number) {
     page.value.pagination = { ...page.value.pagination, size, current: 1 }
-    tableLoading.value = true
-    await loadTable()
-    tableLoading.value = false
+    await runTable()
   }
 
   async function onExport() {
@@ -250,6 +272,7 @@ export function useAdPerformancePage() {
   return {
     meta,
     page,
+    metaLoading,
     loading,
     tableLoading,
     activeTableTab,

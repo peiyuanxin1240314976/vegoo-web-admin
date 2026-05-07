@@ -227,8 +227,7 @@
     transition:
       background-color 0.22s var(--ease-out),
       border-color 0.22s var(--ease-default),
-      box-shadow 0.26s var(--ease-out),
-      transform 0.22s var(--ease-out);
+      box-shadow 0.26s var(--ease-out);
 
     &:not(:last-child) {
       border-bottom-color: rgb(63 63 70 / 35%);
@@ -244,7 +243,6 @@
       box-shadow:
         0 4px 20px rgb(0 0 0 / 20%),
         0 0 0 1px rgb(239 68 68 / 10%);
-      transform: translateX(4px);
     }
   }
 

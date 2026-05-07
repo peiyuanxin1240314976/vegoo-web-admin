@@ -1,9 +1,6 @@
-/**
- * 权限管理页 - 假数据（左侧角色列表、中间列权限模块、右侧用户列表、权限摘要）
- * 后续接入真实接口后可移除此文件或改为接口数据
- */
+import { routeModules } from '@/router/modules'
+import type { AppRouteRecord } from '@/types/router'
 
-/** 角色列表项（与 Api.SystemManage.RoleListItem 结构一致，用于接口无数据时兜底） */
 export interface MockRoleListItem {
   roleId: number
   roleName: string
@@ -13,149 +10,35 @@ export interface MockRoleListItem {
   createTime: string
 }
 
-/** 左侧 - 角色列表假数据（接口无数据或失败时使用，保证中间/右侧列能展示） */
-export const MOCK_ROLE_LIST: MockRoleListItem[] = [
-  {
-    roleId: 1,
-    roleName: '超级管理员',
-    roleCode: 'super_admin',
-    description: '系统最高权限',
-    enabled: true,
-    createTime: '2025-01-01 00:00:00'
-  },
-  {
-    roleId: 2,
-    roleName: 'CEO管理',
-    roleCode: 'ceo',
-    description: '经营决策时图',
-    enabled: true,
-    createTime: '2025-01-01 00:00:00'
-  },
-  {
-    roleId: 3,
-    roleName: '投放人员',
-    roleCode: 'delivery',
-    description: '投放操作与分析',
-    enabled: true,
-    createTime: '2025-01-01 00:00:00'
-  },
-  {
-    roleId: 4,
-    roleName: '变现人员',
-    roleCode: 'revenue',
-    description: '变现数据分析与配置',
-    enabled: true,
-    createTime: '2025-01-01 00:00:00'
-  },
-  {
-    roleId: 5,
-    roleName: '素材设计师',
-    roleCode: 'material',
-    description: '素材上传于管理',
-    enabled: true,
-    createTime: '2025-01-01 00:00:00'
-  },
-  {
-    roleId: 6,
-    roleName: '运营维护',
-    roleCode: 'ops',
-    description: '系统配置与维护',
-    enabled: true,
-    createTime: '2025-01-01 00:00:00'
-  }
-]
+/**
+ * Backward-compatible export for stale HMR modules that still import the old
+ * permission module constant. The role page has moved to route/date permission
+ * contracts, so this stays as an empty placeholder.
+ */
+export const MOCK_PERMISSION_MODULES: unknown[] = []
 
-/** 功能权限模块项 */
-export interface MockPermissionItem {
-  key: string
-  name: string
-  view: string
-  operation: string
-  dataScope: string
+export interface RolePermissionTreeNode {
+  routeName: string
+  title: string
+  path: string
+  children?: RolePermissionTreeNode[]
 }
 
-/** 功能权限模块 */
-export interface MockPermissionModule {
-  key: string
-  name: string
-  enabled: boolean
-  viewCount: number
-  opCount: number
-  dataScopeText: string
-  permissions: MockPermissionItem[]
+export interface RoleDateScopeConfig {
+  maxHistoryDays: number
+  defaultRangeDays: number
+  allowCustomRange: boolean
 }
 
-/** 中间列 - 权限配置假数据 */
-export const MOCK_PERMISSION_MODULES: MockPermissionModule[] = [
-  {
-    key: 'cockpit',
-    name: '经营驾驶舱',
-    enabled: true,
-    viewCount: 5,
-    opCount: 2,
-    dataScopeText: '全部应用',
-    permissions: [
-      { key: '1', name: '查看核心KPI指标', view: '查看', operation: '—', dataScope: '全部应用' },
-      { key: '2', name: '导出报表', view: '查看', operation: '操作', dataScope: '仅自己负责的' },
-      { key: '3', name: '删除报表', view: '×禁止', operation: '×禁止', dataScope: '×禁止' }
-    ]
-  },
-  {
-    key: 'delivery',
-    name: '投放管理',
-    enabled: true,
-    viewCount: 6,
-    opCount: 3,
-    dataScopeText: '全部',
-    permissions: [
-      { key: '1', name: '查看广告系列列表', view: '查看', operation: '—', dataScope: '全部' },
-      { key: '2', name: '创建广告系列', view: '—', operation: '操作', dataScope: '仅自己创建的' },
-      { key: '3', name: '删除广告', view: '—', operation: '×禁止', dataScope: '仅自己负责的' }
-    ]
-  },
-  {
-    key: 'revenue',
-    name: '变现管理',
-    enabled: false,
-    viewCount: 5,
-    opCount: 0,
-    dataScopeText: '只读',
-    permissions: []
-  },
-  {
-    key: 'material',
-    name: '素材管理',
-    enabled: true,
-    viewCount: 4,
-    opCount: 2,
-    dataScopeText: '全部素材',
-    permissions: [
-      { key: '1', name: '查看素材库', view: '查看', operation: '—', dataScope: '全部素材' },
-      { key: '2', name: '上传素材', view: '—', operation: '操作', dataScope: '仅自己上传的' },
-      { key: '3', name: '删除素材', view: '—', operation: '操作', dataScope: '仅自己上传的' }
-    ]
-  },
-  {
-    key: 'analytics',
-    name: '数据分析',
-    enabled: false,
-    viewCount: 3,
-    opCount: 1,
-    dataScopeText: '—',
-    permissions: [{ key: '1', name: '查看报表', view: '查看', operation: '—', dataScope: '—' }]
-  },
-  {
-    key: 'system',
-    name: '系统管理',
-    enabled: false,
-    viewCount: 0,
-    opCount: 0,
-    dataScopeText: '全部禁止',
-    permissions: []
-  }
-]
+export interface RolePageDateScope extends RoleDateScopeConfig {
+  pageKey: string
+}
 
-/** 右侧 - 角色用户项假数据 */
+export interface RoleDatePageOption {
+  pageKey: string
+  pageName: string
+}
+
 export interface MockRoleUserItem {
   id: string | number
   userName: string
@@ -167,335 +50,366 @@ export interface MockRoleUserItem {
   isLast?: boolean
 }
 
-/** 按角色 ID 的用户列表假数据（未传 roleId 时用默认列表） */
-const MOCK_USERS_BY_ROLE: Record<number, MockRoleUserItem[]> = {
+export interface MockPermissionSummary {
+  routeGrantedCount: number
+  routeTotalCount: number
+  defaultDateScopeText: string
+  overridePageCount: number
+  allowCustomRange: boolean
+  lastUpdatedAt: string
+  lastUpdatedBy: string
+  highlightedRoutes: string[]
+}
+
+export const MOCK_ROLE_LIST: MockRoleListItem[] = [
+  {
+    roleId: 1,
+    roleName: '超级管理员',
+    roleCode: 'SuperAdmin',
+    description: '拥有全部页面访问与全部日期范围权限',
+    enabled: true,
+    createTime: '2026-01-01 09:00:00'
+  },
+  {
+    roleId: 2,
+    roleName: '管理层',
+    roleCode: 'Manager',
+    description: '查看核心经营页面，日期范围较宽',
+    enabled: true,
+    createTime: '2026-01-02 09:00:00'
+  },
+  {
+    roleId: 3,
+    roleName: '投放经理',
+    roleCode: 'DeliveryManager',
+    description: '重点查看投放与增长分析页面',
+    enabled: true,
+    createTime: '2026-01-03 09:00:00'
+  },
+  {
+    roleId: 4,
+    roleName: '分析师',
+    roleCode: 'Analyst',
+    description: '查看多业务分析页面，但日期范围更收敛',
+    enabled: true,
+    createTime: '2026-01-04 09:00:00'
+  },
+  {
+    roleId: 5,
+    roleName: '运营',
+    roleCode: 'Operator',
+    description: '保留必要运营页面与较短的数据窗口',
+    enabled: true,
+    createTime: '2026-01-05 09:00:00'
+  }
+]
+
+const ROLE_USERS_BY_ID: Record<number, MockRoleUserItem[]> = {
   1: [
     {
       id: '1',
-      userName: '管理员',
+      userName: 'admin',
       userEmail: 'admin@vegoo.com',
-      avatarText: 'GL',
+      avatarText: 'AD',
       statusText: '活跃',
       statusClass: 'status-dot--active',
-      lastActive: '2026-03-08',
-      isLast: true
+      lastActive: '2026-04-16'
     }
   ],
   2: [
     {
       id: '2',
-      userName: '赵总',
-      userEmail: 'zhao@vegoo.com',
-      avatarText: 'ZZ',
+      userName: 'ceo',
+      userEmail: 'ceo@vegoo.com',
+      avatarText: 'CE',
       statusText: '活跃',
       statusClass: 'status-dot--active',
-      lastActive: '2026-03-07'
+      lastActive: '2026-04-16'
     },
     {
       id: '3',
-      userName: '钱经理',
-      userEmail: 'qian@vegoo.com',
-      avatarText: 'QJ',
-      statusText: '活跃',
-      statusClass: 'status-dot--active',
-      lastActive: '2026-03-06'
-    },
-    {
-      id: '4',
-      userName: '孙助理',
-      userEmail: 'sun@vegoo.com',
-      avatarText: 'SZ',
+      userName: 'director',
+      userEmail: 'director@vegoo.com',
+      avatarText: 'DI',
       statusText: '离线',
       statusClass: 'status-dot--offline',
-      lastActive: '2026-03-05',
-      isLast: true
+      lastActive: '2026-04-14'
     }
   ],
   3: [
     {
-      id: '5',
-      userName: '张三',
+      id: '4',
+      userName: 'zhangsan',
       userEmail: 'zhangsan@vegoo.com',
       avatarText: 'ZS',
       statusText: '活跃',
       statusClass: 'status-dot--active',
-      lastActive: '2026-01-15'
+      lastActive: '2026-04-16'
     },
     {
-      id: '6',
-      userName: '李四',
+      id: '5',
+      userName: 'lisi',
       userEmail: 'lisi@vegoo.com',
       avatarText: 'LS',
       statusText: '活跃',
       statusClass: 'status-dot--active',
-      lastActive: '2026-01-10'
+      lastActive: '2026-04-15'
     },
     {
-      id: '7',
-      userName: '王五',
+      id: '6',
+      userName: 'wangwu',
       userEmail: 'wangwu@vegoo.com',
       avatarText: 'WW',
       statusText: '离线',
       statusClass: 'status-dot--offline',
-      lastActive: '2026-01-08',
-      isLast: true
+      lastActive: '2026-04-13'
     }
   ],
   4: [
     {
-      id: '8',
-      userName: '周六',
-      userEmail: 'zhouliu@vegoo.com',
-      avatarText: 'ZL',
+      id: '7',
+      userName: 'analyst.a',
+      userEmail: 'analyst.a@vegoo.com',
+      avatarText: 'AA',
       statusText: '活跃',
       statusClass: 'status-dot--active',
-      lastActive: '2026-02-20'
+      lastActive: '2026-04-16'
     },
     {
-      id: '9',
-      userName: '吴七',
-      userEmail: 'wuqi@vegoo.com',
-      avatarText: 'WQ',
-      statusText: '活跃',
-      statusClass: 'status-dot--active',
-      lastActive: '2026-02-18',
-      isLast: true
+      id: '8',
+      userName: 'analyst.b',
+      userEmail: 'analyst.b@vegoo.com',
+      avatarText: 'AB',
+      statusText: '离线',
+      statusClass: 'status-dot--offline',
+      lastActive: '2026-04-12'
     }
   ],
   5: [
     {
-      id: '10',
-      userName: '郑八',
-      userEmail: 'zhenba@vegoo.com',
-      avatarText: 'ZB',
+      id: '9',
+      userName: 'operator.a',
+      userEmail: 'operator.a@vegoo.com',
+      avatarText: 'OA',
       statusText: '活跃',
       statusClass: 'status-dot--active',
-      lastActive: '2026-02-15'
+      lastActive: '2026-04-16'
     },
     {
-      id: '11',
-      userName: '王九',
-      userEmail: 'wangjiu@vegoo.com',
-      avatarText: 'WJ',
-      statusText: '离线',
-      statusClass: 'status-dot--offline',
-      lastActive: '2026-02-10',
-      isLast: true
+      id: '10',
+      userName: 'operator.b',
+      userEmail: 'operator.b@vegoo.com',
+      avatarText: 'OB',
+      statusText: '活跃',
+      statusClass: 'status-dot--active',
+      lastActive: '2026-04-15'
+    }
+  ]
+}
+
+const ROLE_ROUTE_PRESETS: Record<number, string[]> = {
+  1: ['__ALL__'],
+  2: [
+    'Cockpit',
+    'UserGrowth',
+    'AccountPerformance',
+    'AdPlatformAnalysis',
+    'MyAds',
+    'MyPerformance',
+    'PerformanceAnalysis',
+    'ComprehensiveAnalysis',
+    'BusinessInsight',
+    'AgencyAnalysis',
+    'ProfitAnalysis',
+    'ConfigManagement',
+    'ApplicationManagement',
+    'AppAssignment'
+  ],
+  3: [
+    'UserGrowth',
+    'AccountPerformance',
+    'AdPlatformAnalysis',
+    'MyAds',
+    'MyPerformance',
+    'AdPerformance',
+    'PerformanceAnalysis',
+    'ComprehensiveAnalysis',
+    'BusinessInsight',
+    'AgencyAnalysis'
+  ],
+  4: [
+    'Cockpit',
+    'UserGrowth',
+    'AccountPerformance',
+    'PerformanceAnalysis',
+    'ComprehensiveAnalysis',
+    'PlatformAnalysisDetail',
+    'BusinessInsight',
+    'ProfitAnalysis',
+    'IAPAnalysis'
+  ],
+  5: [
+    'UserGrowth',
+    'MyAds',
+    'ConversionManagement',
+    'ProductOperations',
+    'ReviewsRatingsMonitor',
+    'OrderRefundAnalysis'
+  ]
+}
+
+const ROLE_DEFAULT_DATE_SCOPE: Record<number, RoleDateScopeConfig> = {
+  1: { maxHistoryDays: -1, defaultRangeDays: 30, allowCustomRange: true },
+  2: { maxHistoryDays: 365, defaultRangeDays: 30, allowCustomRange: true },
+  3: { maxHistoryDays: 90, defaultRangeDays: 7, allowCustomRange: true },
+  4: { maxHistoryDays: 30, defaultRangeDays: 7, allowCustomRange: true },
+  5: { maxHistoryDays: 7, defaultRangeDays: 3, allowCustomRange: false }
+}
+
+const ROLE_PAGE_DATE_SCOPE: Record<number, RolePageDateScope[]> = {
+  1: [{ pageKey: 'AdMobDetail', maxHistoryDays: 7, defaultRangeDays: 1, allowCustomRange: true }],
+  2: [
+    { pageKey: 'AdMobDetail', maxHistoryDays: 7, defaultRangeDays: 1, allowCustomRange: false },
+    {
+      pageKey: 'PerformanceAnalysis',
+      maxHistoryDays: 180,
+      defaultRangeDays: 30,
+      allowCustomRange: true
     }
   ],
-  6: [
+  3: [
+    { pageKey: 'AdMobDetail', maxHistoryDays: 3, defaultRangeDays: 1, allowCustomRange: false },
+    { pageKey: 'MyAds', maxHistoryDays: 60, defaultRangeDays: 7, allowCustomRange: true }
+  ],
+  4: [
     {
-      id: '12',
-      userName: '冯十',
-      userEmail: 'fengshi@vegoo.com',
-      avatarText: 'FS',
-      statusText: '活跃',
-      statusClass: 'status-dot--active',
-      lastActive: '2026-03-01'
-    },
+      pageKey: 'ComprehensiveAnalysis',
+      maxHistoryDays: 30,
+      defaultRangeDays: 7,
+      allowCustomRange: true
+    }
+  ],
+  5: [
+    { pageKey: 'MyAds', maxHistoryDays: 7, defaultRangeDays: 3, allowCustomRange: false },
     {
-      id: '13',
-      userName: '陈十一',
-      userEmail: 'chen11@vegoo.com',
-      avatarText: 'CS',
-      statusText: '活跃',
-      statusClass: 'status-dot--active',
-      lastActive: '2026-02-28',
-      isLast: true
+      pageKey: 'ConversionManagement',
+      maxHistoryDays: 15,
+      defaultRangeDays: 7,
+      allowCustomRange: false
     }
   ]
 }
 
-const DEFAULT_MOCK_USERS: MockRoleUserItem[] = [
-  {
-    id: '1',
-    userName: '张三',
-    userEmail: 'zhangsan@vegoo.com',
-    avatarText: 'ZS',
-    statusText: '活跃',
-    statusClass: 'status-dot--active',
-    lastActive: '2026-01-15'
-  },
-  {
-    id: '2',
-    userName: '李四',
-    userEmail: 'lisi@vegoo.com',
-    avatarText: 'LS',
-    statusText: '活跃',
-    statusClass: 'status-dot--active',
-    lastActive: '2026-01-10'
-  },
-  {
-    id: '3',
-    userName: '王五',
-    userEmail: 'wangwu@vegoo.com',
-    avatarText: 'WW',
-    statusText: '离线',
-    statusClass: 'status-dot--offline',
-    lastActive: '2026-01-08',
-    isLast: true
-  }
-]
+function buildRouteNodeTitle(route: AppRouteRecord): string {
+  return String(route.meta?.title || route.name || route.path)
+}
+
+function buildRouteNodes(routes: AppRouteRecord[]): RolePermissionTreeNode[] {
+  return routes
+    .filter((route) => !route.meta?.isHide)
+    .map((route) => {
+      const children = route.children?.length ? buildRouteNodes(route.children) : undefined
+      return {
+        routeName: String(route.name || route.path),
+        title: buildRouteNodeTitle(route),
+        path: String(route.path || ''),
+        children: children?.length ? children : undefined
+      }
+    })
+    .filter((route) => route.routeName && route.path)
+}
+
+function flattenRouteNames(nodes: RolePermissionTreeNode[]): string[] {
+  return nodes.flatMap((node) => [
+    node.routeName,
+    ...(node.children ? flattenRouteNames(node.children) : [])
+  ])
+}
+
+const ALL_ROUTE_TREE = buildRouteNodes(routeModules)
+const ALL_ROUTE_NAMES = flattenRouteNames(ALL_ROUTE_TREE)
 
 export function getMockRoleUsers(roleId: number | undefined): MockRoleUserItem[] {
-  if (roleId !== undefined && MOCK_USERS_BY_ROLE[roleId]) {
-    return MOCK_USERS_BY_ROLE[roleId]
+  if (!roleId) return []
+  return ROLE_USERS_BY_ID[roleId] ?? []
+}
+
+export function getMockRoleDescription(roleName: string | undefined): string {
+  const matched = MOCK_ROLE_LIST.find((item) => item.roleName === roleName)
+  return matched?.description ?? '当前角色用于控制页面访问与日期权限。'
+}
+
+export function getMockRoleRouteTree(): RolePermissionTreeNode[] {
+  return ALL_ROUTE_TREE
+}
+
+export function getMockCheckedRouteNames(roleId: number | undefined): string[] {
+  if (!roleId) return []
+  const preset = ROLE_ROUTE_PRESETS[roleId] ?? []
+  if (preset.includes('__ALL__')) {
+    return ALL_ROUTE_NAMES
   }
-  return DEFAULT_MOCK_USERS
+  return preset.filter((item) => ALL_ROUTE_NAMES.includes(item))
 }
 
-/** 权限摘要项 */
-export interface MockPermissionSummaryRole {
-  roleId: number
-  roleName: string
-  percent: number
-  isCurrent?: boolean
+export function getMockDatePageOptions(): RoleDatePageOption[] {
+  return ALL_ROUTE_NAMES.map((routeName) => findRouteNodeByName(ALL_ROUTE_TREE, routeName))
+    .filter((item): item is RolePermissionTreeNode => Boolean(item))
+    .filter((item) => !item.children?.length)
+    .map((item) => ({
+      pageKey: item.routeName,
+      pageName: item.title
+    }))
 }
 
-export interface MockPermissionSummary {
-  funcEnabled: number
-  funcTotal: number
-  dataScope: string
-  percent: number
-  rolePercentList: MockPermissionSummaryRole[]
-}
-
-/** 按角色 ID 的权限摘要假数据 */
-const MOCK_SUMMARY_BY_ROLE: Record<
-  number,
-  Omit<MockPermissionSummary, 'rolePercentList'> & {
-    rolePercentList: (currentRoleId: number) => MockPermissionSummaryRole[]
+function findRouteNodeByName(
+  nodes: RolePermissionTreeNode[],
+  routeName: string
+): RolePermissionTreeNode | undefined {
+  for (const node of nodes) {
+    if (node.routeName === routeName) return node
+    if (node.children?.length) {
+      const matched = findRouteNodeByName(node.children, routeName)
+      if (matched) return matched
+    }
   }
-> = {
-  1: {
-    funcEnabled: 58,
-    funcTotal: 58,
-    dataScope: '全部',
-    percent: 100,
-    rolePercentList: (currentRoleId) => [
-      { roleId: 1, roleName: '超级管理员', percent: 100, isCurrent: currentRoleId === 1 },
-      { roleId: 2, roleName: 'CEO管理', percent: 85 },
-      { roleId: 3, roleName: '投放人员', percent: 55 },
-      { roleId: 4, roleName: '变现人员', percent: 40 },
-      { roleId: 5, roleName: '素材设计师', percent: 35 },
-      { roleId: 6, roleName: '运营维护', percent: 30 }
-    ]
-  },
-  2: {
-    funcEnabled: 49,
-    funcTotal: 58,
-    dataScope: '较宽范围',
-    percent: 85,
-    rolePercentList: (currentRoleId) => [
-      { roleId: 1, roleName: '超级管理员', percent: 100 },
-      { roleId: 2, roleName: 'CEO管理', percent: 85, isCurrent: currentRoleId === 2 },
-      { roleId: 3, roleName: '投放人员', percent: 55 },
-      { roleId: 4, roleName: '变现人员', percent: 40 },
-      { roleId: 5, roleName: '素材设计师', percent: 35 },
-      { roleId: 6, roleName: '运营维护', percent: 30 }
-    ]
-  },
-  3: {
-    funcEnabled: 32,
-    funcTotal: 58,
-    dataScope: '中等范围',
-    percent: 55,
-    rolePercentList: (currentRoleId) => [
-      { roleId: 1, roleName: '超级管理员', percent: 100 },
-      { roleId: 2, roleName: 'CEO管理', percent: 85 },
-      { roleId: 3, roleName: '投放人员', percent: 55, isCurrent: currentRoleId === 3 },
-      { roleId: 4, roleName: '变现人员', percent: 40 },
-      { roleId: 5, roleName: '素材设计师', percent: 35 },
-      { roleId: 6, roleName: '运营维护', percent: 30 }
-    ]
-  },
-  4: {
-    funcEnabled: 23,
-    funcTotal: 58,
-    dataScope: '中等范围',
-    percent: 40,
-    rolePercentList: (currentRoleId) => [
-      { roleId: 1, roleName: '超级管理员', percent: 100 },
-      { roleId: 2, roleName: 'CEO管理', percent: 85 },
-      { roleId: 3, roleName: '投放人员', percent: 55 },
-      { roleId: 4, roleName: '变现人员', percent: 40, isCurrent: currentRoleId === 4 },
-      { roleId: 5, roleName: '素材设计师', percent: 35 },
-      { roleId: 6, roleName: '运营维护', percent: 30 }
-    ]
-  },
-  5: {
-    funcEnabled: 20,
-    funcTotal: 58,
-    dataScope: '部分素材',
-    percent: 35,
-    rolePercentList: (currentRoleId) => [
-      { roleId: 1, roleName: '超级管理员', percent: 100 },
-      { roleId: 2, roleName: 'CEO管理', percent: 85 },
-      { roleId: 3, roleName: '投放人员', percent: 55 },
-      { roleId: 4, roleName: '变现人员', percent: 40 },
-      { roleId: 5, roleName: '素材设计师', percent: 35, isCurrent: currentRoleId === 5 },
-      { roleId: 6, roleName: '运营维护', percent: 30 }
-    ]
-  },
-  6: {
-    funcEnabled: 17,
-    funcTotal: 58,
-    dataScope: '受限',
-    percent: 30,
-    rolePercentList: (currentRoleId) => [
-      { roleId: 1, roleName: '超级管理员', percent: 100 },
-      { roleId: 2, roleName: 'CEO管理', percent: 85 },
-      { roleId: 3, roleName: '投放人员', percent: 55 },
-      { roleId: 4, roleName: '变现人员', percent: 40 },
-      { roleId: 5, roleName: '素材设计师', percent: 35 },
-      { roleId: 6, roleName: '运营维护', percent: 30, isCurrent: currentRoleId === 6 }
-    ]
-  }
+  return undefined
 }
 
-const DEFAULT_SUMMARY: MockPermissionSummary = {
-  funcEnabled: 32,
-  funcTotal: 58,
-  dataScope: '中等范围',
-  percent: 55,
-  rolePercentList: [
-    { roleId: 1, roleName: '超级管理员', percent: 100 },
-    { roleId: 2, roleName: 'CEO管理', percent: 85 },
-    { roleId: 3, roleName: '投放人员', percent: 55, isCurrent: true },
-    { roleId: 4, roleName: '变现人员', percent: 40 },
-    { roleId: 5, roleName: '素材设计师', percent: 35 },
-    { roleId: 6, roleName: '运营维护', percent: 30 }
-  ]
+export function getMockDefaultDateScope(roleId: number | undefined): RoleDateScopeConfig {
+  return (
+    (roleId ? ROLE_DEFAULT_DATE_SCOPE[roleId] : undefined) ?? {
+      maxHistoryDays: 30,
+      defaultRangeDays: 7,
+      allowCustomRange: true
+    }
+  )
+}
+
+export function getMockPageDateScopes(roleId: number | undefined): RolePageDateScope[] {
+  if (!roleId) return []
+  return ROLE_PAGE_DATE_SCOPE[roleId] ?? []
+}
+
+function formatDateScopeText(scope: RoleDateScopeConfig): string {
+  const dayText = scope.maxHistoryDays === -1 ? '不限天数' : `近${scope.maxHistoryDays}天`
+  const customText = scope.allowCustomRange ? '允许自定义' : '不允许自定义'
+  return `${dayText}，默认${scope.defaultRangeDays}天，${customText}`
 }
 
 export function getMockPermissionSummary(roleId: number | undefined): MockPermissionSummary {
-  if (roleId !== undefined && MOCK_SUMMARY_BY_ROLE[roleId]) {
-    const base = MOCK_SUMMARY_BY_ROLE[roleId]
-    return {
-      ...base,
-      rolePercentList: base.rolePercentList(roleId)
-    }
+  const grantedRoutes = getMockCheckedRouteNames(roleId)
+  const defaultScope = getMockDefaultDateScope(roleId)
+  const pageScopes = getMockPageDateScopes(roleId)
+
+  return {
+    routeGrantedCount: grantedRoutes.length,
+    routeTotalCount: ALL_ROUTE_NAMES.length,
+    defaultDateScopeText: formatDateScopeText(defaultScope),
+    overridePageCount: pageScopes.length,
+    allowCustomRange: defaultScope.allowCustomRange,
+    lastUpdatedAt: '2026-04-16 18:30:00',
+    lastUpdatedBy: 'admin',
+    highlightedRoutes: grantedRoutes.slice(0, 5)
   }
-  return DEFAULT_SUMMARY
-}
-
-/** 角色说明假数据（按角色名或编码匹配，未匹配时用默认） */
-const MOCK_ROLE_DESCRIPTIONS: Record<string, string> = {
-  超级管理员: '系统最高权限，可访问全部功能与数据。',
-  CEO管理: '经营决策相关权限，可查看全局报表与核心指标。',
-  投放人员:
-    '可查看所有投放数据，可创建和编辑自己负责的广告系列，可调整预算，但不能删除广告，不能访问变现配置和系统管理功能。',
-  变现人员: '可查看变现数据与配置，可调整变现策略，不可修改系统配置。',
-  素材设计师: '可上传与管理素材，可查看投放与素材使用情况。',
-  运营维护: '系统配置与维护权限，可管理基础设置与部分运维功能。'
-}
-
-const DEFAULT_ROLE_DESCRIPTION =
-  '可查看所有投放数据，可创建和编辑自己负责的广告系列，可调整预算，但不能删除广告，不能访问变现配置和系统管理功能。'
-
-export function getMockRoleDescription(roleName: string | undefined): string {
-  if (roleName && MOCK_ROLE_DESCRIPTIONS[roleName]) {
-    return MOCK_ROLE_DESCRIPTIONS[roleName]
-  }
-  return DEFAULT_ROLE_DESCRIPTION
 }

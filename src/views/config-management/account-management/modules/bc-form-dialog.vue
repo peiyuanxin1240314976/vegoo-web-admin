@@ -91,15 +91,7 @@
       <div class="form-item">
         <label class="form-label"><span class="req">*</span>开户主体</label>
         <div class="form-control">
-          <div class="radio-row">
-            <label v-for="o in ownerOptions" :key="o" class="radio-item">
-              <span
-                :class="['radio-dot', { 'radio-dot--checked': form.ownerType === o }]"
-                @click="form.ownerType = o"
-              />
-              <span class="radio-label" @click="form.ownerType = o">{{ o }}</span>
-            </label>
-          </div>
+          <el-input v-model="form.ownerType" placeholder="请输入开户主体" class="form-input" />
         </div>
       </div>
 
@@ -191,7 +183,7 @@
   import { ref, computed, watch, reactive } from 'vue'
   import type { FormInstance } from 'element-plus'
   import { PLATFORM_CONFIGS } from '../types'
-  import type { BcItem, BcFormModel, BcOwnerType } from '../types'
+  import type { BcItem, BcFormModel } from '../types'
 
   defineOptions({ name: 'BcFormDialog' })
 
@@ -215,7 +207,6 @@
   const bcPlatforms = PLATFORM_CONFIGS.filter((p) => ['Meta Ads', 'TikTok Ads'].includes(p.value))
 
   const statusOptions = ['健康', '可用', '不再使用', '封禁', '其他']
-  const ownerOptions: BcOwnerType[] = ['企业户', '个人户', '小额广告户']
   const managerOptions = ['张三', '李四', '王五', '赵六']
   const groupOptions = ['Google组', 'TikTok组', 'Agency-A组', 'Agency-B组']
 

@@ -18,7 +18,7 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
       type: 'paidRevenue',
       label: '付费收入',
       value: '$89,240',
-      detail: '未扣平台费用',
+      detail: '订阅收入及内购收入',
       compare: '昨日: $125,245 -2.6%↓',
       compareUp: false
     },
@@ -61,7 +61,7 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
   alertSummaryMetrics: [
     { label: 'DNU', value: '374,920', change: 8649, trend: 'down' },
     { label: '自然量', value: '50,372', change: 649, trend: 'up' },
-    { label: '买量应用', value: '23个' },
+    { label: '买量用户', value: '23个' },
     { label: '广告系列', value: '604个', change: 47, trend: 'down' },
     { label: '广告账户', value: '97个', change: 3, trend: 'up' }
   ],
@@ -82,6 +82,109 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
       suggestion: '需关注'
     }
   ],
+  todaySummaryCards: [
+    {
+      key: 'adRevenueSummary',
+      title: '广告收入汇总',
+      items: [
+        { label: '广告收入', valueText: '$25207', changeText: '$1770', trend: 'down' },
+        { label: '广告支出', valueText: '$23379', changeText: '$41799', trend: 'down' },
+        { label: '买量用户', valueText: '204920', changeText: '7', trend: 'down' },
+        { label: '广告账户', valueText: '129', changeText: '7', trend: 'down' },
+        { label: '广告系列', valueText: '916', changeText: '86', trend: 'down' }
+      ]
+    },
+    {
+      key: 'adSpendSummary',
+      title: '广告支出汇总',
+      items: [
+        { label: 'Google', valueText: '$13342', changeText: '$1216', trend: 'down' },
+        { label: 'Facebook', valueText: '$7185', changeText: '$293', trend: 'up' },
+        { label: 'Mintegral', valueText: '$1413', changeText: '$368', trend: 'down' },
+        { label: 'TikTok', valueText: '$1201', changeText: '$407', trend: 'down' },
+        { label: 'Kwai', valueText: '$164', changeText: '$44.1', trend: 'down' },
+        { label: 'NewsBreak', valueText: '$73.6', changeText: '$28.0', trend: 'down' }
+      ]
+    },
+    {
+      key: 'paidUsersSummary',
+      title: '买量用户汇总',
+      items: [
+        { label: 'Google', valueText: '89726', changeText: '22020', trend: 'down' },
+        { label: 'Facebook', valueText: '54706', changeText: '1686', trend: 'down' },
+        { label: 'Mintegral', valueText: '46133', changeText: '12032', trend: 'down' },
+        { label: 'TikTok', valueText: '13409', changeText: '5860', trend: 'down' },
+        { label: 'Kwai', valueText: '847', changeText: '179', trend: 'down' },
+        { label: 'NewsBreak', valueText: '99', changeText: '22', trend: 'down' }
+      ]
+    },
+    {
+      key: 'roiSummary',
+      title: 'ROI',
+      items: [
+        { label: 'Google', valueText: '53%' },
+        { label: 'Facebook', valueText: '82%' },
+        { label: 'Mintegral', valueText: '95%' },
+        { label: 'TikTok', valueText: '95%' },
+        { label: 'Kwai', valueText: '72%' },
+        { label: 'NewsBreak', valueText: '53%' }
+      ]
+    }
+  ],
+  yesterdaySummarySections: [
+    {
+      key: 'adSpendSummary',
+      title: '广告支出汇总',
+      items: [
+        { label: 'Google', valueText: '$17163', changeText: '$344', trend: 'up' },
+        { label: 'Facebook', valueText: '$9209', changeText: '$631', trend: 'down' },
+        { label: 'Mintegral', valueText: '$2107', changeText: '$158', trend: 'down' },
+        { label: 'TikTok', valueText: '$1946', changeText: '$261', trend: 'up' },
+        { label: 'Kwai', valueText: '$239', changeText: '$77.9', trend: 'down' },
+        { label: 'NewsBreak', valueText: '$102', changeText: '$20.1', trend: 'down' }
+      ]
+    },
+    {
+      key: 'proxySummary',
+      title: '代投汇总',
+      items: [
+        { label: '广告支出', valueText: '$132', changeText: '$20.8', trend: 'down' },
+        { label: 'Facebook', valueText: '$132', changeText: '$20.8', trend: 'down' }
+      ]
+    },
+    {
+      key: 'proxyDetail',
+      title: '代投明细',
+      items: [
+        { label: '—', valueText: '$114', changeText: '$22.1', trend: 'down' },
+        { label: 'GatherOne', valueText: '$17.6', changeText: '$1.35', trend: 'up' }
+      ]
+    },
+    {
+      key: 'app-phonetracker',
+      title: 'PhoneTracker',
+      items: [
+        { label: '总收入', valueText: '$6609', changeText: '$1105', trend: 'down' },
+        { label: '广告支出', valueText: '$5304', changeText: '$967', trend: 'down' },
+        { label: '预估利润', valueText: '$1276', changeText: '$155', trend: 'down' },
+        { label: '活跃用户', valueText: '128324', changeText: '1308', trend: 'down' },
+        { label: '新用户', valueText: '68367', changeText: '321', trend: 'down' },
+        { label: '广告系列', valueText: '187', changeText: '20', trend: 'up' }
+      ]
+    },
+    {
+      key: 'app-phonetracker2',
+      title: 'PhoneTracker2',
+      items: [
+        { label: '总收入', valueText: '$4288', changeText: '$802', trend: 'down' },
+        { label: '广告支出', valueText: '$3612', changeText: '$655', trend: 'down' },
+        { label: '预估利润', valueText: '$906', changeText: '$147', trend: 'down' },
+        { label: '活跃用户', valueText: '90412', changeText: '985', trend: 'down' },
+        { label: '新用户', valueText: '45210', changeText: '284', trend: 'down' },
+        { label: '广告系列', valueText: '143', changeText: '12', trend: 'up' }
+      ]
+    }
+  ],
   revenueCostTrend: {
     dates: ['10.15', '10.20', '10.25', '10.30', '11.05', '11.10', '11.15'],
     revenue: [620, 732, 601, 634, 590, 730, 620],
@@ -92,6 +195,7 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
       channel: 'Google Ads',
       spend: 7500,
       installs: 42500,
+      roi: 1.32,
       cpi: 1.2,
       trend: [3200, 3800, 4200, 5800, 6200, 6500, 6800]
     },
@@ -99,6 +203,7 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
       channel: 'Facebook',
       spend: 7500,
       installs: 18500,
+      roi: 1.18,
       cpi: 1.4,
       trend: [2200, 2400, 2600, 2500, 2700, 2600, 2800]
     },
@@ -106,13 +211,15 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
       channel: 'TikTok',
       spend: 7500,
       installs: 7500,
+      roi: 0.92,
       cpi: 0.82,
       trend: [900, 950, 1100, 1050, 1150, 1200, 1150]
     },
     {
-      channel: 'Mintefral',
+      channel: 'Mintegral',
       spend: 7500,
       installs: 4500,
+      roi: 1.05,
       cpi: 1.2,
       trend: [500, 580, 620, 650, 680, 720, 750]
     },
@@ -120,6 +227,7 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
       channel: 'Kwai',
       spend: 7500,
       installs: 3500,
+      roi: 0.88,
       cpi: 1.35,
       trend: [480, 460, 520, 500, 510, 530, 500]
     },
@@ -127,6 +235,7 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
       channel: 'NewsBreak',
       spend: 7500,
       installs: 2500,
+      roi: 1.11,
       cpi: 1.5,
       trend: [320, 350, 360, 340, 380, 370, 380]
     }
@@ -186,8 +295,8 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
       tagType: 'danger'
     },
     {
-      name: 'Mintefral',
-      platform: 'mintefral',
+      name: 'Mintegral',
+      platform: 'mintegral',
       current: 5500,
       budget: 10000,
       percent: 55,

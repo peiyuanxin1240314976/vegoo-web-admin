@@ -1,0 +1,202 @@
+{
+  "_comment": "付费分析 - 商品分析 Tab · 商品收入排行。契约文件：03-tab-product-ranking.json。types: PaidAnalysisProductTabRankingData。",
+  "fieldDescription": {
+    "request": {
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "起始日 YYYY-MM-DD（含）。"
+      },
+      "endDate": { "type": "string", "required": true, "description": "结束日 YYYY-MM-DD（含）。" },
+      "appId": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "应用 ID；与 meta appOptions.value 一致；空为全部。"
+      },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "终端平台。"
+      },
+      "s_country_code": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "国家。"
+      },
+      "n_source": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "广告平台。"
+      },
+      "productRankingMode": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "enum": ["", "revenue", "orders", "retention", "country"],
+        "description": "可选：服务端接管排序时传入；空则返回默认序，由前端子 Tab 本地重排。"
+      }
+    },
+    "response": {
+      "productRows": { "type": "array", "required": true, "description": "商品收入排行主表。" }
+    },
+    "PaidAnalysisProductRankingRow": {
+      "skuName": { "type": "string", "required": true, "description": "SKU 展示名。" },
+      "priceUsd": { "type": "number", "required": true, "description": "标价 USD。" },
+      "productKind": { "type": "string", "required": true, "description": "商品类型展示文案。" },
+      "productKindKey": {
+        "type": "string",
+        "required": true,
+        "enum": ["year_sub", "month_sub", "lifetime", "coin", "other"],
+        "description": "商品类型键，用于标签样式。"
+      },
+      "revenueUsd": { "type": "number", "required": true, "description": "收入 USD。" },
+      "sharePercent": { "type": "number", "required": true, "description": "占比 0–100。" },
+      "orderCount": { "type": "number", "required": true, "description": "订单数。" },
+      "arppuUsd": { "type": "number", "required": true, "description": "ARPPU USD。" },
+      "retentionPercent": {
+        "type": "number",
+        "required": false,
+        "description": "续订率 0–100；无则 null。"
+      },
+      "topCountries": { "type": "array", "required": true, "description": "Top 国家小写码。" },
+      "trendPoints": { "type": "array", "required": true, "description": "迷你趋势序列。" }
+    }
+  },
+  "sampleRequest": {
+    "startDate": "2026-04-01",
+    "endDate": "2026-04-03",
+    "appId": "",
+    "platform": "",
+    "s_country_code": "",
+    "n_source": "",
+    "productRankingMode": ""
+  },
+  "sampleResponse": {
+    "productRows": [
+      {
+        "skuName": "Weather Premium Annual",
+        "priceUsd": 89.99,
+        "productKind": "年度订阅",
+        "productKindKey": "year_sub",
+        "revenueUsd": 119480,
+        "sharePercent": 42.0,
+        "orderCount": 1328,
+        "arppuUsd": 89.99,
+        "retentionPercent": 78.4,
+        "topCountries": ["us", "kr", "de"],
+        "trendPoints": [3200, 3500, 3800, 4000, 3900, 4200, 4400]
+      },
+      {
+        "skuName": "Weather Premium Monthly",
+        "priceUsd": 9.99,
+        "productKind": "月度订阅",
+        "productKindKey": "month_sub",
+        "revenueUsd": 79680,
+        "sharePercent": 28.0,
+        "orderCount": 7976,
+        "arppuUsd": 9.99,
+        "retentionPercent": 58.2,
+        "topCountries": ["us", "jp", "tw"],
+        "trendPoints": [2600, 2400, 2700, 2900, 3100, 3000, 3200]
+      },
+      {
+        "skuName": "Weather Lifetime Unlock",
+        "priceUsd": 49.99,
+        "productKind": "终身购买",
+        "productKindKey": "lifetime",
+        "revenueUsd": 51190,
+        "sharePercent": 18.0,
+        "orderCount": 1024,
+        "arppuUsd": 49.99,
+        "retentionPercent": null,
+        "topCountries": ["us", "de", "gb"],
+        "trendPoints": [1600, 1800, 1700, 2000, 1900, 2100, 2000]
+      },
+      {
+        "skuName": "Coin Pack 1000",
+        "priceUsd": 9.99,
+        "productKind": "虚拟币",
+        "productKindKey": "coin",
+        "revenueUsd": 22756,
+        "sharePercent": 8.0,
+        "orderCount": 2278,
+        "arppuUsd": 9.99,
+        "retentionPercent": null,
+        "topCountries": ["us", "kr", "tw"],
+        "trendPoints": [800, 700, 900, 1000, 800, 900, 1000]
+      },
+      {
+        "skuName": "Coin Pack 500",
+        "priceUsd": 4.99,
+        "productKind": "虚拟币",
+        "productKindKey": "coin",
+        "revenueUsd": 8527,
+        "sharePercent": 3.0,
+        "orderCount": 1709,
+        "arppuUsd": 4.99,
+        "retentionPercent": null,
+        "topCountries": ["us", "kr", "jp"],
+        "trendPoints": [300, 400, 400, 500, 300, 400, 400]
+      },
+      {
+        "skuName": "Weather Pro Monthly",
+        "priceUsd": 6.99,
+        "productKind": "月度订阅",
+        "productKindKey": "month_sub",
+        "revenueUsd": 2887,
+        "sharePercent": 1.0,
+        "orderCount": 413,
+        "arppuUsd": 6.99,
+        "retentionPercent": 52.4,
+        "topCountries": ["us", "ca", "au"],
+        "trendPoints": [100, 100, 200, 100, 100, 100, 100]
+      },
+      {
+        "skuName": "Intro Bundle",
+        "priceUsd": 2.99,
+        "productKind": "组合包",
+        "productKindKey": "other",
+        "revenueUsd": 1200,
+        "sharePercent": 0.4,
+        "orderCount": 400,
+        "arppuUsd": 3.0,
+        "retentionPercent": 45.0,
+        "topCountries": ["us", "fr", "it"],
+        "trendPoints": [50, 55, 60, 58, 62, 61, 65]
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/user-growth/paid-analysis/tab-product/ranking",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "startDate, endDate, appId?, platform?, s_country_code?, n_source?, productRankingMode?",
+    "responseBody": "PaidAnalysisProductTabRankingData"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "商品分析 Tab 首屏 / 顶栏检索",
+        "detail": "与 overview、charts 并行；主表数据以此为准。",
+        "prerequisite": "登录态"
+      },
+      {
+        "moment": "「商品收入排行表」卡片内子 Tab 切换",
+        "detail": "类型 **A（前端本地）**：「收入 / 订单量 / 续订率 / 国家分布」不重拉接口，对 `productRows` 按维度降序排序并列强调；迷你图 nextTick 重建。类型 **B**：可传 `productRankingMode` 并重拉本接口。",
+        "prerequisite": "已有 ranking 数据或同意额外请求"
+      }
+    ],
+    "defaultSelection": "子 Tab 默认按收入；`productRankingMode` 默认 \"\"",
+    "dedupe": "续订率 null 行排序置末（前端约定）。"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "国家分布排序口径见本目录 03-tab-product-ranking 约定；若产品改主导国家 ARPU 等，应后端增列。",
+      "主表示例须覆盖 productKindKey 全枚举以利标签色。"
+    ]
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "_comment": "Ad account management - delete account.",
+  "fieldDescription": {
+    "request": {
+      "id": { "type": "number", "required": true, "description": "Target account ID." }
+    },
+    "response": {
+      "deleted": { "type": "boolean", "required": true, "description": "Delete result." },
+      "id": { "type": "number", "required": true, "description": "Deleted account ID." }
+    }
+  },
+  "sampleRequest": {
+    "id": 104
+  },
+  "sampleResponse": {
+    "deleted": true,
+    "id": 104
+  },
+  "api": {
+    "url": "POST /api/config-management/ad-account-management/account/delete",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "id",
+    "responseBody": "DeleteAdAccountResult"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "Return a clear business message if the account cannot be deleted because of external binding.",
+      "Frontend will usually refresh table and stats after delete."
+    ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "user action",
+        "detail": "Called after user clicks delete and confirms the dangerous action."
+      }
+    ],
+    "defaultSelection": "Use the current row id.",
+    "dedupe": "Prevent repeated delete submissions."
+  }
+}

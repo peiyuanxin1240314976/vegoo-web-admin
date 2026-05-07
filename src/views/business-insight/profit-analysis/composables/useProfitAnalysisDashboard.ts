@@ -1,21 +1,14 @@
 import { computed, reactive, ref } from 'vue'
 import type { ComputedRef, Reactive, Ref } from 'vue'
-/** ElDatePicker shortcuts（element-plus 未导出 ShortcutProps 时的本地形状） */
-interface ProfitDatePickerShortcut {
-  text: string
-  value: () => [Date, Date]
-}
 import type {
   ProfitAnalysisQueryParams,
-  ProfitAppTotal,
   ProfitCountryRow,
   ProfitFilterOptions,
   ProfitKpiCard,
-  ProfitMapDataItem,
-  ProfitMapScatterItem,
-  ProfitAppRow,
+  ProfitAppProfitTreeNode,
   ProfitSankeyLink,
   ProfitSankeyNode,
+  ProfitSelectOption,
   ProfitTrend30d
 } from '../types'
 import {
@@ -26,24 +19,26 @@ import {
   fetchProfitOverviewTrend30d,
   fetchProfitTableAppProfit
 } from '@/api/business-insight'
+import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
+
+/** 与页面 ElSelect 首项「全部」value="" 一致：列表内不再保留 value 为 all/空串 的占位项 */
+function stripAllSentinelOptions(list: ProfitSelectOption[] | undefined): ProfitSelectOption[] {
+  if (!Array.isArray(list)) return []
+  return list.filter((o) => {
+    const v = String(o.value ?? '')
+      .trim()
+      .toLowerCase()
+    return v !== '' && v !== 'all'
+  })
+}
 
 const DEFAULT_FILTER_OPTIONS: ProfitFilterOptions = {
-  appOptions: [{ label: '全部', value: 'all' }],
-  countryOptions: [{ label: '全部', value: 'all' }],
+  appOptions: [],
+  countryOptions: [],
   platformOptions: [
-    { label: '全部', value: 'all' },
     { label: 'Android', value: 'android' },
     { label: 'iOS', value: 'ios' }
   ]
-}
-
-const EMPTY_TOTAL: ProfitAppTotal = {
-  adRev: '—',
-  paidRev: '—',
-  total: '—',
-  adSpend: '—',
-  profit: '—',
-  rate: '—'
 }
 
 const EMPTY_TREND: ProfitTrend30d = {
@@ -53,16 +48,39 @@ const EMPTY_TREND: ProfitTrend30d = {
   profit: []
 }
 
+const EMPTY_APP_PROFIT_ROOT: ProfitAppProfitTreeNode = {
+  id: 'root',
+  name: '全部应用、全部国家',
+  appName: '全部应用',
+  adRev: '—',
+  paidRev: '—',
+  adSpend: '—',
+  profit: '—',
+  profitColor: '#94a3b8',
+  roi1d: '—',
+  avgDau: '—',
+  newUsers: '—',
+  paidUsers: '—',
+  organicUsers: '—',
+  profitTrend: [],
+  children: []
+}
+
 function mergeFilterOptions(remote: ProfitFilterOptions | null): ProfitFilterOptions {
   if (!remote) return { ...DEFAULT_FILTER_OPTIONS }
+  const app = remote.appOptions?.length
+    ? stripAllSentinelOptions(remote.appOptions)
+    : DEFAULT_FILTER_OPTIONS.appOptions
+  const country = remote.countryOptions?.length
+    ? stripAllSentinelOptions(remote.countryOptions)
+    : DEFAULT_FILTER_OPTIONS.countryOptions
+  const plat = remote.platformOptions?.length
+    ? stripAllSentinelOptions(remote.platformOptions)
+    : DEFAULT_FILTER_OPTIONS.platformOptions
   return {
-    appOptions: remote.appOptions?.length ? remote.appOptions : DEFAULT_FILTER_OPTIONS.appOptions,
-    countryOptions: remote.countryOptions?.length
-      ? remote.countryOptions
-      : DEFAULT_FILTER_OPTIONS.countryOptions,
-    platformOptions: remote.platformOptions?.length
-      ? remote.platformOptions
-      : DEFAULT_FILTER_OPTIONS.platformOptions,
+    appOptions: app,
+    countryOptions: country,
+    platformOptions: plat.length ? plat : DEFAULT_FILTER_OPTIONS.platformOptions,
     datePresets: remote.datePresets?.length ? remote.datePresets : undefined
   }
 }
@@ -72,12 +90,8 @@ export interface UseProfitAnalysisDashboardReturn {
   filterOptions: Ref<ProfitFilterOptions>
   pendingMeta: Ref<boolean>
   dateRangePicker: ComputedRef<[string, string] | null>
-  dateShortcuts: ComputedRef<ProfitDatePickerShortcut[]>
   kpiCards: Ref<ProfitKpiCard[]>
-  appRows: Ref<ProfitAppRow[]>
-  appTotal: Ref<ProfitAppTotal>
-  mapData: Ref<ProfitMapDataItem[]>
-  mapScatter: Ref<ProfitMapScatterItem[]>
+  appProfitRoot: Ref<ProfitAppProfitTreeNode>
   countryRows: Ref<ProfitCountryRow[]>
   trend30d: Ref<ProfitTrend30d>
   sankeyNodes: Ref<ProfitSankeyNode[]>
@@ -94,33 +108,37 @@ export interface UseProfitAnalysisDashboardReturn {
 }
 
 export function useProfitAnalysisDashboard(): UseProfitAnalysisDashboardReturn {
+  const appNow = getAppNow()
+  const defaultEnd = formatYYYYMMDD(appNow)
+  const defaultStartDate = cloneAppDate(appNow)
+  // 保持原有默认跨度（5 天）：结束为“今天”，开始往前推 4 天
+  defaultStartDate.setDate(defaultStartDate.getDate() - 4)
+  const defaultStart = formatYYYYMMDD(defaultStartDate)
+
   const query = reactive<ProfitAnalysisQueryParams>({
     currentPage: 0,
     pageSize: 0,
-    dateRange: '2026-03-01,2026-03-05',
-    platform: 'all',
-    sAppId: 'all',
-    sCountryCode: 'all'
+    dateRange: `${defaultStart},${defaultEnd}`,
+    platform: '',
+    sAppId: [],
+    sCountryCode: ''
   })
 
   const filterOptions = ref<ProfitFilterOptions>({ ...DEFAULT_FILTER_OPTIONS })
   const pendingMeta = ref(false)
 
   const kpiCards = ref<ProfitKpiCard[]>([])
-  const appRows = ref<ProfitAppRow[]>([])
-  const appTotal = ref<ProfitAppTotal>({ ...EMPTY_TOTAL })
-  const mapData = ref<ProfitMapDataItem[]>([])
-  const mapScatter = ref<ProfitMapScatterItem[]>([])
+  const appProfitRoot = ref<ProfitAppProfitTreeNode>({ ...EMPTY_APP_PROFIT_ROOT })
   const countryRows = ref<ProfitCountryRow[]>([])
   const trend30d = ref<ProfitTrend30d>({ ...EMPTY_TREND })
   const sankeyNodes = ref<ProfitSankeyNode[]>([])
   const sankeyLinks = ref<ProfitSankeyLink[]>([])
 
-  const pendingKpi = ref(false)
-  const pendingApp = ref(false)
-  const pendingCountry = ref(false)
-  const pendingTrend = ref(false)
-  const pendingSankey = ref(false)
+  const pendingKpi = ref(true)
+  const pendingApp = ref(true)
+  const pendingCountry = ref(true)
+  const pendingTrend = ref(true)
+  const pendingSankey = ref(true)
 
   const dateRangePicker = computed({
     get(): [string, string] | null {
@@ -133,27 +151,6 @@ export function useProfitAnalysisDashboard(): UseProfitAnalysisDashboardReturn {
     set(v: [string, string] | null) {
       if (v?.[0] && v?.[1]) query.dateRange = `${v[0]},${v[1]}`
     }
-  })
-
-  const dateShortcuts = computed<ProfitDatePickerShortcut[]>(() => {
-    const presets = filterOptions.value.datePresets
-    if (!presets?.length) return []
-    return presets
-      .map((p) => {
-        const n = Number(p.value)
-        if (!Number.isFinite(n) || n < 1) return null
-        return {
-          text: p.label,
-          value: () => {
-            const end = new Date()
-            end.setHours(0, 0, 0, 0)
-            const start = new Date(end)
-            start.setDate(start.getDate() - (n - 1))
-            return [start, end]
-          }
-        }
-      })
-      .filter((x): x is ProfitDatePickerShortcut => x != null)
   })
 
   function buildParams(): ProfitAnalysisQueryParams {
@@ -172,6 +169,20 @@ export function useProfitAnalysisDashboard(): UseProfitAnalysisDashboardReturn {
     try {
       const data = await fetchProfitMetaFilterOptions()
       filterOptions.value = mergeFilterOptions(data)
+      const hasSelectedApp = Array.isArray(query.sAppId)
+        ? query.sAppId.length > 0
+        : !!String(query.sAppId ?? '').trim()
+      const firstAppId = String(
+        filterOptions.value.appOptions.find((item) => {
+          const v = String(item.value ?? '')
+            .trim()
+            .toLowerCase()
+          return v !== '' && v !== 'all'
+        })?.value ?? ''
+      ).trim()
+      if (!hasSelectedApp && firstAppId) {
+        query.sAppId = [firstAppId]
+      }
     } catch {
       filterOptions.value = { ...DEFAULT_FILTER_OPTIONS }
     } finally {
@@ -210,16 +221,13 @@ export function useProfitAnalysisDashboard(): UseProfitAnalysisDashboardReturn {
         pendingApp,
         () => fetchProfitTableAppProfit(p),
         (d) => {
-          appRows.value = d.rows ?? []
-          appTotal.value = d.total ?? { ...EMPTY_TOTAL }
+          appProfitRoot.value = d?.root ?? { ...EMPTY_APP_PROFIT_ROOT }
         }
       ),
       run(
         pendingCountry,
         () => fetchProfitOverviewCountryProfit(p),
         (d) => {
-          mapData.value = d.mapData ?? []
-          mapScatter.value = d.mapScatter ?? []
           countryRows.value = d.countryRows ?? []
         }
       ),
@@ -250,12 +258,8 @@ export function useProfitAnalysisDashboard(): UseProfitAnalysisDashboardReturn {
     filterOptions,
     pendingMeta,
     dateRangePicker,
-    dateShortcuts,
     kpiCards,
-    appRows,
-    appTotal,
-    mapData,
-    mapScatter,
+    appProfitRoot,
     countryRows,
     trend30d,
     sankeyNodes,

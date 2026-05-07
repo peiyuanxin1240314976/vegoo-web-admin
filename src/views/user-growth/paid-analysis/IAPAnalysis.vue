@@ -4,56 +4,57 @@
     <header class="iap-analysis-page__section--filters iap-entry-1">
       <div class="iap-filters-inner">
         <div class="iap-filters-row">
-          <div class="iap-filter-chip iap-filter-chip--static">
+          <!-- <div class="iap-filter-chip iap-filter-chip--static">
             <ElIcon class="iap-filter-chip__icon"><Calendar /></ElIcon>
             <span class="iap-filter-chip__label">日期</span>
             <span class="iap-filter-chip__value">{{ dateChipText }}</span>
-          </div>
-          <ElDatePicker
-            v-model="filters.date"
-            type="date"
+          </div> -->
+          <AppDatePicker
+            v-model="filters.dateRange"
+            type="daterange"
+            :shortcuts="dateRangeShortcuts"
+            unlink-panels
             value-format="YYYY-MM-DD"
             format="YYYY-MM-DD"
-            placeholder="选择日期"
+            range-separator="~"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
             class="iap-filter-date"
           />
-          <ElSelect
-            v-model="filters.app"
+          <AppPlatformSearchSelect
+            v-model="filters.appId"
+            mode="app"
             placeholder="应用"
-            class="iap-filter-select"
-            :prefix-icon="Grid"
-          >
-            <ElOption label="全部" value="all" />
-            <ElOption label="Weather5" value="weather5" />
-            <ElOption label="PhoneTracker" value="phonetracker" />
-            <ElOption label="YearCam" value="yearcam" />
-            <ElOption label="AgeCam" value="agecam" />
-          </ElSelect>
+            search-placeholder="应用"
+            class="iap-filter-select iap-filter-select--app"
+            input-class="iap-filter-select__input"
+            dropdown-class="iap-filter-popper"
+            :setting-apps="settingAppsForSelect"
+            :height="36"
+            :min-width="200"
+            :max-width="240"
+          />
           <ElSelect
-            v-model="filters.platform"
-            placeholder="终端平台"
-            class="iap-filter-select"
-            :prefix-icon="Monitor"
-          >
-            <ElOption label="Android&iOS" value="all" />
-            <ElOption label="iOS" value="ios" />
-            <ElOption label="Android" value="android" />
-          </ElSelect>
-          <ElSelect
-            v-model="filters.country"
+            :model-value="filters.country"
             placeholder="国家"
             class="iap-filter-select"
-            :prefix-icon="Flag"
+            popper-class="iap-filter-popper"
+            clearable
+            @update:model-value="onCountryFilterUpdate"
           >
-            <ElOption label="全部" value="all" />
-            <ElOption label="US" value="us" />
-            <ElOption label="KR" value="kr" />
-            <ElOption label="DE" value="de" />
-            <ElOption label="JP" value="jp" />
+            <ElOption :label="tr('adPerformance.filterAll', '全部')" value="" />
+            <ElOption
+              v-for="opt in countrySelectOptionsForSelect"
+              :key="opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
           </ElSelect>
           <div class="iap-filter-actions">
-            <ElButton round class="iap-search-btn" @click="handleSearch">检索</ElButton>
-            <ElButton round class="iap-search-btn" @click="onExportClick">导出</ElButton>
+            <ElButton type="primary" plain round :icon="Search" @click="handleSearch">
+              搜索
+            </ElButton>
+            <!-- <ElButton type="primary" plain round @click="onExportClick">导出</ElButton> -->
           </div>
         </div>
       </div>
@@ -103,21 +104,21 @@
           v-if="activeTab === 'channel'"
           :key="`channel-${searchToken}`"
           class="iap-tab-panel"
-          :filters="appliedFilters"
+          :filters="tabFilters"
           :search-token="searchToken"
         />
         <IAPProductTab
           v-if="activeTab === 'product'"
           :key="`product-${searchToken}`"
           class="iap-tab-panel"
-          :filters="appliedFilters"
+          :filters="tabFilters"
           :search-token="searchToken"
         />
         <IAPOrderTab
           v-if="activeTab === 'order'"
           :key="`order-${searchToken}`"
           class="iap-tab-panel"
-          :filters="appliedFilters"
+          :filters="tabFilters"
           :search-token="searchToken"
         />
       </template>
@@ -126,13 +127,59 @@
 </template>
 
 <script setup lang="ts">
-  import { Calendar, Flag, Grid, Monitor } from '@element-plus/icons-vue'
+  import { Search } from '@element-plus/icons-vue'
+  import { useI18n } from 'vue-i18n'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
+  import { storeToRefs } from 'pinia'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import { getAppTodayYYYYMMDD } from '@/utils/app-now'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
+  import type { CockpitMetaOptionItem, CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
   import IAPChannelTab from './IAPChannelTab.vue'
   import IAPProductTab from './IAPProductTab.vue'
   import IAPOrderTab from './IAPOrderTab.vue'
 
   defineOptions({ name: 'IAPAnalysis' })
+
+  const { t, te } = useI18n()
+  const tr = (key: string, fallback: string) => (te(key) ? t(key) : fallback)
+
+  const metaStore = useCockpitMetaFilterStore()
+  const { data: cockpitMeta } = storeToRefs(metaStore)
+
+  function fallbackOptions(label: string): CockpitMetaOptionItem[] {
+    return [{ label, value: '' }]
+  }
+
+  const appSelectOptions = computed(() => {
+    const list = cockpitMeta.value?.appOptions
+    return list?.length ? list : fallbackOptions('全部')
+  })
+  const countrySelectOptions = computed(() => {
+    const list = cockpitMeta.value?.countryOptions
+    return list?.length ? list : fallbackOptions('全部')
+  })
+  const countrySelectOptionsForSelect = computed(() =>
+    countrySelectOptions.value.filter((o) => String(o.value ?? '').trim() !== '')
+  )
+
+  const settingAppsForSelect = computed<CockpitSettingAppItem[]>(() => {
+    const fromCockpit = cockpitMeta.value?.settingApps ?? []
+    if (fromCockpit.length) return fromCockpit
+
+    return appSelectOptions.value
+      .filter((opt) => opt.value !== '')
+      .map((opt, index) => ({
+        sAppId: String(opt.value ?? ''),
+        nPlatform: '',
+        platformName: '',
+        sAppName: String(opt.label ?? ''),
+        sAppShortName: String(opt.label ?? ''),
+        nCategory: `fallback-${index}`,
+        categoryName: '应用'
+      }))
+  })
 
   const activeTab = ref<'channel' | 'product' | 'order'>('channel')
 
@@ -142,22 +189,78 @@
     { key: 'order' as const, label: '订单明细' }
   ]
 
+  function normalizeFilterDateRange(r: [string, string] | null | undefined): [string, string] {
+    const today = getAppTodayYYYYMMDD()
+    if (!r || !Array.isArray(r) || r.length < 2) return [today, today]
+    let a = String(r[0] ?? '').trim() || today
+    let b = String(r[1] ?? '').trim() || today
+    if (a > b) {
+      const t = a
+      a = b
+      b = t
+    }
+    return [a, b]
+  }
+
   const filters = reactive({
-    app: 'all',
-    platform: 'all',
-    country: 'all',
-    date: getAppTodayYYYYMMDD()
+    appId: [] as string[],
+    platform: '',
+    country: '',
+    dateRange: [getAppTodayYYYYMMDD(), getAppTodayYYYYMMDD()] as [string, string] | null
   })
 
-  const appliedFilters = ref({ ...filters })
-  const searchToken = ref(0)
+  function onCountryFilterUpdate(v: string | undefined | null) {
+    filters.country = v ?? ''
+  }
 
-  const dateChipText = computed(() => filters.date || '—')
+  const _initialRange = normalizeFilterDateRange(filters.dateRange)
+  const appliedFilters = ref<{
+    appId: string[]
+    platform: string
+    country: string
+    startDate: string
+    endDate: string
+  }>({
+    appId: [...filters.appId],
+    platform: filters.platform,
+    country: filters.country,
+    startDate: _initialRange[0],
+    endDate: _initialRange[1]
+  })
+
+  /** 子 Tab 用纯对象，避免模板里直接传 ref 时个别环境下 props 形态异常；日期缺省回落到顶栏草稿范围 */
+  const tabFilters = computed(() => {
+    const v = appliedFilters.value
+    const draft = normalizeFilterDateRange(filters.dateRange)
+    const today = getAppTodayYYYYMMDD()
+    let sd = String(v.startDate ?? '').trim()
+    let ed = String(v.endDate ?? '').trim()
+    if (!sd) sd = draft[0] || today
+    if (!ed) ed = draft[1] || today
+    if (sd > ed) {
+      const t = sd
+      sd = ed
+      ed = t
+    }
+    return {
+      appId: v.appId,
+      platform: v.platform,
+      country: v.country,
+      startDate: sd,
+      endDate: ed
+    }
+  })
+
+  const searchToken = ref(0)
+  const hasSyncedInitialAutoApp = ref(false)
+
+  // const dateChipText = computed(() => filters.date || '-')
 
   const bootLoading = ref(true)
   let bootTimer: ReturnType<typeof setTimeout> | null = null
 
   onMounted(() => {
+    void metaStore.ensureLoaded()
     bootTimer = setTimeout(() => {
       bootLoading.value = false
       bootTimer = null
@@ -169,7 +272,14 @@
   })
 
   function handleSearch() {
-    appliedFilters.value = { ...filters }
+    const [startDate, endDate] = normalizeFilterDateRange(filters.dateRange)
+    appliedFilters.value = {
+      appId: [...filters.appId],
+      platform: filters.platform,
+      country: filters.country,
+      startDate,
+      endDate
+    }
     searchToken.value += 1
     bootLoading.value = true
     if (bootTimer != null) clearTimeout(bootTimer)
@@ -179,58 +289,61 @@
     }, 260)
   }
 
-  function onExportClick() {
-    /* 演示占位，与改版前一致不接真实导出 */
-  }
+  watch(
+    () => filters.appId,
+    (appId) => {
+      // AppPlatformSearchSelect 会自动选首个应用；首屏把该值同步到 appliedFilters 并触发一次查询。
+      if (hasSyncedInitialAutoApp.value) return
+      if (Array.isArray(appId) ? appId.length === 0 : !appId) return
+      hasSyncedInitialAutoApp.value = true
+      handleSearch()
+    }
+  )
+
+  // function onExportClick() {
+  //   // 占位，保留原交互
+  // }
 </script>
 
 <style scoped lang="scss">
   @use './styles/iap-analysis-page.scss' as *;
+  @use '../styles/filter-bar-theme.scss' as filterTheme;
 
   .iap-filters-inner {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 14px 16px;
-    align-items: center;
-    justify-content: space-between;
+    @include filterTheme.filter-panel(14px 16px);
+    @include filterTheme.filter-panel-children;
+
     min-width: 0;
-    padding: 18px 20px;
-    background: rgb(10 10 14 / 82%);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgb(96 165 250 / 20%);
-    border-radius: 16px;
-    box-shadow:
-      0 8px 32px rgb(0 0 0 / 40%),
-      inset 0 1px 0 rgb(186 230 253 / 10%),
-      0 0 40px rgb(59 130 246 / 8%);
+    overflow: visible;
   }
 
   .iap-filters-row {
-    display: flex;
+    @include filterTheme.filter-row;
+
     flex: 1;
     flex-wrap: wrap;
-    gap: 10px 12px;
     align-items: center;
     min-width: 0;
+    overflow: visible;
   }
 
   .iap-filter-chip {
     display: inline-flex;
     gap: 7px;
     align-items: center;
-    min-height: 40px;
+    min-height: 36px;
     padding: 0 14px;
     white-space: nowrap;
-    background: rgb(16 185 129 / 8%);
-    border: 1px solid rgb(16 185 129 / 30%);
-    border-radius: 9999px;
-    box-shadow: 0 0 16px rgb(16 185 129 / 10%);
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: 0 0 16px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 10%, transparent);
   }
 
   .iap-filter-chip__icon {
     font-size: 16px;
-    color: #10b981;
-    filter: drop-shadow(0 0 6px rgb(16 185 129 / 55%));
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   .iap-filter-chip__label {
@@ -241,92 +354,23 @@
   .iap-filter-chip__value {
     font-size: 13px;
     font-weight: 600;
-    color: #10b981;
-    text-shadow: 0 0 10px rgb(16 185 129 / 50%);
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
-  .iap-filter-date {
-    flex: 0 1 160px;
-    width: 160px;
-    min-width: 140px;
-  }
-
-  :deep(.iap-filter-date .el-input__wrapper) {
-    min-height: 40px;
-    padding: 0 12px;
-    background: rgb(16 185 129 / 6%);
-    border: 1px solid rgb(16 185 129 / 28%);
-    border-radius: 9999px;
-    box-shadow: none;
-    transition:
-      border-color 0.22s ease,
-      box-shadow 0.22s ease,
-      background 0.22s ease;
-  }
-
-  :deep(.iap-filter-date .el-input__wrapper.is-focus) {
-    background: rgb(16 185 129 / 10%) !important;
-    border-color: #10b981 !important;
-    box-shadow: 0 0 0 2px rgb(16 185 129 / 20%) !important;
-  }
-
-  :deep(.iap-filter-date .el-input__inner) {
-    font-size: 13px;
-    color: var(--el-text-color-primary);
-  }
+  @include filterTheme.date-trigger('.iap-filters-row', '.iap-filter-date');
 
   .iap-filter-select {
-    width: 150px;
-    min-width: 120px;
-    max-width: 100%;
+    @include filterTheme.filter-select-size;
   }
 
-  :deep(.iap-filter-select) {
-    --el-input-focus-border-color: #10b981;
-    --el-border-color-hover: rgb(16 185 129 / 75%);
-    --el-color-primary: #10b981;
-    --el-border-color-focus: #10b981;
-    --el-component-size: 40px;
+  .iap-filter-select--app {
+    @include filterTheme.filter-select-size;
   }
 
-  :deep(.iap-filter-select .el-input__wrapper) {
-    padding: 0 12px;
-    background: rgb(16 185 129 / 6%);
-    border: 1px solid rgb(16 185 129 / 28%);
-    border-radius: 9999px;
-    box-shadow: none;
-    transition:
-      border-color 0.22s ease,
-      box-shadow 0.22s ease,
-      background 0.22s ease;
-  }
-
-  :deep(.iap-filter-select .el-input__inner) {
-    font-size: 14px;
-    color: var(--el-text-color-primary);
-  }
-
-  :deep(.iap-filter-select .el-input__prefix-inner svg) {
-    width: 16px;
-    height: 16px;
-    color: #10b981;
-    filter: drop-shadow(0 0 5px rgb(16 185 129 / 50%));
-  }
-
-  :deep(.iap-filter-select .el-select__caret) {
-    color: #10b981;
-  }
-
-  :deep(.iap-filter-select .el-input__wrapper.is-focus) {
-    background: rgb(16 185 129 / 10%) !important;
-    border-color: #10b981 !important;
-    box-shadow: 0 0 0 2px rgb(16 185 129 / 20%) !important;
-  }
-
-  :deep(.iap-filter-select .el-input__wrapper:hover) {
-    border-color: rgb(16 185 129 / 60%);
-    box-shadow: 0 0 12px rgb(16 185 129 / 18%);
-  }
+  @include filterTheme.element-select-trigger('.iap-filter-select');
+  @include filterTheme.app-platform-trigger('.iap-filter-select');
+  @include filterTheme.select-popper('iap-filter-popper');
+  @include filterTheme.app-platform-popper('iap-filter-popper');
 
   .iap-filter-actions {
     display: inline-flex;
@@ -335,30 +379,27 @@
   }
 
   .iap-search-btn {
-    --el-button-size: 40px;
+    --el-button-size: 36px;
 
-    height: 40px;
+    height: 36px;
     padding: 0 20px;
     font-size: 14px;
-    color: var(--art-success);
-    background: color-mix(in srgb, var(--art-success) 16%, transparent);
-    border: 1px solid color-mix(in srgb, var(--art-success) 45%, transparent);
-    box-shadow:
-      0 0 18px color-mix(in srgb, var(--art-success) 20%, transparent),
-      inset 0 1px 0 rgb(255 255 255 / 10%);
-    transition:
-      box-shadow 0.22s ease,
-      transform 0.18s ease;
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: 0 0 18px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 20%, transparent);
+    transition: box-shadow 0.22s ease;
 
     &:hover {
-      box-shadow:
-        0 0 26px color-mix(in srgb, var(--art-success) 34%, transparent),
-        inset 0 1px 0 rgb(255 255 255 / 16%);
-      transform: translateY(-1px);
-    }
-
-    &:active {
-      transform: translateY(0);
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 8%,
+        transparent
+      );
+      box-shadow: 0 0 26px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 28%, transparent);
     }
   }
 
@@ -369,8 +410,8 @@
     gap: 8px;
     padding: 4px;
     margin-bottom: 16px;
-    background: color-mix(in srgb, var(--default-box-color) 75%, transparent);
-    border: 1px solid color-mix(in srgb, var(--art-success) 35%, var(--default-border));
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
     border-radius: 9999px;
   }
 
@@ -393,19 +434,29 @@
       box-shadow 0.15s ease;
 
     &:hover {
-      color: var(--art-success);
-      background: color-mix(in srgb, var(--art-success) 12%, transparent);
+      color: var(--theme-color, var(--art-primary, #3b82f6));
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 12%,
+        transparent
+      );
     }
 
     &.is-active {
       font-weight: 700;
-      color: var(--art-success);
-      background: color-mix(in srgb, var(--art-success) 18%, transparent);
-      box-shadow: 0 0 0 1px color-mix(in srgb, var(--art-success) 45%, transparent) inset;
+      color: var(--theme-color, var(--art-primary, #3b82f6));
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 18%,
+        transparent
+      );
+      box-shadow: 0 0 0 1px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 45%, transparent) inset;
     }
 
     &:focus-visible {
-      box-shadow: 0 0 0 2px color-mix(in srgb, var(--art-success) 45%, transparent);
+      box-shadow: 0 0 0 2px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 45%, transparent);
     }
   }
 
@@ -448,10 +499,6 @@
       padding: 14px 16px;
     }
 
-    .iap-filter-select {
-      flex: 1 1 calc(50% - 6px);
-    }
-
     .iap-filter-actions {
       width: 100%;
       margin-left: 0;
@@ -474,11 +521,7 @@
 
   @media (width <= 1200px) {
     .iap-filters-inner {
-      padding: 16px 18px;
-    }
-
-    .iap-filter-select {
-      width: 150px;
+      padding: 14px 16px;
     }
 
     .iap-filter-actions {

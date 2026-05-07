@@ -3,7 +3,16 @@
   "fieldDescription": {
     "request": {
       "path.id": { "type": "string", "required": true, "description": "应用业务 ID。" },
-      "body": { "type": "ApplicationFormPayload", "required": true, "description": "编辑字段。" }
+      "body": {
+        "type": "ApplicationFormPayload",
+        "required": true,
+        "description": "编辑字段；可包含 iconFileKey 更新图标。"
+      },
+      "body.iconFileKey": {
+        "type": "string",
+        "required": false,
+        "description": "图标上传后的文件标识或 URL；未传表示沿用原图标。"
+      }
     },
     "response": {
       "data": {
@@ -21,6 +30,7 @@
       "platform": "Android",
       "category": "Weather",
       "bundleId": "com.accurate.weather.forecast.live",
+      "iconFileKey": "oss://app-icons/weather5-new.png",
       "lastModifier": "李四"
     }
   },
@@ -28,6 +38,7 @@
     "id": "Weather5A",
     "appName": "Weather5",
     "iconColor": "#2dd4bf",
+    "iconUrl": "https://cdn.example.com/app-icons/weather5-new.png",
     "platform": "Android",
     "bundleId": "com.accurate.weather.forecast.live",
     "packageId": "com.accurate.weather.forecast.live",

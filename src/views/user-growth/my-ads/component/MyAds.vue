@@ -1,23 +1,35 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
   import { ref, computed, onMounted, watch } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import SummaryTab from './SummaryTab.vue'
   import PlatformTab from './PlatformTab.vue'
   import CampaignTab from './CampaignTab.vue'
   import { fetchMyAdsPageHeader, fetchMyAdsSummary, fetchMyAdsPlatform } from '@/api/user-growth'
-  import { getAppTodayYYYYMMDD } from '@/utils/app-now'
+  import { formatNumberWithWan } from '@/utils'
+  import { cloneAppDate, formatYYYYMMDD, getAppNow, getAppTodayYYYYMMDD } from '@/utils/app-now'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
+  import { Search } from '@element-plus/icons-vue'
+  import { useI18n } from 'vue-i18n'
   import type { MyAdsStaffOption, MyAdsUserCardMock, MyAdsMetricStripItem } from '../types'
 
   defineOptions({ name: 'MyAdsPageContent' })
 
+  const { t, te } = useI18n()
+  const tr = (key: string, fallback: string) => (te(key) ? t(key) : fallback)
+
   function getDefaultDateRange(): [string, string] {
     const today = getAppTodayYYYYMMDD()
-    const d = new Date(today)
+    const d = cloneAppDate(getAppNow())
+    d.setHours(0, 0, 0, 0)
     d.setDate(d.getDate() - 7)
-    const start = d.toISOString().slice(0, 10)
+    const start = formatYYYYMMDD(d)
     return [start, today]
   }
 
   const staffList = ref<MyAdsStaffOption[]>([])
+  const staffListForSelect = computed(() =>
+    staffList.value.filter((s) => String(s.id ?? '').trim() !== '')
+  )
   /** 顶部控件绑定：改人员/日期不会自动请求，需点「查询」 */
   const selectedStaffId = ref('')
   const dateRange = ref<[string, string]>(getDefaultDateRange())
@@ -175,10 +187,10 @@
     }
   })
 
-  const staffAvatarLetter = computed(() => {
-    const name = staffList.value.find((s) => s.id === selectedStaffId.value)?.name ?? ''
-    return name ? name[0]! : '—'
-  })
+  // const staffAvatarLetter = computed(() => {
+  //   const name = staffList.value.find((s) => s.id === selectedStaffId.value)?.name ?? ''
+  //   return name ? name[0]! : '—'
+  // })
 
   const tabs = [
     { key: 'summary', label: '汇总' },
@@ -192,6 +204,10 @@
   const handleTabClick = (key: 'summary' | 'platform' | 'campaign') => {
     activeTab.value = key
   }
+
+  function onSelectedStaffIdUpdate(v: string | undefined | null) {
+    selectedStaffId.value = v ?? ''
+  }
 </script>
 
 <template>
@@ -203,20 +219,21 @@
       <div class="top-actions filter-bar" aria-label="页面筛选">
         <div class="date-pill date-pill--range">
           <ElSelect
-            v-model="selectedStaffId"
+            :model-value="selectedStaffId"
             class="filter-staff-select"
             popper-class="my-ads-filter-select-popper"
             :teleported="true"
+            clearable
+            @update:model-value="onSelectedStaffIdUpdate"
           >
-            <template #prefix>
-              <span class="pill-avatar">{{ staffAvatarLetter }}</span>
-            </template>
-            <ElOption v-for="s in staffList" :key="s.id" :label="`人员: ${s.name}`" :value="s.id" />
+            <ElOption :label="tr('adPerformance.filterAll', '全部')" value="" />
+            <ElOption v-for="s in staffListForSelect" :key="s.id" :label="s.name" :value="s.id" />
           </ElSelect>
-          <ElDatePicker
+          <AppDatePicker
             v-model="dateRange"
             type="daterange"
             range-separator="~"
+            :shortcuts="dateRangeShortcuts"
             start-placeholder="开始"
             end-placeholder="结束"
             format="YYYY-MM-DD"
@@ -227,8 +244,12 @@
             :clearable="false"
           />
 
-          <button type="button" class="export-btn" @click="commitFiltersAndRefresh">查询</button>
-          <button type="button" class="export-btn">导出报表</button>
+          <el-button type="primary" plain round :icon="Search" @click="commitFiltersAndRefresh">
+            查询
+          </el-button>
+          <!-- <el-button type="primary" plain round @click="commitFiltersAndRefresh"
+            >导出报表</el-button
+          > -->
         </div>
       </div>
     </div>
@@ -281,7 +302,9 @@
           <template v-else>
             <div v-for="m in pageHeaderData.metrics" :key="m.label" class="metric-item">
               <div class="metric-label">{{ m.label }}</div>
-              <div class="metric-value" :style="{ color: m.valueColor }">{{ m.value }}</div>
+              <div class="metric-value" :style="{ color: m.valueColor }">
+                {{ formatNumberWithWan(m.value, { fallback: '无数据' }) }}
+              </div>
               <div class="metric-sub" :style="{ color: m.subColor }">{{ m.sub }}</div>
             </div>
           </template>
@@ -321,6 +344,7 @@
 
 <style scoped lang="scss">
   @use '../styles/my-ads-neon.scss' as ma;
+  @use '../../styles/filter-bar-theme.scss' as filterTheme;
 
   /* ── CSS 变量 ── */
   .my-ads-page {
@@ -516,8 +540,59 @@
   // }
 
   .filter-staff-select {
-    width: 150px;
-    min-width: 50px;
+    flex: 0 0 auto;
+    width: 240px;
+    min-width: 200px;
+    max-width: 240px;
+
+    @media (width <= 768px) {
+      min-width: 0;
+      max-width: 100%;
+    }
+  }
+
+  .filter-staff-select :deep(.el-select__wrapper) {
+    min-height: 36px;
+    padding: 4px 12px;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: none;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      background 0.2s ease;
+  }
+
+  .filter-staff-select :deep(.el-select__wrapper:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
+  }
+
+  .filter-staff-select :deep(.el-select__wrapper.is-focused) {
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent);
+  }
+
+  .filter-staff-select :deep(.el-select__selected-item) {
+    color: var(--el-text-color-primary);
+  }
+
+  .filter-staff-select :deep(.el-select__selected-item .el-select__placeholder) {
+    color: var(--el-text-color-primary);
+  }
+
+  .filter-staff-select :deep(.el-select__placeholder.is-transparent),
+  .filter-staff-select :deep(.el-select__selected-item.is-transparent) {
+    color: var(--el-text-color-placeholder);
+  }
+
+  .filter-staff-select :deep(.el-select__caret),
+  .filter-staff-select :deep(.el-select__suffix) {
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   // .user-pill--select :deep(.el-select__wrapper) {
@@ -569,31 +644,37 @@
   }
 
   .date-pill {
-    display: flex;
-    gap: 6px;
+    @include filterTheme.filter-panel(12px 16px);
+    @include filterTheme.filter-panel-children;
+    @include filterTheme.filter-row;
+
+    flex-wrap: wrap;
     align-items: center;
-    padding: 5px 12px;
-    font-size: 12px;
-    color: var(--text-secondary);
+    width: 100%;
+    overflow: visible;
+    font-size: 14px;
+    color: var(--el-text-color-primary);
     cursor: pointer;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 6px;
     transition:
       border-color 0.22s ease,
       box-shadow 0.22s ease,
-      transform 0.22s ease;
+      background 0.22s ease;
   }
 
   .date-pill--range:hover {
-    border-color: rgb(0 212 170 / 45%);
-    box-shadow: 0 0 0 1px rgb(0 212 170 / 12%);
-    transform: translateY(-1px);
+    border-color: rgb(96 165 250 / 65%);
+    box-shadow:
+      0 24px 72px rgb(0 0 0 / 52%),
+      0 0 0 1px rgb(96 165 250 / 25%),
+      inset 0 1px 0 rgb(186 230 253 / 18%),
+      0 0 72px rgb(59 130 246 / 22%),
+      0 0 120px rgb(6 182 212 / 12%),
+      0 0 160px rgb(16 185 129 / 8%);
   }
 
   .date-pill--range {
-    flex-shrink: 0;
-    padding: 10px;
+    flex-wrap: wrap;
+    min-width: 0;
     cursor: default;
   }
 
@@ -604,81 +685,142 @@
   }
 
   .filter-date-range {
-    flex: 0 0 220px;
-    width: 220px;
-    min-width: 220px;
-    max-width: 220px;
+    flex: 0 0 250px;
+    width: 250px;
+    min-width: 250px;
+    max-width: 250px;
 
-    --el-date-editor-width: 220px;
-    --el-date-editor-daterange-width: 220px;
+    --el-date-editor-width: 250px;
+    --el-date-editor-daterange-width: 250px;
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+
+    @media (width <= 768px) {
+      flex: 1 1 100%;
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+    }
   }
 
   .date-pill--range :deep(.el-date-editor.el-date-editor--daterange) {
-    flex: 0 0 220px;
-    width: 220px !important;
-    min-width: 220px;
-    max-width: 220px;
+    flex: 0 0 250px !important;
+    width: 250px !important;
+    min-width: 250px !important;
+    max-width: 250px !important;
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    border-radius: var(--el-border-radius-base, 4px) !important;
+    box-shadow: none !important;
 
-    --el-date-editor-width: 220px;
-    --el-date-editor-daterange-width: 220px;
+    --el-date-editor-width: 250px;
+    --el-date-editor-daterange-width: 250px;
   }
 
+  @media (width <= 768px) {
+    .date-pill--range :deep(.el-date-editor.el-date-editor--daterange) {
+      flex: 1 1 100% !important;
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: 100% !important;
+    }
+  }
+
+  .date-pill--range :deep(.el-date-editor),
+  .date-pill--range :deep(.el-range-editor),
+  .date-pill--range :deep(.el-range-editor.el-input__wrapper),
   .date-pill--range :deep(.el-date-editor .el-input__wrapper) {
-    padding: 2px 4px;
-    background: transparent;
-    border: none;
-    box-shadow: none;
+    min-height: 36px;
+    padding: 2px 10px;
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    border-radius: var(--el-border-radius-base, 4px) !important;
+    box-shadow: none !important;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      background 0.2s ease;
   }
 
+  .date-pill--range :deep(.el-date-editor:hover),
+  .date-pill--range :deep(.el-range-editor:hover),
+  .date-pill--range :deep(.el-date-editor .el-input__wrapper:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
+  }
+
+  .date-pill--range :deep(.el-date-editor.is-active),
+  .date-pill--range :deep(.el-range-editor.is-active),
+  .date-pill--range :deep(.el-range-editor.is-focus),
   .date-pill--range :deep(.el-date-editor .el-input__wrapper.is-focus) {
-    box-shadow: none;
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
   }
 
   .date-pill--range :deep(.el-range-input) {
-    font-size: 12px;
-    color: var(--text-secondary);
+    font-size: 14px;
+    color: var(--el-text-color-primary);
+  }
+
+  .date-pill--range :deep(.el-range-input::placeholder) {
+    color: var(--el-text-color-placeholder);
   }
 
   .date-pill--range :deep(.el-range-separator) {
     flex: 0 0 auto;
     padding: 0 4px;
-    font-size: 12px;
-    color: var(--text-secondary);
+    font-size: 14px;
+    color: var(--el-text-color-primary);
   }
 
   .date-pill--range :deep(.el-range__icon) {
-    display: none;
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   .date-pill--range :deep(.el-range__close-icon) {
-    color: var(--text-dim);
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   .export-btn {
     padding: 7px 18px;
     font-size: 13px;
     font-weight: 600;
-    color: var(--teal);
+    color: var(--theme-color, var(--art-primary, #3b82f6));
     cursor: pointer;
-    // background: var(--teal);
-    border: 1px solid var(--teal);
-    // border: none;
-    border-radius: 9999px;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
     transition:
       opacity 0.2s ease,
-      transform 0.22s ease,
+      background 0.2s ease,
+      border-color 0.2s ease,
       box-shadow 0.22s ease;
   }
 
   .export-btn:hover {
-    box-shadow: 0 4px 14px rgb(0 212 170 / 35%);
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 4px 14px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 24%, transparent);
     opacity: 0.95;
-    transform: translateY(-1px);
   }
 
   .export-btn:active {
     box-shadow: none;
-    transform: translateY(0);
   }
 
   /* ── 用户卡 ── */
@@ -763,7 +905,7 @@
     max-width: 423px;
   }
 
-  /* 与「我的绩效」顶部用户卡 avatar 对齐：渐变圆、外发光、脉冲环 */
+  /* 与「我的绩效」顶部用户卡 avatar 对齐：渐变圆、外发光、静态外圈描边 */
   .user-avatar {
     position: relative;
     display: flex;
@@ -781,9 +923,7 @@
       0 0 20px rgb(16 185 129 / 32%),
       0 0 40px rgb(16 185 129 / 14%),
       0 0 64px rgb(34 211 238 / 8%);
-    transition:
-      transform 0.45s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
-      box-shadow 0.45s var(--ease-out, cubic-bezier(0, 0, 0.2, 1));
+    transition: box-shadow 0.45s var(--ease-out, cubic-bezier(0, 0, 0.2, 1));
 
     &::after {
       position: absolute;
@@ -792,22 +932,7 @@
       content: '';
       border: 2px solid rgb(16 185 129 / 30%);
       border-radius: 9999px;
-      animation: ma-avatar-ring-pulse 3s ease-in-out infinite;
-    }
-  }
-
-  @keyframes ma-avatar-ring-pulse {
-    0%,
-    100% {
-      border-color: rgb(16 185 129 / 30%);
       opacity: 0.4;
-      transform: scale(1);
-    }
-
-    50% {
-      border-color: rgb(34 211 238 / 45%);
-      opacity: 0.8;
-      transform: scale(1.08);
     }
   }
 
@@ -816,7 +941,6 @@
       0 0 28px rgb(16 185 129 / 42%),
       0 0 48px rgb(16 185 129 / 20%),
       0 0 80px rgb(34 211 238 / 12%);
-    transform: scale(1.07);
   }
 
   .user-name {
@@ -854,12 +978,12 @@
     border-radius: 8px;
     transition:
       background 0.2s ease,
-      transform 0.2s ease;
+      box-shadow 0.2s ease;
   }
 
   .metric-item:hover {
     background: rgb(0 212 170 / 8%);
-    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgb(0 0 0 / 18%);
   }
 
   .metric-label {
@@ -900,12 +1024,12 @@
     transition:
       color 0.2s ease,
       border-color 0.2s ease,
-      transform 0.2s ease;
+      text-shadow 0.2s ease;
   }
 
   .tab-item:hover {
     color: var(--text-primary);
-    transform: translateY(-1px);
+    text-shadow: 0 0 14px rgb(0 212 170 / 18%);
   }
 
   .tab-item.active {
@@ -963,10 +1087,6 @@
       transform: none;
     }
 
-    .user-avatar::after {
-      animation: none;
-    }
-
     // .user-pill--select:hover {
     //   filter: none;
     //   box-shadow: none;
@@ -975,35 +1095,20 @@
 </style>
 
 <style lang="scss">
+  @use '../../styles/filter-bar-theme.scss' as filterTheme;
+
   /* Teleport 到 body 的下拉/面板，与顶部深色条协调 */
-  .my-ads-filter-select-popper.el-popper {
-    background: #0f1929;
-    border: 1px solid #1e2f45;
-  }
-
-  .my-ads-filter-select-popper .el-select-dropdown__item {
-    font-size: 12px;
-    color: #e2e8f0;
-  }
-
-  .my-ads-filter-select-popper .el-select-dropdown__item.is-hovering {
-    background: rgb(0 212 170 / 12%);
-  }
-
-  .my-ads-filter-select-popper .el-select-dropdown__item.is-selected {
-    font-weight: 600;
-    color: #00d4aa;
-  }
+  @include filterTheme.select-popper('my-ads-filter-select-popper');
 
   .my-ads-filter-date-popper.el-popper {
-    --el-datepicker-border-color: #1e2f45;
+    // --el-datepicker-border-color: var(--theme-color, var(--art-primary, #3b82f6));
     --el-datepicker-text-color: #e2e8f0;
     --el-datepicker-off-text-color: #64748b;
     --el-datepicker-header-text-color: #e2e8f0;
-    --el-datepicker-active-color: #00d4aa;
-    --el-datepicker-hover-text-color: #00d4aa;
+    --el-datepicker-active-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-datepicker-hover-text-color: var(--theme-color, var(--art-primary, #3b82f6));
 
     background: #0f1929;
-    border: 1px solid #1e2f45;
+    // border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
   }
 </style>

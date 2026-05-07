@@ -20,11 +20,11 @@ export enum PlatformAnalysisDetailEndpoint {
 }
 
 export const PLATFORM_ANALYSIS_DETAIL_USE_MOCK: Record<PlatformAnalysisDetailEndpoint, boolean> = {
-  [PlatformAnalysisDetailEndpoint.Summary]: true,
-  [PlatformAnalysisDetailEndpoint.CpiTrend]: true,
-  [PlatformAnalysisDetailEndpoint.EcpmTrend]: true,
-  [PlatformAnalysisDetailEndpoint.MatrixTable]: true,
-  [PlatformAnalysisDetailEndpoint.AlertBar]: true
+  [PlatformAnalysisDetailEndpoint.Summary]: false,
+  [PlatformAnalysisDetailEndpoint.CpiTrend]: false,
+  [PlatformAnalysisDetailEndpoint.EcpmTrend]: false,
+  [PlatformAnalysisDetailEndpoint.MatrixTable]: false,
+  [PlatformAnalysisDetailEndpoint.AlertBar]: false
 }
 
 export function isPlatformAnalysisDetailEndpointMock(

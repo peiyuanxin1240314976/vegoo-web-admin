@@ -2,74 +2,49 @@
  * 综合分析页本地 Mock（与 `mock/backend-api` 契约、`types.ts` 一致）
  * 由 `src/api/user-growth/comprehensive-analysis.ts` 中综合分析相关方法引用（接入真实接口前）
  */
-import type {
-  ComprehensiveAnalysisApiParams,
-  ComprehensiveAnalysisData,
-  ComprehensiveAnalysisFilterOptions,
-  CpiStatus,
-  SectionAppData
-} from '../types'
-
-export const MOCK_COMPREHENSIVE_ANALYSIS_FILTER_OPTIONS: ComprehensiveAnalysisFilterOptions = {
-  appOptions: [
-    { label: '全部', value: 'all' },
-    { label: 'Weather5', value: 'weather5' },
-    { label: 'PhoneTracker', value: 'phonetracker' }
-  ],
-  sourceOptions: [
-    { label: '全部', value: 'all' },
-    { label: 'Google Ads', value: 'google' },
-    { label: 'Facebook', value: 'facebook' },
-    { label: 'TikTok', value: 'tiktok' }
-  ],
-  countryOptions: [
-    { label: '全部', value: 'all' },
-    { label: '美国', value: 'US' },
-    { label: '英国', value: 'GB' },
-    { label: '日本', value: 'JP' }
-  ]
-}
+import type { ComprehensiveAnalysisApiParams, ComprehensiveAnalysisData, CpiStatus } from '../types'
 
 export const MOCK_COMPREHENSIVE_ANALYSIS_DATA: ComprehensiveAnalysisData = {
   kpis: [
     {
-      id: 'totalInstall',
-      title: '总安装量',
-      subTitle: '近7天',
-      primaryValue: '12,485',
-      trendText: '+8.5%',
+      id: 'cpiToday',
+      title: '今日CPI（综合）',
+      subTitle: '安装成本',
+      primaryValue: '$2.38',
+      trendText: '5.20%',
+      trendUp: true,
+      trendCompareLabel: 'vs昨日'
+    },
+    {
+      id: 'installsToday',
+      title: '今日安装数',
+      subTitle: '买量用户',
+      primaryValue: '42,156',
+      trendText: '2.30%',
       trendUp: true
     },
     {
-      id: 'totalSpend',
-      title: '总花费',
-      subTitle: '近7天',
-      primaryValue: '$48.2k',
-      trendText: '+3.2%',
-      trendUp: false
-    },
-    {
-      id: 'avgCpi',
-      title: '平均 CPI',
-      subTitle: '近7天',
-      primaryValue: '$2.65',
-      trendText: '-2.1%',
+      id: 'ecpmKpi',
+      title: 'ECPM',
+      subTitle: '广告变现效率',
+      primaryValue: '19.20',
+      trendText: '5.20%',
       trendUp: true
     },
     {
-      id: 'roiD1',
-      title: 'ROI D1',
-      subTitle: '近7天',
-      primaryValue: '112%',
-      trendText: '+4.0%',
+      id: 'roiD1Comprehensive',
+      title: '首日ROI（综合）',
+      subTitle: '回收率',
+      primaryValue: '87%',
+      trendText: '2.10%',
       trendUp: true
     },
     {
-      id: 'newUsers',
-      title: '新增用户',
-      subTitle: '近7天',
-      primaryValue: '9,820',
-      trendText: '+6.1%',
+      id: 'estProfit',
+      title: '预估利润',
+      subTitle: '今日',
+      primaryValue: '$3,358',
+      trendText: '8.40%',
       trendUp: true
     }
   ],
@@ -150,10 +125,10 @@ export const MOCK_COMPREHENSIVE_ANALYSIS_DATA: ComprehensiveAnalysisData = {
     estimated: [18.2, 18.5, 18.8, 19.0, 19.2, 19.5, 19.8],
     actual: [17.9, 18.1, 18.3, 18.0, 18.4, 18.5, 18.6],
     metrics: {
-      estimatedEcpm: '$19.8',
-      actualEcpm: '$18.6',
-      biasRate: '-6.1%',
-      biasAmount: '-$1.2'
+      estimatedEcpm: '$19.80',
+      actualEcpm: '$18.60',
+      biasRate: '-6.10%',
+      biasAmount: '-$1.20'
     }
   }
 }
@@ -197,27 +172,38 @@ function platformBarItemMatches(itemName: string, source: string): boolean {
 export function buildMockComprehensiveAnalysisData(
   params: ComprehensiveAnalysisApiParams
 ): ComprehensiveAnalysisData {
-  const key = `${params.date_start}|${params.date_end}|${params.s_app_id}|${params.source}|${params.s_country_code}`
+  const appKey = [...params.appIds].sort().join(',')
+  const key = `${params.date_start}|${params.date_end}|${appKey}|${params.source}|${params.s_country_code}`
   const h = hashStr(key)
   const jitter = 0.88 + (h % 25) / 100
   const d = cloneComprehensiveData(MOCK_COMPREHENSIVE_ANALYSIS_DATA)
 
   d.kpis = d.kpis.map((k) => {
-    if (k.id === 'totalInstall' || k.id === 'newUsers') {
+    if (k.id === 'installsToday') {
       const n = parseInt(String(k.primaryValue).replace(/,/g, ''), 10)
       const n2 = Math.max(0, Math.round(n * jitter))
       return { ...k, primaryValue: n2.toLocaleString('en-US') }
     }
-    if (k.id === 'totalSpend') {
-      const raw = String(k.primaryValue).replace(/[$k]/g, '')
-      const num = parseFloat(raw) * jitter
-      return { ...k, primaryValue: `$${num.toFixed(1)}k` }
+    if (k.id === 'estProfit') {
+      const raw = String(k.primaryValue).replace(/[$,]/g, '')
+      const num = parseInt(raw, 10) * jitter
+      return { ...k, primaryValue: `$${Math.round(num).toLocaleString('en-US')}` }
     }
-    if (k.id === 'avgCpi') {
+    if (k.id === 'cpiToday') {
       const num = parseFloat(String(k.primaryValue).replace('$', '')) * jitter
       return { ...k, primaryValue: `$${num.toFixed(2)}` }
     }
-    if (k.id === 'roiD1') {
+    if (k.id === 'ecpmKpi') {
+      const num = parseFloat(String(k.primaryValue)) * jitter
+      return {
+        ...k,
+        primaryValue: num.toLocaleString('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        })
+      }
+    }
+    if (k.id === 'roiD1Comprehensive') {
       const num = parseFloat(String(k.primaryValue).replace('%', '')) * (0.96 + (h % 8) / 100)
       return { ...k, primaryValue: `${Math.round(num)}%` }
     }
@@ -235,10 +221,10 @@ export function buildMockComprehensiveAnalysisData(
 
   d.appCpiRank = d.appCpiRank.map((row, i) => {
     let cpi = row.cpi * jitter
-    if (params.s_app_id && params.s_app_id === 'weather5' && row.name === 'Weather5') {
+    if (params.appIds.includes('weather5') && row.name === 'Weather5') {
       cpi *= 0.92
     }
-    if (params.s_app_id && params.s_app_id === 'phonetracker' && row.name === 'PhoneTracker') {
+    if (params.appIds.includes('phonetracker') && row.name === 'PhoneTracker') {
       cpi *= 0.9
     }
     return {
@@ -283,10 +269,10 @@ export function buildMockComprehensiveAnalysisData(
     estimated: d.ecpmAnalysis.estimated.map((v) => +(v * jitter).toFixed(1)),
     actual: d.ecpmAnalysis.actual.map((v) => +(v * jitter).toFixed(1)),
     metrics: {
-      estimatedEcpm: `$${(19.8 * jitter).toFixed(1)}`,
-      actualEcpm: `$${(18.6 * jitter).toFixed(1)}`,
-      biasRate: `${((h % 2 === 0 ? -1 : 1) * (5 + (h % 5))).toFixed(1)}%`,
-      biasAmount: `$${((h % 2 === 0 ? -1 : 1) * (0.8 + (h % 5) / 10)).toFixed(1)}`
+      estimatedEcpm: `$${(19.8 * jitter).toFixed(2)}`,
+      actualEcpm: `$${(18.6 * jitter).toFixed(2)}`,
+      biasRate: `${((h % 2 === 0 ? -1 : 1) * (5 + (h % 5))).toFixed(2)}%`,
+      biasAmount: `$${((h % 2 === 0 ? -1 : 1) * (0.8 + (h % 5) / 10)).toFixed(2)}`
     }
   }
 
@@ -306,81 +292,4 @@ export function buildMockComprehensiveAnalysisData(
   }
 
   return d
-}
-
-const CODE_TO_COUNTRY_LABEL: Record<string, string> = {
-  US: '美国',
-  GB: '英国',
-  JP: '日本',
-  DE: '德国',
-  FR: '法国',
-  BR: '巴西'
-}
-
-/** 看板视图 SectionApp 用 Mock（随筛选变化） */
-export function buildMockSectionAppData(params: ComprehensiveAnalysisApiParams): SectionAppData {
-  const h = hashStr(JSON.stringify(params))
-  const jitter = 0.9 + (h % 20) / 100
-  const cc = params.s_country_code.toUpperCase()
-  const countries = params.s_country_code
-    ? [CODE_TO_COUNTRY_LABEL[cc] ?? cc]
-    : (['美国', '日本', '德国'] as const)
-
-  const cpiBase = (i: number) => +(2.2 + i * 0.35 * jitter).toFixed(2)
-
-  return {
-    appCpiRank: [
-      { rank: 1, appName: 'PhoneTracker', cpi: cpiBase(3), change: 2.4, isHighlight: true },
-      { rank: 2, appName: 'Weather5', cpi: cpiBase(2), change: -1.2 },
-      { rank: 3, appName: 'BloodSugar2', cpi: cpiBase(1), change: 0.5 },
-      { rank: 4, appName: 'StepCounter', cpi: cpiBase(0), change: -0.8 }
-    ],
-    platformCountryMatrix: {
-      countries: [...countries],
-      rows: [
-        {
-          platform: 'Google Ads',
-          cells: Object.fromEntries(
-            countries.map((c, i) => [
-              c,
-              {
-                value: `$${(3.1 + i * 0.2).toFixed(2)}`,
-                changeRate: `${h % 2 === 0 ? '+' : '-'}${1 + (i % 3)}%`,
-                highlight: (i === 0 ? 'warn' : '') as '' | 'warn' | 'good'
-              }
-            ])
-          )
-        },
-        {
-          platform: 'TikTok',
-          cells: Object.fromEntries(
-            countries.map((c, i) => [
-              c,
-              {
-                value: `$${(2.4 + i * 0.15).toFixed(2)}`,
-                changeRate: `${h % 2 === 1 ? '+' : '-'}${2 + (i % 2)}%`,
-                highlight: '' as const
-              }
-            ])
-          )
-        }
-      ]
-    },
-    appCpiTrend: {
-      dates: ['03-14', '03-15', '03-16', '03-17', '03-18', '03-19', '03-20'],
-      target: 2.5,
-      series: [
-        {
-          name: 'PhoneTracker',
-          color: '#4B8EF1',
-          data: [2.1, 2.15, 2.2, 2.35, 2.5, 2.68, 2.9].map((v) => +(v * jitter).toFixed(2))
-        },
-        {
-          name: 'Weather5',
-          color: '#22c55e',
-          data: [1.9, 1.95, 2.0, 2.05, 2.1, 2.12, 2.15].map((v) => +(v * jitter).toFixed(2))
-        }
-      ]
-    }
-  }
 }

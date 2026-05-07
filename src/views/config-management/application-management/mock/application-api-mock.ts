@@ -1,8 +1,17 @@
 /**
  * 应用管理 Mock，与 `mock/backend-api` 契约及 `Api.Common.PaginatedResponse` 一致。
  */
+import FileSaver from 'file-saver'
 import { getAppNow } from '@/utils/app-now'
-import type { ApplicationAppItem, ApplicationFormPayload, ApplicationTableQuery } from '../types'
+import type {
+  ApplicationAppItem,
+  ApplicationFilterFormOptions,
+  ApplicationIconUploadResponse,
+  ApplicationFormPayload,
+  ApplicationOverviewStats,
+  ApplicationOverviewStatsQuery,
+  ApplicationTableQuery
+} from '../types'
 import { deriveIconColorFromId } from '../types'
 import { cloneApplicationMockList } from './data'
 
@@ -39,14 +48,75 @@ export function mockFetchApplicationTable(
   })
 }
 
+export function mockFetchApplicationOverviewStats(
+  params: ApplicationOverviewStatsQuery
+): Promise<ApplicationOverviewStats> {
+  const filtered = filterApps(mockList, {
+    current: 1,
+    size: 1,
+    keyword: params.keyword,
+    category: params.category,
+    platform: params.platform,
+    status: params.status,
+    creator: params.creator
+  })
+  return Promise.resolve({
+    totalApplications: filtered.length,
+    iosCount: filtered.filter((i) => i.platform === 'iOS').length,
+    androidCount: filtered.filter((i) => i.platform === 'Android').length,
+    pendingCount: filtered.filter((i) => i.status === '禁用').length
+  })
+}
+
+export function mockFetchApplicationFilterFormOptions(): Promise<ApplicationFilterFormOptions> {
+  return Promise.resolve({
+    categoryOptions: [
+      { label: 'Weather', value: 'Weather' },
+      { label: 'Health', value: 'Health' },
+      { label: 'Finance', value: 'Finance' },
+      { label: 'Travel', value: 'Travel' },
+      { label: 'Shopping', value: 'Shopping' },
+      { label: 'Entertainment', value: 'Entertainment' }
+    ],
+    creatorOptions: [
+      { label: '张三', value: '张三' },
+      { label: '李四', value: '李四' },
+      { label: '王五', value: '王五' }
+    ],
+    timezoneOptions: [
+      { label: 'PST', value: 'PST' },
+      { label: 'EST', value: 'EST' },
+      { label: 'CST', value: 'CST' },
+      { label: 'MST', value: 'MST' },
+      { label: 'UTC', value: 'UTC' },
+      { label: 'GMT+8', value: 'GMT+8' }
+    ]
+  })
+}
+
+export function mockUploadApplicationIcon(file: File): Promise<ApplicationIconUploadResponse> {
+  const safeName = file.name.replace(/\s+/g, '-').toLowerCase()
+  const now = getAppNow().getTime()
+  return Promise.resolve({
+    fileKey: `mock/app-icons/${now}-${safeName}`,
+    iconUrl: `https://cdn.example.com/mock/app-icons/${now}-${safeName}`
+  })
+}
+
 export function mockCreateApplication(data: ApplicationFormPayload): Promise<ApplicationAppItem> {
-  if (mockList.some((a) => a.id === data.id)) {
+  const generatedId = `APP${getAppNow().getTime()}`
+  const createdId = (data.id ?? '').trim() || generatedId
+  if (mockList.some((a) => a.id === createdId)) {
     return Promise.reject(new Error('应用 ID 已存在'))
   }
   const dateStr = getAppNow().toISOString().slice(0, 10)
+  const appIdResolved = String(data.appId ?? createdId).trim() || createdId
   const item: ApplicationAppItem = {
     ...data,
-    iconColor: data.iconColor ?? deriveIconColorFromId(data.id),
+    id: createdId,
+    appId: appIdResolved,
+    iconColor: data.iconColor ?? deriveIconColorFromId(createdId),
+    iconUrl: data.iconFileKey ?? data.iconUrl,
     packageId: data.packageId ?? data.bundleId,
     shortName: data.shortName ?? '',
     timezone: data.timezone ?? 'PST',
@@ -74,6 +144,8 @@ export function mockUpdateApplication(data: ApplicationFormPayload): Promise<App
   const next: ApplicationAppItem = {
     ...prev,
     ...data,
+    id: data.id ?? prev.id,
+    appId: data.appId ?? prev.appId,
     iconColor: data.iconColor ?? prev.iconColor,
     packageId: data.packageId ?? data.bundleId ?? prev.packageId,
     lastModifier: data.lastModifier ?? prev.lastModifier,
@@ -93,12 +165,50 @@ export function mockDeleteApplication(id: string): Promise<unknown> {
   return Promise.resolve({})
 }
 
-export function mockExportApplicationList(
+function csvCell(value: string) {
+  if (/[,"\n\r]/.test(value)) return `"${value.replace(/"/g, '""')}"`
+  return value
+}
+
+const EXPORT_HEADER = [
+  'id',
+  'appName',
+  'platform',
+  'bundleId',
+  'packageId',
+  'shortName',
+  'category',
+  'timezone',
+  'priority',
+  'status',
+  'creator',
+  'createTime'
+] as const
+
+/** Mock：按列表筛选生成 CSV 并触发下载（模拟文件流） */
+export async function mockExportApplicationList(
   params: Partial<ApplicationTableQuery>
-): Promise<{ downloadUrl: string; fileName: string }> {
-  void params
-  return Promise.resolve({
-    downloadUrl: 'https://example.com/exports/applications-mock.xlsx',
-    fileName: `applications-${getAppNow().getTime()}.xlsx`
-  })
+): Promise<void> {
+  const q: ApplicationTableQuery = {
+    current: 1,
+    size: 10000,
+    keyword: params.keyword ?? '',
+    category: params.category ?? '',
+    platform: params.platform ?? '',
+    status: params.status ?? '',
+    creator: params.creator ?? ''
+  }
+  const rows = filterApps(mockList, q)
+  const lines = [
+    '\uFEFF' + EXPORT_HEADER.join(','),
+    ...rows.map((r) =>
+      EXPORT_HEADER.map((key) => {
+        const v = r[key as keyof ApplicationAppItem]
+        const s = v === undefined || v === null ? '' : String(v)
+        return csvCell(s)
+      }).join(',')
+    )
+  ]
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' })
+  FileSaver.saveAs(blob, `applications-mock_${getAppNow().getTime()}.csv`)
 }

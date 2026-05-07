@@ -1,0 +1,84 @@
+{
+  "_comment": "Ad account management - overview stats cards.",
+  "fieldDescription": {
+    "request": {
+      "keyword": {
+        "type": "string",
+        "required": false,
+        "description": "Same keyword rule as table API."
+      },
+      "appId": {
+        "type": "string",
+        "required": false,
+        "description": "App filter; cockpit appOptions[].value. Empty string means all."
+      },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "description": "Terminal platform filter; cockpit platformOptions[].value. Empty string means all."
+      },
+      "source": {
+        "type": "string",
+        "required": false,
+        "description": "Ad platform filter; cockpit sourceOptions[].value. Empty string means all."
+      },
+      "status": {
+        "type": "string",
+        "required": false,
+        "enum": ["", "enabled", "disabled"],
+        "description": "Status filter. Empty string means all."
+      }
+    },
+    "response": {
+      "total": { "type": "number", "required": true, "description": "Total matched accounts." },
+      "enabled": { "type": "number", "required": true, "description": "Enabled account count." },
+      "disabled": { "type": "number", "required": true, "description": "Disabled account count." },
+      "platformCount": {
+        "type": "number",
+        "required": true,
+        "description": "Distinct ad platform (source) count under current filters."
+      }
+    }
+  },
+  "sampleRequest": {
+    "keyword": "",
+    "appId": "",
+    "platform": "",
+    "source": "",
+    "status": ""
+  },
+  "sampleResponse": {
+    "total": 4,
+    "enabled": 3,
+    "disabled": 1,
+    "platformCount": 4
+  },
+  "api": {
+    "url": "POST /api/config-management/ad-account-management/account/overview-stats",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "keyword?, appId?, platform?, source?, status?",
+    "responseBody": "AdAccountOverviewStats"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "Use exactly the same filter scope as table API.",
+      "Return all numeric fields as 0 when there is no data."
+    ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "page init",
+        "detail": "Load stats together with table data on page enter.",
+        "prerequisite": "none"
+      },
+      {
+        "moment": "user action",
+        "detail": "Reload when keyword or filters change."
+      }
+    ],
+    "defaultSelection": "Default filters are the same as table API.",
+    "dedupe": "Use the latest request result when requests overlap."
+  }
+}

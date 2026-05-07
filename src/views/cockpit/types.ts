@@ -51,6 +51,8 @@ export interface CockpitOverallDataPeriod {
   adAccountCount?: number
   adCost?: number
   adRevenue?: number
+  /** 广告收入（部分数据源字段名为 dAdRevenue，这里兼容） */
+  dAdRevenue?: number
   dCost: number
   dnu?: number
   dau: number
@@ -65,7 +67,7 @@ export interface CockpitOverallDataPeriod {
   proxyCost?: number
   /** 自然量（警示摘要用） */
   naturalCount?: number
-  /** 买量应用数（警示摘要用，单位：个） */
+  /** 买量用户数（警示摘要用，单位：个） */
   initialCount?: number
   /** 广告系列数（警示摘要用，单位：个） */
   adGroupCount?: number
@@ -87,6 +89,9 @@ export interface CockpitOverallData {
   /** 变化量（后端已算好，直接用于升降展示） */
   activeSubscriptionChange?: number
   adAccountCountChange?: number
+  /** 广告支出变化（推荐字段：dCostChange） */
+  dCostChange?: number
+  /** 兼容字段（旧/部分数据源）：广告支出变化 */
   adCostChange?: number
   dauChange?: number
   dnuChange?: number
@@ -96,6 +101,8 @@ export interface CockpitOverallData {
   totalRevenueChange?: number
   /** 自然量变化（警示摘要用） */
   naturalCountChange?: number
+  /** 买量用户数变化（警示摘要用） */
+  initialCountChange?: number
   /** 广告系列数变化（警示摘要用） */
   adGroupCountChange?: number
   /** 第一排折线统计：运营成本/广告支出 */
@@ -365,6 +372,30 @@ export interface CockpitAlertSummaryMetric {
   trend?: 'up' | 'down'
 }
 
+/** 今日 Tab 专属：四卡片 - 单行指标 */
+export interface CockpitTodaySummaryMetricItem {
+  label: string
+  /** 主值展示（可能为预格式化：$25207 / 129 / 53% 等） */
+  valueText: string
+  /** 右侧变化展示（可能为预格式化：$1770 / 7 / 28.0 等） */
+  changeText?: string
+  trend?: 'up' | 'down'
+}
+
+/** 今日 Tab 专属：四卡片 - 卡片单项 */
+export interface CockpitTodaySummaryCard {
+  key: 'adRevenueSummary' | 'adSpendSummary' | 'paidUsersSummary' | 'roiSummary'
+  title: string
+  items: CockpitTodaySummaryMetricItem[]
+}
+
+/** 昨日 Tab 专属：汇总面板 - 分组块（与截图的“广告支出汇总/代投汇总/代投明细/应用汇总”等一致） */
+export interface CockpitYesterdaySummarySection {
+  key: string
+  title: string
+  items: CockpitTodaySummaryMetricItem[]
+}
+
 /** 收入与成本趋势图 */
 export interface CockpitRevenueCostTrend {
   dates: string[]
@@ -375,11 +406,18 @@ export interface CockpitRevenueCostTrend {
 /** 广告平台 ROI&安装量表格行：近7日为折线图数据 */
 export interface CockpitChannelRoiInstallItem {
   channel: string
+  /** 广告平台 slug，与 iconfont 映射一致；可选，缺省时用 channel 文案解析 */
+  platform?: string
   spend: number
+  spendChange?: number
   installs: number
+  installsChange?: number
+  /** ROI（比例值，如 1.23） */
+  roi: number
+  roiChange?: number
   cpi: number
-  /** 近7日趋势，用于最后一列迷你折线图 */
-  trend: number[]
+  /** 近 7 日等指标序列（消耗/安装等，由接口或 mock 提供；表格可不展示） */
+  trend?: number[]
 }
 
 /** 广告平台 ROI&安装量接口：单日数据（list 中每个元素，接口可能返回 null） */
@@ -387,12 +425,16 @@ export interface CockpitChannelRoiInstallDayItem {
   cost?: number | null
   cpl?: number | null
   install?: number | null
+  roi?: number | null
 }
 
 /** 广告平台 ROI&安装量接口：单广告平台（data 数组中每个元素，list 为近 7 日数据） */
 export interface CockpitChannelRoiInstallApiItem {
   channel: string
   list: CockpitChannelRoiInstallDayItem[]
+  costChange?: number
+  installChange?: number
+  roiChange?: number
 }
 
 /** 广告平台 ROI&安装量接口响应（/api/v1/datacenter/analysis/cockpit/installAndRoiOfChannel） */
@@ -639,12 +681,16 @@ export interface CockpitTop10CampaignItem {
   roi: string
 }
 
-/** 驾驶舱全量数据（与后端 /api/v1/datacenter/analysis/cockpit/overview 返回结构对齐） */
+/** 驾驶舱页面合并用数据结构（可由单接口 overview 返回，或由 overall + top3 + 各子接口在前端合并） */
 export interface CockpitOverview {
   kpi: CockpitKpiCard[]
-  /** 警示模块左侧：运营摘要指标（DNU、自然量、买量应用等） */
+  /** 警示模块左侧：运营摘要指标（DNU、自然量、买量用户等） */
   alertSummaryMetrics?: CockpitAlertSummaryMetric[]
   alertBanners: CockpitAlertBanner[]
+  /** 今日 Tab 专属：四卡片数据 */
+  todaySummaryCards?: CockpitTodaySummaryCard[]
+  /** 昨日 Tab 专属：汇总面板（分组块列表） */
+  yesterdaySummarySections?: CockpitYesterdaySummarySection[]
   revenueCostTrend: CockpitRevenueCostTrend
   /** 广告平台 ROI&安装量表格数据 */
   channelRoiInstall?: CockpitChannelRoiInstallItem[]

@@ -2,29 +2,7 @@
  * 整体回收页本地 Mock（与 `mock/backend-api` 契约、`types.ts` 一致）
  * 由 `src/api/user-growth/overall-recovery.ts` 中整体回收相关方法引用（接入真实接口前）
  */
-import type { OverallRecoveryFilterOptions, OverallTabData, OrganicTabData } from '../types'
-
-// ─── 筛选选项 ──────────────────────────────────────────────────
-
-export const MOCK_OVERALL_RECOVERY_FILTER_OPTIONS: OverallRecoveryFilterOptions = {
-  appOptions: [
-    { label: '全部', value: 'all' },
-    { label: 'Weather5', value: 'weather5' }
-  ],
-  sourceOptions: [
-    { label: '全部', value: 'all' },
-    { label: 'Google', value: 'google' },
-    { label: 'Facebook', value: 'facebook' },
-    { label: 'TikTok', value: 'tiktok' }
-  ],
-  countryOptions: [
-    { label: '全部', value: 'all' },
-    { label: '美国', value: 'US' },
-    { label: '德国', value: 'DE' },
-    { label: '日本', value: 'JP' },
-    { label: '韩国', value: 'KR' }
-  ]
-}
+import type { OverallTabData, OrganicTabData } from '../types'
 
 // ─── Tab1: 整体回收 ────────────────────────────────────────────
 
@@ -138,6 +116,8 @@ export const MOCK_OVERALL_TAB_DATA: OverallTabData = {
   ],
   detailRows: [
     {
+      detailApp: 'weather5',
+      detailChannel: 'google',
       date: '03-09',
       adSpend: 8754,
       cpi: 1.13,
@@ -158,6 +138,8 @@ export const MOCK_OVERALL_TAB_DATA: OverallTabData = {
       retDay7: 18.4
     },
     {
+      detailApp: 'weather5',
+      detailChannel: 'facebook',
       date: '03-08',
       adSpend: 9216,
       cpi: 1.13,
@@ -178,6 +160,8 @@ export const MOCK_OVERALL_TAB_DATA: OverallTabData = {
       retDay7: 17.8
     },
     {
+      detailApp: 'weather5',
+      detailChannel: 'google',
       date: '03-07',
       adSpend: 9521,
       cpi: 1.13,

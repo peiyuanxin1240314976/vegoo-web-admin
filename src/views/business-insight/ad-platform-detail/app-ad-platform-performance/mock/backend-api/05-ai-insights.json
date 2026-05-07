@@ -1,0 +1,61 @@
+{
+  "_comment": "应用内广告平台表现 — AI 洞察与建议。对应 index.vue insights。",
+  "interaction": {
+    "route": "/business-insight/ad-platform-detail/app-ad-platform-performance",
+    "surface": "AI 洞察列表",
+    "triggers": ["查询刷新", "点击展开"]
+  },
+  "fieldDescription": {
+    "request": {
+      "startDate": { "type": "string", "required": true, "description": "YYYY-MM-DD。" },
+      "endDate": { "type": "string", "required": true, "description": "YYYY-MM-DD。" },
+      "countryCode": { "type": "string", "required": true, "description": "国家；空为全部。" },
+      "appId": { "type": "string", "required": true, "description": "应用，来自路由。" },
+      "source": { "type": "string", "required": false, "description": "广告平台上下文。" }
+    },
+    "response": {
+      "insights": {
+        "type": "AppAdPlatformAiInsightItem[]",
+        "required": true,
+        "description": "洞察卡片。"
+      }
+    },
+    "AppAdPlatformAiInsightItem": {
+      "type": { "type": "string", "required": true, "description": "分类标签（如瀑布流优化）。" },
+      "text": { "type": "string", "required": true, "description": "正文。" }
+    }
+  },
+  "sampleRequest": {
+    "startDate": "2025-12-01",
+    "endDate": "2025-12-31",
+    "countryCode": "",
+    "appId": "Weather8",
+    "source": "Google"
+  },
+  "sampleResponse": {
+    "insights": [
+      {
+        "type": "瀑布流优化",
+        "text": "在 Interstitial_LevelEnd 广告位中，AdMob 的填充率高达 99%，但 eCPM 低于 AppLovin，当前排序合理，可考虑提升 AppLovin floor price 以测试收益空间。"
+      },
+      {
+        "type": "广告位机会",
+        "text": "Rewarded._ExtraLife 的 eCPM 高达 $7.50，是收入效率最高的广告位。建议在应用内增加更多此广告位的曝光机会，以提升总收入。"
+      },
+      {
+        "type": "填充率预警",
+        "text": "Unity Ads 在激励视频广告位填充率仅为 92%，低于行业均值。建议补充备用广告网络或调整 waterfall 层级，避免库存浪费。"
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/business-insight/ad-platform-detail/app-ad-platform-performance/overview/ai-insights",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "startDate, endDate, countryCode, appId, source?",
+    "responseBody": "{ insights }"
+  },
+  "apiSuggestion": {
+    "notes": ["与父页 AI 契约区分：本页 insights 项为 type + text，无 highlights 数组。"]
+  }
+}

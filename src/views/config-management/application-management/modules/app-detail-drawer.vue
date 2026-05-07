@@ -1,253 +1,264 @@
 <template>
-  <!-- 遮罩层 -->
-  <transition name="fade">
-    <div v-if="visible" class="drawer-overlay" @click="handleClose" />
-  </transition>
+  <Teleport to="body">
+    <!-- 遮罩层 -->
+    <transition name="fade">
+      <div v-if="visible" class="drawer-overlay" @click="handleClose" />
+    </transition>
 
-  <!-- 抽屉主体 -->
-  <transition name="drawer-slide">
-    <div v-if="visible" class="app-detail-drawer">
-      <!-- ── 头部 ─────────────────────────────────── -->
-      <div class="drawer-header">
-        <div class="header-left">
-          <div class="app-icon" :style="{ background: appData?.iconColor || '#2dd4bf' }">
-            {{ appData?.appName?.charAt(0) || 'A' }}
+    <!-- 抽屉主体 -->
+    <transition name="drawer-slide">
+      <div v-if="visible" class="app-detail-drawer">
+        <!-- ── 头部 ─────────────────────────────────── -->
+        <div class="drawer-header">
+          <div class="header-left">
+            <div
+              class="app-icon"
+              :style="{ background: appData?.iconColor || 'var(--el-color-primary)' }"
+            >
+              {{ appData?.appName?.charAt(0) || 'A' }}
+            </div>
+            <div class="header-info">
+              <div class="header-name-row">
+                <span class="app-name">{{ appData?.appName }}</span>
+                <span
+                  :class="[
+                    'platform-badge',
+                    appData?.platform === 'Android'
+                      ? 'platform-badge--android'
+                      : 'platform-badge--ios'
+                  ]"
+                >
+                  <span class="platform-dot" />
+                  {{ appData?.platform }}
+                </span>
+              </div>
+              <div class="header-meta">
+                <span class="id-chip">{{ appData?.id }}</span>
+                <span class="meta-text">类别：{{ appData?.category }}</span>
+                <span
+                  :class="[
+                    'status-badge',
+                    appData?.status === '正常' ? 'status-badge--normal' : 'status-badge--disabled'
+                  ]"
+                  >{{ appData?.status }}</span
+                >
+              </div>
+            </div>
           </div>
-          <div class="header-info">
-            <div class="header-name-row">
-              <span class="app-name">{{ appData?.appName }}</span>
-              <span
-                :class="[
-                  'platform-badge',
-                  appData?.platform === 'Android'
-                    ? 'platform-badge--android'
-                    : 'platform-badge--ios'
-                ]"
-              >
-                <span class="platform-dot" />
-                {{ appData?.platform }}
-              </span>
-            </div>
-            <div class="header-meta">
-              <span class="id-chip">{{ appData?.id }}</span>
-              <span class="meta-text">类别：{{ appData?.category }}</span>
-              <span
-                :class="[
-                  'status-badge',
-                  appData?.status === '正常' ? 'status-badge--normal' : 'status-badge--disabled'
-                ]"
-                >{{ appData?.status }}</span
-              >
-            </div>
+          <div class="header-right">
+            <ElButton round class="edit-btn" size="small" @click="handleEdit">
+              <ElIcon><EditPen /></ElIcon>编辑
+            </ElButton>
+            <button class="close-btn" @click="handleClose">
+              <svg viewBox="0 0 16 16" fill="none" width="14" height="14">
+                <path
+                  d="M2 2l12 12M14 2L2 14"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </button>
           </div>
         </div>
-        <div class="header-right">
-          <ElButton round class="edit-btn" size="small" @click="handleEdit">
-            <ElIcon><EditPen /></ElIcon>编辑
+
+        <!-- ── 正文滚动区 ──────────────────────────── -->
+        <div class="drawer-body">
+          <!-- 基础信息 -->
+          <section class="detail-section">
+            <div class="section-title">基础信息</div>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-key">应用名</span>
+                <span class="info-val">{{ appData?.appName }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-key">应用简称</span>
+                <span class="info-val">{{ appData?.shortName }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-key">ID</span>
+                <span class="info-val">{{ appData?.id }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-key">类别</span>
+                <span class="info-val">{{ appData?.category }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-key">平台</span>
+                <span
+                  :class="[
+                    'platform-badge',
+                    appData?.platform === 'Android'
+                      ? 'platform-badge--android'
+                      : 'platform-badge--ios'
+                  ]"
+                >
+                  <span class="platform-dot" />{{ appData?.platform }}
+                </span>
+              </div>
+              <div class="info-item">
+                <span class="info-key">状态</span>
+                <span
+                  :class="[
+                    'status-badge',
+                    appData?.status === '正常' ? 'status-badge--normal' : 'status-badge--disabled'
+                  ]"
+                  >{{ appData?.status }}</span
+                >
+              </div>
+            </div>
+          </section>
+
+          <!-- 技术标识 -->
+          <section class="detail-section">
+            <div class="section-title">技术标识</div>
+            <div class="tech-list">
+              <div class="tech-item">
+                <span class="tech-key">app ID</span>
+                <div class="tech-val-row">
+                  <span class="tech-val tech-val--mono">{{ appData?.appId }}</span>
+                  <button class="icon-btn" @click="copyText(appData?.appId)">
+                    <el-icon><CopyDocument /></el-icon>
+                  </button>
+                </div>
+              </div>
+              <div class="tech-item">
+                <span class="tech-key">软件包ID</span>
+                <div class="tech-val-row">
+                  <span class="tech-val tech-val--mono">{{ appData?.packageId }}</span>
+                  <button class="icon-btn" @click="copyText(appData?.packageId)">
+                    <el-icon><CopyDocument /></el-icon>
+                  </button>
+                </div>
+              </div>
+              <div class="tech-item">
+                <span class="tech-key">应用商店ID</span>
+                <div class="tech-val-row">
+                  <span class="tech-val tech-val--mono">
+                    {{ appData?.storeId || appData?.bundleId }}
+                  </span>
+                  <button class="icon-btn icon-btn--link">
+                    <el-icon><Link /></el-icon>
+                  </button>
+                </div>
+              </div>
+              <div class="tech-item">
+                <span class="tech-key">地址</span>
+                <div class="tech-val-row">
+                  <span class="tech-val tech-val--link">
+                    {{ appData?.url || `https://${appData?.bundleId}` }}
+                  </span>
+                  <button class="icon-btn icon-btn--link">
+                    <el-icon><Link /></el-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 报表配置 -->
+          <section class="detail-section">
+            <div class="section-title">报表配置</div>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-key">报表时区</span>
+                <span class="info-val">{{ appData?.timezone || 'PST' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-key">优先级</span>
+                <span class="info-val">{{ appData?.priority }}</span>
+              </div>
+            </div>
+            <div class="toggle-display-grid">
+              <div class="toggle-display-item">
+                <span class="toggle-display-key">数据独立</span>
+                <span
+                  :class="[
+                    'bool-chip',
+                    appData?.dataIsolation ? 'bool-chip--yes' : 'bool-chip--no'
+                  ]"
+                >
+                  {{ appData?.dataIsolation ? '是' : '否' }}
+                </span>
+              </div>
+              <div class="toggle-display-item">
+                <span class="toggle-display-key">启用工具</span>
+                <span
+                  :class="['bool-chip', appData?.toolEnabled ? 'bool-chip--yes' : 'bool-chip--no']"
+                >
+                  {{ appData?.toolEnabled ? '是' : '否' }}
+                </span>
+              </div>
+              <div class="toggle-display-item">
+                <span class="toggle-display-key">预生成报表文件</span>
+                <span
+                  :class="['bool-chip', appData?.preGenReport ? 'bool-chip--yes' : 'bool-chip--no']"
+                >
+                  {{ appData?.preGenReport ? '是' : '否' }}
+                </span>
+              </div>
+              <div class="toggle-display-item">
+                <span class="toggle-display-key">使用订单明细</span>
+                <span
+                  :class="[
+                    'bool-chip',
+                    appData?.useOrderDetail ? 'bool-chip--yes' : 'bool-chip--no'
+                  ]"
+                >
+                  {{ appData?.useOrderDetail ? '是' : '否' }}
+                </span>
+              </div>
+              <div class="toggle-display-item">
+                <span class="toggle-display-key">报表展示订单</span>
+                <span
+                  :class="[
+                    'bool-chip',
+                    appData?.showOrderReport ? 'bool-chip--yes' : 'bool-chip--no'
+                  ]"
+                >
+                  {{ appData?.showOrderReport ? '是' : '否' }}
+                </span>
+              </div>
+            </div>
+          </section>
+
+          <!-- 操作记录 -->
+          <section class="detail-section detail-section--last">
+            <div class="section-title">操作记录</div>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-key">创建人</span>
+                <span class="info-val">{{ appData?.creator }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-key">创建时间</span>
+                <span class="info-val">{{ appData?.createTime || '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-key">最后修改人</span>
+                <span class="info-val">{{ appData?.lastModifier || '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-key">最后修改时间</span>
+                <span class="info-val">{{ appData?.lastModifyTime || '—' }}</span>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- ── 底部操作栏 ───────────────────────────── -->
+        <div class="drawer-footer">
+          <ElButton round class="footer-btn footer-btn--delete" @click="handleDelete">
+            删除应用
           </ElButton>
-          <button class="close-btn" @click="handleClose">
-            <svg viewBox="0 0 16 16" fill="none" width="14" height="14">
-              <path
-                d="M2 2l12 12M14 2L2 14"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-              />
-            </svg>
-          </button>
+          <ElButton round class="footer-btn footer-btn--edit" @click="handleEdit">
+            编辑应用
+          </ElButton>
         </div>
       </div>
-
-      <!-- ── 正文滚动区 ──────────────────────────── -->
-      <div class="drawer-body">
-        <!-- 基础信息 -->
-        <section class="detail-section">
-          <div class="section-title">基础信息</div>
-          <div class="info-grid">
-            <div class="info-item">
-              <span class="info-key">应用名</span>
-              <span class="info-val">{{ appData?.appName }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-key">应用简称</span>
-              <span class="info-val">{{ appData?.shortName }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-key">ID</span>
-              <span class="info-val">{{ appData?.id }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-key">类别</span>
-              <span class="info-val">{{ appData?.category }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-key">平台</span>
-              <span
-                :class="[
-                  'platform-badge',
-                  appData?.platform === 'Android'
-                    ? 'platform-badge--android'
-                    : 'platform-badge--ios'
-                ]"
-              >
-                <span class="platform-dot" />{{ appData?.platform }}
-              </span>
-            </div>
-            <div class="info-item">
-              <span class="info-key">状态</span>
-              <span
-                :class="[
-                  'status-badge',
-                  appData?.status === '正常' ? 'status-badge--normal' : 'status-badge--disabled'
-                ]"
-                >{{ appData?.status }}</span
-              >
-            </div>
-          </div>
-        </section>
-
-        <!-- 技术标识 -->
-        <section class="detail-section">
-          <div class="section-title">技术标识</div>
-          <div class="tech-list">
-            <div class="tech-item">
-              <span class="tech-key">Bundle ID</span>
-              <div class="tech-val-row">
-                <span class="tech-val tech-val--mono">{{ appData?.bundleId }}</span>
-                <button class="icon-btn" @click="copyText(appData?.bundleId)">
-                  <el-icon><CopyDocument /></el-icon>
-                </button>
-              </div>
-            </div>
-            <div class="tech-item">
-              <span class="tech-key">软件包ID</span>
-              <div class="tech-val-row">
-                <span class="tech-val tech-val--mono">{{ appData?.packageId }}</span>
-                <button class="icon-btn" @click="copyText(appData?.packageId)">
-                  <el-icon><CopyDocument /></el-icon>
-                </button>
-              </div>
-            </div>
-            <div class="tech-item">
-              <span class="tech-key">应用商店ID</span>
-              <div class="tech-val-row">
-                <span class="tech-val tech-val--mono">
-                  {{ appData?.storeId || appData?.bundleId }}
-                </span>
-                <button class="icon-btn icon-btn--link">
-                  <el-icon><Link /></el-icon>
-                </button>
-              </div>
-            </div>
-            <div class="tech-item">
-              <span class="tech-key">地址</span>
-              <div class="tech-val-row">
-                <span class="tech-val tech-val--link">
-                  {{ appData?.url || `https://${appData?.bundleId}` }}
-                </span>
-                <button class="icon-btn icon-btn--link">
-                  <el-icon><Link /></el-icon>
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- 报表配置 -->
-        <section class="detail-section">
-          <div class="section-title">报表配置</div>
-          <div class="info-grid">
-            <div class="info-item">
-              <span class="info-key">报表时区</span>
-              <span class="info-val">{{ appData?.timezone || 'PST' }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-key">优先级</span>
-              <span class="info-val">{{ appData?.priority }}</span>
-            </div>
-          </div>
-          <div class="toggle-display-grid">
-            <div class="toggle-display-item">
-              <span class="toggle-display-key">数据独立</span>
-              <span
-                :class="['bool-chip', appData?.dataIsolation ? 'bool-chip--yes' : 'bool-chip--no']"
-              >
-                {{ appData?.dataIsolation ? '是' : '否' }}
-              </span>
-            </div>
-            <div class="toggle-display-item">
-              <span class="toggle-display-key">启用工具</span>
-              <span
-                :class="['bool-chip', appData?.toolEnabled ? 'bool-chip--yes' : 'bool-chip--no']"
-              >
-                {{ appData?.toolEnabled ? '是' : '否' }}
-              </span>
-            </div>
-            <div class="toggle-display-item">
-              <span class="toggle-display-key">预生成报表文件</span>
-              <span
-                :class="['bool-chip', appData?.preGenReport ? 'bool-chip--yes' : 'bool-chip--no']"
-              >
-                {{ appData?.preGenReport ? '是' : '否' }}
-              </span>
-            </div>
-            <div class="toggle-display-item">
-              <span class="toggle-display-key">使用订单明细</span>
-              <span
-                :class="['bool-chip', appData?.useOrderDetail ? 'bool-chip--yes' : 'bool-chip--no']"
-              >
-                {{ appData?.useOrderDetail ? '是' : '否' }}
-              </span>
-            </div>
-            <div class="toggle-display-item">
-              <span class="toggle-display-key">报表展示订单</span>
-              <span
-                :class="[
-                  'bool-chip',
-                  appData?.showOrderReport ? 'bool-chip--yes' : 'bool-chip--no'
-                ]"
-              >
-                {{ appData?.showOrderReport ? '是' : '否' }}
-              </span>
-            </div>
-          </div>
-        </section>
-
-        <!-- 操作记录 -->
-        <section class="detail-section detail-section--last">
-          <div class="section-title">操作记录</div>
-          <div class="info-grid">
-            <div class="info-item">
-              <span class="info-key">创建人</span>
-              <span class="info-val">{{ appData?.creator }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-key">创建时间</span>
-              <span class="info-val">{{ appData?.createTime || '—' }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-key">最后修改人</span>
-              <span class="info-val">{{ appData?.lastModifier || '—' }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-key">最后修改时间</span>
-              <span class="info-val">{{ appData?.lastModifyTime || '—' }}</span>
-            </div>
-          </div>
-        </section>
-      </div>
-
-      <!-- ── 底部操作栏 ───────────────────────────── -->
-      <div class="drawer-footer">
-        <ElButton round class="footer-btn footer-btn--delete" @click="handleDelete">
-          删除应用
-        </ElButton>
-        <ElButton round class="footer-btn footer-btn--edit" @click="handleEdit">
-          编辑应用
-        </ElButton>
-      </div>
-    </div>
-  </transition>
+    </transition>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -287,27 +298,27 @@
 </script>
 
 <style lang="scss" scoped>
-  // ─── CSS 变量 ───────────────────────────────────────────
   .app-detail-drawer,
   .drawer-overlay {
-    --bg-drawer: #0f1829;
-    --bg-header: #131c2e;
-    --bg-section: rgb(255 255 255 / 2.5%);
-    --border: rgb(255 255 255 / 7%);
-    --border-accent: rgb(45 212 191 / 30%);
-    --text-primary: #e2e8f0;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
-    --accent: #2dd4bf;
-    --accent-dim: rgb(45 212 191 / 10%);
-    --android-green: #22c55e;
-    --android-bg: rgb(34 197 94 / 12%);
-    --ios-blue: #60a5fa;
-    --ios-bg: rgb(96 165 250 / 12%);
-    --status-green: #22c55e;
-    --status-bg: rgb(34 197 94 / 12%);
-    --red: #ef4444;
-    --red-dim: rgb(239 68 68 / 10%);
+    --dp-border: color-mix(in srgb, var(--el-color-primary) 14%, transparent);
+    --dp-border-soft: color-mix(in srgb, var(--el-color-primary) 10%, transparent);
+    --bg-drawer: color-mix(in srgb, var(--default-box-color) 97%, transparent);
+    --bg-header: color-mix(in srgb, var(--default-box-color) 94%, transparent);
+    --border: var(--dp-border-soft);
+    --border-accent: color-mix(in srgb, var(--el-color-primary) 35%, transparent);
+    --text-primary: var(--text-primary);
+    --text-secondary: var(--text-secondary);
+    --text-muted: var(--text-tertiary);
+    --accent: var(--el-color-primary);
+    --accent-dim: color-mix(in srgb, var(--el-color-primary) 12%, transparent);
+    --android-green: var(--art-success);
+    --android-bg: color-mix(in srgb, var(--art-success) 14%, transparent);
+    --ios-blue: color-mix(in srgb, #60a5fa 65%, var(--el-color-primary) 35%);
+    --ios-bg: color-mix(in srgb, var(--el-color-primary) 14%, transparent);
+    --status-green: var(--art-success);
+    --status-bg: color-mix(in srgb, var(--art-success) 14%, transparent);
+    --red: var(--art-danger);
+    --red-dim: color-mix(in srgb, var(--art-danger) 12%, transparent);
   }
 
   // ─── 遮罩 ──────────────────────────────────────────────
@@ -330,9 +341,21 @@
     flex-direction: column;
     width: 468px;
     font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-    background: var(--bg-drawer);
-    border-left: 1px solid var(--border);
-    box-shadow: -12px 0 48px rgb(0 0 0 / 50%);
+    background:
+      linear-gradient(
+        175deg,
+        color-mix(in srgb, var(--default-box-color) 98%, transparent) 0%,
+        color-mix(in srgb, var(--default-bg-color) 45%, transparent) 100%
+      ),
+      linear-gradient(
+        120deg,
+        color-mix(in srgb, var(--el-color-primary) 5%, transparent),
+        color-mix(in srgb, var(--theme-color) 4%, transparent)
+      );
+    border-left: 1px solid var(--dp-border);
+    box-shadow:
+      -12px 0 48px rgb(0 0 0 / 22%),
+      inset 1px 0 0 color-mix(in srgb, white 6%, transparent);
   }
 
   // ─── 头部 ──────────────────────────────────────────────
@@ -343,7 +366,7 @@
     justify-content: space-between;
     padding: 20px 20px 16px;
     background: var(--bg-header);
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--dp-border-soft);
   }
 
   .header-left {
@@ -425,14 +448,16 @@
     padding: 5px 12px !important;
     font-size: 12px !important;
     font-weight: 500 !important;
-    color: var(--accent) !important;
+    color: var(--el-color-primary) !important;
     background: var(--accent-dim) !important;
-    border: 1px solid var(--border-accent) !important;
-    border-radius: 7px !important;
-    transition: all 0.15s;
+    border: 1px solid color-mix(in srgb, var(--el-color-primary) 32%, transparent) !important;
+    border-radius: 8px !important;
+    transition:
+      background-color var(--duration-fast) var(--ease-out),
+      transform var(--duration-fast) var(--ease-out);
 
     &:hover {
-      background: rgb(45 212 191 / 18%) !important;
+      background: color-mix(in srgb, var(--el-color-primary) 20%, transparent) !important;
       transform: translateY(-1px);
     }
 
@@ -449,15 +474,18 @@
     height: 30px;
     color: var(--text-muted);
     cursor: pointer;
-    background: rgb(255 255 255 / 4%);
-    border: 1px solid var(--border);
-    border-radius: 7px;
-    transition: all 0.15s;
+    background: color-mix(in srgb, var(--default-box-color) 88%, transparent);
+    border: 1px solid var(--dp-border-soft);
+    border-radius: 8px;
+    transition:
+      color var(--duration-fast) var(--ease-out),
+      background-color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out);
 
     &:hover {
       color: var(--text-primary);
-      background: rgb(255 255 255 / 8%);
-      border-color: rgb(255 255 255 / 14%);
+      background: color-mix(in srgb, var(--default-box-color) 72%, transparent);
+      border-color: color-mix(in srgb, var(--el-color-primary) 28%, transparent);
     }
   }
 
@@ -476,7 +504,7 @@
     }
 
     &::-webkit-scrollbar-thumb {
-      background: rgb(255 255 255 / 8%);
+      background: color-mix(in srgb, var(--default-box-color) 55%, transparent);
       border-radius: 2px;
     }
   }
@@ -484,7 +512,7 @@
   // ─── Section ───────────────────────────────────────────
   .detail-section {
     padding: 16px 20px;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--dp-border-soft);
 
     &--last {
       border-bottom: none;
@@ -497,8 +525,8 @@
     font-size: 13px;
     font-weight: 600;
     line-height: 1;
-    color: var(--accent);
-    border-left: 3px solid var(--accent);
+    color: var(--el-color-primary);
+    border-left: 3px solid var(--el-color-primary);
   }
 
   // ─── 二列信息网格 ──────────────────────────────────────
@@ -626,7 +654,7 @@
     &--link {
       font-family: SFMono-Regular, Consolas, monospace;
       font-size: 12px;
-      color: var(--ios-blue);
+      color: var(--el-color-primary);
       word-break: break-all;
     }
   }
@@ -645,16 +673,16 @@
     transition: all 0.15s;
 
     &:hover {
-      color: var(--accent);
+      color: var(--el-color-primary);
       background: var(--accent-dim);
     }
 
     &--link {
-      color: var(--ios-blue);
-      opacity: 0.7;
+      color: var(--el-color-primary);
+      opacity: 0.75;
 
       &:hover {
-        background: rgb(96 165 250 / 10%);
+        background: color-mix(in srgb, var(--el-color-primary) 12%, transparent);
         opacity: 1;
       }
     }
@@ -673,9 +701,9 @@
     align-items: center;
     justify-content: space-between;
     padding: 9px 12px;
-    background: rgb(255 255 255 / 2.5%);
-    border: 1px solid var(--border);
-    border-radius: 7px;
+    background: color-mix(in srgb, var(--default-box-color) 90%, transparent);
+    border: 1px solid var(--dp-border-soft);
+    border-radius: 8px;
   }
 
   .toggle-display-key {
@@ -696,7 +724,7 @@
 
     &--no {
       color: var(--text-muted);
-      background: rgb(255 255 255 / 5%);
+      background: color-mix(in srgb, var(--text-tertiary) 10%, transparent);
     }
   }
 
@@ -707,7 +735,7 @@
     gap: 12px;
     padding: 16px 20px;
     background: var(--bg-header);
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--dp-border-soft);
   }
 
   .footer-btn {
@@ -731,12 +759,17 @@
 
     &--edit {
       font-weight: 600 !important;
-      color: #0b1120 !important;
-      background: var(--accent) !important;
-      border: none !important;
+      color: var(--el-color-white) !important;
+      background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--el-color-primary) 92%, black 8%),
+        color-mix(in srgb, var(--el-color-primary) 78%, black 22%)
+      ) !important;
+      border: 1px solid color-mix(in srgb, var(--el-color-primary) 38%, transparent) !important;
+      box-shadow: 0 6px 16px color-mix(in srgb, var(--el-color-primary) 26%, transparent) !important;
 
       &:hover {
-        filter: brightness(1.1);
+        filter: brightness(1.05);
         transform: translateY(-1px);
       }
     }
@@ -746,6 +779,19 @@
   .drawer-slide-enter-active,
   .drawer-slide-leave-active {
     transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .drawer-slide-enter-active,
+    .drawer-slide-leave-active {
+      transition-duration: 0.01ms;
+    }
+
+    .edit-btn:hover,
+    .footer-btn--delete:hover,
+    .footer-btn--edit:hover {
+      transform: none;
+    }
   }
 
   .drawer-slide-enter-from,

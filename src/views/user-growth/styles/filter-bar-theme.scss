@@ -1,0 +1,483 @@
+@use '../ad-performance/styles/ap-card-fx.scss' as ap;
+
+@mixin filter-panel($padding: 14px 16px) {
+  position: relative;
+  padding: $padding;
+  overflow: auto hidden;
+  border-radius: 12px;
+
+  @include ap.ap-neon-bg;
+  @include ap.ap-card-mesh;
+  @include ap.ap-panel-hover;
+
+  &:hover,
+  &:active {
+    transform: none !important;
+  }
+
+  &:active {
+    transition-duration: var(--duration-fast);
+  }
+}
+
+@mixin filter-panel-children {
+  > * {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+@mixin filter-row($gap: 12px) {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: $gap;
+  align-items: center;
+  max-width: 100%;
+  overflow: auto hidden;
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--default-border) 60%, transparent);
+    border-radius: 9999px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  @media (width <= 768px) {
+    gap: 8px;
+  }
+}
+
+@mixin filter-select-size($width: 240px, $min-width: 200px, $max-width: 240px) {
+  flex: 0 0 auto;
+  width: $width;
+  min-width: $min-width;
+  max-width: $max-width;
+
+  @media (width <= 768px) {
+    flex: 0 0 auto;
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+
+@mixin date-range-size($width: 250px) {
+  flex: 0 0 $width;
+  width: $width;
+  min-width: $width;
+  max-width: $width;
+
+  @media (width <= 768px) {
+    flex: 1 1 100%;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+
+@mixin date-range-trigger($selector, $width: 250px) {
+  #{$selector} {
+    @include date-range-size($width);
+  }
+
+  :deep(#{$selector}.el-date-editor.el-date-editor--daterange),
+  :deep(#{$selector}.el-date-editor--daterange),
+  :deep(#{$selector}.el-date-editor),
+  #{$selector}:deep(.el-date-editor.el-date-editor--daterange),
+  #{$selector}:deep(.el-date-editor--daterange),
+  #{$selector}:deep(.el-date-editor),
+  #{$selector}:deep(.el-range-editor.el-input__wrapper),
+  #{$selector}:deep(.el-date-editor .el-input__wrapper) {
+    flex: 0 0 $width !important;
+    width: $width !important;
+    min-width: $width !important;
+    max-width: $width !important;
+    min-height: 36px;
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    border-radius: var(--el-border-radius-base, 4px) !important;
+    box-shadow: none !important;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      background 0.2s ease;
+  }
+
+  :deep(#{$selector}.el-date-editor.el-date-editor--daterange:hover),
+  :deep(#{$selector}.el-date-editor--daterange:hover),
+  :deep(#{$selector}.el-date-editor:hover),
+  #{$selector}:deep(.el-date-editor.el-date-editor--daterange:hover),
+  #{$selector}:deep(.el-date-editor--daterange:hover),
+  #{$selector}:deep(.el-date-editor:hover),
+  #{$selector}:deep(.el-range-editor.el-input__wrapper:hover),
+  #{$selector}:deep(.el-date-editor .el-input__wrapper:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: none !important;
+  }
+
+  :deep(#{$selector}.el-date-editor.el-date-editor--daterange.is-active),
+  :deep(#{$selector}.el-date-editor.el-date-editor--daterange:focus-within),
+  :deep(#{$selector}.el-date-editor--daterange.is-active),
+  :deep(#{$selector}.el-date-editor--daterange:focus-within),
+  :deep(#{$selector}.el-date-editor.is-active),
+  :deep(#{$selector}.el-date-editor:focus-within),
+  #{$selector}:deep(.el-date-editor.el-date-editor--daterange.is-active),
+  #{$selector}:deep(.el-date-editor.el-date-editor--daterange:focus-within),
+  #{$selector}:deep(.el-date-editor--daterange.is-active),
+  #{$selector}:deep(.el-date-editor--daterange:focus-within),
+  #{$selector}:deep(.el-date-editor.is-active),
+  #{$selector}:deep(.el-date-editor:focus-within),
+  #{$selector}:deep(.el-range-editor.el-input__wrapper.is-focus),
+  #{$selector}:deep(.el-date-editor .el-input__wrapper.is-focus) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: none !important;
+  }
+
+  :deep(#{$selector} .el-range-input),
+  :deep(#{$selector} .el-range-separator),
+  #{$selector}:deep(.el-range-input),
+  #{$selector}:deep(.el-range-separator) {
+    font-size: 14px;
+    color: var(--el-text-color-primary);
+  }
+
+  :deep(#{$selector} .el-range-input::placeholder),
+  #{$selector}:deep(.el-range-input::placeholder) {
+    color: var(--el-text-color-placeholder);
+  }
+
+  :deep(#{$selector} .el-range__icon),
+  :deep(#{$selector} .el-range__close-icon),
+  #{$selector}:deep(.el-range__icon),
+  #{$selector}:deep(.el-range__close-icon) {
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+  }
+
+  @media (width <= 768px) {
+    :deep(#{$selector}.el-date-editor.el-date-editor--daterange),
+    :deep(#{$selector}.el-date-editor--daterange),
+    :deep(#{$selector}.el-date-editor),
+    #{$selector}:deep(.el-date-editor.el-date-editor--daterange),
+    #{$selector}:deep(.el-date-editor--daterange),
+    #{$selector}:deep(.el-date-editor),
+    #{$selector}:deep(.el-range-editor.el-input__wrapper),
+    #{$selector}:deep(.el-date-editor .el-input__wrapper) {
+      flex: 1 1 100% !important;
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: 100% !important;
+    }
+  }
+}
+
+@mixin date-trigger($anchor, $date-class, $width: 240px) {
+  #{$anchor} :deep(#{$date-class}) {
+    @include filter-select-size($width, 200px, $width);
+
+    --el-input-border-color: var(--el-color-primary);
+    --el-border-color: var(--el-color-primary);
+    --el-input-focus-border-color: var(--el-color-primary);
+    --el-border-color-focus: var(--el-color-primary);
+    --el-border-color-hover: var(--el-color-primary);
+  }
+
+  #{$anchor} :deep(#{$date-class}.el-date-editor) {
+    flex: 0 0 $width !important;
+    width: $width !important;
+    min-width: 200px !important;
+    max-width: $width !important;
+  }
+
+  #{$anchor} :deep(#{$date-class} .el-input__wrapper) {
+    width: 100% !important;
+    min-height: 36px;
+    background: color-mix(in srgb, var(--el-color-primary) 6%, transparent) !important;
+    border: 1px solid var(--el-color-primary) !important;
+    border-radius: var(--el-border-radius-base, 4px) !important;
+    box-shadow: none !important;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      background 0.2s ease;
+  }
+
+  #{$anchor} :deep(#{$date-class}.el-date-editor .el-input__wrapper) {
+    border-color: var(--el-color-primary) !important;
+  }
+
+  #{$anchor} :deep(#{$date-class} .el-input__wrapper:hover) {
+    border-color: var(--el-border-color-hover) !important;
+    box-shadow: none !important;
+  }
+
+  #{$anchor} :deep(#{$date-class} .el-input__wrapper.is-focus),
+  #{$anchor} :deep(#{$date-class} .el-input__wrapper:focus-within) {
+    background: color-mix(in srgb, var(--el-color-primary) 6%, transparent) !important;
+    border-color: var(--el-input-focus-border-color) !important;
+    box-shadow: none !important;
+  }
+
+  #{$anchor} :deep(#{$date-class} .el-input__inner) {
+    font-size: 14px;
+    color: var(--el-text-color-primary);
+  }
+
+  #{$anchor} :deep(#{$date-class} .el-input__inner::placeholder) {
+    color: var(--el-text-color-placeholder);
+  }
+
+  #{$anchor} :deep(#{$date-class} .el-input__prefix-inner),
+  #{$anchor} :deep(#{$date-class} .el-input__icon),
+  #{$anchor} :deep(#{$date-class} .el-input__suffix) {
+    color: var(--el-color-primary);
+  }
+
+  @media (width <= 768px) {
+    #{$anchor} :deep(#{$date-class}.el-date-editor) {
+      flex: 1 1 100% !important;
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: 100% !important;
+    }
+
+    #{$anchor} :deep(#{$date-class} .el-input__wrapper) {
+      width: 100% !important;
+    }
+  }
+}
+
+@mixin element-select-trigger($selector) {
+  #{$selector} :deep(.el-select__wrapper) {
+    min-height: 36px;
+    padding: 4px 12px;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: none;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      background 0.2s ease;
+  }
+
+  #{$selector} :deep(.el-select__wrapper:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: none;
+  }
+
+  #{$selector} :deep(.el-select__wrapper.is-focused) {
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: none;
+  }
+
+  #{$selector} :deep(.el-select__selected-item),
+  #{$selector} :deep(.el-select__selected-item .el-select__placeholder) {
+    color: var(--el-text-color-primary);
+  }
+
+  #{$selector} :deep(.el-select__placeholder.is-transparent),
+  #{$selector} :deep(.el-select__selected-item.is-transparent) {
+    color: var(--el-text-color-placeholder);
+  }
+
+  #{$selector} :deep(.el-select__caret),
+  #{$selector} :deep(.el-select__suffix),
+  #{$selector} :deep(.el-select__icon),
+  #{$selector} :deep(.el-icon.el-select__loading) {
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+  }
+}
+
+@mixin app-platform-trigger($selector) {
+  #{$selector} :deep(.app-platform-search-select) {
+    color: var(--el-text-color-primary);
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: none;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      background 0.2s ease;
+  }
+
+  #{$selector} :deep(.app-platform-search-select:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: none;
+  }
+
+  #{$selector} :deep(.app-platform-search-select.is-open) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: none;
+  }
+
+  #{$selector} :deep(.app-platform-search-select__text),
+  #{$selector} :deep(.app-platform-search-select__tag),
+  #{$selector} :deep(.app-platform-search-select__more) {
+    color: var(--el-text-color-primary);
+  }
+
+  #{$selector} :deep(.app-platform-search-select__text.is-placeholder) {
+    color: var(--el-text-color-placeholder);
+  }
+
+  #{$selector} :deep(.app-platform-search-select__suffix) {
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+  }
+}
+
+@mixin select-popper($popper-class) {
+  :global(.#{$popper-class}.el-popper),
+  :global(.#{$popper-class}.el-select__popper),
+  :global(.#{$popper-class}.el-picker__popper) {
+    overflow: hidden;
+    background: var(--el-bg-color-overlay) !important;
+    border: 1px solid var(--el-border-color-light) !important;
+    border-radius: 8px !important;
+    box-shadow: var(--el-box-shadow-light) !important;
+  }
+
+  :global(.#{$popper-class} .el-select-dropdown__list) {
+    padding: 6px;
+  }
+
+  :global(.#{$popper-class} .el-select-dropdown__item) {
+    height: 36px;
+    margin: 2px 0;
+    font-size: 14px;
+    line-height: 36px;
+    color: var(--el-text-color-primary);
+    border-radius: 6px;
+    transition:
+      background 0.15s ease,
+      color 0.15s ease;
+  }
+
+  :global(.#{$popper-class} .el-select-dropdown__item:hover),
+  :global(.#{$popper-class} .el-select-dropdown__item.is-hovering) {
+    color: var(--el-text-color-primary);
+    background: var(--el-fill-color-light);
+  }
+
+  :global(.#{$popper-class} .el-select-dropdown__item.is-selected) {
+    font-weight: 600;
+    color: var(--el-text-color-primary);
+    background: var(--el-fill-color);
+  }
+}
+
+@mixin date-picker-popper($popper-class) {
+  $tc: var(--theme-color, var(--art-primary, #3b82f6));
+
+  :global(.#{$popper-class}.el-picker__popper) {
+    --el-datepicker-active-color: #{$tc};
+    --el-datepicker-hover-text-color: #{$tc};
+  }
+
+  :global(.#{$popper-class}.el-picker-panel),
+  :global(.#{$popper-class} .el-picker-panel) {
+    color: var(--el-text-color-primary);
+    background: transparent;
+    border-color: color-mix(in srgb, #{$tc} 28%, transparent) !important;
+  }
+
+  :global(.#{$popper-class} .el-date-picker__header-label),
+  :global(.#{$popper-class} .el-picker-panel__icon-btn) {
+    color: var(--el-text-color-regular);
+  }
+
+  :global(.#{$popper-class} .el-picker-panel__icon-btn:hover) {
+    color: #{$tc};
+  }
+
+  :global(.#{$popper-class} .el-date-table th) {
+    color: var(--el-text-color-secondary);
+  }
+
+  :global(.#{$popper-class} .el-date-table td.available .el-date-table-cell__text:hover) {
+    color: #{$tc};
+  }
+
+  :global(.#{$popper-class} .el-date-table td.in-range .el-date-table-cell) {
+    background: color-mix(in srgb, #{$tc} 12%, transparent) !important;
+  }
+
+  :global(.#{$popper-class} .el-date-table td.in-range div) {
+    background: color-mix(in srgb, #{$tc} 12%, transparent) !important;
+  }
+
+  :global(
+    .#{$popper-class} .el-date-table td.start-date .el-date-table-cell .el-date-table-cell__text
+  ),
+  :global(
+    .#{$popper-class} .el-date-table td.end-date .el-date-table-cell .el-date-table-cell__text
+  ) {
+    color: #fff !important;
+    background: linear-gradient(135deg, #{$tc}, color-mix(in srgb, #{$tc} 68%, #000)) !important;
+    border-radius: var(--el-border-radius-base, 4px);
+  }
+
+  :global(.#{$popper-class} .el-date-table td.start-date div),
+  :global(.#{$popper-class} .el-date-table td.end-date div) {
+    color: #fff !important;
+    background: linear-gradient(135deg, #{$tc}, color-mix(in srgb, #{$tc} 68%, #000)) !important;
+  }
+
+  :global(.#{$popper-class} .el-date-table td.start-date .el-date-table-cell),
+  :global(.#{$popper-class} .el-date-table td.end-date .el-date-table-cell) {
+    background: transparent !important;
+  }
+
+  :global(.#{$popper-class} .el-date-table td.today .el-date-table-cell__text) {
+    font-weight: 600;
+    color: #{$tc};
+  }
+
+  :global(.#{$popper-class} .el-picker-panel__shortcut:hover) {
+    color: #{$tc};
+  }
+}
+
+@mixin app-platform-popper($popper-class) {
+  :global(.#{$popper-class} .app-platform-search-select__panel) {
+    color: var(--el-text-color-primary);
+  }
+
+  :global(.#{$popper-class} .app-platform-search-select__header) {
+    color: color-mix(in srgb, var(--el-text-color-regular) 78%, #fff);
+  }
+
+  :global(.#{$popper-class} .app-platform-search-select__row:hover),
+  :global(.#{$popper-class} .app-platform-search-select__row.is-active) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 14%,
+      transparent
+    );
+  }
+}

@@ -67,7 +67,6 @@
 // 整块卡片悬浮：上浮 + 霓虹描边/外光（显式列出 transition 属性，避免 all）
 @mixin mp-panel-hover-lift {
   transition:
-    transform 0.4s var(--ease-out),
     box-shadow 0.45s var(--ease-out),
     border-color 0.35s var(--ease-default);
 
@@ -79,39 +78,31 @@
       inset 0 1px 0 rgb(244 244 245 / 15%),
       0 0 64px rgb(59 130 246 / 14%),
       0 0 100px rgb(16 185 129 / 7%);
-    transform: translateY(-6px);
   }
 
   &:active {
     transition-duration: 0.12s;
-    transform: translateY(-3px);
   }
 }
 
 // 与 mp-panel-hover-lift 同用：标题跟手加光
 @mixin mp-panel-header-title-hover {
   .panel__header .title {
-    transition:
-      transform 0.35s var(--ease-out),
-      filter 0.35s var(--ease-out);
+    transition: filter 0.35s var(--ease-out);
   }
 
   &:hover .panel__header .title {
     filter: drop-shadow(0 0 16px rgb(34 211 238 / 35%));
-    transform: translateX(5px) scale(1.03);
   }
 }
 
 // 消耗面板标题选择器不同
 @mixin mp-spend-header-title-hover {
   .spend-panel__title {
-    transition:
-      transform 0.35s var(--ease-out),
-      filter 0.35s var(--ease-out);
+    transition: filter 0.35s var(--ease-out);
   }
 
   &:hover .spend-panel__title {
     filter: drop-shadow(0 0 16px rgb(96 165 250 / 38%));
-    transform: translateX(5px) scale(1.03);
   }
 }

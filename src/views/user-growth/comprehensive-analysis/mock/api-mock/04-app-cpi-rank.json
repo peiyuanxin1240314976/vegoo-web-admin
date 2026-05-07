@@ -1,0 +1,9 @@
+{
+  "data": [
+    { "id": "app1", "name": "PhoneTracker", "cpi": 3.21, "trend": "down" },
+    { "id": "app2", "name": "Weather5", "cpi": 2.88, "trend": "up" },
+    { "id": "app3", "name": "BloodSugar2", "cpi": 2.54, "trend": "flat" },
+    { "id": "app4", "name": "StepCounter", "cpi": 2.31, "trend": "up" },
+    { "id": "app5", "name": "SleepTrack", "cpi": 2.09, "trend": "down" }
+  ]
+}

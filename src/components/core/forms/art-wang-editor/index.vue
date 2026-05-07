@@ -71,10 +71,7 @@
   } as const
 
   // 计算属性：上传服务器地址
-  const uploadServer = computed(
-    () =>
-      props.uploadConfig?.server || `${import.meta.env.VITE_API_URL}/api/common/upload/wangeditor`
-  )
+  const uploadServer = computed(() => props.uploadConfig?.server || '/api/common/upload/wangeditor')
 
   // 合并上传配置
   const mergedUploadConfig = computed(() => ({

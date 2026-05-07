@@ -22,8 +22,8 @@ export const staticRoutes: AppRouteRecordRaw[] = [
   // {
   //   path: '/welcome',
   //   name: 'WelcomeStatic',
-  //   component: () => import('@views/dashboard/console/index.vue'),
-  //   meta: { title: 'menus.dashboard.title' }
+  //   component: () => import('@views/cockpit/index.vue'),
+  //   meta: { title: 'menus.cockpit.title' }
   // },
   {
     path: '/auth/login',

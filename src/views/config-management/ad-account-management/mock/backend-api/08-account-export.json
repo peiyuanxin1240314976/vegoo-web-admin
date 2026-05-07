@@ -1,0 +1,86 @@
+{
+  "_comment": "Ad account management - export current filtered result. Response is HTTP binary file stream only (no JSON body).",
+  "fieldDescription": {
+    "request": {
+      "keyword": {
+        "type": "string",
+        "required": false,
+        "description": "Keyword filter. Empty string means no keyword filter."
+      },
+      "appId": {
+        "type": "string",
+        "required": false,
+        "description": "App filter; cockpit appOptions[].value. Empty string means all."
+      },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "description": "Terminal platform filter; cockpit platformOptions[].value. Empty string means all."
+      },
+      "source": {
+        "type": "string",
+        "required": false,
+        "description": "Ad platform filter; cockpit sourceOptions[].value. Empty string means all."
+      },
+      "status": {
+        "type": "string",
+        "required": false,
+        "enum": ["", "enabled", "disabled"],
+        "description": "Status filter. Empty string means all."
+      }
+    },
+    "response": {
+      "httpBody": {
+        "type": "binary stream",
+        "required": true,
+        "description": "HTTP 响应体为**原始文件二进制流**（chunked/stream 写出均可），**不是** JSON。前端使用 `responseType: 'blob'`（或项目内 `requestBlob`）接收后触发下载。"
+      },
+      "contentType": {
+        "type": "string (response header)",
+        "required": true,
+        "description": "响应头 `Content-Type`，须与文件格式一致，例如 `text/csv;charset=utf-8`、`application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`。"
+      },
+      "contentDisposition": {
+        "type": "string (response header)",
+        "required": true,
+        "description": "响应头 `Content-Disposition`：`attachment` + `filename` / `filename*=`（RFC 5987），供前端或浏览器解析默认文件名。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "keyword": "",
+    "appId": "",
+    "platform": "",
+    "source": "",
+    "status": ""
+  },
+  "sampleResponse": {
+    "_note": "无 JSON 业务体；联调时以实际 HTTP 响应流为准。`sampleResponse` 不可用表格类 JSON 代替文件内容。",
+    "httpBody": "<binary stream — not representable as JSON object>"
+  },
+  "api": {
+    "url": "POST /api/config-management/ad-account-management/account/export",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "keyword?, appId?, platform?, source?, status?",
+    "responseBody": "binary file stream (blob); not JSON"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "后端须以**流式**返回文件字节（或等价的整块二进制响应），禁止将本导出接口约定为「仅返回 JSON + Base64」作为主交付形态。",
+      "若业务为异步导出（任务 `fileId` + 二次拉取 URL），应使用**独立契约**描述任务与下载 URL，不与「即时流式导出」混在同一 endpoint 语义内。",
+      "无匹配行时仍返回合法文件流（至少含表头），`Content-Type` / `Content-Disposition` 与有数据时一致。",
+      "建议导出列：status, appId, appName, platform, source, managerAccount, adAccounts, credential, tokenConfigured。"
+    ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "user action",
+        "detail": "Called when the top export button is clicked."
+      }
+    ],
+    "defaultSelection": "Use the current page keyword and filters.",
+    "dedupe": "Disable export button while exporting."
+  }
+}

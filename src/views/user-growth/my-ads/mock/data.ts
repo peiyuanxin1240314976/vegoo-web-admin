@@ -157,6 +157,16 @@ const summaryTab: MyAdsSummaryTabMock = {
   ],
   progressList: [
     {
+      id: '6906353663222',
+      name: 'PT_FB_639_ZZW_VO_BR_0128',
+      platformIcon: 'f',
+      spend: '2323.85',
+      budget: '700.00',
+      progress: 331.98,
+      statusType: null,
+      roi1: 36.31
+    },
+    {
       name: 'Weather5 US Google',
       spend: '$5,200',
       budget: '$6,500',

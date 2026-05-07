@@ -1,16 +1,25 @@
 /**
  * 用户增长 - 整体回收 API（Mock / 远程由模块 `views/user-growth/overall-recovery/config/data-source` 切换）
+ *
+ * 顶栏筛选项复用公用 **`GET .../cockpit/meta-filter-options`**（`useCockpitMetaFilterStore`），本模块不提供 meta-filter-options。
  */
 import request from '@/utils/http'
 import { ANALYSIS_API_BASE } from '@/api/analysis-api-base'
+import { toAppsRequestBody } from '@/utils/app-id-request'
 import type {
-  OverallRecoveryFilterOptions,
+  DailyVolumeItem,
+  OrganicTabData,
+  OverallKpiCard,
   OverallRecoveryFilterState,
   OverallTabData,
-  OrganicTabData,
-  SelectOption
+  RecoveryCurveData,
+  RecoveryDetailRow,
+  RoiCompareRow
 } from '@/views/user-growth/overall-recovery/types'
-import { buildOverallRecoveryApiParams } from '@/views/user-growth/overall-recovery/utils/buildApiParams'
+import {
+  buildOverallRecoveryCommonBody,
+  buildOverallRecoveryDetailRecordsBody
+} from '@/views/user-growth/overall-recovery/utils/buildApiParams'
 import {
   OverallRecoveryEndpoint,
   isOverallRecoveryEndpointMock
@@ -19,6 +28,13 @@ import * as overallRecoveryMock from '@/views/user-growth/overall-recovery/mock/
 
 /** 与其它 user-growth 模块同级结构：`.../analysis/user-growth/overall-recovery` */
 export const OVERALL_RECOVERY_BASE = `${ANALYSIS_API_BASE}/user-growth/overall-recovery`
+
+function withApps<T extends { appIds: string[] }>(body: T) {
+  return {
+    ...body,
+    apps: toAppsRequestBody(body.appIds)
+  }
+}
 
 function unwrapDataDeep<T = unknown>(value: unknown, maxDepth = 3): T {
   let cur: any = value
@@ -38,62 +54,106 @@ function asRecord(value: unknown): Record<string, any> {
   return value && typeof value === 'object' ? (value as Record<string, any>) : {}
 }
 
-/** 整体回收 - 下拉筛选选项 */
-export function fetchOverallRecoveryFilterOptions() {
-  if (isOverallRecoveryEndpointMock(OverallRecoveryEndpoint.MetaFilterOptions)) {
-    return overallRecoveryMock.mockFetchOverallRecoveryMetaFilterOptions()
+type OverallFilterPick = Pick<
+  OverallRecoveryFilterState,
+  'startDate' | 'endDate' | 's_app_id' | 'source' | 's_country_code'
+>
+
+/** Tab1 — KPI */
+export function fetchOverallTabKpis(filters: OverallFilterPick) {
+  if (isOverallRecoveryEndpointMock(OverallRecoveryEndpoint.OverallTabKpis)) {
+    return overallRecoveryMock.mockFetchOverallTabKpis()
   }
+  const data = buildOverallRecoveryCommonBody(filters)
   return request
-    .post<any>({
-      url: `${OVERALL_RECOVERY_BASE}/meta-filter-options`,
-      data: {}
-    })
-    .then((res) => unwrapDataDeep<OverallRecoveryFilterOptions>(res))
-    .then((opts) => ({
-      appOptions: asArray<SelectOption>(opts?.appOptions),
-      sourceOptions: asArray<SelectOption>(opts?.sourceOptions),
-      countryOptions: asArray<SelectOption>(opts?.countryOptions)
+    .post<any>({ url: `${OVERALL_RECOVERY_BASE}/overall-tab/kpis`, data: withApps(data) })
+    .then((res) => asRecord(unwrapDataDeep(res)))
+    .then((obj) => ({ kpis: asArray(obj.kpis) }))
+}
+
+/** Tab1 — 回收曲线 */
+export function fetchOverallTabRecoveryCurve(filters: OverallFilterPick) {
+  if (isOverallRecoveryEndpointMock(OverallRecoveryEndpoint.OverallTabRecoveryCurve)) {
+    return overallRecoveryMock.mockFetchOverallTabRecoveryCurve()
+  }
+  const data = buildOverallRecoveryCommonBody(filters)
+  return request
+    .post<any>({ url: `${OVERALL_RECOVERY_BASE}/overall-tab/recovery-curve`, data: withApps(data) })
+    .then((res) => asRecord(unwrapDataDeep(res)))
+    .then((obj) => ({
+      recoveryCurve: obj.recoveryCurve ?? { days: [], series: [] }
     }))
 }
 
-/** 整体回收 - Tab1 整体回收数据 */
-export function fetchOverallTabData(
-  filters: Pick<OverallRecoveryFilterState, 'dateRange' | 's_app_id' | 'source' | 's_country_code'>
-) {
-  if (isOverallRecoveryEndpointMock(OverallRecoveryEndpoint.OverallTab)) {
-    return overallRecoveryMock.mockFetchOverallRecoveryOverallTab()
+/** Tab1 — 日均量 */
+export function fetchOverallTabDailyVolume(filters: OverallFilterPick) {
+  if (isOverallRecoveryEndpointMock(OverallRecoveryEndpoint.OverallTabDailyVolume)) {
+    return overallRecoveryMock.mockFetchOverallTabDailyVolume()
   }
-  const params = buildOverallRecoveryApiParams(filters)
+  const data = buildOverallRecoveryCommonBody(filters)
   return request
-    .post<any>({
-      url: `${OVERALL_RECOVERY_BASE}/overall-tab`,
-      data: params
+    .post<any>({ url: `${OVERALL_RECOVERY_BASE}/overall-tab/daily-volume`, data: withApps(data) })
+    .then((res) => asRecord(unwrapDataDeep(res)))
+    .then((obj) => ({ dailyVolume: asArray(obj.dailyVolume) }))
+}
+
+/** Tab1 — ROI 对比 */
+export function fetchOverallTabRoiCompare(filters: OverallFilterPick) {
+  if (isOverallRecoveryEndpointMock(OverallRecoveryEndpoint.OverallTabRoiCompare)) {
+    return overallRecoveryMock.mockFetchOverallTabRoiCompare()
+  }
+  const data = buildOverallRecoveryCommonBody(filters)
+  return request
+    .post<any>({ url: `${OVERALL_RECOVERY_BASE}/overall-tab/roi-compare`, data: withApps(data) })
+    .then((res) => asRecord(unwrapDataDeep(res)))
+    .then((obj) => ({ roiCompare: asArray(obj.roiCompare) }))
+}
+
+/** Tab1 — 明细表（含卡片子筛；`all` 由调用方传入，在 body 构建时转为 `''`） */
+export function fetchOverallTabDetailRecords(
+  filters: OverallFilterPick,
+  detail: { detailApp: string; detailChannel: string }
+): Promise<{ detailRows: RecoveryDetailRow[] }> {
+  const data = buildOverallRecoveryDetailRecordsBody(filters, detail)
+  if (isOverallRecoveryEndpointMock(OverallRecoveryEndpoint.OverallTabDetailRecords)) {
+    return overallRecoveryMock.mockFetchOverallTabDetailRecords(data)
+  }
+  return request
+    .post<any>({ url: `${OVERALL_RECOVERY_BASE}/overall-tab/detail-records`, data: withApps(data) })
+    .then((res) => asRecord(unwrapDataDeep(res)))
+    .then((obj) => ({ detailRows: asArray(obj.detailRows) as RecoveryDetailRow[] }))
+}
+
+/** Tab1 — 并行拉齐五段数据（等价于旧单接口 `overall-tab`） */
+export function fetchOverallTabData(filters: OverallFilterPick): Promise<OverallTabData> {
+  const detailAll = { detailApp: 'all' as const, detailChannel: 'all' as const }
+  return Promise.all([
+    fetchOverallTabKpis(filters),
+    fetchOverallTabRecoveryCurve(filters),
+    fetchOverallTabDailyVolume(filters),
+    fetchOverallTabRoiCompare(filters),
+    fetchOverallTabDetailRecords(filters, detailAll)
+  ]).then(
+    ([kpi, curve, vol, roi, det]): OverallTabData => ({
+      kpis: kpi.kpis as OverallKpiCard[],
+      recoveryCurve: curve.recoveryCurve as RecoveryCurveData,
+      dailyVolume: vol.dailyVolume as DailyVolumeItem[],
+      roiCompare: roi.roiCompare as RoiCompareRow[],
+      detailRows: det.detailRows
     })
-    .then((res) => unwrapDataDeep<OverallTabData>(res))
-    .then((d) => {
-      const obj = asRecord(d)
-      return {
-        kpis: asArray(obj.kpis),
-        recoveryCurve: obj.recoveryCurve ?? { days: [], series: [] },
-        dailyVolume: asArray(obj.dailyVolume),
-        roiCompare: asArray(obj.roiCompare),
-        detailRows: asArray(obj.detailRows)
-      } satisfies OverallTabData
-    })
+  )
 }
 
 /** 整体回收 - Tab2 自然量分析数据 */
-export function fetchOrganicTabData(
-  filters: Pick<OverallRecoveryFilterState, 'dateRange' | 's_app_id' | 'source' | 's_country_code'>
-) {
+export function fetchOrganicTabData(filters: OverallFilterPick) {
   if (isOverallRecoveryEndpointMock(OverallRecoveryEndpoint.OrganicTab)) {
     return overallRecoveryMock.mockFetchOverallRecoveryOrganicTab()
   }
-  const params = buildOverallRecoveryApiParams(filters)
+  const data = buildOverallRecoveryCommonBody(filters)
   return request
     .post<any>({
       url: `${OVERALL_RECOVERY_BASE}/organic-tab`,
-      data: params
+      data: withApps(data)
     })
     .then((res) => unwrapDataDeep<OrganicTabData>(res))
     .then((d) => {

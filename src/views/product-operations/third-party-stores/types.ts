@@ -12,6 +12,17 @@ export interface PlatformCard {
   lastSync: string
 }
 
+export interface ThirdPartyStoresPlatformDetail {
+  id: string
+  name: string
+  status: 'connected' | 'warning' | 'pending'
+  appCount: number
+  lastSync: string
+  createdAt: string
+  updatedAt: string
+  remarks: string
+}
+
 export interface FilterState {
   platform: string
   appStore: string
@@ -101,11 +112,59 @@ export interface ThirdPartyStoresDashboardPayload {
  */
 export interface ThirdPartyStoresQueryParams {
   platform?: string
-  app_store?: string
-  s_app_id?: string
+  appStore?: string
+  appId?: string
   source?: string
   channel?: string
-  t_date_start?: string
-  t_date_end?: string
+  startDate?: string
+  endDate?: string
   currency?: string
+}
+
+export interface SelectOptionItem {
+  label: string
+  value: string
+}
+
+/**
+ * 本模块独有筛选项（不包含 cockpit 通用维度：app/platform/source/country）。
+ * - 通用维度：直接读 `useCockpitMetaFilterStore().data`
+ * - 模块独有：由 `POST /api/product-operations/third-party-stores/meta/filter-options` 提供
+ */
+export interface ThirdPartyStoresFilterOptionsData {
+  appStoreOptions: SelectOptionItem[]
+  channelOptions: SelectOptionItem[]
+  currencyOptions: SelectOptionItem[]
+}
+
+export interface ThirdPartyStoresPlatformDetailRequest {
+  platformId: string
+}
+
+export interface ThirdPartyStoresPlatformDetailResponse {
+  detail: ThirdPartyStoresPlatformDetail
+}
+
+export interface ThirdPartyStoresPlatformCreateRequest {
+  name: string
+}
+
+export interface ThirdPartyStoresPlatformCreateResponse {
+  id: string
+}
+
+export interface ThirdPartyStoresPlatformFixAuthRequest {
+  platformId: string
+}
+
+export interface ThirdPartyStoresPlatformFixAuthResponse {
+  detail: ThirdPartyStoresPlatformDetail
+}
+
+export interface ThirdPartyStoresExportRequest extends ThirdPartyStoresQueryParams {
+  exportType: 'dashboard'
+}
+
+export interface ThirdPartyStoresExportResponse {
+  downloadUrl: string
 }

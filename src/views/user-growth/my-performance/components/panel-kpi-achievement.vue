@@ -68,7 +68,8 @@
 
   defineOptions({ name: 'MyPerformancePanelKpiAchievement' })
 
-  function clampScore(n: number) {
+  function clampScore(n: number | null | undefined) {
+    if (n === null || n === undefined) return 0
     if (!Number.isFinite(n)) return 0
     return Math.min(100, Math.max(0, n))
   }
@@ -96,6 +97,7 @@
 
   const ringColor = computed(() => {
     const v = props.achievement.score
+    if (v === null || v === undefined) return 'var(--text-tertiary)'
     if (v >= 90) return 'var(--art-success)'
     if (v >= 80) return 'var(--art-primary)'
     return 'var(--art-warning)'
@@ -424,7 +426,6 @@
         0 0 32px rgb(16 185 129 / 14%),
         0 0 48px rgb(34 211 238 / 8%);
       opacity: 1;
-      transform: translateX(5px) translateY(-3px);
 
       &::before {
         height: 62%;
@@ -435,7 +436,6 @@
 
     &:active {
       transition-duration: var(--duration-fast);
-      transform: translateX(3px) translateY(-1px);
     }
   }
 

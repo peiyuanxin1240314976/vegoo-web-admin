@@ -1,0 +1,70 @@
+{
+  "_comment": "BC 管理页面 - 顶部统计卡片（BC总数/健康可用/有封户记录/本月开户数）。与 bc-tab.vue 的 stats 对齐。",
+  "fieldDescription": {
+    "request": {
+      "keyword": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "关键词（BM ID / 名称）。"
+      },
+      "source": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "广告平台筛选。"
+      },
+      "status": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "enum": ["", "健康", "可用", "不再使用", "封禁", "其他"],
+        "description": "状态筛选。"
+      },
+      "ownerType": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "enum": ["", "企业户", "个人户", "小额广告户"],
+        "description": "开户主体筛选。"
+      },
+      "banRecord": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "enum": ["", "有", "无"],
+        "description": "封户记录筛选。"
+      }
+    },
+    "response": {
+      "total": { "type": "number", "required": true, "description": "BC 总数。" },
+      "healthy": { "type": "number", "required": true, "description": "健康/可用 BC 数。" },
+      "banned": { "type": "number", "required": true, "description": "有封户记录 BC 数。" },
+      "monthOpen": { "type": "number", "required": true, "description": "本月开户数（汇总）。" }
+    }
+  },
+  "sampleRequest": { "keyword": "", "source": "", "status": "", "ownerType": "", "banRecord": "" },
+  "sampleResponse": {
+    "code": 200,
+    "message": "success",
+    "data": { "total": 128, "healthy": 96, "banned": 12, "monthOpen": 34 }
+  },
+  "api": {
+    "url": "POST /api/account-management/bc-management/overview-stats",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "{ keyword?, source?, status?, ownerType?, banRecord? }",
+    "responseBody": "{ total, healthy, banned, monthOpen }"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面初始化",
+        "detail": "BC 管理页首屏渲染统计卡片。与列表请求解耦，避免依赖分页列表计算。"
+      },
+      { "moment": "用户操作", "detail": "筛选条件变化后刷新卡片统计（与列表同筛选维度）。" }
+    ],
+    "defaultSelection": "默认请求体为全空字符串（代表不限制筛选）。",
+    "dedupe": "可与列表并行请求。"
+  }
+}

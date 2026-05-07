@@ -19,6 +19,14 @@ import { computed } from 'vue'
 import { useMenuStore } from '@/store/modules/menu'
 import { useSettingStore } from '@/store/modules/setting'
 
+/** 主布局滚动容器：内层 `.layout-content` 为内容区主滚动条，`#app-main` 亦可能滚动（见 views/index/style.scss） */
+function forEachAppLayoutScrollEl(fn: (el: HTMLElement) => void) {
+  const appMain = document.getElementById('app-main')
+  if (appMain) fn(appMain)
+  const layoutContent = document.querySelector<HTMLElement>('#app-main .layout-content')
+  if (layoutContent) fn(layoutContent)
+}
+
 export function useCommon() {
   const menuStore = useMenuStore()
   const settingStore = useSettingStore()
@@ -39,13 +47,15 @@ export function useCommon() {
 
   /**
    * 滚动到页面顶部
-   * 查找主内容区域并将其滚动位置重置为顶部
+   * 主内容区实际多在 `#app-main .layout-content` 上滚动，需一并重置；小屏下可能为 window/body。
    */
   const scrollToTop = () => {
-    const scrollContainer = document.getElementById('app-main')
-    if (scrollContainer) {
-      scrollContainer.scrollTop = 0
-    }
+    forEachAppLayoutScrollEl((el) => {
+      el.scrollTop = 0
+    })
+    window.scrollTo(0, 0)
+    document.documentElement.scrollTop = 0
+    document.body.scrollTop = 0
   }
 
   /**
@@ -53,13 +63,11 @@ export function useCommon() {
    * 使用 smooth 行为实现平滑滚动效果
    */
   const smoothScrollToTop = () => {
-    const scrollContainer = document.getElementById('app-main')
-    if (scrollContainer) {
-      scrollContainer.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      })
-    }
+    const opts = { top: 0, behavior: 'smooth' as const }
+    forEachAppLayoutScrollEl((el) => {
+      el.scrollTo(opts)
+    })
+    window.scrollTo(opts)
   }
 
   /**
@@ -68,13 +76,12 @@ export function useCommon() {
    * @param smooth 是否使用平滑滚动
    */
   const scrollTo = (top: number, smooth: boolean = false) => {
-    const scrollContainer = document.getElementById('app-main')
-    if (scrollContainer) {
-      scrollContainer.scrollTo({
-        top,
-        behavior: smooth ? 'smooth' : 'auto'
-      })
-    }
+    const behavior: ScrollBehavior = smooth ? 'smooth' : 'auto'
+    const opts: ScrollToOptions = { top, behavior }
+    forEachAppLayoutScrollEl((el) => {
+      el.scrollTo(opts)
+    })
+    window.scrollTo(opts)
   }
 
   return {

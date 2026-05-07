@@ -1,0 +1,111 @@
+{
+  "_comment": "代投分析 - 非汇总子 Tab：近 7 天 KPI 行。对应 types.ts: AgencySubTabKpiPayload。请求体为含首尾共 7 天的 [startDate, endDate]；前端用应用当前业务日作为 endDate，startDate = endDate 往前推 6 天（与 src/api/agency-analysis.ts fetchAgencySubTabKpiLast7 一致）。",
+  "fieldDescription": {
+    "request": {
+      "agencyTab": {
+        "type": "string",
+        "required": true,
+        "enum": ["gatherone", "kuainiao", "chuhai"],
+        "description": "当前子 Tab（后三个 Tab）标识。"
+      },
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "近 7 天窗口起始日 YYYY-MM-DD（含）；与 endDate 搭配为连续 7 个自然日。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": true,
+        "description": "近 7 天窗口结束日 YYYY-MM-DD（含）；前端默认取 getAppTodayYYYYMMDD()，startDate = endDate 减 6 天。"
+      },
+      "appId": {
+        "type": "string",
+        "required": false,
+        "default": "all",
+        "description": "应用 ID；all 代表全部。"
+      },
+      "source": {
+        "type": "string",
+        "required": false,
+        "default": "all",
+        "description": "广告平台（source）；all 代表全部。"
+      }
+    },
+    "response": {
+      "periodLabel": {
+        "type": "string",
+        "required": true,
+        "description": "展示期文案（如「近7天」）。"
+      },
+      "metrics": {
+        "type": "AgencySubTabKpiMetricItem[]",
+        "required": true,
+        "description": "KPI 指标列表（顺序由后端控制）。"
+      }
+    },
+    "AgencySubTabKpiMetricItem": {
+      "key": {
+        "type": "string",
+        "required": true,
+        "enum": [
+          "spend",
+          "roi1",
+          "cpa",
+          "installs",
+          "appCount",
+          "accountCount",
+          "campaignCount",
+          "adsetCount",
+          "countryCount",
+          "days"
+        ],
+        "description": "指标 key（闭合枚举）。"
+      },
+      "label": { "type": "string", "required": true, "description": "指标名称。" },
+      "value": {
+        "type": "string",
+        "required": true,
+        "description": "指标展示值（含货币符号/百分比/单位等）。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "agencyTab": "gatherone",
+    "startDate": "2026-04-12",
+    "endDate": "2026-04-18",
+    "appId": "all",
+    "source": "all"
+  },
+  "sampleResponse": {
+    "periodLabel": "近7天",
+    "metrics": [
+      { "key": "spend", "label": "广告支出", "value": "$1945" },
+      { "key": "roi1", "label": "首日ROI", "value": "102%" },
+      { "key": "cpa", "label": "CPA", "value": "-" },
+      { "key": "installs", "label": "代投买量用户数", "value": "31984" },
+      { "key": "appCount", "label": "在投应用数", "value": "1" },
+      { "key": "accountCount", "label": "广告账户数", "value": "2" },
+      { "key": "campaignCount", "label": "广告系列数", "value": "8" },
+      { "key": "adsetCount", "label": "广告组数", "value": "15" },
+      { "key": "countryCount", "label": "投放国家数", "value": "21" },
+      { "key": "days", "label": "投放天数", "value": "7" }
+    ]
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/business-insight/agency-analysis/subtab/kpi/last7",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "agencyTab, startDate, endDate, appId?, source?",
+    "responseBody": "periodLabel, metrics"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户切换到非汇总子 Tab",
+        "detail": "与子 Tab 的 KPI 区块渲染绑定：显示「近7天」这一行。",
+        "prerequisite": "依赖当前筛选条件（agencyTab/startDate/endDate/应用/广告平台）。"
+      }
+    ],
+    "defaultSelection": "agencyTab 由 Tab 决定；appId/source 默认 all；endDate 默认取应用当前业务日，startDate 为其前第 6 天（共 7 天）。"
+  }
+}

@@ -22,7 +22,7 @@
       {
         "moment": "用户操作",
         "detail": "任务行「暂停」`pauseOrderImport`。",
-        "prerequisite": "`OrderImportApiSource.pauseImport`。"
+        "prerequisite": "`OrderImportListApiSource.pauseImport`。"
       }
     ],
     "defaultSelection": "无",

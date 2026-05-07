@@ -1,5 +1,6 @@
 import type { ComprehensiveAnalysisApiParams, ComprehensiveAnalysisFilterState } from '../types'
 import { getAppNow, cloneAppDate } from '@/utils/app-now'
+import { toAppIdsRequestBody } from '@/utils/app-id-request'
 
 function pad2(n: number) {
   return String(n).padStart(2, '0')
@@ -26,23 +27,19 @@ export function resolveDateRangeFromPreset(dateRange: string): {
   return { date_start: formatYmd(start), date_end: formatYmd(end) }
 }
 
-/** UI 筛选「全部」→ 请求体空字符串（与 ad-performance mock 约定一致） */
-function allToEmpty(v: string) {
-  return v === 'all' ? '' : v
+/** 筛选维度「全部」：请求体须为 `''`；兼容历史 UI/meta 仍使用字面量 `all` */
+function dimensionToApiValue(v: string) {
+  return v === 'all' || v === '' ? '' : v
 }
 
 export function buildComprehensiveAnalysisApiParams(
-  filters: Pick<
-    ComprehensiveAnalysisFilterState,
-    'dateRange' | 's_app_id' | 'adPlatform' | 's_country_code'
-  >
+  filters: ComprehensiveAnalysisFilterState
 ): ComprehensiveAnalysisApiParams {
-  const { date_start, date_end } = resolveDateRangeFromPreset(filters.dateRange)
   return {
-    date_start,
-    date_end,
-    s_app_id: allToEmpty(filters.s_app_id),
-    source: allToEmpty(filters.adPlatform),
-    s_country_code: allToEmpty(filters.s_country_code)
+    date_start: filters.date_start,
+    date_end: filters.date_end,
+    appIds: toAppIdsRequestBody(filters.s_app_id),
+    source: dimensionToApiValue(filters.adPlatform),
+    s_country_code: dimensionToApiValue(filters.s_country_code)
   }
 }

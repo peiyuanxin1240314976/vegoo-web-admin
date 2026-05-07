@@ -1,6 +1,6 @@
 <!-- 用户管理 - 左侧面板：标题、统计卡片、筛选、用户列表 -->
 <template>
-  <div class="user-left-panel art-full-height flex flex-col">
+  <div class="user-left-panel flex min-h-0 h-full flex-col">
     <!-- 第一排：左侧标题 + 说明 + 右侧「新建用户」 -->
     <div class="panel-row header-row">
       <div class="header-title-wrap">
@@ -103,7 +103,7 @@
 
   export interface UserFilterForm {
     userName?: string
-    role?: string
+    role?: number | ''
     status?: string
   }
 
@@ -113,22 +113,17 @@
       filterForm: UserFilterForm
       /** 是否处于批量选择模式（表格显示勾选列） */
       batchMode?: boolean
-      roleOptions?: { label: string; value: string }[]
+      roleOptions?: { label: string; value: number | '' }[]
       statusOptions?: { label: string; value: string }[]
     }>(),
     {
       batchMode: false,
-      roleOptions: () => [
-        { label: '所有角色', value: '' },
-        { label: '管理层/老板', value: 'admin' },
-        { label: '投放人员', value: 'ops' }
-      ],
+      roleOptions: () => [{ label: '所有角色', value: '' }],
       statusOptions: () => [
         { label: '所有状态', value: '' },
-        { label: '在线', value: '1' },
-        { label: '离线', value: '2' },
-        { label: '异常', value: '3' },
-        { label: '已禁用', value: '4' }
+        { label: '待激活', value: '待激活' },
+        { label: '活跃', value: '活跃' },
+        { label: '禁用', value: '禁用' }
       ]
     }
   )
@@ -160,21 +155,21 @@
     },
     {
       key: 'active',
-      label: '在线',
+      label: '活跃',
       sublabel: '当前页',
       value: props.stats.active,
       icon: UserFilled
     },
     {
       key: 'disabled',
-      label: '已禁用',
+      label: '禁用',
       sublabel: '当前页',
       value: props.stats.disabled,
       icon: CircleCloseFilled
     },
     {
       key: 'pending',
-      label: '离线 / 异常',
+      label: '待激活',
       sublabel: '当前页',
       value: props.stats.pending,
       icon: Clock
@@ -188,9 +183,12 @@
 
 <style scoped lang="scss">
   .user-left-panel {
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     gap: 16px;
+    height: 100%;
+    min-height: 0;
   }
 
   .panel-row {

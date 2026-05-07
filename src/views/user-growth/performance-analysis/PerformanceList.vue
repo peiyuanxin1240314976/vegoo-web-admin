@@ -23,14 +23,27 @@
         </div>
 
         <div class="perf-header__actions">
-          <ElButton round plain type="primary" class="perf-header__btn">
+          <ElButton
+            round
+            type="primary"
+            class="perf-header__btn perf-header__btn--query"
+            :icon="Search"
+            :loading="listLoading || overviewLoading"
+            @click="onQuery"
+          >
+            查询
+          </ElButton>
+          <ElButton round class="perf-header__btn perf-header__btn--reset" @click="onReset">
+            重置
+          </ElButton>
+          <!-- <ElButton round plain type="primary" class="perf-header__btn">
             <span class="perf-header__btn-icon" aria-hidden="true">↓</span>
             导出
-          </ElButton>
-          <ElButton round plain type="warning" class="perf-header__btn perf-header__btn--admin">
+          </ElButton> -->
+          <!-- <ElButton round plain type="warning" class="perf-header__btn perf-header__btn--admin">
             <span class="perf-header__btn-icon" aria-hidden="true">🔐</span>
             管理员编辑
-          </ElButton>
+          </ElButton> -->
         </div>
       </div>
     </div>
@@ -39,52 +52,71 @@
       <!-- ─── Main Area ───────────────────────────── -->
       <div class="main-area">
         <!-- Filters -->
-        <div class="filter-block pa-neon-filter">
-          <div class="filter-row">
+        <div class="filter-block">
+          <div class="filter-row filter-row--person">
             <span class="filter-label">人员：</span>
-            <button
-              v-for="p in PERSON_FILTERS"
-              :key="p"
-              type="button"
-              :class="['filter-chip', { active: activePersonFilter === p }]"
-              @click="activePersonFilter = p"
-              >{{ p }}</button
-            >
-            <input
-              v-model="searchKw"
-              type="search"
-              class="search-input"
-              placeholder="搜索人员…"
-              aria-label="搜索人员"
-              spellcheck="false"
-            />
+            <div class="filter-chip-group">
+              <button
+                v-for="p in personOptions"
+                :key="p.value || '__all__'"
+                type="button"
+                :class="['filter-chip', { active: activePersonFilter === p.value }]"
+                @click="activePersonFilter = p.value"
+                >{{ p.label }}</button
+              >
+            </div>
           </div>
           <div class="filter-row">
             <span class="filter-label">应用：</span>
             <button
-              v-for="a in APP_FILTERS"
-              :key="a"
+              v-for="a in appCategoryOptions"
+              :key="a.value || '__all_app__'"
               type="button"
-              :class="['filter-chip', { active: activeAppFilter === a }]"
-              @click="activeAppFilter = a"
-              >{{ a }}</button
+              :class="['filter-chip', { active: activeAppFilter === a.value }]"
+              @click="activeAppFilter = a.value"
+              >{{ a.label }}</button
             >
             <span class="filter-spacer" aria-hidden="true"></span>
             <span class="filter-label">达标状态：</span>
             <button
-              v-for="s in STATUS_FILTERS"
-              :key="s"
+              v-for="s in statusOptions"
+              :key="s.value || '__all_status__'"
               type="button"
-              :class="['filter-chip', { active: activeStatusFilter === s }]"
-              @click="activeStatusFilter = s"
-              >{{ s }}</button
+              :class="['filter-chip', { active: activeStatusFilter === s.value }]"
+              @click="activeStatusFilter = s.value"
+              >{{ s.label }}</button
             >
           </div>
         </div>
 
         <!-- Table -->
         <div class="table-wrap pa-neon-table-wrap pa-entry-3">
+          <div v-if="listLoading" class="pa-skeleton-table" aria-label="表格加载中">
+            <ElSkeleton animated>
+              <template #template>
+                <div class="pa-skeleton-table__header">
+                  <ElSkeletonItem variant="text" class="sk sk-w-24" />
+                  <ElSkeletonItem variant="text" class="sk sk-w-40" />
+                  <ElSkeletonItem variant="text" class="sk sk-w-28" />
+                  <ElSkeletonItem variant="text" class="sk sk-w-36" />
+                  <ElSkeletonItem variant="text" class="sk sk-w-32" />
+                  <ElSkeletonItem variant="text" class="sk sk-w-28" />
+                </div>
+                <div class="pa-skeleton-table__rows">
+                  <div v-for="i in 10" :key="i" class="pa-skeleton-table__row">
+                    <ElSkeletonItem variant="text" class="sk sk-w-18" />
+                    <ElSkeletonItem variant="text" class="sk sk-w-46" />
+                    <ElSkeletonItem variant="text" class="sk sk-w-22" />
+                    <ElSkeletonItem variant="text" class="sk sk-w-30" />
+                    <ElSkeletonItem variant="text" class="sk sk-w-26" />
+                    <ElSkeletonItem variant="text" class="sk sk-w-24" />
+                  </div>
+                </div>
+              </template>
+            </ElSkeleton>
+          </div>
           <ArtTable
+            v-else
             :data="pagedData"
             row-key="id"
             size="small"
@@ -137,7 +169,7 @@
             </ElTableColumn>
 
             <ElTableColumn label="预算" min-width="90" align="left">
-              <template #default="{ row }">${{ fmt(row.calcCost) }}</template>
+              <template #default="{ row }">${{ fmt(row.budget) }}</template>
             </ElTableColumn>
             <ElTableColumn label="首日ROI" min-width="90" align="left">
               <template #default="{ row }">
@@ -162,16 +194,16 @@
             </ElTableColumn>
             <ElTableColumn label="预估利润" min-width="90" align="left">
               <template #default="{ row }">
-                <span :class="['num', row.estProfit >= 0 ? 'pos' : 'neg']">
+                <ProfitTip :value="row.estProfit">
                   {{ row.estProfit >= 0 ? '+' : '' }}${{ fmt(Math.abs(row.estProfit)) }}
-                </span>
+                </ProfitTip>
               </template>
             </ElTableColumn>
             <ElTableColumn label="最低利润" min-width="90" align="left">
               <template #default="{ row }">
-                <span :class="['num', row.minProfit >= 0 ? 'pos' : 'neg']">
+                <ProfitTip :value="row.minProfit" tone="min">
                   {{ row.minProfit >= 0 ? '+' : '' }}${{ fmt(Math.abs(row.minProfit)) }}
-                </span>
+                </ProfitTip>
               </template>
             </ElTableColumn>
             <ElTableColumn label="得分" min-width="80" align="left">
@@ -195,7 +227,7 @@
         <!-- Pagination -->
         <div class="pagination">
           <div class="page-left">
-            共 {{ filteredData.length }} 人 &nbsp; 已选择 {{ checkedIds.length }} 人
+            共 {{ tableTotal }} 人 &nbsp; 已选择 {{ checkedIds.length }} 人
             <button
               :class="['compare-btn', { 'compare-active': checkedIds.length >= 2 }]"
               :disabled="checkedIds.length < 2"
@@ -212,7 +244,7 @@
               :disabled="disabled"
               :background="background"
               layout="total, sizes, prev, pager, next, jumper"
-              :total="filteredData.length"
+              :total="tableTotal"
               @size-change="handleSizeChange"
               @current-change="handleCurrentChange"
             />
@@ -238,44 +270,79 @@
         </div>
         <div v-show="!isSidebarCollapsed" class="sidebar-content">
           <div class="metric-card pa-neon-lift-card">
-            <div class="metric-title">团队广告支出</div>
-            <div class="metric-main-row">
-              <div class="metric-val">${{ fmt(overviewMetrics.adSpend) }}</div>
-              <div class="metric-side">
-                <span>周环比</span>
-                <span class="pos-text">+8%</span>
-              </div>
-            </div>
+            <ElSkeleton :loading="overviewLoading" animated>
+              <template #template>
+                <ElSkeletonItem variant="text" class="sk sk-w-32" />
+                <ElSkeletonItem variant="h1" class="sk sk-w-44 sk-mt-8" />
+                <ElSkeletonItem variant="text" class="sk sk-w-28 sk-mt-10" />
+              </template>
+              <template #default>
+                <div class="metric-title">团队广告支出</div>
+                <div class="metric-main-row">
+                  <div class="metric-val">${{ fmt(overviewMetrics.adSpend) }}</div>
+                  <div class="metric-side">
+                    <span>周环比</span>
+                    <span class="pos-text">+8%</span>
+                  </div>
+                </div>
+              </template>
+            </ElSkeleton>
           </div>
           <div class="metric-card pa-neon-lift-card">
-            <div class="metric-title">首日ROI均值</div>
-            <div class="metric-main-row">
-              <div class="metric-val gold-text">{{ overviewMetrics.avgRoi1.toFixed(2) }}%</div>
-              <div class="metric-badge-inline">{{ overviewMetrics.roiStatusLabel }}</div>
-            </div>
+            <ElSkeleton :loading="overviewLoading" animated>
+              <template #template>
+                <ElSkeletonItem variant="text" class="sk sk-w-28" />
+                <ElSkeletonItem variant="h1" class="sk sk-w-40 sk-mt-8" />
+                <ElSkeletonItem variant="text" class="sk sk-w-22 sk-mt-10" />
+              </template>
+              <template #default>
+                <div class="metric-title">首日ROI均值</div>
+                <div class="metric-main-row">
+                  <div class="metric-val gold-text">{{ overviewMetrics.avgRoi1.toFixed(2) }}%</div>
+                  <div class="metric-badge-inline">{{ overviewMetrics.roiStatusLabel }}</div>
+                </div>
+              </template>
+            </ElSkeleton>
           </div>
           <div class="metric-card pa-neon-lift-card">
-            <div class="metric-title">团队预估利润</div>
-            <div class="metric-main-row">
-              <div
-                :class="['metric-val', overviewMetrics.estProfit >= 0 ? 'pos-text' : 'red-text']"
-              >
-                {{ overviewMetrics.estProfit >= 0 ? '+' : '-' }}${{
-                  fmt(Math.abs(overviewMetrics.estProfit))
-                }}
-              </div>
-              <div class="metric-side">
-                <span>周环比</span>
-                <span class="pos-text">+12%</span>
-              </div>
-            </div>
+            <ElSkeleton :loading="overviewLoading" animated>
+              <template #template>
+                <ElSkeletonItem variant="text" class="sk sk-w-30" />
+                <ElSkeletonItem variant="h1" class="sk sk-w-46 sk-mt-8" />
+                <ElSkeletonItem variant="text" class="sk sk-w-24 sk-mt-10" />
+              </template>
+              <template #default>
+                <div class="metric-title">团队预估利润</div>
+                <div class="metric-main-row">
+                  <ProfitTip :value="overviewMetrics.estProfit" class="metric-val">
+                    {{ overviewMetrics.estProfit >= 0 ? '+' : '-' }}${{
+                      fmt(Math.abs(overviewMetrics.estProfit))
+                    }}
+                  </ProfitTip>
+                  <div class="metric-side">
+                    <span>周环比</span>
+                    <span class="pos-text">+12%</span>
+                  </div>
+                </div>
+              </template>
+            </ElSkeleton>
           </div>
           <div class="metric-card pa-neon-lift-card alert-card">
-            <div class="metric-title">未达标人员</div>
-            <div class="metric-main-row metric-main-col">
-              <div class="metric-val red-text">{{ overviewMetrics.failCount }} 人</div>
-              <div class="metric-sub red-text">{{ overviewMetrics.failNamesText }}</div>
-            </div>
+            <ElSkeleton :loading="overviewLoading" animated>
+              <template #template>
+                <ElSkeletonItem variant="text" class="sk sk-w-26" />
+                <ElSkeletonItem variant="h1" class="sk sk-w-24 sk-mt-8" />
+                <ElSkeletonItem variant="text" class="sk sk-w-56 sk-mt-10" />
+                <ElSkeletonItem variant="text" class="sk sk-w-46 sk-mt-6" />
+              </template>
+              <template #default>
+                <div class="metric-title">未达标人员</div>
+                <div class="metric-main-row metric-main-col">
+                  <div class="metric-val red-text">{{ overviewMetrics.failCount }} 人</div>
+                  <div class="metric-sub red-text">{{ failNamesText }}</div>
+                </div>
+              </template>
+            </ElSkeleton>
           </div>
         </div>
       </div>
@@ -287,9 +354,10 @@
       width="420px"
       append-to-body
     >
-      <ElDatePicker
+      <AppDatePicker
         v-model="customDateRangeDraft"
         type="daterange"
+        :shortcuts="dateRangeShortcuts"
         start-placeholder="开始日期"
         end-placeholder="结束日期"
         value-format="YYYY-MM-DD"
@@ -305,39 +373,28 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, watch } from 'vue'
+  import ProfitTip from '../components/ProfitTip.vue'
+  import { computed, onMounted, ref, watch } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { useRouter } from 'vue-router'
   import { ElMessage } from 'element-plus'
-  import { ArrowLeftBold, ArrowRightBold } from '@element-plus/icons-vue'
+  import { ArrowLeftBold, ArrowRightBold, Search } from '@element-plus/icons-vue'
   import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
+  import {
+    fetchPerformanceList,
+    fetchPerformanceListFilterOptions,
+    fetchPerformanceOverviewMetrics,
+    type PerformanceListRequest,
+    type PerformanceListRow,
+    type PerformanceListTotals,
+    type PerformanceOverviewMetricsResponse
+  } from '@/api/user-growth/performance-analysis'
 
   defineOptions({ name: 'PerformanceList' })
 
   const tableHeaderCellStyle = {
     backgroundColor: 'color-mix(in srgb, var(--default-box-color) 88%, transparent)'
-  }
-
-  // ─── Types ──────────────────────────────────────────────
-  interface StaffRow {
-    id: string
-    surname: string
-    name: string
-    avatarBg: string
-    level: string
-    levelClass: string
-    adSpend: number
-    calcCost: number
-    roi1: number
-    roi3: number
-    roi7: number
-    agentCost: number
-    minCost: number
-    estProfit: number
-    minProfit: number
-    score: number
-    status: string
-    statusClass: string
-    reportDate: string
   }
 
   // ─── Constants ──────────────────────────────────────────
@@ -348,213 +405,32 @@
     { label: '自定义', value: 'custom' }
   ]
 
-  const PERSON_FILTERS = ['全部', '张三', '李四', '王五', '赵六', '刘七', '陈八', '周九', '吴十']
-  const APP_FILTERS = ['全部', '天气类', '健康类', '工具类']
-  const STATUS_FILTERS = ['全部', '达标', '未达标']
+  const personOptions = ref<{ label: string; value: string }[]>([{ label: '全部', value: '' }])
+  const appCategoryOptions = ref<{ label: string; value: string }[]>([{ label: '全部', value: '' }])
+  const statusOptions = ref<{ label: string; value: string }[]>([{ label: '全部', value: '' }])
 
-  const MOCK_DATA: StaffRow[] = [
-    {
-      id: 'zhao6',
-      surname: '赵',
-      name: '赵六',
-      avatarBg: '#f97316',
-      level: '高级优化师',
-      levelClass: 'senior',
-      adSpend: 52100,
-      calcCost: 50800,
-      roi1: 96,
-      roi3: 94,
-      roi7: 95,
-      agentCost: 2400,
-      minCost: 48000,
-      estProfit: 15600,
-      minProfit: 9800,
-      score: 96,
-      status: '超标',
-      statusClass: 'over',
-      reportDate: '2026-03-26'
-    },
-    {
-      id: 'zhao6',
-      surname: '赵',
-      name: '赵六',
-      avatarBg: '#f97316',
-      level: '高级优化师',
-      levelClass: 'senior',
-      adSpend: 52100,
-      calcCost: 50800,
-      roi1: 96,
-      roi3: 94,
-      roi7: 95,
-      agentCost: 2400,
-      minCost: 48000,
-      estProfit: 15600,
-      minProfit: 9800,
-      score: 96,
-      status: '超标',
-      statusClass: 'over',
-      reportDate: '2026-03-25'
-    },
-    {
-      id: 'zhang3',
-      surname: '张',
-      name: '张三',
-      avatarBg: '#06b6d4',
-      level: '高级优化师',
-      levelClass: 'senior',
-      adSpend: 49279,
-      calcCost: 49840,
-      roi1: 93,
-      roi3: 91,
-      roi7: 92,
-      agentCost: 1866,
-      minCost: 45000,
-      estProfit: 12400,
-      minProfit: 8200,
-      score: 94,
-      status: '达标',
-      statusClass: 'pass',
-      reportDate: '2026-03-22'
-    },
-    {
-      id: 'liu7',
-      surname: '刘',
-      name: '刘七',
-      avatarBg: '#3b82f6',
-      level: '优化师',
-      levelClass: 'mid',
-      adSpend: 33500,
-      calcCost: 31200,
-      roi1: 91,
-      roi3: 89,
-      roi7: 90,
-      agentCost: 0,
-      minCost: 30000,
-      estProfit: 8900,
-      minProfit: 5100,
-      score: 90,
-      status: '达标',
-      statusClass: 'pass',
-      reportDate: '2026-03-18'
-    },
-    {
-      id: 'li4',
-      surname: '李',
-      name: '李四',
-      avatarBg: '#6366f1',
-      level: '优化师',
-      levelClass: 'mid',
-      adSpend: 37838,
-      calcCost: 27159,
-      roi1: 88,
-      roi3: 86,
-      roi7: 87,
-      agentCost: 38,
-      minCost: 25000,
-      estProfit: 6800,
-      minProfit: 3200,
-      score: 88,
-      status: '达标',
-      statusClass: 'pass',
-      reportDate: '2026-03-10'
-    },
-    {
-      id: 'chen8',
-      surname: '陈',
-      name: '陈八',
-      avatarBg: '#8b5cf6',
-      level: '优化师',
-      levelClass: 'mid',
-      adSpend: 29600,
-      calcCost: 28400,
-      roi1: 85,
-      roi3: 83,
-      roi7: 84,
-      agentCost: 120,
-      minCost: 27000,
-      estProfit: 3200,
-      minProfit: 1800,
-      score: 83,
-      status: '达标',
-      statusClass: 'pass',
-      reportDate: '2026-02-28'
-    },
-    {
-      id: 'zhou9',
-      surname: '周',
-      name: '周九',
-      avatarBg: '#0ea5e9',
-      level: '优化师',
-      levelClass: 'mid',
-      adSpend: 24100,
-      calcCost: 22800,
-      roi1: 82,
-      roi3: 80,
-      roi7: 81,
-      agentCost: 200,
-      minCost: 21000,
-      estProfit: 1600,
-      minProfit: 800,
-      score: 80,
-      status: '达标',
-      statusClass: 'pass',
-      reportDate: '2026-02-19'
-    },
-    {
-      id: 'wu10',
-      surname: '吴',
-      name: '吴十',
-      avatarBg: '#64748b',
-      level: '初级优化师',
-      levelClass: 'junior',
-      adSpend: 18200,
-      calcCost: 16900,
-      roi1: 84,
-      roi3: 82,
-      roi7: 83,
-      agentCost: 0,
-      minCost: 15000,
-      estProfit: 900,
-      minProfit: 200,
-      score: 78,
-      status: '接近达标',
-      statusClass: 'near',
-      reportDate: '2026-02-10'
-    },
-    {
-      id: 'wang5',
-      surname: '王',
-      name: '王五',
-      avatarBg: '#a855f7',
-      level: '优化师',
-      levelClass: 'mid',
-      adSpend: 28450,
-      calcCost: 26100,
-      roi1: 79,
-      roi3: 77,
-      roi7: 78,
-      agentCost: 420,
-      minCost: 24000,
-      estProfit: -1200,
-      minProfit: -3800,
-      score: 72,
-      status: '未达标',
-      statusClass: 'fail',
-      reportDate: '2026-01-30'
-    }
-  ]
+  const tableRows = ref<PerformanceListRow[]>([])
+  const tableTotal = ref(0)
+  const tableTotals = ref<PerformanceListTotals>({
+    adSpend: 0,
+    budget: 0,
+    roi1: 0,
+    roi3: 0,
+    roi7: 0,
+    agentCost: 0,
+    estProfit: 0,
+    minProfit: 0,
+    score: 0
+  })
 
-  const TOTALS = {
-    adSpend: 272068,
-    calcCost: 252259,
-    roi1: 89,
-    roi3: 87,
-    roi7: 88,
-    agentCost: 5044,
-    estProfit: 47200,
-    minProfit: 25100,
-    score: 85
-  }
+  const overviewMetrics = ref<PerformanceOverviewMetricsResponse>({
+    adSpend: 0,
+    avgRoi1: 0,
+    roiStatusLabel: '—',
+    estProfit: 0,
+    failCount: 0,
+    failNames: []
+  })
 
   // ─── State ──────────────────────────────────────────────
   const router = useRouter()
@@ -563,74 +439,47 @@
   const isCustomDateDialogVisible = ref(false)
   const customDateRangeValue = ref<[string, string] | null>(null)
   const customDateRangeDraft = ref<[string, string] | null>(null)
-  const activePersonFilter = ref('全部')
-  const activeAppFilter = ref('全部')
-  const activeStatusFilter = ref('全部')
-  const searchKw = ref('')
+  const activePersonFilter = ref('')
+  const activeAppFilter = ref('')
+  const activeStatusFilter = ref('')
+  const appliedPersonFilter = ref('')
+  const appliedAppFilter = ref('')
+  const appliedStatusFilter = ref('')
   const checkedIds = ref<string[]>([])
   const sortField = ref('')
   const sortAsc = ref(true)
   const currentPage = ref(1)
   const pageSize = ref(20)
   const isSidebarCollapsed = ref(false)
+  const filterOptionsLoading = ref(false)
+  // 首次进入页面时先展示骨架，避免“先看到空页面再加载”
+  const listLoading = ref(true)
+  const overviewLoading = ref(true)
+  let dataLoadSeq = 0
+  let filterLoadSeq = 0
 
   // ─── Computed ────────────────────────────────────────────
-  const filteredData = computed<StaffRow[]>(() => {
-    let list = [...MOCK_DATA]
-    const [rangeStart, rangeEnd] = getActiveDateRange()
-
-    list = list.filter((r) => r.reportDate >= rangeStart && r.reportDate <= rangeEnd)
-
-    if (activePersonFilter.value !== '全部') {
-      list = list.filter((r) => r.name === activePersonFilter.value)
-    }
-    if (activeStatusFilter.value === '达标') {
-      list = list.filter((r) => r.statusClass === 'pass' || r.statusClass === 'over')
-    } else if (activeStatusFilter.value === '未达标') {
-      list = list.filter((r) => r.statusClass === 'fail' || r.statusClass === 'near')
-    }
-    if (searchKw.value) {
-      list = list.filter((r) => r.name.includes(searchKw.value))
-    }
-    if (sortField.value === 'adSpend') {
-      list.sort((a, b) => (sortAsc.value ? a.adSpend - b.adSpend : b.adSpend - a.adSpend))
-    }
-    return list
-  })
-  const overviewMetrics = computed(() => {
-    const list = filteredData.value
-    const total = list.length
-    const adSpend = list.reduce((sum, item) => sum + item.adSpend, 0)
-    const estProfit = list.reduce((sum, item) => sum + item.estProfit, 0)
-    const avgRoi1 = total > 0 ? list.reduce((sum, item) => sum + item.roi1, 0) / total : 0
-    const failRows = list.filter(
-      (item) => item.statusClass === 'fail' || item.statusClass === 'near'
-    )
-    const failNamesText =
-      failRows.length > 0 ? failRows.map((item) => item.name).join('、') : '暂无'
-    const roiStatusLabel = avgRoi1 >= 85 ? '达标' : '未达标'
-
-    return {
-      adSpend,
-      estProfit,
-      avgRoi1,
-      failCount: failRows.length,
-      failNamesText,
-      roiStatusLabel
-    }
+  const failNamesText = computed(() => {
+    const list = overviewMetrics.value.failNames ?? []
+    return list.length ? list.join('、') : '暂无'
   })
 
   const size = 'small' as const
   const disabled = false
   const background = false
-  const pagedData = computed<StaffRow[]>(() => {
-    const start = (currentPage.value - 1) * pageSize.value
-    return filteredData.value.slice(start, start + pageSize.value)
-  })
+  const pagedData = computed<PerformanceListRow[]>(() => tableRows.value)
   const allSelected = computed(
     () =>
       pagedData.value.length > 0 && pagedData.value.every((r) => checkedIds.value.includes(r.id))
   )
+  // const isDirty = computed(() => {
+  //   return (
+  //     activePersonFilter.value !== appliedPersonFilter.value ||
+  //     activeAppFilter.value !== appliedAppFilter.value ||
+  //     activeStatusFilter.value !== appliedStatusFilter.value ||
+  //     false
+  //   )
+  // })
 
   // ─── Methods ─────────────────────────────────────────────
   function fmt(n: number) {
@@ -750,10 +599,10 @@
         ids: id,
         startDate,
         endDate,
-        personFilter: activePersonFilter.value,
-        appFilter: activeAppFilter.value,
-        statusFilter: activeStatusFilter.value,
-        keyword: searchKw.value
+        personFilter: appliedPersonFilter.value,
+        appFilter: appliedAppFilter.value,
+        statusFilter: appliedStatusFilter.value,
+        keyword: ''
       }
     })
   }
@@ -767,10 +616,10 @@
         ids: checkedIds.value.join(','),
         startDate,
         endDate,
-        personFilter: activePersonFilter.value,
-        appFilter: activeAppFilter.value,
-        statusFilter: activeStatusFilter.value,
-        keyword: searchKw.value
+        personFilter: appliedPersonFilter.value,
+        appFilter: appliedAppFilter.value,
+        statusFilter: appliedStatusFilter.value,
+        keyword: ''
       }
     })
   }
@@ -784,7 +633,7 @@
     currentPage.value = page
   }
 
-  function getRowClassName({ row }: { row: StaffRow }) {
+  function getRowClassName({ row }: { row: PerformanceListRow }) {
     return [
       'data-row',
       `border-${row.statusClass}`,
@@ -796,16 +645,16 @@
     const map: Record<string, string> = {
       优化师: '团队合计',
       职级: '—',
-      广告支出: `$${fmt(TOTALS.adSpend)}`,
-      预算: `$${fmt(TOTALS.calcCost)}`,
-      首日ROI: `${TOTALS.roi1}%`,
-      '3日ROI': `${TOTALS.roi3}%`,
-      '7日ROI': `${TOTALS.roi7}%`,
-      代投消耗: `$${fmt(TOTALS.agentCost)}`,
+      广告支出: `$${fmt(tableTotals.value.adSpend)}`,
+      预算: `$${fmt(tableTotals.value.budget)}`,
+      首日ROI: `${tableTotals.value.roi1}%`,
+      '3日ROI': `${tableTotals.value.roi3}%`,
+      '7日ROI': `${tableTotals.value.roi7}%`,
+      代投消耗: `$${fmt(tableTotals.value.agentCost)}`,
       最低消耗: '—',
-      预估利润: `+$${fmt(TOTALS.estProfit)}`,
-      最低利润: `+$${fmt(TOTALS.minProfit)}`,
-      得分: `${TOTALS.score}分`,
+      预估利润: `+$${fmt(tableTotals.value.estProfit)}`,
+      最低利润: `+$${fmt(tableTotals.value.minProfit)}`,
+      得分: `${tableTotals.value.score}分`,
       达标状态: '—',
       操作: ''
     }
@@ -813,14 +662,111 @@
     return columns.map((column) => map[column.label || ''] ?? '')
   }
 
-  watch([filteredData, pageSize], () => {
-    const maxPage = Math.max(1, Math.ceil(filteredData.value.length / pageSize.value))
-    if (currentPage.value > maxPage) currentPage.value = maxPage
+  function buildListRequest(): PerformanceListRequest {
+    const [startDate, endDate] = getActiveDateRange()
+    return {
+      startDate,
+      endDate,
+      personFilter: appliedPersonFilter.value,
+      appFilter: appliedAppFilter.value,
+      statusFilter: appliedStatusFilter.value,
+      keyword: '',
+      sortField: sortField.value || undefined,
+      sortAsc: sortAsc.value,
+      current: currentPage.value,
+      size: pageSize.value
+    }
+  }
+
+  function onQuery() {
+    appliedPersonFilter.value = activePersonFilter.value
+    appliedAppFilter.value = activeAppFilter.value
+    appliedStatusFilter.value = activeStatusFilter.value
+    currentPage.value = 1
+    loadListAndOverview()
+  }
+
+  function onReset() {
+    activePersonFilter.value = ''
+    activeAppFilter.value = ''
+    activeStatusFilter.value = ''
+    onQuery()
+  }
+
+  async function loadFilterOptions() {
+    const seq = ++filterLoadSeq
+    const [startDate, endDate] = getActiveDateRange()
+    filterOptionsLoading.value = true
+    try {
+      const res = await fetchPerformanceListFilterOptions({ startDate, endDate })
+      if (seq !== filterLoadSeq) return
+      personOptions.value = res.personOptions
+      appCategoryOptions.value = res.appCategoryOptions
+      statusOptions.value = res.statusOptions
+    } finally {
+      if (seq === filterLoadSeq) filterOptionsLoading.value = false
+    }
+  }
+
+  async function loadList(seq: number) {
+    const body = buildListRequest()
+    listLoading.value = true
+    try {
+      const listRes = await fetchPerformanceList(body)
+      if (seq !== dataLoadSeq) return
+      tableRows.value = listRes.list
+      tableTotal.value = listRes.total
+      tableTotals.value = listRes.totals
+    } finally {
+      if (seq === dataLoadSeq) listLoading.value = false
+    }
+  }
+
+  async function loadOverview(seq: number) {
+    const body = buildListRequest()
+    overviewLoading.value = true
+    try {
+      const metricsRes = await fetchPerformanceOverviewMetrics({
+        startDate: body.startDate,
+        endDate: body.endDate,
+        personFilter: body.personFilter,
+        appFilter: body.appFilter,
+        statusFilter: body.statusFilter,
+        keyword: body.keyword
+      })
+      if (seq !== dataLoadSeq) return
+      overviewMetrics.value = metricsRes
+    } finally {
+      if (seq === dataLoadSeq) overviewLoading.value = false
+    }
+  }
+
+  function loadListAndOverview() {
+    const seq = ++dataLoadSeq
+    void loadList(seq)
+    void loadOverview(seq)
+  }
+
+  onMounted(() => {
+    // 进入页面：先触发列表/概览请求，让骨架立即出现；筛选项异步补齐即可
+    onQuery()
+    void loadFilterOptions()
+  })
+
+  watch([activeDateRange, customDateRangeValue], async () => {
+    currentPage.value = 1
+    await loadFilterOptions()
+    loadListAndOverview()
+  })
+
+  watch([currentPage, pageSize, sortField, sortAsc], async () => {
+    loadListAndOverview()
   })
 </script>
 
 <style scoped lang="scss">
   @use './styles/pa-performance-fx.scss' as *;
+  @use './styles/pa-filters-or-align.scss' as *;
 
   // ─── Tokens ──────────────────────────────────────────────
   $bg: #0d1117;
@@ -855,7 +801,6 @@
     color: var(--text-primary);
   }
 
-  // ─── Header ──────────────────────────────────────────────
   .perf-header {
     flex-shrink: 0;
     padding: 0;
@@ -867,11 +812,6 @@
     gap: 10px;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 14px;
-    margin-bottom: 12px;
-    border-radius: 16px;
-
-    @include pa-neon-surface-static;
   }
 
   .perf-header__group {
@@ -890,84 +830,16 @@
     justify-content: flex-end;
   }
 
-  .breadcrumb {
-    font-size: 16px;
-    font-weight: 600;
-
-    .bc-parent {
-      color: $text-secondary;
-      cursor: pointer;
-
-      &:hover {
-        color: $text-primary;
-      }
-    }
-
-    .bc-sep {
-      margin: 0 6px;
-      color: $text-muted;
-    }
-
-    .bc-current {
-      color: $text-primary;
-    }
-  }
-
-  .subtitle {
-    margin-top: 2px;
-    font-size: 11px;
-    color: $text-muted;
-  }
-
-  .date-label {
-    font-size: 12px;
-    color: $text-secondary;
-    white-space: nowrap;
-  }
-
   .date-btns {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
   }
 
-  .date-btn {
-    padding: 5px 12px;
-    font-size: 12px;
-    color: $text-secondary;
-    cursor: pointer;
-    background: color-mix(in srgb, var(--default-box-color) 72%, transparent);
-    border: 1px solid color-mix(in srgb, var(--art-primary) 14%, transparent);
-    border-radius: 9999px;
-    transition:
-      color 0.15s var(--ease-default),
-      background-color 0.15s var(--ease-default),
-      border-color 0.15s var(--ease-default);
-
-    &:hover {
-      color: $text-primary;
-      border-color: color-mix(in srgb, var(--art-primary) 40%, transparent);
-    }
-
-    &:focus-visible {
-      outline: none;
-      box-shadow: 0 0 0 2px
-        color-mix(in srgb, var(--focus-ring-color, var(--art-primary)) 55%, transparent);
-    }
-
-    &.active {
-      font-weight: 600;
-      color: var(--art-gray-900);
-      background: color-mix(in srgb, var(--art-primary) 82%, white 18%);
-      border-color: color-mix(in srgb, var(--art-primary) 55%, transparent);
-    }
-  }
-
   .perf-header__btn {
     display: inline-flex;
     gap: 6px;
     align-items: center;
-    padding: 6px 14px;
     font-weight: 600;
     letter-spacing: 0.2px;
   }
@@ -1043,109 +915,9 @@
     flex: 1;
     flex-direction: column;
     gap: 12px;
+    min-width: 0;
     padding: 0;
     overflow: hidden;
-  }
-
-  // ─── Filters ─────────────────────────────────────────────
-  .filter-block {
-    display: flex;
-    flex-direction: column;
-    flex-shrink: 0;
-    gap: 8px;
-    padding: 12px 14px;
-  }
-
-  .filter-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    align-items: center;
-    padding: 8px 10px;
-    background: color-mix(in srgb, var(--default-bg-color) 35%, transparent);
-    border: 1px solid color-mix(in srgb, var(--art-primary) 10%, transparent);
-    border-radius: 12px;
-  }
-
-  .filter-label {
-    flex-shrink: 0;
-    font-size: 12px;
-    color: $text-secondary;
-    white-space: nowrap;
-  }
-
-  .filter-spacer {
-    width: 10px;
-    height: 14px;
-    margin: 0 2px 0 6px;
-    border-left: 1px dashed color-mix(in srgb, var(--art-primary) 18%, transparent);
-  }
-
-  .filter-chip {
-    padding: 4px 12px;
-    font-size: 12px;
-    color: $text-secondary;
-    cursor: pointer;
-    background: color-mix(in srgb, var(--default-box-color) 35%, transparent);
-    border: 1px solid color-mix(in srgb, var(--art-primary) 14%, transparent);
-    border-radius: 20px;
-    transition:
-      color 0.15s var(--ease-default),
-      background-color 0.15s var(--ease-default),
-      border-color 0.15s var(--ease-default),
-      box-shadow 0.22s var(--ease-out);
-
-    &:hover {
-      color: $text-primary;
-      border-color: color-mix(in srgb, var(--art-primary) 45%, transparent);
-      box-shadow: 0 0 0 1px color-mix(in srgb, var(--art-primary) 20%, transparent);
-    }
-
-    &:focus-visible {
-      outline: none;
-      box-shadow:
-        0 0 0 2px color-mix(in srgb, var(--focus-ring-color, var(--art-primary)) 55%, transparent),
-        0 0 0 6px rgb(0 0 0 / 18%);
-    }
-
-    &.active {
-      font-weight: 600;
-      color: var(--art-gray-900);
-      background: color-mix(in srgb, var(--art-primary) 82%, white 18%);
-      border-color: color-mix(in srgb, var(--art-primary) 55%, transparent);
-      box-shadow:
-        0 10px 30px rgb(0 0 0 / 22%),
-        0 0 0 1px color-mix(in srgb, var(--art-primary) 24%, transparent),
-        0 0 24px color-mix(in srgb, var(--art-primary) 16%, transparent);
-    }
-  }
-
-  .search-input {
-    flex: 1;
-    width: 220px;
-    min-width: 180px;
-    max-width: 360px;
-    padding: 6px 12px;
-    font-size: 12px;
-    color: $text-primary;
-    background: rgb(255 255 255 / 4%);
-    border: 1px solid color-mix(in srgb, var(--art-primary) 14%, transparent);
-    border-radius: 20px;
-    outline: none;
-    transition:
-      border-color 0.15s var(--ease-default),
-      box-shadow 0.22s var(--ease-out);
-
-    &::placeholder {
-      color: $text-muted;
-    }
-
-    &:focus-visible {
-      border-color: color-mix(in srgb, var(--art-primary) 55%, transparent);
-      box-shadow:
-        0 0 0 2px color-mix(in srgb, var(--focus-ring-color, var(--art-primary)) 45%, transparent),
-        0 0 0 6px rgb(0 0 0 / 16%);
-    }
   }
 
   // ─── Table ───────────────────────────────────────────────
@@ -1168,6 +940,107 @@
       background: color-mix(in srgb, var(--art-primary) 14%, transparent);
       border-radius: 9999px;
     }
+  }
+
+  .pa-skeleton-table {
+    height: 100%;
+    padding: 14px 14px 18px;
+    background: color-mix(in srgb, var(--default-box-color) 72%, transparent);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 14%, transparent);
+    border-radius: 14px;
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 8%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--art-gray-900) 8%, transparent);
+  }
+
+  .pa-skeleton-table__header {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 6px 12px;
+    border-bottom: 1px solid color-mix(in srgb, var(--art-primary) 10%, transparent);
+  }
+
+  .pa-skeleton-table__rows {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 12px;
+  }
+
+  .pa-skeleton-table__row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 6px;
+    background: color-mix(in srgb, var(--default-bg-color) 25%, transparent);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 10%, transparent);
+    border-radius: 10px;
+  }
+
+  .sk {
+    height: 12px;
+    border-radius: 9999px;
+  }
+
+  .sk-mt-6 {
+    margin-top: 6px;
+  }
+
+  .sk-mt-8 {
+    margin-top: 8px;
+  }
+
+  .sk-mt-10 {
+    margin-top: 10px;
+  }
+
+  .sk-w-18 {
+    width: 18%;
+  }
+
+  .sk-w-22 {
+    width: 22%;
+  }
+
+  .sk-w-24 {
+    width: 24%;
+  }
+
+  .sk-w-26 {
+    width: 26%;
+  }
+
+  .sk-w-28 {
+    width: 28%;
+  }
+
+  .sk-w-30 {
+    width: 30%;
+  }
+
+  .sk-w-32 {
+    width: 32%;
+  }
+
+  .sk-w-36 {
+    width: 36%;
+  }
+
+  .sk-w-40 {
+    width: 40%;
+  }
+
+  .sk-w-44 {
+    width: 44%;
+  }
+
+  .sk-w-46 {
+    width: 46%;
+  }
+
+  .sk-w-56 {
+    width: 56%;
   }
 
   .th-sortable {
@@ -1587,8 +1460,9 @@
     flex-direction: column;
     flex-shrink: 0;
     width: 320px;
+    min-height: 0;
     padding: 12px;
-    overflow-y: auto;
+    overflow: hidden;
     border-radius: 16px;
     transition:
       width 0.22s var(--ease-default),
@@ -1672,13 +1546,21 @@
 
   .sidebar-content {
     display: flex;
+    flex: 1;
     flex-direction: column;
     gap: 12px;
+    min-height: 0;
     padding: 12px 0 4px;
+    overflow: hidden;
   }
 
   .metric-card {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    min-height: 64px;
     padding: 14px;
+    overflow: hidden auto;
 
     .metric-title {
       margin-bottom: 8px;
@@ -1840,5 +1722,23 @@
       background: transparent !important;
       box-shadow: none;
     }
+  }
+
+  .filter-row--person {
+    flex-wrap: nowrap;
+    align-items: flex-start;
+  }
+
+  .filter-chip-group {
+    display: flex;
+    flex: 1;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .filter-row--person .search-input {
+    flex: 0 0 auto;
   }
 </style>

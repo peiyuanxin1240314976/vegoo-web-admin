@@ -66,6 +66,8 @@ declare namespace Api {
     interface LoginParams {
       username: string
       password: string
+      captchaId: string
+      captchaValue: string
       /** 记住我 */
       rememberMe?: boolean
     }
@@ -73,15 +75,51 @@ declare namespace Api {
     /** 登录响应：后端返回的 token 字符串 */
     type LoginResponse = string
 
+    interface CaptchaResponse {
+      base64Str: string
+      id: string
+    }
+
+    interface RoutePermissionsConfig {
+      routeNames: string[]
+    }
+
+    interface DateScopeConfig {
+      maxHistoryDays: number
+      defaultRangeDays: number
+      allowCustomRange: boolean
+    }
+
+    interface PageDateScopeConfig extends DateScopeConfig {
+      pageKey: string
+    }
+
+    interface DatePermissionsConfig {
+      defaultDateScope: DateScopeConfig
+      pageDateScopes: PageDateScopeConfig[]
+    }
+
+    interface ButtonPermissionsConfig {
+      codes: string[]
+    }
+
+    interface PermissionConfig {
+      routePermissions: RoutePermissionsConfig
+      datePermissions: DatePermissionsConfig
+      buttonPermissions: ButtonPermissionsConfig
+    }
+
     /** 用户信息（与 GET /api/v1/datacenter/biz/user/get 响应一致） */
     interface UserInfo {
       id: number
       username: string
+      name?: string
       email: string
       phone: string
       /** 0 非管理员，1 管理员 */
       isAdmin: number
       permissions: string[]
+      permissionConfig?: PermissionConfig
       /** 兼容：与 id 相同，用于 store 等 */
       userId?: number
       /** 兼容：与 username 相同 */
@@ -93,6 +131,35 @@ declare namespace Api {
     }
   }
 
+  /** 系统 · 个人中心（/system/user-center） */
+  namespace UserCenter {
+    /** 飞书通知开关（与当前表格行一致：预警、日报） */
+    interface FeishuNotifySwitches {
+      alert: boolean
+      daily: boolean
+    }
+
+    /** 预警触达渠道；当前页仅高优先级 + 飞书卡片 */
+    interface AlertChannelsConfig {
+      high: string[]
+    }
+
+    /** 通知设置查询/保存业务体，见 `views/system/user-center/mock/backend-api` */
+    interface UserNotificationSettings {
+      feishu: FeishuNotifySwitches
+      alertChannels: AlertChannelsConfig
+      pushInWorkTime: boolean
+      pushStartTime: string
+      pushEndTime: string
+      pushWeekdays: number[]
+    }
+
+    /** 保存接口 `data` 内业务体 */
+    interface NotificationSettingsSaveResult {
+      success: boolean
+    }
+  }
+
   /** 系统管理类型 */
   namespace SystemManage {
     /** 用户列表 */
@@ -101,13 +168,13 @@ declare namespace Api {
     /**
      * 用户列表项（系统管理 · 用户管理）
      *
-     * status 约定：1=在线 2=离线 3=异常 4=已禁用（与列表筛选、标签展示一致）
+     * status：后端直接返回中文状态文案（如 待激活、活跃、禁用），与列表筛选、标签展示一致
      */
     interface UserListItem {
       id: number
       /** 头像 URL；缺省、空串或无效时前端使用统一占位图，不参与业务校验 */
       avatar?: string
-      /** 1=在线 2=离线 3=异常 4=已禁用 */
+      /** 待激活 | 活跃 | 禁用（以后端返回值为准） */
       status: string
       userName: string
       userGender: string
@@ -165,7 +232,7 @@ declare namespace Api {
       id: string
       platform: 'android' | 'ios'
       mccAccount: string
-      appPackage: string
+      appId: string
       conversionName: string
       conversionId: string
       platformConversionType: string
@@ -180,7 +247,8 @@ declare namespace Api {
     /** 转化映射列表请求参数 */
     interface ConversionMappingListParams extends Api.Common.CommonSearchParams {
       platform?: string
-      app?: string
+      /** 应用筛选（自有应用 ID）；「全部」为空字符串 */
+      appId?: string
       conversionType?: string
       status?: string
       keyword?: string
@@ -231,8 +299,20 @@ declare namespace Api {
     interface PlatformAnalysisDetailRequest {
       /** 钻取实体名称（与路由 query `name` 一致，如应用名） */
       name: string
-      /** 来源页面标识，如 comprehensive-analysis；可空字符串 */
-      from?: string
+      /** 查询起始日期（含），YYYY-MM-DD */
+      startDate: string
+      /** 查询结束日期（含），YYYY-MM-DD */
+      endDate: string
+      /** 应用筛选；空字符串表示全部（与 cockpit meta `appOptions` 的 value 一致，UI `all` 须映射为 ''） */
+      appId: string
+      /** 应用筛选（兼容 account-performance 的 appIds 结构） */
+      appIds?: string[]
+      /** 应用筛选（兼容 account-performance 的 apps 结构） */
+      apps?: Array<{ appId: string; platform: number }>
+      /** 广告平台筛选；空字符串表示全部；枚举值为 string（如 `"1"`） */
+      source: string
+      /** 国家代码筛选；空字符串表示全部；小写 ISO 3166-1 alpha-2 */
+      s_country_code: string
     }
 
     /** 广告平台分析 - 筛选项元数据单项（响应 data.apps | platforms | sources[]） */
@@ -254,7 +334,8 @@ declare namespace Api {
      * 例：KPI 卡片 POST /api/v1/datacenter/analysis/ad-platform/kpi/cards
      */
     interface AdPlatformAnalysisRequestParams {
-      appId: string
+      /** 应用筛选：不限 []，单选 ['appId'] */
+      appIds: string[]
       currentPage: number
       dateEnd: string
       dateStart: string
@@ -562,8 +643,12 @@ declare namespace Api {
       spend: string
       progress: number
       platformIcon: string
-      statusType: string
-      roi?: string
+      /** ok | warn | inactive；接口可为 null */
+      statusType: string | null
+      /** 预格式化首日 ROI 文案（如 41.2%）；与 roi1 二选一或并存时优先有内容的 roi */
+      roi?: string | null
+      /** 首日 ROI 百分比数值（非 0-1），无 roi 时前端格式化为两位小数 + % */
+      roi1?: number | null
       status?: string
     }
 
@@ -760,11 +845,6 @@ declare namespace Api {
         userName: string
         email: string
         avatarColor: string
-      }
-
-      /** 导出异步凭证（与网关约定；若直接返回文件流见接口说明） */
-      interface ExportResponse {
-        fileToken: string
       }
     }
   }

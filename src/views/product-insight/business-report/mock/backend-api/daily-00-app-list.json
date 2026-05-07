@@ -1,0 +1,162 @@
+{
+  "_comment": "日报-侧栏应用列表。与 overview 等详情接口解耦；body 中 appId 固定 \"\" 表示列表模式。设计说明见同目录 README「侧栏 app-list 接口设计说明（给后端）」。切换左侧选中应用不触发本接口。",
+  "fieldDescription": {
+    "request": {
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "查询起始日期（含），YYYY-MM-DD。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": true,
+        "description": "查询结束日期（含），YYYY-MM-DD。"
+      },
+      "appId": {
+        "type": "string",
+        "required": true,
+        "description": "须为空串 \"\"，表示拉取侧栏全量列表（非单应用详情）。与顶栏「应用」多选无关；顶栏应用范围见 appIds。说明：此为与详情接口统一 POST 形态的约定字段，非旧版响应兼容逻辑。"
+      },
+      "appIds": {
+        "type": "string[]",
+        "required": true,
+        "description": "顶栏「应用」多选：与 meta `appOptions` 的 value 一致（自有应用 ID）。空数组 [] 表示不限（全部应用）。"
+      },
+      "platformList": {
+        "type": "string[]",
+        "required": true,
+        "description": "顶栏「终端平台」多选，元素与 meta `platformOptions.value` 一致；空数组 [] 表示不限。"
+      },
+      "sourceList": {
+        "type": "string[]",
+        "required": true,
+        "description": "顶栏「广告平台」多选，元素与 meta `sourceOptions.value` 一致（string 枚举）；空数组 [] 表示不限。"
+      },
+      "countryCodeList": {
+        "type": "string[]",
+        "required": true,
+        "description": "顶栏「国家」多选，元素为小写 ISO 3166-1 alpha-2；空数组 [] 表示不限。"
+      },
+      "account": {
+        "type": "string",
+        "required": false,
+        "description": "广告账户；空串 \"\" 表示不限。与全局筛选维度键名对齐；当前页无账户控件，前端恒传 \"\"。非旧版 API 兼容字段。"
+      },
+      "tab": {
+        "type": "string",
+        "required": true,
+        "enum": ["summary", "adPlatform", "byCountry", "platformCountry", "campaigns"],
+        "description": "与页面二级 Tab 一致，决定侧栏卡片展示的次要指标口径。"
+      }
+    },
+    "response": {
+      "items": {
+        "type": "AppListItem[]",
+        "required": true,
+        "description": "侧栏卡片数据；首项为整体汇总（id 为 overall 或 isOverall 为 true）。"
+      }
+    },
+    "AppListItem": {
+      "id": { "type": "string", "required": true, "description": "展示用主键；整体为 overall。" },
+      "name": { "type": "string", "required": true, "description": "应用名称或「整体」。" },
+      "isOverall": {
+        "type": "boolean",
+        "required": false,
+        "description": "是否为整体汇总行。"
+      },
+      "revenue": { "type": "number", "required": true, "description": "总收入 USD 原始值。" },
+      "revenueChange": {
+        "type": "number",
+        "required": true,
+        "description": "环比变化率，如 8.4 表示 +8.4%。"
+      },
+      "dau": { "type": "number", "required": false, "description": "DAU（万），日报/周报侧栏用。" },
+      "mau": { "type": "number", "required": false, "description": "MAU（万），月报侧栏用。" },
+      "adSpend": {
+        "type": "number",
+        "required": false,
+        "description": "广告支出 USD，广告平台/系列 Tab 侧栏用。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "startDate": "2026-04-09",
+    "endDate": "2026-04-09",
+    "appId": "",
+    "appIds": [],
+    "platformList": [],
+    "sourceList": [],
+    "countryCodeList": [],
+    "account": "",
+    "tab": "summary"
+  },
+  "sampleResponse": {
+    "items": [
+      {
+        "id": "overall",
+        "name": "整体",
+        "category": "全部平台",
+        "platforms": ["安卓", "iOS"],
+        "iconEmoji": "📊",
+        "iconColor": "#00D4A1",
+        "iconBg": "rgba(0,212,161,0.15)",
+        "revenue": 152300,
+        "revenueChange": 8.4,
+        "profit": 108900,
+        "dau": 78.3,
+        "adSpend": 41100,
+        "adSpendChange": 7.8,
+        "isOverall": true,
+        "sparkline": [118, 125, 120, 138, 132, 145, 149, 152]
+      },
+      {
+        "id": "health",
+        "name": "健康",
+        "category": "全部平台",
+        "platforms": ["安卓", "iOS"],
+        "iconEmoji": "🏥",
+        "iconColor": "#3B82F6",
+        "iconBg": "rgba(59,130,246,0.15)",
+        "revenue": 41200,
+        "revenueChange": 11.2,
+        "profit": 29400,
+        "dau": 29.2,
+        "adSpend": 11200,
+        "adSpendChange": 9.3,
+        "sparkline": [32, 34, 33, 37, 36, 39, 40, 41]
+      },
+      {
+        "id": "weather",
+        "name": "天气",
+        "category": "安卓+iOS",
+        "platforms": ["安卓", "iOS"],
+        "iconEmoji": "🌤",
+        "iconColor": "#94A3B8",
+        "iconBg": "rgba(148,163,184,0.15)",
+        "revenue": 32800,
+        "revenueChange": -3.1,
+        "profit": 23400,
+        "dau": 18.1,
+        "adSpend": 8900,
+        "adSpendChange": -2.4,
+        "sparkline": [35, 34, 36, 33, 32, 31, 33, 32]
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/report/daily/app-list",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "startDate, endDate, appId(固定\"\"), appIds[], platformList[], sourceList[], countryCodeList[], account?, tab",
+    "responseBody": "{ items: AppListItem[] }"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "无数据时 items 返回 []；整体行仍建议首项 id=overall。响应键名必须为 items，勿使用 appList。",
+      "详情类接口（overview 等）不应再承载侧栏列表，避免切换应用时重复刷新侧栏。",
+      "appId 固定 \"\"：与详情共用 POST 字段表，表示「拉列表」而非单应用详情；顶栏应用范围见 appIds，勿混淆。",
+      "account 当前前端恒传 \"\"（页无账户筛选）；与统一维度对齐，后端可按不限忽略。",
+      "本接口非「全站应用 id 目录」：列表与卡片指标须与 startDate/endDate、tab 及顶栏四数组口径一致，详见 mock/backend-api/README.md 同节说明。"
+    ]
+  }
+}

@@ -1,0 +1,140 @@
+{
+  "_comment": "付费分析 - 广告平台 IAP 转化 Tab · 图表。契约文件：02-tab-channel-charts.json。types: PaidAnalysisChannelTabChartsData。",
+  "fieldDescription": {
+    "request": {
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "起始日 YYYY-MM-DD（含）。"
+      },
+      "endDate": { "type": "string", "required": true, "description": "结束日 YYYY-MM-DD（含）。" },
+      "appId": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "应用 ID；与公用 meta appOptions.value 一致；空为全部。"
+      },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "终端平台；空为不限。"
+      },
+      "s_country_code": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "国家小写码；空为全部。"
+      },
+      "n_source": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "广告平台枚举 string；空为全部。"
+      }
+    },
+    "response": {
+      "trendSeries": {
+        "type": "array",
+        "required": true,
+        "description": "IAP 收入趋势多序列（含 points.t_date / revenue）。"
+      },
+      "arppuBar": {
+        "type": "array",
+        "required": true,
+        "description": "ARPPU 横向条（percentOfMax、arppu）。"
+      },
+      "productMixDonut": {
+        "type": "array",
+        "required": true,
+        "description": "商品类型占比（name/value/color）。"
+      },
+      "donutCenterRevenueUsd": {
+        "type": "number",
+        "required": true,
+        "description": "环形图中心总 IAP（USD）。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "startDate": "2026-04-01",
+    "endDate": "2026-04-03",
+    "appId": "",
+    "platform": "",
+    "s_country_code": "",
+    "n_source": ""
+  },
+  "sampleResponse": {
+    "trendSeries": [
+      {
+        "name": "Google",
+        "color": "#22d3ee",
+        "points": [
+          { "t_date": "2026-04-01", "revenue": 8400 },
+          { "t_date": "2026-04-02", "revenue": 7800 },
+          { "t_date": "2026-04-03", "revenue": 8900 }
+        ]
+      },
+      {
+        "name": "Facebook",
+        "color": "#3b82f6",
+        "points": [
+          { "t_date": "2026-04-01", "revenue": 5200 },
+          { "t_date": "2026-04-02", "revenue": 5800 },
+          { "t_date": "2026-04-03", "revenue": 5400 }
+        ]
+      },
+      {
+        "name": "TikTok",
+        "color": "#8b5cf6",
+        "points": [
+          { "t_date": "2026-04-01", "revenue": 2800 },
+          { "t_date": "2026-04-02", "revenue": 3200 },
+          { "t_date": "2026-04-03", "revenue": 2900 }
+        ]
+      },
+      {
+        "name": "Others",
+        "color": "#64748b",
+        "points": [
+          { "t_date": "2026-04-01", "revenue": 1800 },
+          { "t_date": "2026-04-02", "revenue": 2100 },
+          { "t_date": "2026-04-03", "revenue": 1900 }
+        ]
+      }
+    ],
+    "arppuBar": [
+      { "channelName": "其他", "percentOfMax": 65, "arppu": 30.82 },
+      { "channelName": "AppLovin", "percentOfMax": 76, "arppu": 30.82 },
+      { "channelName": "Mintegral", "percentOfMax": 82, "arppu": 30.82 },
+      { "channelName": "TikTok", "percentOfMax": 88, "arppu": 30.82 },
+      { "channelName": "Facebook", "percentOfMax": 95, "arppu": 30.82 },
+      { "channelName": "Organic", "percentOfMax": 100, "arppu": 30.82 },
+      { "channelName": "Google", "percentOfMax": 100, "arppu": 30.82 }
+    ],
+    "productMixDonut": [
+      { "name": "年订阅", "value": 42, "color": "#22d3ee" },
+      { "name": "月订阅", "value": 28, "color": "#3b82f6" },
+      { "name": "终身购", "value": 18, "color": "#8b5cf6" },
+      { "name": "虚拟币", "value": 8, "color": "#f59e0b" },
+      { "name": "其他", "value": 4, "color": "#475569" }
+    ],
+    "donutCenterRevenueUsd": 284520
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/user-growth/paid-analysis/tab-channel/charts",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "startDate, endDate, appId?, platform?, s_country_code?, n_source?",
+    "responseBody": "PaidAnalysisChannelTabChartsData"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "进入 channel Tab 或点击检索",
+        "detail": "与 overview、tables 并行；图表可在下一帧挂载以减轻主线程压力。",
+        "prerequisite": "同 overview"
+      }
+    ]
+  }
+}

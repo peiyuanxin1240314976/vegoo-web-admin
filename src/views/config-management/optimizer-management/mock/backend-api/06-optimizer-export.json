@@ -1,46 +1,64 @@
 {
-  "_comment": "优化师管理 - 导出。筛选与列表一致；异步凭证或与文件流二选一（见 apiSuggestion）。",
+  "_comment": "优化师管理 - 导出列表。筛选与 table 一致（不传 current/size）；响应仅为 HTTP **二进制文件流**，无 JSON 业务体。",
   "interaction": {
     "triggers": [
       {
         "moment": "页头点击「导出」",
-        "detail": "`index.vue` `handleExport`：远程模式下 `exportOptimizerList`，否则前端 CSV 兜底。",
+        "detail": "`index.vue` `handleExport`：远程模式下 `exportOptimizerList`（`requestBlob` + `FileSaver`），失败则前端 CSV 兜底；Mock 开关为 true 时由 `mockExportOptimizerList` 生成本地 CSV。",
         "prerequisite": "无。"
       }
     ],
-    "defaultSelection": "请求体字段与 table 筛选一致时可省略分页字段，表示导出全部匹配行（权限内）。",
+    "defaultSelection": "请求体仅含与 table 一致的筛选字段（keyword、status）；不传 current/size，导出全部匹配行（权限内）。",
     "dedupe": "导出任务进行中禁用按钮。"
   },
   "fieldDescription": {
     "request": {
-      "keyword": { "type": "string", "required": false, "description": "与列表一致。" },
-      "status": { "type": "string", "required": false, "description": "与列表一致。" },
-      "current": { "type": "number", "required": false, "description": "若后端支持按页导出。" },
-      "size": { "type": "number", "required": false, "description": "若后端支持按页导出。" }
+      "keyword": {
+        "type": "string",
+        "required": false,
+        "description": "与列表一致；空字符串表示不按关键词过滤。"
+      },
+      "status": {
+        "type": "string",
+        "required": false,
+        "description": "与列表一致；空字符串表示全部。"
+      }
     },
     "response": {
-      "fileToken": {
-        "type": "string",
+      "httpBody": {
+        "type": "binary stream",
         "required": true,
-        "description": "异步导出任务令牌或下载凭证；前端可再调下载接口。"
+        "description": "HTTP 响应体为**原始文件二进制流**（chunked/stream 或整块二进制均可），**不是** JSON。前端使用 `responseType: 'blob'`（或项目内 `requestBlob`）接收后触发下载。"
+      },
+      "contentType": {
+        "type": "string (response header)",
+        "required": true,
+        "description": "响应头 `Content-Type`，须与文件格式一致，例如 `text/csv;charset=utf-8`、`application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`。"
+      },
+      "contentDisposition": {
+        "type": "string (response header)",
+        "required": true,
+        "description": "响应头 `Content-Disposition`：`attachment` + `filename` / `filename*=`（RFC 5987），供前端解析默认文件名。"
       }
     }
   },
-  "sampleRequest": { "keyword": "", "status": "在职" },
+  "sampleRequest": { "keyword": "", "status": "" },
   "sampleResponse": {
-    "fileToken": "optimizer-export-20260327120000"
+    "_note": "无 JSON 业务体；联调时以实际 HTTP 响应流为准。`sampleResponse` 不可用表格类 JSON 代替文件内容。",
+    "httpBody": "<binary stream — not representable as JSON object>"
   },
   "api": {
     "url": "POST /api/config-management/optimizer/export",
     "method": "POST",
     "priority": "P1",
-    "requestBody": "keyword?, status?, current?, size?",
-    "responseBody": "Api.ConfigManagement.Optimizer.ExportResponse"
+    "requestBody": "keyword?, status?（不传 current/size）",
+    "responseBody": "binary file stream (blob); not JSON"
   },
   "apiSuggestion": {
     "notes": [
-      "若直接返回二进制流，需 `responseType: 'blob'` 且本契约 `sampleResponse` 仅作占位说明。",
-      "`sampleResponse` 为 unwrap 后 `data`。"
+      "目标形态：HTTP 响应体为文件字节流（或整块二进制）；联调过渡期 `Content-Type` / `Content-Disposition` 可能不完整。",
+      "前端一律 `requestBlob` 后以 `FileSaver.saveAs` 落盘：优先解析 `Content-Disposition` 文件名；否则按 `Content-Type` 粗判后缀（csv/xlsx/json），未知则为 `.bin`。",
+      "无匹配行时仍建议返回合法文件流（至少含表头），与有数据时响应头语义一致。"
     ]
   }
 }

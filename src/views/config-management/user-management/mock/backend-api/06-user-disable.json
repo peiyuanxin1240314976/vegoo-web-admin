@@ -1,0 +1,61 @@
+{
+  "_comment": "配置管理 - 用户管理 - 禁用用户（列表删除按钮与右侧禁用共用）。",
+  "fieldDescription": {
+    "request": {
+      "id": { "type": "number", "required": true, "description": "用户主键。" },
+      "reason": { "type": "string", "required": false, "description": "禁用原因。" },
+      "operator": { "type": "string", "required": true, "description": "操作人。" }
+    },
+    "response": {
+      "success": { "type": "boolean", "required": true, "description": "是否禁用成功。" },
+      "id": { "type": "number", "required": true, "description": "被禁用用户主键。" },
+      "status": {
+        "type": "string",
+        "required": true,
+        "enum": ["禁用"],
+        "description": "禁用后固定为文案「禁用」。"
+      },
+      "updateTime": { "type": "string", "required": true, "description": "状态更新时间。" }
+    }
+  },
+  "sampleRequest": {
+    "id": 104,
+    "reason": "离职停用",
+    "operator": "alice"
+  },
+  "sampleResponse": {
+    "success": true,
+    "id": 104,
+    "status": "禁用",
+    "updateTime": "2026-04-13 10:00:00"
+  },
+  "api": {
+    "url": "POST /api/config-management/user-management/disable",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "{ id, reason?, operator }",
+    "responseBody": "{ success, id, status, updateTime }"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "列表「删除」按钮语义为禁用用户，不做物理删除。",
+      "成功后前端刷新列表；若当前右侧展示该用户，前端清空右侧选中态。"
+    ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "表格操作列点击删除确认后触发。",
+        "prerequisite": "确认弹窗点击确定"
+      },
+      {
+        "moment": "用户操作",
+        "detail": "右侧面板点击禁用并确认后触发。",
+        "prerequisite": "当前右侧存在选中用户"
+      }
+    ],
+    "defaultSelection": "无。",
+    "dedupe": "同一 id 在请求未返回前应避免重复提交。"
+  }
+}

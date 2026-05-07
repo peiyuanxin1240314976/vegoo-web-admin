@@ -1,219 +1,152 @@
 <template>
   <div class="panel">
+    <div class="panel__top">
+      <slot name="prepend"></slot>
+    </div>
+
     <ElSkeleton :loading="loading" animated>
       <template #template>
         <div class="panel__header">
-          <ElSkeletonItem variant="text" class="app-table-sk-title" />
+          <ElSkeletonItem variant="text" class="table-sk-title" />
+          <ElSkeletonItem variant="text" class="table-sk-hint" />
         </div>
         <div class="panel__body">
-          <div class="table-scroll app-table-sk">
-            <div class="app-table-sk-toolbar">
-              <ElSkeletonItem v-for="c in 10" :key="c" variant="text" class="app-table-sk-th" />
+          <div class="table-sk-shell">
+            <div class="table-sk-grid table-sk-grid--summary">
+              <ElSkeletonItem
+                v-for="i in 9"
+                :key="`summary-${i}`"
+                variant="text"
+                class="table-sk-cell"
+              />
             </div>
-            <div v-for="r in 6" :key="r" class="app-table-sk-row">
-              <ElSkeletonItem variant="text" class="app-table-sk-cell app-table-sk-cell--app" />
-              <ElSkeletonItem v-for="c in 9" :key="c" variant="text" class="app-table-sk-cell" />
-            </div>
-            <div class="app-table-sk-summary">
-              <ElSkeletonItem variant="text" class="app-table-sk-sum-line" />
+            <div class="table-sk-grid table-sk-grid--detail">
+              <ElSkeletonItem
+                v-for="i in 12"
+                :key="`detail-${i}`"
+                variant="text"
+                class="table-sk-cell"
+              />
             </div>
           </div>
         </div>
       </template>
+
       <template #default>
-        <div class="panel__header">
-          <div class="header-left">
-            <span class="title">{{ title }}</span>
-            <span v-if="headerHint" class="header-hint">{{ headerHint }}</span>
+        <div v-if="resolvedHeaderHint" class="panel__header">
+          <div class="header-copy">
+            <div class="hint">{{ resolvedHeaderHint }}</div>
           </div>
         </div>
 
         <div class="panel__body">
-          <div class="table-scroll">
-            <ElTable
-              :data="tableData"
-              row-key="id"
-              :tree-props="{ children: 'children' }"
-              :default-expand-all="false"
-              :expand-row-keys="expandedRowKeys"
-              :row-style="getRowStyle"
-              :cell-style="getCellStyle"
-              stripe
-              size="default"
-              class="mp-detail-table"
-              table-layout="fixed"
-              :header-cell-style="{ fontWeight: 600 }"
-            >
-              <ElTableColumn :label="colApp" min-width="220" show-overflow-tooltip>
-                <template #default="{ row }">
-                  <span class="name-cell">
-                    <span
-                      v-if="row.type === 'app' && row.__appId"
-                      class="app-dot"
-                      :class="'app-dot--' + appDotFromAppId(row.__appId)"
-                    ></span>
-                    <span class="name" :class="'is-' + row.type" :style="getNameStyle(row)">{{
-                      row.name
-                    }}</span>
-                  </span>
-                </template>
-              </ElTableColumn>
-
-              <ElTableColumn :label="colPlatform" width="90" show-overflow-tooltip>
-                <template #default="{ row }">
-                  <span v-if="row.platform" class="dim dim--platform">{{ row.platform }}</span>
-                  <span v-else>--</span>
-                </template>
-              </ElTableColumn>
-
-              <ElTableColumn :label="colSource" width="110" show-overflow-tooltip>
-                <template #default="{ row }">
-                  <span
-                    v-if="row.type === 'source'"
-                    class="dim dim--source"
-                    :style="getSourceTextStyle(row)"
-                  >
-                    {{ row.name }}
-                  </span>
-                  <span
-                    v-else-if="row.type === 'app'"
-                    class="dim dim--source"
-                    :style="getSourceTextStyle(row)"
-                    >全部</span
-                  >
-                  <span v-else>--</span>
-                </template>
-              </ElTableColumn>
-
-              <ElTableColumn :label="colWindow" width="70" show-overflow-tooltip>
-                <template #default="{ row }">
-                  {{ row.windowLabel ?? (row.type === 'app' ? '--' : '--') }}
-                </template>
-              </ElTableColumn>
-
-              <ElTableColumn :label="colReachRate" width="80" align="right">
-                <template #default="{ row }">{{ fmtNum(row.reachRate, '%') }}</template>
-              </ElTableColumn>
-
-              <ElTableColumn :label="colMinRate" width="80" align="right">
-                <template #default="{ row }">{{ fmtNum(row.minRate, '%') }}</template>
-              </ElTableColumn>
-
-              <ElTableColumn :label="colDeviationCoef" width="90" align="right">
-                <template #default="{ row }">{{ fmtNum(row.deviationCoef) }}</template>
-              </ElTableColumn>
-
-              <ElTableColumn :label="colMinProfit" width="110" align="right">
-                <template #default="{ row }">{{ fmtMoney(row.minProfit) }}</template>
-              </ElTableColumn>
-
-              <ElTableColumn :label="colAdSpend" width="110" align="right">
-                <template #default="{ row }">
-                  <span class="ad-spend">{{ fmtMoney(row.adSpend) }}</span>
-                </template>
-              </ElTableColumn>
-
-              <ElTableColumn :label="colCalculatedSpend" width="110" align="right">
-                <template #default="{ row }">{{ fmtMoney(row.calculatedSpend) }}</template>
-              </ElTableColumn>
-
-              <ElTableColumn :label="colRoi" width="80" align="right">
-                <template #default="{ row }">
-                  <span
-                    v-if="row.roi != null"
-                    class="roi-pill"
-                    :class="roiClass(row.roi)"
-                    :style="getRoiPillStyle(row)"
-                  >
-                    {{ row.roi }}%
-                  </span>
-                  <span v-else>--</span>
-                </template>
-              </ElTableColumn>
-
-              <ElTableColumn :label="colCommissionSpend" width="110" align="right">
-                <template #default="{ row }">{{ fmtMoney(row.commissionSpend) }}</template>
-              </ElTableColumn>
-
-              <ElTableColumn :label="colEstimatedProfit" width="120" align="right">
-                <template #default="{ row }">
-                  <span
-                    v-if="row.estimatedProfit != null"
-                    :class="profitClass(row.estimatedProfit)"
-                  >
-                    {{ fmtSignedMoney(row.estimatedProfit) }}
-                  </span>
-                  <span v-else>--</span>
-                </template>
-              </ElTableColumn>
-
-              <ElTableColumn :label="colCpa" width="90" align="right">
-                <template #default="{ row }">{{
-                  row.cpa != null ? '$' + row.cpa.toFixed(2) : '--'
-                }}</template>
-              </ElTableColumn>
-
-              <ElTableColumn :label="colScore" width="80" align="right">
-                <template #default="{ row }">
-                  <span v-if="row.score != null" class="score">{{ row.score }}分</span>
-                  <span v-else>--</span>
-                </template>
-              </ElTableColumn>
-
-              <ElTableColumn :label="colStatus" width="90" show-overflow-tooltip>
-                <template #default="{ row }">
-                  <span
-                    v-if="row.type === 'source' && row.status"
-                    class="status-pill"
-                    :class="'is-' + row.status"
-                    :style="getStatusPillStyle(row)"
-                  >
-                    {{ row.statusText }}
-                  </span>
-                  <span v-else>--</span>
-                </template>
-              </ElTableColumn>
-            </ElTable>
-
-            <div class="summary-footer">
-              <div class="summary-footer__label">合计/均值：</div>
-              <div class="summary-footer__items">
-                <div class="sf-item">
-                  <span class="sf-k">基础系数</span>
-                  <span class="sf-v">--</span>
+          <div class="dimension-shell">
+            <section class="dimension-section">
+              <!-- <div class="dimension-section__head">
+                <div>
+                  <div class="dimension-section__eyebrow">Overview</div>
+                  <div class="dimension-section__title">7D Overview</div>
                 </div>
-                <div class="sf-item">
-                  <span class="sf-k">广告支出</span>
-                  <span class="sf-v is-primary">{{ money(summary.adSpend) }}</span>
+                <div class="dimension-section__meta">
+                  <span>{{ summaryRows.length }} metrics</span>
+                  <span>{{ resolvedExcelTables.dateHeaders.length }} days</span>
                 </div>
-                <div class="sf-item">
-                  <span class="sf-k">预算</span>
-                  <span class="sf-v is-info">{{ money(summary.calculatedSpend) }}</span>
-                </div>
-                <div class="sf-item">
-                  <span class="sf-k">平均ROI</span>
-                  <span class="sf-v is-warning">{{ summary.roi }}%</span>
-                </div>
-                <div class="sf-item">
-                  <span class="sf-k">代投消耗</span>
-                  <span class="sf-v is-info">{{ money(summary.commissionSpend) }}</span>
-                </div>
-                <div class="sf-item">
-                  <span class="sf-k">预估利润</span>
-                  <span class="sf-v" :class="profitClass(summary.estimatedProfit)">{{
-                    signedMoney(summary.estimatedProfit)
-                  }}</span>
-                </div>
-                <div class="sf-item">
-                  <span class="sf-k">平均CPA</span>
-                  <span class="sf-v">{{ '$' + summary.cpa.toFixed(2) }}</span>
-                </div>
-                <div class="sf-item">
-                  <span class="sf-k">绩效分数</span>
-                  <span class="sf-v is-strong">{{ summary.score }}分</span>
-                </div>
+              </div> -->
+
+              <div class="dimension-table-wrap">
+                <table class="dimension-table dimension-table--summary">
+                  <colgroup>
+                    <col
+                      v-for="column in summaryColumns"
+                      :key="column.key"
+                      :style="{ width: column.width }"
+                    />
+                  </colgroup>
+                  <thead>
+                    <tr>
+                      <th v-for="column in summaryColumns" :key="column.key">{{ column.label }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="row in summaryRows" :key="row.label">
+                      <td class="cell-label">{{ row.label }}</td>
+                      <td class="cell-strong">{{ row.total }}</td>
+                      <td
+                        v-for="(value, index) in row.days"
+                        :key="`${row.label}-${index}`"
+                        class="cell-strong"
+                      >
+                        {{ value }}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
-            </div>
+            </section>
+
+            <section class="dimension-section">
+              <!-- <div class="dimension-section__head">
+                <div>
+                  <div class="dimension-section__eyebrow">Breakdown</div>
+                  <div class="dimension-section__title">App Breakdown</div>
+                </div>
+                <div class="dimension-section__meta">
+                  <span>{{ resolvedExcelTables.appBlocks.length }} apps</span>
+                  <span>grouped by source</span>
+                </div>
+              </div> -->
+
+              <div class="dimension-table-wrap dimension-table-wrap--detail">
+                <table class="dimension-table dimension-table--detail">
+                  <colgroup>
+                    <col
+                      v-for="column in detailColumns"
+                      :key="column.key"
+                      :style="{ width: column.width }"
+                    />
+                  </colgroup>
+                  <thead>
+                    <tr>
+                      <th v-for="column in detailColumns" :key="column.key">{{ column.label }}</th>
+                    </tr>
+                  </thead>
+                  <tbody v-if="detailRows.length">
+                    <tr v-for="row in detailRows" :key="row.key" :class="{ 'is-alt': row.alt }">
+                      <td v-if="row.showApp" :rowspan="row.appRowSpan" class="cell-app cell-strong">
+                        {{ row.app }}
+                      </td>
+                      <td
+                        v-if="row.showPlatform"
+                        :rowspan="row.platformRowSpan"
+                        class="cell-platform cell-strong"
+                      >
+                        {{ row.platform }}
+                      </td>
+                      <td
+                        v-if="row.showAdPlatform"
+                        :rowspan="row.adPlatformRowSpan"
+                        class="cell-ad-platform cell-strong"
+                      >
+                        {{ row.adPlatform }}
+                      </td>
+                      <td class="cell-label cell-strong">{{ row.label }}</td>
+                      <td
+                        v-for="(value, index) in row.values"
+                        :key="`${row.key}-${index}`"
+                        :class="['cell-value', { 'is-negative': isNegativeValue(value) }]"
+                      >
+                        {{ value }}
+                      </td>
+                    </tr>
+                  </tbody>
+                  <tbody v-else>
+                    <tr class="empty-row">
+                      <td :colspan="detailColumns.length">No data</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
           </div>
         </div>
       </template>
@@ -223,900 +156,544 @@
 
 <script setup lang="ts">
   import { computed } from 'vue'
-  import { storeToRefs } from 'pinia'
-  import { useSettingStore } from '@/store/modules/setting'
-  import type { MyPerformanceAppTableSummary, MyPerformanceAppTreeRow } from '../types'
+  import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
+  import {
+    panelAppDimensionAppBlocks,
+    panelAppDimensionDateHeaders,
+    panelAppDimensionSummaryRows,
+    panelAppDimensionText
+  } from '../mock/panel-app-dimension-table.mock'
+  import type {
+    MyPerformanceAppTableSummary,
+    MyPerformanceAppTreeRow,
+    MyPerformanceExcelAppBlock,
+    MyPerformanceExcelSummaryRow,
+    MyPerformanceExcelTables
+  } from '../types'
 
   defineOptions({ name: 'MyPerformancePanelAppDimensionTable' })
 
-  const settingStore = useSettingStore()
-  const { isDark } = storeToRefs(settingStore)
+  const MY_PERFORMANCE_NOW_OFFSET_DAYS = -2
+
+  function getMyPerformanceNow() {
+    const now = cloneAppDate(getAppNow())
+    now.setDate(now.getDate() + MY_PERFORMANCE_NOW_OFFSET_DAYS)
+    return now
+  }
+
+  type DetailDisplayRow = {
+    key: string
+    app: string
+    platform: string
+    adPlatform: string
+    label: string
+    values: Array<string | number>
+    alt: boolean
+    showApp: boolean
+    showPlatform: boolean
+    showAdPlatform: boolean
+    appRowSpan: number
+    platformRowSpan: number
+    adPlatformRowSpan: number
+  }
 
   const props = withDefaults(
     defineProps<{
       loading?: boolean
-      title: string
       list: MyPerformanceAppTreeRow[]
       summary: MyPerformanceAppTableSummary
+      excelTables?: MyPerformanceExcelTables
       headerHint?: string
-      colApp?: string
-      colPlatform?: string
-      colSource?: string
-      colWindow?: string
-      colReachRate?: string
-      colMinRate?: string
-      colDeviationCoef?: string
-      colMinProfit?: string
-      colAdSpend?: string
-      colCalculatedSpend?: string
-      colRoi?: string
-      colCommissionSpend?: string
-      colEstimatedProfit?: string
-      colCpa?: string
-      colScore?: string
-      colStatus?: string
     }>(),
     {
-      loading: false,
-      colApp: '应用',
-      colPlatform: '平台',
-      colSource: '广告平台',
-      colWindow: '天数',
-      colReachRate: '达标要求',
-      colMinRate: '最低要求',
-      colDeviationCoef: '违度系数',
-      colMinProfit: '最低利润',
-      colAdSpend: '广告支出',
-      colCalculatedSpend: '预算',
-      colRoi: 'ROI',
-      colCommissionSpend: '代投消耗',
-      colEstimatedProfit: '预估利润',
-      colCpa: 'CPA',
-      colScore: '分数',
-      colStatus: '状态'
+      loading: false
     }
   )
 
-  const headerHint = computed(() => props.headerHint)
-  const colApp = computed(() => props.colApp)
-  const colPlatform = computed(() => props.colPlatform)
-  const colSource = computed(() => props.colSource)
-  const colWindow = computed(() => props.colWindow)
-  const colReachRate = computed(() => props.colReachRate)
-  const colMinRate = computed(() => props.colMinRate)
-  const colDeviationCoef = computed(() => props.colDeviationCoef)
-  const colMinProfit = computed(() => props.colMinProfit)
-  const colAdSpend = computed(() => props.colAdSpend)
-  const colCalculatedSpend = computed(() => props.colCalculatedSpend)
-  const colRoi = computed(() => props.colRoi)
-  const colCommissionSpend = computed(() => props.colCommissionSpend)
-  const colEstimatedProfit = computed(() => props.colEstimatedProfit)
-  const colCpa = computed(() => props.colCpa)
-  const colScore = computed(() => props.colScore)
-  const colStatus = computed(() => props.colStatus)
-
-  type TableRowWithMeta = MyPerformanceAppTreeRow & { __appId?: string }
-
-  const tableData = computed(() => attachAppMeta(props.list))
-
-  const expandedRowKeys = computed(() => {
-    const rows = tableData.value ?? []
-    const appWithChildren = rows.filter((r) => r.type === 'app' && r.children?.length)
-    const collapseCount = Math.min(2, Math.max(1, appWithChildren.length ? 2 : 0))
-    const collapsed = new Set(appWithChildren.slice(-collapseCount).map((r) => r.id))
-    return appWithChildren.filter((r) => !collapsed.has(r.id)).map((r) => r.id)
+  const loading = computed(() => props.loading)
+  const resolvedHeaderHint = computed(() => {
+    if (props.headerHint) return props.headerHint
+    const endDate = getMyPerformanceNow()
+    const startDate = cloneAppDate(endDate)
+    startDate.setDate(startDate.getDate() - 7)
+    return `计算周期：${formatYYYYMMDD(startDate)} 至 ${formatYYYYMMDD(endDate)} | 应用层级预估利润基于真实收入计算，广告平台预估利润基于回收计算`
   })
 
-  /**
-   * 基色调色板：保持稳定且“随机感”
-   * 仅用透明度区分层级与深浅，避免过度花哨
-   */
-  const BASE_RGB_COLORS = [
-    { r: 64, g: 158, b: 255 }, // 蓝
-    { r: 103, g: 194, b: 58 }, // 绿
-    { r: 230, g: 162, b: 60 }, // 橙
-    { r: 245, g: 108, b: 108 }, // 红
-    { r: 144, g: 147, b: 153 }, // 灰
-    { r: 114, g: 46, b: 209 } // 紫
-  ]
-
-  const ROW_BG_ALPHA_LIGHT = 0.12
-  const ROW_BG_ALPHA_DARK = 0.18
-  const NAME_TEXT_ALPHA_LIGHT = 0.92
-  const NAME_TEXT_ALPHA_DARK = 0.9
-
-  function getRowBgAlpha() {
-    return isDark.value ? ROW_BG_ALPHA_DARK : ROW_BG_ALPHA_LIGHT
-  }
-
-  function getNameTextAlpha() {
-    return isDark.value ? NAME_TEXT_ALPHA_DARK : NAME_TEXT_ALPHA_LIGHT
-  }
-
-  function hashStringToIndex(input: string, mod: number) {
-    let h = 5381
-    for (let i = 0; i < input.length; i++) {
-      h = (h * 33) ^ input.charCodeAt(i)
+  const resolvedExcelTables = computed<MyPerformanceExcelTables>(() => {
+    if (props.excelTables?.dateHeaders?.length) {
+      return props.excelTables
     }
-    return Math.abs(h) % mod
-  }
 
-  function hashToUnit(input: string) {
-    // 0 ~ 1
-    const idx = hashStringToIndex(input, 10000)
-    return idx / 9999
-  }
+    return {
+      dateHeaders: [...panelAppDimensionDateHeaders],
+      summaryRows: [...panelAppDimensionSummaryRows],
+      appBlocks: panelAppDimensionAppBlocks.map((block) => ({
+        app: block.app,
+        platform: block.platform,
+        allRows: block.allRows ?? null,
+        sourceRows: block.sourceRows,
+        alt: block.alt
+      }))
+    }
+  })
 
-  function randRange(input: string, min: number, max: number) {
-    const u = hashToUnit(input)
-    return min + (max - min) * u
-  }
+  const summaryColumns = computed(() => [
+    { key: 'item', label: panelAppDimensionText.item, width: '128px' },
+    { key: 'total', label: panelAppDimensionText.total, width: '112px' },
+    ...resolvedExcelTables.value.dateHeaders.map((label, index) => ({
+      key: `day-${index}`,
+      label,
+      width: '112px'
+    }))
+  ])
 
-  function pickMin(list: Array<number | null | undefined>) {
-    const nums = list.filter((v): v is number => typeof v === 'number')
-    if (!nums.length) return undefined
-    return Math.min(...nums)
-  }
+  const detailColumns = computed(() => [
+    { key: 'app', label: panelAppDimensionText.app, width: '132px' },
+    { key: 'platform', label: panelAppDimensionText.platform, width: '72px' },
+    { key: 'adPlatform', label: panelAppDimensionText.adPlatform, width: '124px' },
+    { key: 'item', label: panelAppDimensionText.item, width: '96px' },
+    ...resolvedExcelTables.value.dateHeaders.map((label, index) => ({
+      key: `detail-day-${index}`,
+      label,
+      width: '100px'
+    }))
+  ])
 
-  function rgba(c: { r: number; g: number; b: number }, a: number) {
-    return `rgba(${c.r}, ${c.g}, ${c.b}, ${a})`
-  }
+  const summaryRows = computed<MyPerformanceExcelSummaryRow[]>(
+    () => resolvedExcelTables.value.summaryRows
+  )
 
-  function getBaseColor(appId: string) {
-    const base = BASE_RGB_COLORS[hashStringToIndex(appId, BASE_RGB_COLORS.length)]
-    return base ?? BASE_RGB_COLORS[0]
-  }
+  const detailRows = computed<DetailDisplayRow[]>(() =>
+    resolvedExcelTables.value.appBlocks.flatMap((block, blockIndex) =>
+      buildDetailRows(block, blockIndex)
+    )
+  )
 
-  function attachAppMeta(
-    rows: MyPerformanceAppTreeRow[],
-    currentAppId?: string
-  ): TableRowWithMeta[] {
-    return (rows ?? []).map((row) => {
-      const appId = row.type === 'app' ? row.id : currentAppId
-      const next: TableRowWithMeta = { ...(row as TableRowWithMeta), __appId: appId }
-      if (row.children?.length) {
-        next.children = attachAppMeta(row.children, appId)
-      }
+  function buildDetailRows(
+    block: MyPerformanceExcelAppBlock,
+    blockIndex: number
+  ): DetailDisplayRow[] {
+    const rows: DetailDisplayRow[] = []
+    const allRows = block.allRows ?? []
+    const sourceRows = block.sourceRows ?? []
+    const sourceRowsTotal = sourceRows.reduce((total, group) => total + group.rows.length, 0)
+    const totalRows = allRows.length + sourceRowsTotal
+    const alt = !!block.alt
 
-      if (next.type === 'app' && next.children?.length) {
-        const children = next.children
+    let hasRenderedMergedCell = false
 
-        const adSpendSum = sum(children.map((c) => c.adSpend))
-        const calculatedSum = sum(children.map((c) => c.calculatedSpend))
-        const commissionSum = sum(children.map((c) => c.commissionSpend))
-        const estimatedProfitSum = sum(children.map((c) => c.estimatedProfit))
-
-        const totalAdSpend = adSpendSum ?? 0
-        const weightedRoi: number | undefined =
-          totalAdSpend > 0
-            ? Math.round(
-                children.reduce((acc, c) => acc + (c.roi ?? 0) * (c.adSpend ?? 0), 0) / totalAdSpend
-              )
-            : undefined
-
-        const avgCpa = average(children.map((c) => c.cpa))
-        const avgScore = average(children.map((c) => c.score))
-        const avgReachRate = average(children.map((c) => c.reachRate))
-        const avgMinRate = average(children.map((c) => c.minRate))
-        const avgCoef = average(children.map((c) => c.deviationCoef))
-        const minMinProfit = pickMin(children.map((c) => c.minProfit))
-
-        next.adSpend = adSpendSum || undefined
-        next.calculatedSpend = calculatedSum || undefined
-        next.commissionSpend = commissionSum || undefined
-        next.estimatedProfit = estimatedProfitSum || undefined
-        next.roi = weightedRoi
-        next.cpa = avgCpa ?? undefined
-        next.score = avgScore != null ? Math.round(avgScore) : undefined
-        next.reachRate = avgReachRate != null ? Math.round(avgReachRate) : undefined
-        next.minRate = avgMinRate != null ? Math.round(avgMinRate) : undefined
-        next.deviationCoef = avgCoef != null ? Math.round(avgCoef * 10) / 10 : undefined
-        next.minProfit = minMinProfit
-      }
-
-      if (next.type === 'app' && (!next.children || next.children.length === 0)) {
-        // 没有子级时，为了展示效果生成稳定随机值
-        const seed = next.id || next.name
-        next.platform = '安卓'
-        next.windowLabel = '--'
-
-        const reach = Math.round(randRange(seed + ':reach', 50, 100))
-        const min = Math.max(0, Math.min(reach, Math.round(randRange(seed + ':min', 45, 98))))
-        const coef = Math.round(randRange(seed + ':coef', 7, 15)) / 10
-
-        const adSpend = Math.round(randRange(seed + ':adSpend', 1200, 46000) / 10) * 10
-        const calculated = Math.round(adSpend * randRange(seed + ':calcRate', 0.75, 0.98))
-        const commission = Math.round(adSpend * randRange(seed + ':commissionRate', 0.05, 0.18))
-        const estimated = Math.round(randRange(seed + ':profit', -500, 4500))
-        const cpa = Math.round(randRange(seed + ':cpa', 0.5, 3.2) * 100) / 100
-        const score = Math.round(randRange(seed + ':score', 0, 30))
-        const minProfit = Math.round(randRange(seed + ':minProfit', 0, 50000) / 100) * 100
-
-        next.reachRate = reach
-        next.minRate = min
-        next.deviationCoef = coef
-        next.minProfit = minProfit || undefined
-        next.adSpend = adSpend
-        next.calculatedSpend = calculated
-        next.roi = Math.round(randRange(seed + ':roi', 50, 99))
-        next.commissionSpend = commission
-        next.estimatedProfit = estimated
-        next.cpa = cpa
-        next.score = score
-      }
-
-      return next
+    allRows.forEach((row, index) => {
+      rows.push({
+        key: `${blockIndex}-all-${index}`,
+        app: block.app,
+        platform: block.platform,
+        adPlatform: panelAppDimensionText.all,
+        label: row.label,
+        values: row.values,
+        alt,
+        showApp: !hasRenderedMergedCell,
+        showPlatform: !hasRenderedMergedCell,
+        showAdPlatform: index === 0,
+        appRowSpan: totalRows,
+        platformRowSpan: totalRows,
+        adPlatformRowSpan: allRows.length
+      })
+      hasRenderedMergedCell = true
     })
+
+    sourceRows.forEach((group, groupIndex) => {
+      group.rows.forEach((row, rowIndex) => {
+        rows.push({
+          key: `${blockIndex}-source-${groupIndex}-${rowIndex}`,
+          app: block.app,
+          platform: block.platform,
+          adPlatform: group.sourceName,
+          label: row.label,
+          values: row.values,
+          alt,
+          showApp: !hasRenderedMergedCell,
+          showPlatform: !hasRenderedMergedCell,
+          showAdPlatform: rowIndex === 0,
+          appRowSpan: totalRows,
+          platformRowSpan: totalRows,
+          adPlatformRowSpan: group.rows.length
+        })
+        hasRenderedMergedCell = true
+      })
+    })
+
+    return rows
   }
 
-  function sum(list: Array<number | null | undefined>): number {
-    let total = 0
-    for (const v of list) total += typeof v === 'number' ? v : 0
-    return total
-  }
-
-  function average(list: Array<number | null | undefined>): number | undefined {
-    const nums = list.filter((v): v is number => typeof v === 'number')
-    if (!nums.length) return undefined
-    let total = 0
-    for (const n of nums) total += n
-    return total / nums.length
-  }
-
-  function getRowStyle({ row }: { row: TableRowWithMeta }) {
-    if (!row.__appId) return {}
-    const base = getBaseColor(row.__appId)
-    return { backgroundColor: rgba(base, getRowBgAlpha()) }
-  }
-
-  function getCellStyle({ row }: { row: TableRowWithMeta }) {
-    // stripe 的底色在 td 上，用 cell-style 才能稳定覆盖
-    return getRowStyle({ row })
-  }
-
-  function getNameStyle(row: TableRowWithMeta) {
-    if (!row.__appId) return {}
-    const base = getBaseColor(row.__appId)
-    return { color: rgba(base, getNameTextAlpha()), fontWeight: row.type === 'source' ? 600 : 700 }
-  }
-
-  function getRoiPillStyle(row: TableRowWithMeta) {
-    if (!row.__appId) return {}
-    const base = getBaseColor(row.__appId)
-    const roi = row.roi
-    const tone = typeof roi === 'number' ? roiClass(roi) : ''
-
-    // 同一色系：根据 ROI 档位只调透明度与边框强度
-    const bgAlpha = tone === 'is-good' ? 0.18 : tone === 'is-mid' ? 0.14 : 0.1
-    const borderAlpha = tone === 'is-good' ? 0.32 : tone === 'is-mid' ? 0.26 : 0.2
-    const textAlpha = 0.95
-
-    return {
-      background: rgba(base, bgAlpha),
-      borderColor: rgba(base, borderAlpha),
-      color: rgba(base, textAlpha)
-    }
-  }
-
-  function getSourceTextStyle(row: TableRowWithMeta) {
-    if (!row.__appId) return {}
-    const base = getBaseColor(row.__appId)
-    return { color: rgba(base, 0.92) }
-  }
-
-  function getStatusPillStyle(row: TableRowWithMeta) {
-    if (!row.__appId) return {}
-    const base = getBaseColor(row.__appId)
-    const status = row.status
-
-    const bgAlpha = status === 'running' ? 0.18 : status === 'warning' ? 0.14 : 0.1
-    const borderAlpha = status === 'running' ? 0.32 : status === 'warning' ? 0.26 : 0.2
-    const textAlpha = 0.95
-
-    return {
-      background: rgba(base, bgAlpha),
-      borderColor: rgba(base, borderAlpha),
-      color: rgba(base, textAlpha)
-    }
-  }
-
-  function money(n: number) {
-    return '$' + n.toLocaleString('en-US', { maximumFractionDigits: 0 })
-  }
-
-  function signedMoney(n: number) {
-    const s = money(Math.abs(n))
-    return (n >= 0 ? '+' : '-') + s
-  }
-
-  function roiClass(roi: number) {
-    if (roi >= 90) return 'is-good'
-    if (roi >= 80) return 'is-mid'
-    return 'is-bad'
-  }
-
-  function profitClass(p: number) {
-    return p >= 0 ? 'is-profit' : 'is-loss'
-  }
-
-  function appDotFromAppId(appId: string) {
-    const id = (appId || '').toLowerCase()
-    if (id.includes('weather')) return 'weather'
-    if (id.includes('phone')) return 'phone'
-    if (id.includes('blood')) return 'blood'
-    return 'default'
-  }
-
-  function fmtNum(v?: number, suffix = '') {
-    if (v == null) return '--'
-    return String(v) + suffix
-  }
-
-  function fmtMoney(v?: number) {
-    if (v == null) return '--'
-    return money(v)
-  }
-
-  function fmtSignedMoney(v?: number) {
-    if (v == null) return '--'
-    return signedMoney(v)
+  function isNegativeValue(value: string | number) {
+    return String(value).trim().startsWith('-')
   }
 </script>
 
 <style scoped lang="scss">
-  @use '../styles/mp-card-fx.scss' as *;
-
   .panel {
-    position: relative;
+    --panel-bg: linear-gradient(180deg, rgb(15 23 42 / 96%) 0%, rgb(17 24 39 / 94%) 100%);
+    --panel-border: rgb(82 91 111 / 48%);
+    --panel-shadow: 0 12px 30px rgb(0 0 0 / 18%), inset 0 1px 0 rgb(255 255 255 / 7%);
+    --panel-header-border: rgb(255 255 255 / 8%);
+    --panel-hint-color: rgb(203 213 225 / 66%);
+    --table-shell-bg: linear-gradient(180deg, rgb(16 24 39 / 92%) 0%, rgb(18 27 45 / 92%) 100%);
+    --table-shell-border: rgb(255 255 255 / 9%);
+    --section-bg: linear-gradient(180deg, rgb(12 19 33 / 50%) 0%, rgb(15 23 42 / 26%) 100%);
+    --section-border: rgb(255 255 255 / 6%);
+    --section-shadow: inset 0 1px 0 rgb(255 255 255 / 3%);
+    --section-eyebrow: rgb(148 163 184 / 72%);
+    --section-title: rgb(248 250 252 / 96%);
+    --section-meta: rgb(148 163 184 / 72%);
+    --table-wrap-bg: rgb(15 23 42 / 88%);
+    --table-wrap-border: rgb(255 255 255 / 7%);
+    --table-head-bg: linear-gradient(180deg, rgb(42 52 70 / 96%) 0%, rgb(28 35 49 / 96%) 100%);
+    --table-head-text: rgb(226 232 240 / 74%);
+    --table-text: rgb(226 232 240 / 88%);
+    --table-cell-bg: rgb(23 33 52 / 90%);
+    --table-cell-alt-bg: rgb(24 45 62 / 90%);
+    --table-border: rgb(255 255 255 / 7%);
+    --table-strong: rgb(241 245 249 / 90%);
+    --table-negative: rgb(248 113 113 / 96%);
+    --table-hover: rgb(255 255 255 / 2%);
+    --table-app-cell: linear-gradient(180deg, rgb(27 39 60 / 94%) 0%, rgb(24 34 54 / 94%) 100%);
+    --table-ad-platform-cell: #162033;
+    --scrollbar-track: rgb(15 23 42 / 76%);
+    --scrollbar-thumb-start: rgb(96 165 250 / 96%);
+    --scrollbar-thumb-end: rgb(59 130 246 / 96%);
+    --scrollbar-thumb-hover-start: rgb(125 211 252 / 96%);
+    --scrollbar-thumb-hover-end: rgb(37 99 235 / 96%);
+    --sk-grid-bg: rgb(255 255 255 / 5%);
+    --sk-grid-border: rgb(255 255 255 / 8%);
+
     overflow: hidden;
+    background: var(--panel-bg);
     backdrop-filter: blur(16px) saturate(1.08);
-    border: 1px solid rgb(63 63 70 / 42%);
-    border-radius: 16px;
-
-    @include mp-neon-stack;
-    @include mp-card-mesh;
-    @include mp-panel-hover-lift;
-    @include mp-panel-header-title-hover;
-
-    &::before {
-      position: absolute;
-      top: -40%;
-      left: 50%;
-      z-index: 0;
-      width: 80%;
-      height: 85%;
-      pointer-events: none;
-      content: '';
-      background: radial-gradient(ellipse at center, rgb(99 102 241 / 9%) 0%, transparent 68%);
-      transform: translateX(-50%);
-      animation: app-table-aurora 12s ease-in-out infinite alternate;
-    }
+    border: 1px solid var(--panel-border);
+    border-radius: 18px;
+    box-shadow: var(--panel-shadow);
   }
 
-  .app-table-sk-title {
-    width: 32% !important;
-    height: 16px !important;
+  .panel__top {
+    padding: 14px 14px 0;
   }
 
-  .app-table-sk {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    min-height: 280px;
-    padding: 4px 2px 8px;
-  }
-
-  .app-table-sk-toolbar {
-    display: grid;
-    grid-template-columns: 2.2fr repeat(9, 1fr);
-    gap: 8px;
-    padding-bottom: 8px;
-    margin-bottom: 4px;
-    border-bottom: 1px solid rgb(63 63 70 / 25%);
-  }
-
-  .app-table-sk-th {
-    width: 100% !important;
-    height: 12px !important;
-  }
-
-  .app-table-sk-row {
-    display: grid;
-    grid-template-columns: 2.2fr repeat(9, 1fr);
-    gap: 8px;
-    align-items: center;
-    padding: 8px 4px;
-    border-radius: 8px;
-  }
-
-  .app-table-sk-cell {
-    width: 100% !important;
-    height: 14px !important;
-  }
-
-  .app-table-sk-cell--app {
-    width: 88% !important;
-  }
-
-  .app-table-sk-summary {
-    padding-top: 10px;
-    margin-top: 6px;
-    border-top: 1px solid rgb(63 63 70 / 25%);
-  }
-
-  .app-table-sk-sum-line {
-    width: 72% !important;
-    height: 16px !important;
-  }
-
-  @keyframes app-table-aurora {
-    0% {
-      opacity: 0.35;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    100% {
-      opacity: 0.85;
-      transform: translateX(-48%) translateY(4%);
-    }
+  :global(html:not(.dark)) .panel {
+    --panel-bg:
+      linear-gradient(180deg, rgb(255 255 255 / 96%) 0%, rgb(247 250 252 / 98%) 100%),
+      radial-gradient(circle at top right, rgb(59 130 246 / 8%), transparent 35%);
+    --panel-border: rgb(203 213 225 / 88%);
+    --panel-shadow: 0 10px 24px rgb(15 23 42 / 8%), inset 0 1px 0 rgb(255 255 255 / 92%);
+    --panel-header-border: rgb(226 232 240 / 92%);
+    --panel-hint-color: rgb(71 85 105 / 70%);
+    --table-shell-bg: linear-gradient(
+      180deg,
+      rgb(255 255 255 / 92%) 0%,
+      rgb(248 250 252 / 92%) 100%
+    );
+    --table-shell-border: rgb(203 213 225 / 90%);
+    --section-bg: linear-gradient(180deg, rgb(255 255 255 / 78%) 0%, rgb(248 250 252 / 84%) 100%);
+    --section-border: rgb(203 213 225 / 58%);
+    --section-shadow: inset 0 1px 0 rgb(255 255 255 / 86%);
+    --section-eyebrow: rgb(100 116 139 / 72%);
+    --section-title: rgb(15 23 42 / 96%);
+    --section-meta: rgb(100 116 139 / 76%);
+    --table-wrap-bg: #fff;
+    --table-wrap-border: #d2d7df;
+    --table-head-bg: #fff;
+    --table-head-text: rgb(31 41 55 / 78%);
+    --table-text: rgb(31 41 55 / 88%);
+    --table-cell-bg: #fff;
+    --table-cell-alt-bg: rgb(241 245 249 / 94%);
+    --table-border: rgb(143 143 143 / 72%);
+    --table-strong: rgb(31 41 55 / 92%);
+    --table-negative: #111827;
+    --table-hover: rgb(148 163 184 / 6%);
+    --table-app-cell: linear-gradient(
+      180deg,
+      rgb(248 250 252 / 98%) 0%,
+      rgb(241 245 249 / 98%) 100%
+    );
+    --table-ad-platform-cell: #162033;
+    --scrollbar-track: rgb(226 232 240 / 92%);
+    --scrollbar-thumb-start: rgb(148 163 184 / 96%);
+    --scrollbar-thumb-end: rgb(100 116 139 / 96%);
+    --scrollbar-thumb-hover-start: rgb(120 137 167 / 96%);
+    --scrollbar-thumb-hover-end: rgb(71 85 105 / 96%);
+    --sk-grid-bg: rgb(255 255 255 / 88%);
+    --sk-grid-border: rgb(226 232 240 / 92%);
   }
 
   .panel__header {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    justify-content: flex-start;
-    padding: 12px 16px;
-    border-bottom: 1px solid rgb(63 63 70 / 30%);
+    padding: 14px 18px 10px;
+    border-bottom: 1px solid var(--panel-header-border);
   }
 
-  .header-left {
+  .header-copy {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    align-items: flex-start;
-    min-width: 0;
+    gap: 6px;
   }
 
-  .title {
-    font-size: 14px;
-
-    @include mp-title-gradient;
-  }
-
-  .header-hint {
-    min-width: 0;
-    overflow: hidden;
+  .hint {
     font-size: 12px;
-    color: var(--text-secondary);
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    font-weight: 600;
+    line-height: 1.45;
+    color: var(--panel-hint-color);
   }
 
   .panel__body {
-    position: relative;
-    z-index: 1;
     padding: 12px 14px 16px;
   }
 
-  .table-scroll {
-    position: relative;
-    width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-
-    :deep(.el-table) {
-      min-width: 980px;
-    }
+  .dimension-shell {
+    display: grid;
+    gap: 16px;
+    min-width: 0;
+    padding: 12px;
+    background: var(--table-shell-bg);
+    border: 1px solid var(--table-shell-border);
+    border-radius: 16px;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 5%),
+      0 6px 18px rgb(0 0 0 / 12%);
   }
 
-  .summary-footer {
-    position: sticky;
-    bottom: 0;
-    z-index: 3;
+  .dimension-section {
+    display: grid;
+    gap: 10px;
+    padding: 12px;
+    background: var(--section-bg);
+    border: 1px solid var(--section-border);
+    border-radius: 16px;
+    box-shadow: var(--section-shadow);
+  }
+
+  .dimension-section__head {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 2px 2px 0;
+  }
+
+  .dimension-section__eyebrow {
+    margin-bottom: 4px;
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--section-eyebrow);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+
+  .dimension-section__title {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--section-title);
+    letter-spacing: 0.01em;
+  }
+
+  .dimension-section__meta {
     display: flex;
     gap: 10px;
     align-items: center;
-    min-width: 980px;
-    padding: 12px 14px;
-    margin-top: 10px;
-    overflow: hidden;
-    background: linear-gradient(
-      90deg,
-      rgb(24 24 27 / 92%) 0%,
-      rgb(39 39 42 / 88%) 25%,
-      rgb(30 58 138 / 18%) 50%,
-      rgb(39 39 42 / 88%) 75%,
-      rgb(24 24 27 / 92%) 100%
-    );
-    background-size: 200% 100%;
-    backdrop-filter: blur(12px);
-    border: 1px solid rgb(63 63 70 / 45%);
-    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--section-meta);
+  }
+
+  .dimension-section__meta span {
+    padding: 4px 10px;
+    background: rgb(255 255 255 / 4%);
+    border: 1px solid rgb(255 255 255 / 6%);
+    border-radius: 999px;
+  }
+
+  :global(html:not(.dark)) .dimension-section__meta span {
+    background: rgb(255 255 255 / 76%);
+    border-color: rgb(203 213 225 / 92%);
+  }
+
+  .dimension-table-wrap {
+    max-width: 100%;
+    overflow: auto;
+    background: var(--table-wrap-bg);
+    border: 1px solid var(--table-wrap-border);
+    border-radius: 14px;
+    scrollbar-gutter: stable;
+    scrollbar-width: auto;
+    scrollbar-color: var(--scrollbar-thumb-end) var(--scrollbar-track);
     box-shadow:
-      0 -4px 20px rgb(0 0 0 / 25%),
-      0 0 40px rgb(59 130 246 / 6%),
-      inset 0 1px 0 rgb(244 244 245 / 5%);
-    animation: summary-sheen 6s ease-in-out infinite;
-
-    &::before {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      content: '';
-      background: linear-gradient(
-        105deg,
-        transparent 40%,
-        rgb(34 211 238 / 6%) 50%,
-        transparent 60%
-      );
-      animation: summary-glint 4s ease-in-out infinite;
-    }
+      inset 0 1px 0 rgb(255 255 255 / 4%),
+      0 6px 18px rgb(2 6 23 / 8%);
   }
 
-  @keyframes summary-sheen {
-    0%,
-    100% {
-      background-position: 0% 50%;
-    }
-
-    50% {
-      background-position: 100% 50%;
-    }
+  .dimension-table-wrap--detail {
+    max-height: 576px;
+    overflow-y: auto;
   }
 
-  @keyframes summary-glint {
-    0%,
-    100% {
-      opacity: 0;
-      transform: translateX(-30%);
-    }
-
-    50% {
-      opacity: 1;
-      transform: translateX(30%);
-    }
+  .dimension-table-wrap::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
   }
 
-  .summary-footer__label {
-    position: relative;
-    z-index: 1;
-    flex: none;
+  .dimension-table-wrap::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+    border-radius: 999px;
+  }
+
+  .dimension-table-wrap::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--scrollbar-thumb-start), var(--scrollbar-thumb-end));
+    border: 2px solid var(--scrollbar-track);
+    border-radius: 999px;
+  }
+
+  .dimension-table-wrap::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(
+      180deg,
+      var(--scrollbar-thumb-hover-start),
+      var(--scrollbar-thumb-hover-end)
+    );
+  }
+
+  .dimension-table {
+    width: max-content;
+    min-width: 100%;
+    color: var(--table-text);
+    table-layout: fixed;
+    border-spacing: 0;
+    border-collapse: collapse;
+  }
+
+  .dimension-table th,
+  .dimension-table td {
+    padding: 10px;
     font-size: 12px;
-    font-weight: 700;
-    color: var(--text-primary);
-    text-shadow: 0 0 10px rgb(244 244 245 / 18%);
-  }
-
-  .summary-footer__items {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 18px;
-    align-items: center;
-    min-width: 0;
-  }
-
-  .sf-item {
-    display: inline-flex;
-    gap: 8px;
-    align-items: baseline;
-    font-variant-numeric: tabular-nums;
+    line-height: 1.25;
     white-space: nowrap;
+    border: 1px solid var(--table-border);
   }
 
-  .sf-k {
-    font-size: 12px;
-    color: var(--text-secondary);
-  }
-
-  .sf-v {
-    font-size: 13px;
+  .dimension-table th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
     font-weight: 700;
-    color: rgb(244 244 245 / 92%);
+    color: var(--table-head-text);
+    text-align: center;
+    background: var(--table-head-bg);
+    backdrop-filter: blur(8px);
   }
 
-  .sf-v.is-primary {
-    color: rgb(96 165 250 / 98%);
-    text-shadow: 0 0 10px rgb(59 130 246 / 25%);
+  .dimension-table td {
+    font-weight: 500;
+    background: var(--table-cell-bg);
+    transition: background-color 160ms ease;
   }
 
-  .sf-v.is-info {
-    color: rgb(34 211 238 / 95%);
-    text-shadow: 0 0 10px rgb(34 211 238 / 25%);
+  .dimension-table tbody tr.is-alt td {
+    background: var(--table-cell-alt-bg);
   }
 
-  .sf-v.is-warning {
-    color: rgb(249 115 22 / 98%);
-    text-shadow: 0 0 10px rgb(249 115 22 / 25%);
+  .dimension-table tbody tr:hover td {
+    background: color-mix(in srgb, var(--table-cell-bg) 88%, var(--table-hover));
   }
 
-  .sf-v.is-strong {
-    color: rgb(244 244 245);
-    text-shadow: 0 0 10px rgb(244 244 245 / 20%);
+  .dimension-table tbody tr.is-alt:hover td {
+    background: color-mix(in srgb, var(--table-cell-alt-bg) 88%, var(--table-hover));
   }
 
-  .mp-detail-table {
-    font-size: 14px;
-    transition:
-      filter 0.45s var(--ease-out),
-      transform 0.45s var(--ease-out);
-    transform-origin: top center;
-
-    --el-table-border-color: var(--el-border-color-lighter);
-    --el-table-header-bg-color: var(--el-fill-color-light);
-
-    :deep(.el-table__cell .cell) {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    :deep(.el-table__row) {
-      transition:
-        background-color 0.25s var(--ease-out),
-        box-shadow 0.25s var(--ease-out);
-    }
-
-    :deep(.el-table__row:hover > td) {
-      background-color: rgb(39 39 42 / 45%) !important;
-      box-shadow: inset 0 0 0 1px rgb(59 130 246 / 12%);
-    }
-
-    :deep(.el-table__row:hover > td:first-child) {
-      box-shadow:
-        inset 0 0 0 1px rgb(59 130 246 / 12%),
-        inset 3px 0 12px rgb(59 130 246 / 6%);
-    }
+  .cell-app,
+  .cell-platform,
+  .cell-ad-platform,
+  .cell-label {
+    color: var(--table-strong);
   }
 
-  .panel:hover .mp-detail-table {
-    filter: brightness(1.04) drop-shadow(0 6px 24px rgb(59 130 246 / 6%));
-    transform: translateY(-2px);
-  }
-
-  html.dark .mp-detail-table {
-    --el-table-border-color: rgb(63 63 70 / 40%);
-    --el-table-header-bg-color: rgb(24 24 27 / 70%);
-    --el-table-header-text-color: #fff;
-
-    :deep(.el-table__header-wrapper th),
-    :deep(.el-table__header-wrapper th .cell) {
-      color: #fff;
-    }
-
-    :deep(.el-table__header-wrapper) {
-      backdrop-filter: blur(4px);
-    }
-  }
-
-  .app-dot {
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    margin-right: 8px;
-    vertical-align: middle;
-    border-radius: 4px;
-    transition:
-      box-shadow var(--duration-fast) var(--ease-default),
-      transform var(--duration-fast) var(--ease-default);
-
-    &.app-dot--weather {
-      background: linear-gradient(135deg, #93c5fd, #60a5fa);
-      box-shadow: 0 0 8px rgb(96 165 250 / 35%);
-    }
-
-    &.app-dot--phone {
-      background: linear-gradient(135deg, #86efac, #22c55e);
-      box-shadow: 0 0 8px rgb(34 197 94 / 35%);
-    }
-
-    &.app-dot--blood {
-      background: linear-gradient(135deg, #f87171, #ef4444);
-      box-shadow: 0 0 8px rgb(239 68 68 / 35%);
-    }
-
-    &.app-dot--default {
-      background: rgb(161 161 170 / 45%);
-      box-shadow: 0 0 6px rgb(161 161 170 / 15%);
-    }
-  }
-
-  .roi-pill {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 54px;
-    height: 22px;
-    padding: 0 8px;
-    font-size: 12px;
-    font-weight: 750;
-    font-variant-numeric: tabular-nums;
-    line-height: 22px;
-    border: 1px solid transparent;
-    border-radius: 9999px;
-    transition:
-      box-shadow 0.25s var(--ease-out),
-      transform 0.2s var(--ease-out);
-
-    &:hover {
-      transform: scale(1.06);
-    }
-
-    &.is-good {
-      box-shadow:
-        0 0 10px rgb(16 185 129 / 28%),
-        0 0 20px rgb(16 185 129 / 12%);
-      animation: pill-neon-green 2.6s ease-in-out infinite;
-    }
-
-    &.is-mid {
-      box-shadow:
-        0 0 10px rgb(245 158 11 / 22%),
-        0 0 20px rgb(245 158 11 / 8%);
-      animation: pill-neon-amber 2.8s ease-in-out infinite;
-    }
-
-    &.is-bad {
-      box-shadow:
-        0 0 10px rgb(244 63 94 / 22%),
-        0 0 20px rgb(244 63 94 / 8%);
-      animation: pill-neon-rose 3s ease-in-out infinite;
-    }
-  }
-
-  @keyframes pill-neon-green {
-    0%,
-    100% {
-      box-shadow:
-        0 0 8px rgb(16 185 129 / 22%),
-        0 0 18px rgb(16 185 129 / 8%);
-    }
-
-    50% {
-      box-shadow:
-        0 0 14px rgb(16 185 129 / 38%),
-        0 0 28px rgb(16 185 129 / 14%);
-    }
-  }
-
-  @keyframes pill-neon-amber {
-    0%,
-    100% {
-      box-shadow:
-        0 0 8px rgb(245 158 11 / 18%),
-        0 0 16px rgb(245 158 11 / 6%);
-    }
-
-    50% {
-      box-shadow:
-        0 0 14px rgb(245 158 11 / 32%),
-        0 0 26px rgb(245 158 11 / 10%);
-    }
-  }
-
-  @keyframes pill-neon-rose {
-    0%,
-    100% {
-      box-shadow:
-        0 0 8px rgb(244 63 94 / 18%),
-        0 0 16px rgb(244 63 94 / 6%);
-    }
-
-    50% {
-      box-shadow:
-        0 0 14px rgb(244 63 94 / 32%),
-        0 0 26px rgb(244 63 94 / 10%);
-    }
-  }
-
-  .ad-spend {
-    font-weight: 850;
-    font-variant-numeric: tabular-nums;
-    color: rgb(56 189 248 / 98%);
-    text-shadow: 0 0 8px rgb(56 189 248 / 20%);
-  }
-
-  .is-profit {
-    color: var(--art-success);
-    text-shadow: 0 0 6px rgb(16 185 129 / 20%);
-  }
-
-  .is-loss {
-    color: var(--art-danger);
-    text-shadow: 0 0 6px rgb(239 68 68 / 20%);
-  }
-
-  .status-pill {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    height: 22px;
-    padding: 0 10px;
-    font-size: 12px;
-    font-weight: 700;
-    line-height: 22px;
-    white-space: nowrap;
-    border: 1px solid transparent;
-    border-radius: 9999px;
-    transition:
-      box-shadow var(--duration-fast) var(--ease-default),
-      transform var(--duration-fast) var(--ease-default);
-
-    &:hover {
-      transform: scale(1.05);
-    }
-  }
-
-  .name-cell {
-    display: inline-flex;
-    gap: 8px;
-    align-items: center;
-    min-width: 0;
-  }
-
-  .name {
-    min-width: 0;
+  .cell-app {
+    max-width: 132px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    vertical-align: middle;
+    background: var(--table-app-cell) !important;
   }
 
-  .dim {
-    font-size: 12px;
-    color: rgb(244 244 245 / 70%);
+  .cell-platform {
+    vertical-align: middle;
   }
 
-  .score {
-    font-weight: 700;
+  .cell-ad-platform {
+    vertical-align: middle;
+    background: var(--table-ad-platform-cell) !important;
+  }
+
+  .cell-strong {
+    font-weight: 600;
+  }
+
+  .dimension-table--summary td:not(:first-child),
+  .dimension-table--detail td:not(.cell-app, .cell-platform, .cell-ad-platform, .cell-label) {
     font-variant-numeric: tabular-nums;
-    color: rgb(148 163 184 / 95%);
-    text-shadow: 0 0 6px rgb(148 163 184 / 15%);
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .panel {
-      transition: none;
+  .cell-value.is-negative {
+    color: var(--table-negative);
+  }
+
+  .empty-row td {
+    padding: 24px 16px;
+    text-align: center;
+  }
+
+  .table-sk-title {
+    width: 180px !important;
+    height: 16px !important;
+    margin-bottom: 8px;
+  }
+
+  .table-sk-hint {
+    width: 58% !important;
+    height: 12px !important;
+  }
+
+  .table-sk-shell {
+    display: grid;
+    gap: 16px;
+    padding: 8px;
+  }
+
+  .table-sk-grid {
+    display: grid;
+    gap: 6px;
+    padding: 12px;
+    background: var(--sk-grid-bg);
+    border: 1px solid var(--sk-grid-border);
+    border-radius: 12px;
+  }
+
+  .table-sk-grid--summary {
+    grid-template-columns: repeat(9, 1fr);
+  }
+
+  .table-sk-grid--detail {
+    grid-template-columns: repeat(6, 1fr);
+  }
+
+  .table-sk-cell {
+    width: 100% !important;
+    height: 18px !important;
+  }
+
+  @media (width <= 1200px) {
+    .dimension-section__head {
+      flex-direction: column;
+      align-items: flex-start;
     }
 
-    .panel:hover {
-      transform: none;
-    }
-
-    .panel:hover .panel__header .title {
-      filter: none;
-      transform: none;
-    }
-
-    .panel:hover .mp-detail-table {
-      filter: none;
-      transform: none;
-    }
-
-    .mp-detail-table {
-      transition: none;
-    }
-
-    .panel::before {
-      animation: none;
-    }
-
-    .panel::after {
-      opacity: 0.12;
-    }
-
-    .summary-footer,
-    .summary-footer::before {
-      animation: none;
-    }
-
-    .roi-pill.is-good,
-    .roi-pill.is-mid,
-    .roi-pill.is-bad {
-      animation: none;
+    .dimension-section__meta {
+      flex-wrap: wrap;
     }
   }
 </style>

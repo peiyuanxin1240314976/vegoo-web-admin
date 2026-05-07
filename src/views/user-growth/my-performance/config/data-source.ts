@@ -21,6 +21,8 @@ export enum MyPerformanceEndpoint {
   SpendProgress = 'spendProgress',
   /** 07-app-dimension-table */
   AppDimensionTable = 'appDimensionTable',
+  /** 09-app-dimension-table-by-date-range */
+  AppDimensionTableByDateRange = 'appDimensionTableByDateRange',
   /** 08-performance-history */
   PerformanceHistory = 'performanceHistory'
 }
@@ -33,7 +35,8 @@ export const MY_PERFORMANCE_USE_MOCK: Record<MyPerformanceEndpoint, boolean> = {
   [MyPerformanceEndpoint.RoiTrend]: false,
   [MyPerformanceEndpoint.SpendProgress]: false,
   [MyPerformanceEndpoint.AppDimensionTable]: false,
-  [MyPerformanceEndpoint.PerformanceHistory]: false
+  [MyPerformanceEndpoint.AppDimensionTableByDateRange]: false,
+  [MyPerformanceEndpoint.PerformanceHistory]: true
 }
 
 export function isMyPerformanceEndpointMock(endpoint: MyPerformanceEndpoint): boolean {

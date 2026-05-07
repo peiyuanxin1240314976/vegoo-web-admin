@@ -14,8 +14,16 @@ export type AdPlatformInfoMetricKey =
   | 'cvr'
 
 /** 详情页筛选项：仅时间维度（与路由 param `id` 配合请求详情） */
+export type AdPlatformInfoDateRangePreset = '7d' | '30d' | '90d'
+
+/** 详情页筛选项：默认 preset（7d/30d/90d），也支持用户自选起止日期（YYYY-MM-DD）；null 表示用户清空日期框（请求仍按 composable 默认窗口兜底） */
+export type AdPlatformInfoDateRange =
+  | AdPlatformInfoDateRangePreset
+  | [start: string, end: string]
+  | null
+
 export type AdPlatformInfoFilterState = {
-  dateRange: '7d' | '30d' | '90d'
+  dateRange: AdPlatformInfoDateRange
 }
 
 export type AdPlatformInfoPlatformSummary = {

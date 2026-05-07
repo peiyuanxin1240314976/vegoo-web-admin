@@ -16,9 +16,9 @@
       >
         <template #cell:name="{ row }">
           <span class="ap-cell-name">
-            <ElIcon v-if="row.type === 'app'" class="ap-row-icon ap-row-icon--app">
-              <Monitor />
-            </ElIcon>
+            <span v-if="row.type === 'app'" class="ap-app-logo" :style="getAppLogoStyle(row.name)">
+              {{ getAppInitial(row.name) }}
+            </span>
             <ElIcon v-else-if="row.type === 'platform'" class="ap-row-icon ap-row-icon--platform">
               <Iphone />
             </ElIcon>
@@ -33,7 +33,7 @@
         </template>
 
         <template #cell:spend="{ row }">{{ formatMoney(row.spend) }}</template>
-        <template #cell:budget="{ row }">{{ formatMoney(row.budget) }}</template>
+        <template #cell:budget="{ row }">{{ formatMoneyWithWan(row.budget) }}</template>
 
         <template #cell:usageRate="{ row }">
           <div class="ap-usage-cell">
@@ -86,14 +86,14 @@
 
         <template #cell:operation="{ row }">
           <template v-if="row.type === 'account'">
-            <ElButton round link type="primary" size="small" @click="goCampaignDetail(row)">
-              系列
-            </ElButton>
+            <!-- <ElButton round link type="primary" size="small" @click="goCampaignDetail(row)">
+              系列11
+            </ElButton> -->
           </template>
           <template v-else-if="row.type === 'app'">
-            <ElButton round link type="primary" size="small" @click="goCampaignDetailFromApp(row)">
-              详情
-            </ElButton>
+            <!-- <ElButton round link type="primary" size="small" @click="goCampaignDetailFromApp(row)">
+              详情1222
+            </ElButton> -->
             <ElButton
               v-if="rowHasChildren(row)"
               round
@@ -128,8 +128,9 @@
 <script setup lang="ts">
   import { computed } from 'vue'
   import type { AccountDetailRow } from '../types'
-  import { Monitor, Iphone } from '@element-plus/icons-vue'
-  import { useRouter } from 'vue-router'
+  import { Iphone } from '@element-plus/icons-vue'
+  // import { useRouter } from 'vue-router'
+  import { formatNumberWithWan } from '@/utils'
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore Vetur 对 <script setup> 的误报：.vue 无 default export
   import ArtVirtualTable from '@/components/core/art-virtual-table/index.vue'
@@ -137,7 +138,7 @@
 
   defineOptions({ name: 'AccountDetailTable' })
 
-  const router = useRouter()
+  // const router = useRouter()
 
   const props = defineProps<{
     tableData: AccountDetailRow[]
@@ -159,12 +160,12 @@
   }>()
 
   const virtualColumns = computed<ArtVirtualTableColumn[]>(() => [
-    { key: 'name', title: '应用 / 平台 / 账户', width: 320, flexGrow: 1 },
+    { key: 'name', title: '应用 / 平台 / 账户', width: 300, flexGrow: 1 },
     { key: 'spend', title: '广告支出', width: 120, align: 'left' },
-    { key: 'budget', title: '预算', width: 120, align: 'center' },
+    { key: 'budget', title: '预算', width: 140, align: 'center' },
     { key: 'usageRate', title: '使用率', width: 160, align: 'center' },
     { key: 'cpi', title: 'CPI', width: 90, align: 'center' },
-    { key: 'installs', title: '安装数', width: 120, align: 'center' },
+    { key: 'installs', title: '买量用户', width: 120, align: 'center' },
     { key: 'roi1', title: '首日ROI', width: 110, align: 'center' },
     { key: 'roi3', title: '3日ROI', width: 100, align: 'center' },
     { key: 'roi7', title: '7日ROI', width: 100, align: 'center' },
@@ -213,28 +214,28 @@
   }
 
   /** 系列详情：与广告成效系列页 query 约定一致（appId / appName） */
-  function goCampaignDetail(row: AccountDetailRow) {
-    router.push({
-      name: 'CampaignDetail',
-      query: {
-        id: String(row.id),
-        appId: String(row.id),
-        appName: row.name
-      }
-    })
-  }
+  // function goCampaignDetail(row: AccountDetailRow) {
+  //   router.push({
+  //     name: 'CampaignDetail',
+  //     query: {
+  //       id: String(row.id),
+  //       appId: String(row.id),
+  //       appName: row.name
+  //     }
+  //   })
+  // }
 
-  function goCampaignDetailFromApp(row: AccountDetailRow) {
-    router.push({
-      name: 'CampaignDetail',
-      query: {
-        // CampaignDetail 页面读取 route.query.id 作为 campaignId
-        id: String(row.id ?? ''),
-        appId: String(row.id ?? ''),
-        appName: String(row.name ?? '')
-      }
-    })
-  }
+  // function goCampaignDetailFromApp(row: AccountDetailRow) {
+  //   router.push({
+  //     name: 'CampaignDetail',
+  //     query: {
+  //       // CampaignDetail 页面读取 route.query.id 作为 campaignId
+  //       id: String(row.id ?? ''),
+  //       appId: String(row.id ?? ''),
+  //       appName: String(row.name ?? '')
+  //     }
+  //   })
+  // }
 
   const EMPTY_TEXT = '无数据'
 
@@ -261,6 +262,37 @@
   function formatPercentFixed2OrEmpty(v: unknown): string {
     const n = toFiniteNumber(v)
     return n === null ? EMPTY_TEXT : `${n.toFixed(2)}%`
+  }
+
+  function formatMoneyWithWan(v: unknown): string {
+    const n = toFiniteNumber(v)
+    if (n === null) return EMPTY_TEXT
+    return `$${formatNumberWithWan(n)}`
+  }
+
+  function getAppInitial(name?: string) {
+    const text = String(name ?? '').trim()
+    if (!text) return 'A'
+    const match = text.match(/[A-Za-z0-9]/)
+    return (match?.[0] ?? text[0] ?? 'A').toUpperCase()
+  }
+
+  function getAppLogoStyle(name?: string) {
+    const palettes = [
+      { bg: 'linear-gradient(180deg, #4d8dff 0%, #2f6fe4 100%)', border: 'rgb(143 188 255 / 38%)' },
+      { bg: 'linear-gradient(180deg, #5b8cff 0%, #3565d6 100%)', border: 'rgb(157 190 255 / 38%)' },
+      { bg: 'linear-gradient(180deg, #77839a 0%, #5f6b82 100%)', border: 'rgb(203 213 225 / 24%)' },
+      { bg: 'linear-gradient(180deg, #8792a8 0%, #6c778d 100%)', border: 'rgb(203 213 225 / 24%)' }
+    ]
+
+    const text = String(name ?? '').trim()
+    const hash = Array.from(text).reduce((total, char) => total + char.charCodeAt(0), 0)
+    const palette = palettes[hash % palettes.length]
+
+    return {
+      '--app-logo-bg': palette.bg,
+      '--app-logo-border': palette.border
+    }
   }
 </script>
 
@@ -336,6 +368,26 @@
     &.ap-row-icon--platform {
       color: var(--el-text-color-regular);
     }
+  }
+
+  .ap-app-logo {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    overflow: hidden;
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1;
+    color: #fff;
+    background: var(--app-logo-bg);
+    border: 1px solid var(--app-logo-border);
+    border-radius: 9px;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 12%),
+      0 4px 10px rgb(15 23 42 / 18%);
   }
 
   .ap-cell-account {

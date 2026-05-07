@@ -1,0 +1,489 @@
+{
+  "_comment": "我的绩效 - 应用维度绩效评估表（Excel 透视）。请求体与其它业务 POST 一致：MyPerformanceQueryBody；对应 types.ts: MyPerformanceAppTreeRow, MyPerformanceAppTableSummary。",
+  "fieldDescription": {
+    "request": {
+      "personId": { "type": "string", "required": true, "description": "人员 ID。" },
+      "periodType": {
+        "type": "string",
+        "required": true,
+        "enum": ["quarter", "month"],
+        "description": "统计口径类型。"
+      },
+      "periodValue": {
+        "type": "string",
+        "required": true,
+        "description": "口径值，如 2026-03 或 2026-Q1。"
+      },
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "开始日期，YYYY-MM-DD；与页面全局计算日期一致。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": true,
+        "description": "结束日期，YYYY-MM-DD；与页面全局计算日期一致。"
+      }
+    },
+    "response": {
+      "title": { "type": "string", "required": true, "description": "表格标题。" },
+      "list": {
+        "type": "MyPerformanceAppTreeRow[]",
+        "required": true,
+        "description": "树形表格数据：顶层为应用行(type=app)，children 为广告平台行(type=source)。"
+      },
+      "summary": {
+        "type": "MyPerformanceAppTableSummary",
+        "required": true,
+        "description": "底部汇总（合计/均值）。"
+      },
+      "excelTables": {
+        "type": "object",
+        "required": true,
+        "description": "用于页面两张 Excel 风格表格的完整示例数据（上方汇总表 + 下方明细表）。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "personId": "u_001",
+    "periodType": "month",
+    "periodValue": "2026-04",
+    "startDate": "2026-04-01",
+    "endDate": "2026-04-26"
+  },
+  "sampleResponse": {
+    "title": "应用维度绩效评估 | 近7天绩效评估",
+    "list": [
+      {
+        "id": "app_weather5",
+        "type": "app",
+        "name": "Weather5",
+        "children": [
+          {
+            "id": "app_weather5_google",
+            "type": "source",
+            "name": "Google",
+            "platform": "安卓",
+            "windowLabel": "3天",
+            "reachRate": 53,
+            "minRate": 50,
+            "deviationCoef": 1.2,
+            "minProfit": null,
+            "adSpend": 12450,
+            "calculatedSpend": 11800,
+            "roi": 91,
+            "commissionSpend": 2100,
+            "estimatedProfit": 3240,
+            "cpa": 2.21,
+            "score": 28,
+            "status": "running",
+            "statusText": "投放中"
+          }
+        ]
+      },
+      {
+        "id": "app_weather8",
+        "type": "app",
+        "name": "Weather8（汇总）",
+        "children": [
+          {
+            "id": "app_weather8_all",
+            "type": "source",
+            "name": "全部",
+            "platform": "安卓",
+            "windowLabel": null,
+            "reachRate": null,
+            "minRate": null,
+            "deviationCoef": null,
+            "minProfit": 46000,
+            "adSpend": 8200,
+            "calculatedSpend": 7600,
+            "roi": 53,
+            "commissionSpend": 1200,
+            "estimatedProfit": 1840,
+            "cpa": null,
+            "score": null,
+            "status": "running",
+            "statusText": "投放中"
+          },
+          {
+            "id": "app_weather8_facebook",
+            "type": "source",
+            "name": "Facebook",
+            "platform": "安卓",
+            "windowLabel": "3天",
+            "reachRate": 53,
+            "minRate": 50,
+            "deviationCoef": 1.2,
+            "minProfit": 5100,
+            "adSpend": 4800,
+            "calculatedSpend": 4800,
+            "roi": 53,
+            "commissionSpend": 800,
+            "estimatedProfit": -340,
+            "cpa": 2.45,
+            "score": 0,
+            "status": "warning",
+            "statusText": "投放中"
+          }
+        ]
+      },
+      {
+        "id": "app_phonetracker2",
+        "type": "app",
+        "name": "PhoneTracker2",
+        "children": [
+          {
+            "id": "app_phonetracker2_google",
+            "type": "source",
+            "name": "Google",
+            "platform": "安卓",
+            "windowLabel": "3天",
+            "reachRate": 100,
+            "minRate": 97,
+            "deviationCoef": 1,
+            "minProfit": null,
+            "adSpend": 6800,
+            "calculatedSpend": 6400,
+            "roi": 98,
+            "commissionSpend": 1100,
+            "estimatedProfit": 2180,
+            "cpa": 1.89,
+            "score": 25,
+            "status": "running",
+            "statusText": "投放中"
+          },
+          {
+            "id": "app_phonetracker2_facebook",
+            "type": "source",
+            "name": "Facebook",
+            "platform": "安卓",
+            "windowLabel": "1天",
+            "reachRate": 97,
+            "minRate": 92,
+            "deviationCoef": 1,
+            "minProfit": null,
+            "adSpend": 4200,
+            "calculatedSpend": 3900,
+            "roi": 94,
+            "commissionSpend": 680,
+            "estimatedProfit": 1240,
+            "cpa": 2.12,
+            "score": 22,
+            "status": "running",
+            "statusText": "投放中"
+          }
+        ]
+      },
+      {
+        "id": "app_bloodsugar2",
+        "type": "app",
+        "name": "BloodSugar2",
+        "children": [
+          {
+            "id": "app_bloodsugar2_google",
+            "type": "source",
+            "name": "Google",
+            "platform": "安卓",
+            "windowLabel": "3天",
+            "reachRate": 100,
+            "minRate": 95,
+            "deviationCoef": 1,
+            "minProfit": null,
+            "adSpend": 9760,
+            "calculatedSpend": 9200,
+            "roi": 96,
+            "commissionSpend": 1800,
+            "estimatedProfit": 3120,
+            "cpa": 2.08,
+            "score": 26,
+            "status": "running",
+            "statusText": "投放中"
+          }
+        ]
+      },
+      {
+        "id": "app_cpumonitor",
+        "type": "app",
+        "name": "CPUMonitor",
+        "children": [
+          {
+            "id": "app_cpumonitor_google",
+            "type": "source",
+            "name": "Google",
+            "platform": "安卓",
+            "windowLabel": "3天",
+            "reachRate": 95,
+            "minRate": 93,
+            "deviationCoef": 1,
+            "minProfit": null,
+            "adSpend": 3200,
+            "calculatedSpend": 3000,
+            "roi": 98,
+            "commissionSpend": 480,
+            "estimatedProfit": -120,
+            "cpa": 2.38,
+            "score": 0,
+            "status": "paused",
+            "statusText": "投放中（变更: 2026-02-28）"
+          }
+        ]
+      },
+      {
+        "id": "app_dressup",
+        "type": "app",
+        "name": "Dressup",
+        "children": [
+          {
+            "id": "app_dressup_google",
+            "type": "source",
+            "name": "Google",
+            "platform": "安卓",
+            "windowLabel": "3天",
+            "reachRate": 75,
+            "minRate": 70,
+            "deviationCoef": 0.7,
+            "minProfit": 45000,
+            "adSpend": 4850,
+            "calculatedSpend": 4500,
+            "roi": 72,
+            "commissionSpend": 620,
+            "estimatedProfit": 1890,
+            "cpa": 18.5,
+            "score": 18,
+            "status": "running",
+            "statusText": "投放中（CPA≤$25）"
+          }
+        ]
+      },
+      {
+        "id": "app_focusbuddy",
+        "type": "app",
+        "name": "FocusBuddy"
+      },
+      {
+        "id": "app_sleeptracker",
+        "type": "app",
+        "name": "SleepTracker"
+      }
+    ],
+    "summary": {
+      "adSpend": 36600,
+      "calculatedSpend": 34200,
+      "roi": 88,
+      "commissionSpend": 6180,
+      "estimatedProfit": 8450,
+      "cpa": 2.21,
+      "score": 92
+    },
+    "excelTables": {
+      "dateHeaders": ["4月18日", "4月17日", "4月16日", "4月15日", "4月14日", "4月13日", "4月12日"],
+      "summaryRows": [
+        {
+          "label": "广告支出",
+          "total": "$102429",
+          "days": ["$5381", "$5474", "$5721", "$5770", "$5126", "$5211", "$5860"]
+        },
+        {
+          "label": "计算消耗",
+          "total": "$51543",
+          "days": ["$2623", "$2747", "$2937", "$3109", "$2796", "$2835", "$3148"]
+        },
+        {
+          "label": "首日ROI",
+          "total": "39%",
+          "days": ["38%", "37%", "37%", "39%", "42%", "39%", "39%"]
+        },
+        {
+          "label": "代投消耗",
+          "total": "$0",
+          "days": ["$0", "$0", "$0", "$0", "$0", "$0", "$0"]
+        }
+      ],
+      "appBlocks": [
+        {
+          "app": "Weather8",
+          "platform": "安卓",
+          "allRows": [
+            {
+              "label": "预估利润",
+              "values": ["$812", "$631", "$686", "$623", "$820", "$488", "$352"]
+            },
+            {
+              "label": "最低利润",
+              "values": ["$989", "$989", "$989", "$989", "$989", "$989", "$989"]
+            }
+          ],
+          "googleRows": [
+            {
+              "label": "广告支出",
+              "values": ["$1686", "$1708", "$1658", "$1766", "$1582", "$1768", "$1918"]
+            },
+            { "label": "首日ROI", "values": ["40%", "41%", "40%", "39%", "42%", "39%", "39%"] }
+          ]
+        },
+        {
+          "app": "Weather5",
+          "platform": "安卓",
+          "alt": true,
+          "allRows": [
+            {
+              "label": "预估利润",
+              "values": ["$1613", "$1465", "$1287", "$1341", "$1410", "$1317", "$1460"]
+            },
+            {
+              "label": "最低利润",
+              "values": ["$1978", "$1978", "$1978", "$1978", "$1978", "$1978", "$1978"]
+            }
+          ],
+          "googleRows": [
+            {
+              "label": "广告支出",
+              "values": ["$911", "$939", "$961", "$933", "$774", "$773", "$839"]
+            },
+            { "label": "首日ROI", "values": ["22%", "18%", "19%", "19%", "19%", "17%", "19%"] }
+          ]
+        },
+        {
+          "app": "Weather9",
+          "platform": "安卓",
+          "allRows": [
+            {
+              "label": "预估利润",
+              "values": ["$83", "-$18", "$192", "$389", "$356", "$241", "$49"]
+            },
+            {
+              "label": "最低利润",
+              "values": ["$396", "$396", "$396", "$396", "$396", "$396", "$396"]
+            }
+          ],
+          "googleRows": [
+            {
+              "label": "广告支出",
+              "values": ["$810", "$803", "$798", "$693", "$653", "$622", "$735"]
+            },
+            { "label": "首日ROI", "values": ["37%", "34%", "41%", "47%", "47%", "38%", "39%"] }
+          ]
+        },
+        {
+          "app": "Weather11",
+          "platform": "安卓",
+          "alt": true,
+          "allRows": [
+            {
+              "label": "预估利润",
+              "values": ["$527", "$483", "$612", "$578", "$590", "$544", "$502"]
+            },
+            {
+              "label": "最低利润",
+              "values": ["$688", "$688", "$688", "$688", "$688", "$688", "$688"]
+            }
+          ],
+          "googleRows": [
+            {
+              "label": "广告支出",
+              "values": ["$1202", "$1188", "$1266", "$1193", "$1160", "$1115", "$1096"]
+            },
+            { "label": "首日ROI", "values": ["31%", "29%", "33%", "32%", "35%", "34%", "31%"] }
+          ]
+        },
+        {
+          "app": "Weather12",
+          "platform": "安卓",
+          "allRows": [
+            {
+              "label": "预估利润",
+              "values": ["$932", "$887", "$954", "$901", "$978", "$844", "$816"]
+            },
+            {
+              "label": "最低利润",
+              "values": ["$1206", "$1206", "$1206", "$1206", "$1206", "$1206", "$1206"]
+            }
+          ],
+          "googleRows": [
+            {
+              "label": "广告支出",
+              "values": ["$1712", "$1689", "$1741", "$1703", "$1666", "$1608", "$1581"]
+            },
+            { "label": "首日ROI", "values": ["43%", "42%", "44%", "41%", "45%", "40%", "39%"] }
+          ]
+        },
+        {
+          "app": "Weather13",
+          "platform": "安卓",
+          "alt": true,
+          "allRows": [
+            {
+              "label": "预估利润",
+              "values": ["$241", "$198", "$265", "$289", "$302", "$248", "$211"]
+            },
+            {
+              "label": "最低利润",
+              "values": ["$455", "$455", "$455", "$455", "$455", "$455", "$455"]
+            }
+          ],
+          "googleRows": [
+            {
+              "label": "广告支出",
+              "values": ["$764", "$733", "$781", "$745", "$718", "$692", "$701"]
+            },
+            { "label": "首日ROI", "values": ["28%", "25%", "31%", "33%", "32%", "29%", "27%"] }
+          ]
+        },
+        {
+          "app": "Weather14",
+          "platform": "安卓",
+          "allRows": [
+            {
+              "label": "预估利润",
+              "values": ["$1154", "$1099", "$1188", "$1202", "$1235", "$1108", "$1044"]
+            },
+            {
+              "label": "最低利润",
+              "values": ["$1368", "$1368", "$1368", "$1368", "$1368", "$1368", "$1368"]
+            }
+          ],
+          "googleRows": [
+            {
+              "label": "广告支出",
+              "values": ["$2106", "$2058", "$2144", "$2120", "$2077", "$1988", "$1940"]
+            },
+            { "label": "首日ROI", "values": ["46%", "44%", "48%", "49%", "47%", "45%", "43%"] }
+          ]
+        },
+        {
+          "app": "Weather15",
+          "platform": "安卓",
+          "alt": true,
+          "allRows": [
+            { "label": "预估利润", "values": ["$62", "$105", "$84", "$126", "$118", "$96", "$72"] },
+            {
+              "label": "最低利润",
+              "values": ["$280", "$280", "$280", "$280", "$280", "$280", "$280"]
+            }
+          ],
+          "googleRows": [
+            {
+              "label": "广告支出",
+              "values": ["$655", "$640", "$671", "$689", "$660", "$634", "$622"]
+            },
+            { "label": "首日ROI", "values": ["18%", "21%", "19%", "23%", "22%", "20%", "18%"] }
+          ]
+        }
+      ]
+    }
+  },
+  "api": {
+    "url": "POST /api/user-growth/my-performance/app-dimension-table-by-date-range",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "personId, periodType, periodValue, startDate, endDate",
+    "responseBody": "title, list, summary, excelTables"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "请求体与其它「我的绩效」业务 POST（overview-kpi、roi-trend、app-dimension-table 等）一致：`personId + periodType + periodValue + startDate + endDate`。",
+      "无数据时返回 list: []，summary 保持结构完整（数值字段返回 0），保证页面主流程不阻塞。"
+    ]
+  }
+}

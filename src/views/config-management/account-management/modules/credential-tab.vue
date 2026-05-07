@@ -141,22 +141,31 @@
             <span class="last-time">{{ row.lastValidateTime }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="操作" min-width="130" fixed="right" align="center">
+        <el-table-column label="操作" min-width="150" fixed="right" align="center">
           <template #default="{ row }">
-            <div class="action-btns">
+            <div class="action-cell">
               <button
                 v-if="row.status === '验证失败'"
-                class="action-btn action-btn--revalidate"
+                type="button"
+                class="action-btn action-btn--secondary"
                 @click.stop="emit('revalidate', row)"
               >
                 重新验证
               </button>
-              <template v-else>
-                <button class="action-btn action-btn--validate" @click.stop="emit('validate', row)">
-                  验证
-                </button>
-              </template>
-              <button class="action-btn action-btn--edit" @click.stop="emit('edit', row)">
+              <button
+                v-else
+                type="button"
+                class="action-btn action-btn--secondary"
+                @click.stop="emit('validate', row)"
+              >
+                验证
+              </button>
+              <span class="action-sep" aria-hidden="true">|</span>
+              <button
+                type="button"
+                class="action-btn action-btn--primary"
+                @click.stop="emit('edit', row)"
+              >
                 编辑
               </button>
             </div>
@@ -448,9 +457,11 @@
     &--ok {
       border-left: 3px solid #22c55e;
     }
+
     &--fail {
       border-left: 3px solid #f87171;
     }
+
     &--pending {
       border-left: 3px solid #f59e0b;
     }
@@ -476,12 +487,15 @@
     &--total {
       color: #e2e8f0;
     }
+
     &--ok {
       color: #22c55e;
     }
+
     &--fail {
       color: #f87171;
     }
+
     &--pending {
       color: #f59e0b;
     }
@@ -600,6 +614,7 @@
     &--ok {
       color: #22c55e;
       background: rgb(34 197 94 / 10%);
+
       .status-dot {
         background: #22c55e;
       }
@@ -608,6 +623,7 @@
     &--fail {
       color: #f87171;
       background: rgb(248 113 113 / 10%);
+
       .status-dot {
         background: #f87171;
       }
@@ -636,46 +652,53 @@
     color: #64748b;
   }
 
-  .action-btns {
-    display: flex;
-    gap: 6px;
+  .action-cell {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
     justify-content: center;
   }
 
   .action-btn {
-    padding: 3px 8px;
+    padding: 4px 6px;
+    font-family: inherit;
     font-size: 12px;
+    font-weight: 500;
+    line-height: 1.3;
     cursor: pointer;
-    border: 1px solid transparent;
-    border-radius: 4px;
-    transition: all 0.18s;
+    background: none;
+    border: none;
+    border-radius: 6px;
+    transition:
+      color var(--duration-fast) var(--ease-out),
+      background-color var(--duration-fast) var(--ease-out);
 
-    &--validate {
-      color: #3b82f6;
-      background: rgb(59 130 246 / 10%);
-      border-color: rgb(59 130 246 / 20%);
+    &--primary {
+      color: var(--el-color-primary);
+
       &:hover {
-        background: rgb(59 130 246 / 20%);
+        background: color-mix(in srgb, var(--el-color-primary) 12%, transparent);
       }
     }
 
-    &--revalidate {
-      color: #f59e0b;
-      background: rgb(245 158 11 / 10%);
-      border-color: rgb(245 158 11 / 20%);
-      &:hover {
-        background: rgb(245 158 11 / 20%);
-      }
-    }
+    &--secondary {
+      color: var(--text-secondary);
 
-    &--edit {
-      color: #34d399;
-      background: rgb(52 211 153 / 10%);
-      border-color: rgb(52 211 153 / 20%);
       &:hover {
-        background: rgb(52 211 153 / 20%);
+        color: var(--text-primary);
+        background: color-mix(in srgb, var(--default-box-color) 70%, transparent);
       }
     }
+  }
+
+  .action-sep {
+    flex-shrink: 0;
+    padding: 0 1px;
+    font-size: 12px;
+    line-height: 1;
+    color: color-mix(in srgb, var(--border, rgb(255 255 255 / 12%)) 85%, transparent);
+    user-select: none;
   }
 
   // ─── 分页 ────────────────────────────────────────────
@@ -704,6 +727,7 @@
         background: rgb(59 130 246 / 15%);
         border-radius: 4px;
       }
+
       &:hover:not(.is-active) {
         color: #e2e8f0;
       }
@@ -713,9 +737,11 @@
     :deep(.btn-next) {
       color: #94a3b8;
       background: transparent;
+
       &:hover {
         color: #e2e8f0;
       }
+
       &:disabled {
         opacity: 0.4;
       }

@@ -14,14 +14,14 @@
       </div>
 
       <div class="ad-performance-detail__header-actions">
-        <ElButton round class="ad-performance-detail__header-btn" @click="onEdit">编辑</ElButton>
-        <ElButton
+        <ElButton round class="ad-performance-detail__header-btn" @click="onEdit">详情</ElButton>
+        <!-- <ElButton
           round
           class="ad-performance-detail__header-btn ad-performance-detail__header-btn--warn"
           @click="onPause"
         >
           暂停
-        </ElButton>
+        </ElButton> -->
         <ElButton text round class="ad-performance-detail__close" @click="emit('close')"
           >关闭</ElButton
         >
@@ -121,7 +121,7 @@
       </div>
     </div>
 
-    <div class="ad-performance-detail__bottom-bar">
+    <!-- <div class="ad-performance-detail__bottom-bar">
       <ElButton round class="ad-performance-detail__bottom-btn" @click="onAdd">添加市场</ElButton>
       <ElButton round class="ad-performance-detail__bottom-btn" @click="onAdjust"
         >调整预算</ElButton
@@ -133,15 +133,15 @@
       >
         导出数据
       </ElButton>
-    </div>
+    </div> -->
   </div>
 </template>
 
 <script setup lang="ts">
   import { ref } from 'vue'
   import { useRouter } from 'vue-router'
-  import { ElMessage } from 'element-plus'
-  import { fetchCampaignDetailCampaignAction } from '@/api/user-growth/ad-performance'
+  // import { ElMessage } from 'element-plus'
+  // import { fetchCampaignDetailCampaignAction } from '@/api/user-growth/ad-performance'
   import DetailTabAdGroup from './detail-tabs/detail-tab-adgroup.vue'
   import DetailTabDate from './detail-tabs/detail-tab-date.vue'
   import DetailTabCountry from './detail-tabs/detail-tab-country.vue'
@@ -190,7 +190,7 @@
     router.push({
       path: '/campaign-detail',
       query: {
-        id: props.campaignRow.id,
+        id: props.campaignRow.campaignId,
         name: props.campaignRow.name,
         appId: props.campaignRow.appId ?? '',
         appName: props.campaignRow.appName
@@ -198,31 +198,31 @@
     })
   }
 
-  async function onPause() {
-    try {
-      const res = await fetchCampaignDetailCampaignAction({
-        campaignId: props.campaignRow.id,
-        actionType: 'pause'
-      })
-      if (res.message) ElMessage.success(res.message)
-      else ElMessage.success('操作成功')
-      emit('data-mutated')
-    } catch {
-      ElMessage.error('操作失败')
-    }
-  }
+  // async function onPause() {
+  //   try {
+  //     const res = await fetchCampaignDetailCampaignAction({
+  //       campaignId: props.campaignRow.id,
+  //       actionType: 'pause'
+  //     })
+  //     if (res.message) ElMessage.success(res.message)
+  //     else ElMessage.success('操作成功')
+  //     emit('data-mutated')
+  //   } catch {
+  //     ElMessage.error('操作失败')
+  //   }
+  // }
 
-  function onAdd() {
-    // 占位：后续接添加市场
-  }
+  // function onAdd() {
+  //   // 占位：后续接添加市场
+  // }
 
-  function onAdjust() {
-    // 占位：后续接调整预算
-  }
+  // function onAdjust() {
+  //   // 占位：后续接调整预算
+  // }
 
-  function onExport() {
-    // 占位：后续接导出
-  }
+  // function onExport() {
+  //   // 占位：后续接导出
+  // }
 </script>
 
 <style scoped lang="scss">

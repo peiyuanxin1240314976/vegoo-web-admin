@@ -1,6 +1,7 @@
 <template>
   <BusinessInsight />
 </template>
-<script setup name="ProfitAnalysis" lang="ts">
+<script setup lang="ts">
+  defineOptions({ name: 'ProfitAnalysis' })
   import BusinessInsight from './BusinessInsight.vue'
 </script>

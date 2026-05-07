@@ -2,6 +2,7 @@
  * 用户增长 - 广告平台分析大屏 API
  */
 import request from '@/utils/http'
+import { toAppsRequestBody } from '@/utils/app-id-request'
 import {
   AdPlatformAnalysisEndpoint,
   isAdPlatformAnalysisMock
@@ -14,6 +15,13 @@ import {
   mockFetchAdPlatformAnalysisQualityHeatmap,
   mockFetchAdPlatformAnalysisRoiTrend
 } from '@/views/user-growth/ad-platform-analysis/mock/ad-platform-analysis-api-mock'
+
+function normalizeRequestParams(params: Api.UserGrowth.AdPlatformAnalysisRequestParams) {
+  return {
+    ...params,
+    apps: toAppsRequestBody(params.appIds)
+  }
+}
 
 /** 广告平台分析大屏 - 筛选下拉元数据 POST /api/v1/datacenter/analysis/ad-platform/filters/meta（请求体 `{}`） */
 export function fetchAdPlatformAnalysisFiltersMeta() {
@@ -35,7 +43,7 @@ export function fetchAdPlatformAnalysisKpiCards(
   }
   return request.post<Api.UserGrowth.AdPlatformKpiCardDto[]>({
     url: '/api/v1/datacenter/analysis/ad-platform/kpi/cards',
-    data: params
+    data: normalizeRequestParams(params)
   })
 }
 
@@ -48,7 +56,7 @@ export function fetchAdPlatformAnalysisRoiTrend(
   }
   return request.post<Api.UserGrowth.AdPlatformRoiTrendDto>({
     url: '/api/v1/datacenter/analysis/ad-platform/roi/trend',
-    data: params
+    data: normalizeRequestParams(params)
   })
 }
 
@@ -61,7 +69,7 @@ export function fetchAdPlatformAnalysisQualityHeatmap(
   }
   return request.post<Api.UserGrowth.AdPlatformQualityHeatmapRowDto[]>({
     url: '/api/v1/datacenter/analysis/ad-platform/quality/heatmap',
-    data: params
+    data: normalizeRequestParams(params)
   })
 }
 
@@ -74,7 +82,7 @@ export function fetchAdPlatformAnalysisCampaignTop10(
   }
   return request.post<Api.UserGrowth.AdPlatformCampaignTop10RowDto[]>({
     url: '/api/v1/datacenter/analysis/ad-platform/campaign/top10',
-    data: params
+    data: normalizeRequestParams(params)
   })
 }
 
@@ -87,6 +95,6 @@ export function fetchAdPlatformAnalysisMetricsTable(
   }
   return request.post<Api.UserGrowth.AdPlatformMetricsTableDto>({
     url: '/api/v1/datacenter/analysis/ad-platform/metrics/table',
-    data: params
+    data: normalizeRequestParams(params)
   })
 }

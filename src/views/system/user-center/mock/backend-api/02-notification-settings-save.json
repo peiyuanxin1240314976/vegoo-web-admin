@@ -1,0 +1,85 @@
+{
+  "_comment": "系统 - 个人中心 - 保存当前登录用户的通知设置。请求体与 01-notification-settings-query 返回的 UserNotificationSettings 同构（不含外层 data 包裹）；字段范围与当前页面可见模块一致。",
+  "fieldDescription": {
+    "request": {
+      "feishu": {
+        "type": "FeishuNotifySwitches",
+        "required": true,
+        "description": "飞书通知开关（预警、日报），与查询接口一致。"
+      },
+      "alertChannels": {
+        "type": "AlertChannelsConfig",
+        "required": true,
+        "description": "高优先级预警渠道，与查询接口一致。"
+      },
+      "pushInWorkTime": {
+        "type": "boolean",
+        "required": true,
+        "description": "是否仅在工作时间内推送。"
+      },
+      "pushStartTime": {
+        "type": "string",
+        "required": true,
+        "description": "推送开始时间 HH:mm。"
+      },
+      "pushEndTime": {
+        "type": "string",
+        "required": true,
+        "description": "推送结束时间 HH:mm。"
+      },
+      "pushWeekdays": {
+        "type": "number[]",
+        "required": true,
+        "description": "推送日 1–7（周一至周日）。"
+      }
+    },
+    "response": {
+      "success": {
+        "type": "boolean",
+        "required": true,
+        "description": "是否保存成功。"
+      }
+    },
+    "FeishuNotifySwitches": {
+      "alert": { "type": "boolean", "required": true, "description": "预警通知。" },
+      "daily": { "type": "boolean", "required": true, "description": "日报推送。" }
+    },
+    "AlertChannelsConfig": {
+      "high": {
+        "type": "string[]",
+        "required": true,
+        "description": "高优先级渠道，当前仅飞书卡片。",
+        "enum": ["feishu"]
+      }
+    }
+  },
+  "sampleRequest": {
+    "feishu": {
+      "alert": true,
+      "daily": true
+    },
+    "alertChannels": {
+      "high": ["feishu"]
+    },
+    "pushInWorkTime": true,
+    "pushStartTime": "08:00",
+    "pushEndTime": "22:00",
+    "pushWeekdays": [1, 2, 3, 4, 5]
+  },
+  "sampleResponse": {
+    "success": true
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/system/user-center/notification-settings/save",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "UserNotificationSettings",
+    "responseBody": "{ success: boolean }"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "后端应校验 pushStartTime < pushEndTime（同日时段）；跨午夜策略若产品需要再扩展字段。",
+      "pushWeekdays 元素应限制在 1–7 且去重；保存成功后查询接口应返回一致数据。"
+    ]
+  }
+}

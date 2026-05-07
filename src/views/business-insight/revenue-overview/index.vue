@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div ref="rootRef" class="revenue-overview-root art-full-height revenue-overview-page">
     <div
       class="revenue-overview-wrap"
@@ -12,54 +12,37 @@
       <!-- 顶部栏：筛选 + 导出（对齐原型右上角） -->
       <header class="rev-header rev-entry-1">
         <div class="rev-header__filters rev-filter-panel">
-          <div class="rev-pill">
-            <span class="rev-pill__k">App:</span>
-            <ElSelect
-              v-model="filtersDraft.s_app_id"
-              class="rev-select"
-              popper-class="rev-select__popper"
-              :teleported="true"
-              :fit-input-width="true"
-            >
-              <ElOption
-                v-for="opt in appOptions"
-                :key="opt.value"
-                :label="opt.label"
-                :value="opt.value"
-              />
-            </ElSelect>
+          <div class="rev-pill rev-pill--app-multi">
+            <AppPlatformSearchSelect
+              v-model="filtersDraft.appIds"
+              mode="app"
+              multiple
+              placeholder="应用（多选，空为不限）"
+              search-placeholder="搜索类别/应用名称/应用简称"
+              :setting-apps="metaSettingApps"
+              :height="36"
+              :min-width="200"
+              :max-width="240"
+              input-class="rev-app-platform-select"
+              dropdown-class="rev-select__popper"
+            />
           </div>
 
           <div class="rev-pill">
-            <span class="rev-pill__k">Platform:</span>
             <ElSelect
-              v-model="filtersDraft.platform"
-              class="rev-select"
-              popper-class="rev-select__popper"
-              :teleported="true"
-              :fit-input-width="true"
-            >
-              <ElOption
-                v-for="opt in platformOptions"
-                :key="opt.value"
-                :label="opt.label"
-                :value="opt.value"
-              />
-            </ElSelect>
-          </div>
-
-          <div class="rev-pill">
-            <span class="rev-pill__k">Country:</span>
-            <ElSelect
-              v-model="filtersDraft.s_country_code"
+              :model-value="filtersDraft.s_country_code"
               class="rev-select"
               popper-class="rev-select__popper"
               :teleported="true"
               :fit-input-width="true"
               filterable
+              placeholder="国家"
+              clearable
+              @update:model-value="onCountryFilterUpdate"
             >
+              <ElOption :label="tr('adPerformance.filterAll', '全部')" value="" />
               <ElOption
-                v-for="opt in countryOptions"
+                v-for="opt in countryOptionsForSelect"
                 :key="opt.value"
                 :label="opt.label"
                 :value="opt.value"
@@ -68,7 +51,6 @@
           </div>
 
           <!-- <div class="rev-pill">
-            <span class="rev-pill__k">Version:</span>
             <ElSelect
               v-model="filtersDraft.app_version"
               class="rev-select"
@@ -86,19 +68,23 @@
           </div> -->
 
           <div class="rev-pill">
-            <span class="rev-pill__k">Date:</span>
-            <ElDatePicker
-              v-model="filtersDraft.t_date"
-              type="date"
+            <AppDatePicker
+              v-model="dateRangePicker"
+              type="daterange"
+              unlink-panels
+              range-separator="～"
+              :shortcuts="dateRangeShortcuts"
               value-format="YYYY-MM-DD"
               format="YYYY-MM-DD"
               class="rev-date"
+              popper-class="rev-select__popper"
               :teleported="true"
               :clearable="false"
+              :prefix-icon="Calendar"
             />
           </div>
 
-          <ElButton type="primary" plain round @click="onQuery">查询</ElButton>
+          <ElButton type="primary" plain round :icon="Search" @click="onQuery"> 查询 </ElButton>
         </div>
 
         <!-- <button type="button" class="rev-export" @click="onExport">Export</button> -->
@@ -156,7 +142,7 @@
                 <span class="rev-kpi__subitem">{{ k.subLeftLabel }} {{ k.subLeftValue }}</span>
                 <span class="rev-kpi__subitem">{{ k.subRightLabel }} {{ k.subRightValue }}</span>
               </div>
-              <div :ref="(el) => setSparkRef(k.id, el)" class="rev-kpi__spark" />
+              <RevenueKpiSpark :spark="k.spark" :accent="k.accent" />
             </article>
           </section>
 
@@ -264,6 +250,7 @@
                 <div class="rev-table-wrap rev-table-wrap--iaa">
                   <ArtTable
                     class="rev-art-table"
+                    :class="{ 'rev-art-table--iaa-platform-clickable': iaaTab === 'platform' }"
                     :data="iaaRowsWithTotal"
                     :columns="iaaColumns"
                     row-key="_rowKey"
@@ -274,6 +261,7 @@
                     :header-cell-style="iaaHeaderCellStyle"
                     :cell-style="iaaCellStyle"
                     :row-class-name="iaaRowClassName"
+                    @row-click="onIaaTableRowClick"
                   >
                     <template #s_name="{ row }">
                       <span
@@ -399,7 +387,7 @@
 
                   <div class="rev-iap-bottom">
                     <div class="rev-mini-kpi">
-                      <div class="rev-mini-kpi__k">付费转化率</div>
+                      <div class="rev-mini-kpi__k">付费率</div>
                       <div class="rev-mini-kpi__v rev-mini-kpi__v--accent">{{
                         iapProductFoot.conversionRateText
                       }}</div>
@@ -411,7 +399,7 @@
                       }}</div>
                     </div>
                     <div class="rev-mini-kpi">
-                      <div class="rev-mini-kpi__k">订阅续费率</div>
+                      <div class="rev-mini-kpi__k">续订率</div>
                       <div class="rev-mini-kpi__v rev-mini-kpi__v--accent">{{
                         iapProductFoot.renewalRateText
                       }}</div>
@@ -619,7 +607,12 @@
                     :row-class-name="top5RowClassName"
                   >
                     <template #s_country_name="{ row }">
-                      <span class="rev-flag">{{ flagEmojiByCode(row.s_country_code) }}</span>
+                      <span
+                        v-if="iaaCountryFlagClass(row.s_country_code)"
+                        class="fi rev-flag"
+                        :class="iaaCountryFlagClass(row.s_country_code)"
+                        aria-hidden="true"
+                      />
                       {{ row.s_country_name }}
                     </template>
                   </ArtTable>
@@ -705,9 +698,17 @@
     watch,
     type CSSProperties
   } from 'vue'
+  import { Calendar, Search } from '@element-plus/icons-vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
+  import { useRouter } from 'vue-router'
+  import { useI18n } from 'vue-i18n'
+  import { storeToRefs } from 'pinia'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import 'flag-icons/css/flag-icons.min.css'
   import { useChart } from '@/hooks/core/useChart'
   import { graphic, type EChartsOption } from '@/plugins/echarts'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import type { ColumnOption } from '@/types'
   import {
     fetchRevenueOverviewTopCountries,
@@ -721,10 +722,12 @@
     fetchRevenueOverviewIaaCountry,
     fetchRevenueOverviewIaaAdUnit,
     fetchRevenueOverviewIaaPlatform,
-    fetchRevenueOverviewMetaFilterOptions,
     fetchRevenueOverviewIaaAdType,
     fetchRevenueOverviewOverviewKpis
   } from '@/api/business-insight'
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore Vetur 对 <script setup> 的误报
+  import RevenueKpiSpark from './modules/revenue-kpi-spark.vue'
   import {
     MOCK_REVENUE_OVERVIEW_ECPM_7D,
     MOCK_REVENUE_OVERVIEW_FILTERS,
@@ -764,6 +767,34 @@
 
   defineOptions({ name: 'RevenueOverview' })
 
+  const { t, te } = useI18n()
+  const tr = (key: string, fallback: string) => (te(key) ? t(key) : fallback)
+
+  const router = useRouter()
+  const cockpitMetaStore = useCockpitMetaFilterStore()
+  const { data: cockpitMeta } = storeToRefs(cockpitMetaStore)
+  const metaSettingApps = computed(() => cockpitMeta.value?.settingApps ?? [])
+
+  /** IAA 广告平台 Tab 行点击进入商业洞察 · 广告平台详情 */
+  function onIaaTableRowClick(row: Record<string, unknown>) {
+    if (iaaTab.value !== 'platform') return
+    const platformName =
+      typeof row.s_platform_name === 'string'
+        ? row.s_platform_name.trim()
+        : typeof row.s_name === 'string'
+          ? row.s_name.trim()
+          : ''
+    if (!platformName || platformName === '合计') return
+    const source = typeof row.source === 'string' ? row.source.trim() : ''
+    void router.push({
+      name: 'AdPlatformDetail',
+      query: {
+        'platform-name': platformName,
+        source
+      }
+    })
+  }
+
   // 高度仍保留设计稿基准，宽度改为自适应容器
   const designHeight = 980
   const rootRef = ref<HTMLElement>()
@@ -791,58 +822,76 @@
   // applied filters：仅在点击「查询」时更新，用于所有接口请求
   const filters = reactive<RevenueOverviewFilterState>({ ...MOCK_REVENUE_OVERVIEW_FILTERS })
 
-  const appOptions = ref<SelectOption[]>([
-    { label: 'Weather5', value: 'weather5' },
-    { label: 'App A', value: 'app_a' },
-    { label: 'App B', value: 'app_b' }
-  ])
-  const platformOptions = ref<SelectOption<RevenueOverviewFilterState['platform']>[]>([
-    { label: 'Android & iOS', value: 'all' },
-    { label: 'Android', value: 'android' },
-    { label: 'iOS', value: 'ios' }
-  ])
-  const countryOptions = ref<SelectOption[]>([
-    { label: '全部', value: 'all' },
+  function onCountryFilterUpdate(v: string | undefined | null) {
+    filtersDraft.s_country_code = v ?? ''
+  }
+
+  /** 与 AppDatePicker daterange 双向绑定，底层为 filtersDraft.startDate / endDate */
+  const dateRangePicker = computed<[string, string] | null>({
+    get() {
+      const a = (filtersDraft.startDate ?? '').trim()
+      const b = (filtersDraft.endDate ?? '').trim()
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(a) || !/^\d{4}-\d{2}-\d{2}$/.test(b)) return null
+      return [a, b]
+    },
+    set(v: [string, string] | null) {
+      if (v?.[0] && v?.[1]) {
+        filtersDraft.startDate = v[0]
+        filtersDraft.endDate = v[1]
+      }
+    }
+  })
+
+  /** 驾驶舱 meta 未就绪时的国家下拉兜底（与 store 中 CockpitMetaOptionItem 形态一致） */
+  const COUNTRY_OPTIONS_FALLBACK: SelectOption[] = [
+    { label: '不限', value: '' },
     { label: '美国', value: 'US' },
     { label: '英国', value: 'GB' },
     { label: '德国', value: 'DE' },
     { label: '台湾', value: 'TW' },
     { label: '日本', value: 'JP' }
-  ])
-  const versionOptions = ref<SelectOption[]>([
-    { label: '全部', value: 'all' },
-    { label: '1.2.0', value: '1.2.0' },
-    { label: '1.1.8', value: '1.1.8' },
-    { label: '1.1.2', value: '1.1.2' }
-  ])
+  ]
 
+  const countryOptions = computed<SelectOption[]>(() => {
+    const fromStore = cockpitMeta.value?.countryOptions
+    const emptyFirst: SelectOption = { label: '不限', value: '' }
+    if (fromStore?.length) {
+      const mapped = fromStore
+        .filter((o) => String(o.value).toLowerCase() !== 'all')
+        .map((o) => ({ label: o.label, value: o.value }))
+      const hasEmpty = mapped.some((o) => o.value === '')
+      return hasEmpty ? mapped : [emptyFirst, ...mapped]
+    }
+    return COUNTRY_OPTIONS_FALLBACK
+  })
+
+  const countryOptionsForSelect = computed<SelectOption[]>(() =>
+    countryOptions.value.filter((o) => String(o.value ?? '').trim() !== '')
+  )
+
+  /** 版本筛选项（模板中注释）；未在驾驶舱 meta 中提供，保持本地静态 */
+  // const versionOptions: SelectOption[] = [
+  //   { label: '全部', value: 'all' },
+  //   { label: '1.2.0', value: '1.2.0' },
+  //   { label: '1.1.8', value: '1.1.8' },
+  //   { label: '1.1.2', value: '1.1.2' }
+  // ]
+
+  /** 筛选项统一来自 `useCockpitMetaFilterStore`（GET …/cockpit/meta-filter-options），不再请求 revenue-overview 专用 meta */
   async function loadMetaFilterOptions() {
     try {
-      const data = await fetchRevenueOverviewMetaFilterOptions()
-      if (data.appOptions.length) {
-        appOptions.value = data.appOptions
-
-        const selected = String(filtersDraft.s_app_id || '')
-        const byValue = appOptions.value.find((o) => o.value === selected)
-        if (!byValue) {
-          const byLabel = appOptions.value.find((o) => o.label === selected)
-          filtersDraft.s_app_id = byLabel?.value || appOptions.value[0]?.value || ''
-        }
-      }
-      if (data.platformOptions.length) {
-        platformOptions.value = data.platformOptions as SelectOption<
-          RevenueOverviewFilterState['platform']
-        >[]
-      }
-      if (data.countryOptions.length) countryOptions.value = data.countryOptions
-      if (data.versionOptions.length) versionOptions.value = data.versionOptions
+      await cockpitMetaStore.ensureLoaded()
     } catch {
-      // 保留本地默认筛选项，避免首屏不可用
+      // 失败时仍可用 country 兜底、settingApps 为空
     }
   }
 
   function applyDraftFilters() {
-    Object.assign(filters, filtersDraft)
+    Object.assign(filters, {
+      ...filtersDraft,
+      appIds: [...filtersDraft.appIds],
+      platform: ''
+    })
   }
 
   function triggerQueryLoads() {
@@ -864,24 +913,6 @@
     if (iapTrendInited.value && iapTab.value === 'trend') {
       chartIapTrend.updateChart(buildIapTrendOption())
     }
-    kpis.value.forEach((k) => {
-      const dom = sparkRefs.value[k.id]
-      const chart = sparkCharts.get(k.id)
-      if (!dom || !chart) return
-      const accent =
-        k.accent === 'blue'
-          ? getVar(dom, '--rev-c-blue', '#60a5fa')
-          : k.accent === 'teal'
-            ? getVar(dom, '--rev-c-teal', '#20d6b5')
-            : k.accent === 'purple'
-              ? getVar(dom, '--rev-c-purple', '#a78bfa')
-              : k.accent === 'amber'
-                ? getVar(dom, '--rev-c-amber', '#f59e0b')
-                : k.accent === 'green'
-                  ? getVar(dom, '--rev-c-green', '#22c55e')
-                  : getVar(dom, '--rev-c-indigo', '#60a5fa')
-      chart.updateChart(buildSparkOption(k.spark, accent))
-    })
   }
 
   function onQuery() {
@@ -953,33 +984,6 @@
     try {
       const data = await fetchRevenueOverviewOverviewKpis({ ...filters })
       if (Array.isArray(data.kpis)) kpis.value = data.kpis
-      await nextTick()
-      kpis.value.forEach((k) => {
-        let isNewChart = false
-        let chart = sparkCharts.get(k.id)
-        if (!chart) {
-          chart = useChart({ autoTheme: true })
-          sparkCharts.set(k.id, chart)
-          isNewChart = true
-        }
-        const dom = sparkRefs.value[k.id]
-        if (!dom) return
-        chart.chartRef!.value = dom
-        const accent =
-          k.accent === 'blue'
-            ? getVar(dom, '--rev-c-blue', '#60a5fa')
-            : k.accent === 'teal'
-              ? getVar(dom, '--rev-c-teal', '#20d6b5')
-              : k.accent === 'purple'
-                ? getVar(dom, '--rev-c-purple', '#a78bfa')
-                : k.accent === 'amber'
-                  ? getVar(dom, '--rev-c-amber', '#f59e0b')
-                  : k.accent === 'green'
-                    ? getVar(dom, '--rev-c-green', '#22c55e')
-                    : getVar(dom, '--rev-c-indigo', '#60a5fa')
-        if (isNewChart) chart.initChart(buildSparkOption(k.spark, accent))
-        else chart.updateChart(buildSparkOption(k.spark, accent))
-      })
     } catch {
       // 失败时保留当前卡片，避免首屏闪断
     }
@@ -1426,6 +1430,8 @@
       const rows = iaaPlatformRows.value.map((r) => ({
         _rowKey: `pf-${r.s_platform_name}`,
         s_name: r.s_platform_name,
+        s_platform_name: r.s_platform_name,
+        source: String((r as any).source ?? ''),
         revenue: r.revenue,
         percent: r.percent,
         n_impression: r.n_impression,
@@ -1438,6 +1444,8 @@
       rows.push({
         _rowKey: 'pf-total',
         s_name: '合计',
+        s_platform_name: '合计',
+        source: '',
         revenue: sumR,
         percent: 100,
         n_impression: sumI,
@@ -1887,7 +1895,7 @@
       formatter: (row: any) => `$${formatFixed(row.d_arppu, 2)}`
     },
     {
-      label: '转化率',
+      label: '付费率',
       prop: 'd_conversion_rate',
       minWidth: 88,
       useSlot: true,
@@ -2047,53 +2055,13 @@
     return rows
   })
 
-  function flagEmojiByCode(code: string) {
-    const upper = String(code || '').toUpperCase()
-    if (upper === 'ALL') return '🏳️'
-    if (!/^[A-Z]{2}$/.test(upper)) return '🏳️'
-    const base = 0x1f1e6
-    const chars = [...upper].map((c) => String.fromCodePoint(base + (c.charCodeAt(0) - 65)))
-    return chars.join('')
-  }
-
   function getVar(el: HTMLElement | null, name: string, fallback: string) {
     const root = el ?? document.documentElement
     const v = getComputedStyle(root).getPropertyValue(name).trim()
     return v || fallback
   }
 
-  // --- 图表：KPI sparkline（每卡一个） ---
-  const sparkRefs = ref<Record<string, HTMLElement>>({})
-  function setSparkRef(id: string, el: unknown) {
-    if (el instanceof HTMLElement) sparkRefs.value[id] = el
-    else if (el === null) delete sparkRefs.value[id]
-  }
-  const sparkCharts = new Map<string, ReturnType<typeof useChart>>()
-  kpis.value.forEach((k) => sparkCharts.set(k.id, useChart({ autoTheme: true })))
-
-  function buildSparkOption(data: number[], accent: string): EChartsOption {
-    return {
-      grid: { left: 0, right: 0, top: 2, bottom: 0 },
-      xAxis: { type: 'category', show: false, data: data.map((_, i) => i) },
-      yAxis: { type: 'value', show: false, scale: true },
-      series: [
-        {
-          type: 'line',
-          data,
-          smooth: true,
-          symbol: 'none',
-          lineStyle: { color: accent, width: 1.8 },
-          areaStyle: {
-            color: new graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: accent },
-              { offset: 1, color: 'rgba(0,0,0,0)' }
-            ]),
-            opacity: 0.22
-          }
-        }
-      ]
-    }
-  }
+  // --- KPI sparkline 已拆至 modules/revenue-kpi-spark.vue（在子组件 setup 内注册 useChart，避免 await 后调用触发 Vue 警告）---
 
   // --- 图表：趋势 / 饼图 / eCPM / IAA 构成 ---
   const trend7dRef = ref<HTMLElement>()
@@ -2512,28 +2480,6 @@
   async function initCharts() {
     await nextTick()
 
-    // KPI sparks
-    kpis.value.forEach((k) => {
-      const dom = sparkRefs.value[k.id]
-      if (!dom) return
-      const chart = sparkCharts.get(k.id)
-      if (!chart) return
-      chart.chartRef!.value = dom
-      const accent =
-        k.accent === 'blue'
-          ? getVar(dom, '--rev-c-blue', '#60a5fa')
-          : k.accent === 'teal'
-            ? getVar(dom, '--rev-c-teal', '#20d6b5')
-            : k.accent === 'purple'
-              ? getVar(dom, '--rev-c-purple', '#a78bfa')
-              : k.accent === 'amber'
-                ? getVar(dom, '--rev-c-amber', '#f59e0b')
-                : k.accent === 'green'
-                  ? getVar(dom, '--rev-c-green', '#22c55e')
-                  : getVar(dom, '--rev-c-indigo', '#60a5fa')
-      chart.initChart(buildSparkOption(k.spark, accent))
-    })
-
     if (trend7dRef.value) {
       chartTrend7d.chartRef!.value = trend7dRef.value
       chartTrend7d.initChart(buildTrend7dOption())
@@ -2589,7 +2535,6 @@
   })
 
   onUnmounted(() => {
-    sparkCharts.forEach((c) => c.destroyChart?.())
     chartTrend7d.destroyChart?.()
     chartEcpm.destroyChart?.()
     chartPie.destroyChart?.()
@@ -2601,6 +2546,8 @@
 
 <style scoped lang="scss">
   @use '../../user-growth/ad-performance/styles/ap-card-fx.scss' as ap;
+  @use '../../user-growth/styles/app-platform-select-ad-theme.scss' as apSelect;
+  @use '../../user-growth/styles/filter-bar-theme.scss' as filterTheme;
 
   /* 背景与主题变量在外层 root，保证铺满可视区；内层 scale 后视觉缩小，不再依赖透明底露边 */
   .revenue-overview-root.revenue-overview-page {
@@ -2785,113 +2732,205 @@
   }
 
   .rev-header__filters {
-    display: flex;
+    @include filterTheme.filter-row;
+
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 12px;
     align-items: center;
+    overflow: visible;
   }
 
   .rev-filter-panel {
-    position: relative;
-    padding: 10px 14px;
-    overflow: hidden;
-    border-radius: 16px;
+    @include filterTheme.filter-panel(14px 16px);
+    @include filterTheme.filter-panel-children;
 
-    @include ap.ap-neon-bg;
-    @include ap.ap-card-mesh;
-
-    transition:
-      box-shadow 0.35s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
-      border-color 0.3s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
-
-    &:hover {
-      border-color: rgb(96 165 250 / 48%);
-      box-shadow:
-        0 12px 40px rgb(0 0 0 / 44%),
-        0 0 0 1px rgb(96 165 250 / 22%),
-        inset 0 1px 0 rgb(186 230 253 / 16%),
-        0 0 48px rgb(59 130 246 / 14%);
-    }
-
-    > * {
-      position: relative;
-      z-index: 1;
-    }
-  }
-
-  :global(html:not(.dark) .rev-filter-panel) {
-    background: linear-gradient(148deg, rgb(255 255 255 / 98%), rgb(248 250 252 / 99%));
-    border: 1px solid var(--rev-border-soft);
-    box-shadow: 0 10px 32px rgb(15 23 42 / 7%);
-
-    &:hover {
-      border-color: rgb(59 130 246 / 22%);
-      box-shadow: 0 12px 36px rgb(15 23 42 / 10%);
-    }
+    min-width: 0;
+    overflow: visible;
   }
 
   :global(html.dark .rev-filter-panel .rev-pill) {
-    background: rgb(15 23 42 / 0%);
-    border-color: rgb(96 165 250 / 26%);
-    box-shadow: 0 0 0 0 rgb(59 130 246 / 8%) inset;
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+  }
+
+  .rev-filter-panel :deep(.rev-select) {
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
   }
 
   .rev-filter-panel :deep(.rev-select .el-select__wrapper) {
-    min-height: 32px;
-    padding: 0 10px;
-    background: rgb(0 0 0 / 28%);
-    border: 1px solid rgb(96 165 250 / 24%);
-    border-radius: 10px;
-    box-shadow: 0 0 0 1px rgb(59 130 246 / 6%) inset;
+    min-height: 36px;
+    padding: 0 12px;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: none;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      background 0.2s ease;
   }
 
-  .rev-filter-panel :deep(.rev-date .el-input__wrapper) {
-    min-height: 32px;
+  .rev-filter-panel :deep(.rev-select .el-select__selected-item),
+  .rev-filter-panel :deep(.rev-select .el-select__selected-item .el-select__placeholder) {
+    color: var(--el-text-color-primary);
+  }
+
+  .rev-filter-panel :deep(.rev-select .el-select__placeholder.is-transparent),
+  .rev-filter-panel :deep(.rev-select .el-select__selected-item.is-transparent) {
+    color: var(--el-text-color-placeholder);
+  }
+
+  .rev-filter-panel :deep(.rev-select .el-select__caret),
+  .rev-filter-panel :deep(.rev-select .el-select__suffix),
+  .rev-filter-panel :deep(.rev-select .el-select__icon) {
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+  }
+
+  /*
+   * 日期范围：与 .rev-select / 应用选择器同一条主题实线
+   */
+  .rev-filter-panel :deep(.rev-date.el-date-editor) {
+    --el-input-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
+
+    box-sizing: border-box;
+    width: 250px;
+    min-width: 250px;
+    max-width: 100%;
+    height: 36px;
+
+    @media (width <=768px) {
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+    }
+  }
+
+  .rev-filter-panel :deep(.rev-date .el-range-input) {
+    font-size: 14px;
+    color: var(--el-text-color-primary);
+  }
+
+  .rev-filter-panel :deep(.rev-date .el-range-input::placeholder) {
+    color: var(--el-text-color-placeholder);
+  }
+
+  .rev-filter-panel :deep(.rev-date .el-range-separator) {
+    font-size: 14px;
+    color: var(--el-text-color-primary);
+  }
+
+  .rev-filter-panel :deep(.rev-date.el-date-editor .el-range__icon),
+  .rev-filter-panel :deep(.rev-date.el-date-editor .el-range__close-icon) {
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+  }
+
+  .rev-filter-panel :deep(.rev-date .el-input__wrapper),
+  .rev-filter-panel :deep(.rev-date .el-range-editor.el-input__wrapper),
+  .rev-filter-panel :deep(.rev-date.el-date-editor .el-input__wrapper),
+  .rev-filter-panel :deep(.rev-date.el-date-editor) {
+    min-height: 36px;
     padding: 0 10px;
-    background: rgb(0 0 0 / 28%);
-    border: 1px solid rgb(96 165 250 / 24%);
-    border-radius: 10px;
-    box-shadow: 0 0 0 1px rgb(59 130 246 / 6%) inset;
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    border-radius: var(--el-border-radius-base, 4px) !important;
+    box-shadow: none !important;
+    transition:
+      border-color 0.22s ease,
+      box-shadow 0.22s ease,
+      background 0.22s ease;
   }
 
   :global(html:not(.dark) .rev-filter-panel) :deep(.rev-select .el-select__wrapper),
-  :global(html:not(.dark) .rev-filter-panel) :deep(.rev-date .el-input__wrapper) {
-    background: rgb(255 255 255 / 90%);
-    border: 1px solid var(--rev-pill-border);
-    box-shadow: none;
+  :global(html:not(.dark) .rev-filter-panel) :deep(.rev-date .el-input__wrapper),
+  :global(html:not(.dark) .rev-filter-panel) :deep(.rev-date .el-range-editor.el-input__wrapper),
+  :global(html:not(.dark) .rev-filter-panel) :deep(.rev-date.el-date-editor) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: none !important;
+  }
+
+  .rev-filter-panel :deep(.rev-select .el-select__wrapper:hover),
+  .rev-filter-panel :deep(.rev-date .el-input__wrapper:hover),
+  .rev-filter-panel :deep(.rev-date.el-date-editor:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
+  }
+
+  .rev-filter-panel :deep(.rev-select .el-select__wrapper.is-focused),
+  .rev-filter-panel :deep(.rev-date .el-input__wrapper.is-focus),
+  .rev-filter-panel :deep(.rev-date .el-input__wrapper:focus-within),
+  .rev-filter-panel :deep(.rev-date.el-date-editor.is-active),
+  .rev-filter-panel :deep(.rev-date.el-date-editor:focus-within) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
   }
 
   .rev-filter-panel :deep(.rev-query-btn.el-button) {
     height: 36px;
     padding: 0 18px;
     font-weight: 600;
-    color: #f8fafc;
-    background: linear-gradient(135deg, rgb(37 99 235 / 96%), rgb(6 182 212 / 88%));
-    border: 1px solid rgb(96 165 250 / 55%);
-    box-shadow:
-      0 0 0 1px rgb(186 230 253 / 14%) inset,
-      0 8px 26px rgb(37 99 235 / 38%),
-      0 0 32px rgb(6 182 212 / 12%);
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: none;
   }
 
   .rev-filter-panel :deep(.rev-query-btn.el-button:hover) {
-    filter: brightness(1.08);
-    border-color: rgb(147 197 253 / 62%);
-    box-shadow:
-      0 0 0 1px rgb(186 230 253 / 20%) inset,
-      0 10px 34px rgb(37 99 235 / 45%),
-      0 0 44px rgb(6 182 212 / 20%);
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
   }
 
   :global(html:not(.dark) .rev-filter-panel) :deep(.rev-query-btn.el-button) {
-    color: var(--rev-text);
-    background: var(--rev-pill);
-    border: 1px solid var(--rev-pill-border);
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
     box-shadow: none;
   }
 
   :global(html:not(.dark) .rev-filter-panel) :deep(.rev-query-btn.el-button:hover) {
     filter: brightness(1.06);
+  }
+
+  /* 日期在 .rev-pill 内：flex 子项是 pill，宽度写在外层（原 .rev-date-picker 未挂到 DOM） */
+  .rev-filter-panel.rev-header__filters > .rev-pill:has(.rev-date) {
+    flex: 0 0 200px;
+    width: 250px;
+    min-width: 250px;
+    max-width: 100%;
+
+    @media (width <=768px) {
+      flex: 1 1 100%;
+      width: 100%;
+      min-width: 0;
+    }
   }
 
   .rev-pill {
@@ -2906,9 +2945,50 @@
     border-radius: 14px;
   }
 
-  .rev-pill__k {
-    font-size: 12px;
-    color: var(--rev-muted);
+  /* 去掉 label 后不再用 pill 留白；控件间距由 .rev-header__filters gap 统一控制 */
+  .rev-filter-panel.rev-header__filters > .rev-pill {
+    gap: 0;
+    height: auto;
+    min-height: 36px;
+    padding: 0;
+    color: inherit;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  :global(html:not(.dark) .rev-filter-panel.rev-header__filters > .rev-pill) {
+    background: transparent;
+    border: none;
+  }
+
+  .rev-pill--app-multi {
+    align-items: center;
+  }
+
+  .rev-filter-panel :deep(.rev-app-platform-select) {
+    flex: 1;
+    min-width: 200px;
+    max-width: 320px;
+  }
+
+  @include apSelect.apply-app-platform-select-ad-theme(
+    '.rev-filter-panel',
+    'rev-app-platform-select',
+    'rev-select__popper',
+    320px,
+    200px,
+    320px
+  );
+  @include filterTheme.select-popper('rev-select__popper');
+  @include filterTheme.app-platform-popper('rev-select__popper');
+  @include filterTheme.date-picker-popper('rev-select__popper');
+
+  :global(.rev-select__popper.el-popper),
+  :global(.rev-select__popper.el-select__popper),
+  :global(.rev-select__popper.el-picker__popper) {
+    z-index: 4000 !important;
   }
 
   .rev-export {
@@ -2924,24 +3004,6 @@
 
   .rev-export:hover {
     filter: brightness(1.06);
-  }
-
-  .rev-query-btn {
-    height: 36px;
-    padding: 0 14px;
-    color: var(--rev-text);
-    background: var(--rev-pill);
-    border: 1px solid var(--rev-pill-border);
-    border-radius: 9999px;
-  }
-
-  .rev-query-btn:hover {
-    filter: brightness(1.06);
-  }
-
-  :deep(.rev-query-btn.el-button) {
-    background: var(--rev-pill);
-    border-color: var(--rev-pill-border);
   }
 
   .rev-skeleton {
@@ -3024,40 +3086,60 @@
     animation-delay: 0.2s;
   }
 
-  .rev-select,
-  .rev-date {
+  .rev-select {
     width: 140px;
   }
 
+  .rev-date {
+    box-sizing: border-box;
+    width: 250px;
+    min-width: 250px;
+    max-width: 100%;
+  }
+
+  @media (width <=768px) {
+    .rev-date {
+      width: 100%;
+      min-width: 0;
+    }
+  }
+
   :deep(.rev-select .el-select__wrapper) {
-    min-height: 30px;
-    padding: 0 8px;
-    background: transparent;
-    border: 0;
-    box-shadow: none;
+    min-height: 36px;
+    padding: 0 10px;
   }
 
   :deep(.rev-date .el-input__wrapper) {
-    min-height: 30px;
-    padding: 0 8px;
-    background: transparent;
-    border: 0;
-    box-shadow: none;
+    min-height: 36px;
+    padding: 0 10px;
+  }
+
+  :deep(.rev-date .el-range-input) {
+    color: #fff;
+  }
+
+  :deep(.rev-date .el-range-input::placeholder) {
+    color: var(--el-text-color-placeholder);
   }
 
   :deep(.rev-date .el-input__inner) {
-    color: var(--rev-text);
+    color: #fff;
+  }
+
+  :deep(.rev-date .el-range-separator) {
+    color: #fff;
   }
 
   :deep(.rev-select .el-select__selected-item),
   :deep(.rev-select .el-select__placeholder),
   :deep(.rev-select .el-select__caret) {
-    color: var(--rev-text);
+    color: #fff;
   }
 
   :deep(.rev-date .el-input__prefix),
-  :deep(.rev-date .el-input__suffix) {
-    color: var(--rev-text);
+  :deep(.rev-date .el-input__suffix),
+  :deep(.rev-date .el-range__icon) {
+    color: #fff;
   }
 
   .rev-kpi-grid {
@@ -3081,7 +3163,6 @@
     border-radius: 12px;
     box-shadow: 0 1px 0 rgb(255 255 255 / 4%) inset;
     transition:
-      transform 0.22s cubic-bezier(0.4, 0, 0.2, 1),
       box-shadow 0.22s ease,
       border-color 0.22s ease,
       filter 0.22s ease,
@@ -3149,8 +3230,8 @@
     box-shadow:
       0 14px 36px rgb(0 0 0 / 42%),
       0 0 0 1px rgb(255 255 255 / 6%) inset,
-      0 0 32px var(--rev-kpi-glow);
-    transform: translateY(-3px) scale(1.02);
+      0 0 32px var(--rev-kpi-glow),
+      0 0 72px color-mix(in srgb, var(--rev-kpi-glow) 55%, transparent);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -3602,6 +3683,10 @@
 
   .rev-table-wrap--iaa .rev-art-table {
     height: 100%;
+  }
+
+  .rev-art-table--iaa-platform-clickable :deep(.el-table__body tr:not(.is-iaa-total)) {
+    cursor: pointer;
   }
 
   .rev-panel--iaa :deep(.el-table) {
@@ -4463,7 +4548,6 @@
     border: 1px solid rgb(139 109 49 / 88%);
     box-shadow: 0 0 0 1px rgb(230 162 60 / 8%) inset;
     transition:
-      transform 0.22s cubic-bezier(0.4, 0, 0.2, 1),
       box-shadow 0.22s ease,
       filter 0.22s ease,
       border-color 0.22s ease;
@@ -4476,8 +4560,8 @@
     box-shadow:
       0 10px 28px rgb(0 0 0 / 45%),
       0 0 32px rgb(230 162 60 / 14%),
-      0 0 0 1px rgb(255 255 255 / 5%) inset;
-    transform: translateY(-2px);
+      0 0 0 1px rgb(255 255 255 / 5%) inset,
+      0 0 80px rgb(230 162 60 / 10%);
   }
 
   .rev-panel--ai .rev-panel__title {
@@ -4550,7 +4634,6 @@
     background: linear-gradient(150deg, rgb(22 22 24 / 96%), rgb(12 12 14 / 99%));
     border: 1px solid rgb(51 65 85 / 38%);
     transition:
-      transform 0.22s cubic-bezier(0.4, 0, 0.2, 1),
       box-shadow 0.22s ease,
       filter 0.22s ease,
       border-color 0.22s ease;
@@ -4560,8 +4643,9 @@
     z-index: 1;
     filter: brightness(1.05);
     border-color: rgb(100 116 139 / 45%);
-    box-shadow: 0 10px 28px rgb(0 0 0 / 38%);
-    transform: translateY(-2px);
+    box-shadow:
+      0 10px 28px rgb(0 0 0 / 38%),
+      0 0 68px rgb(59 130 246 / 10%);
   }
 
   :global(html:not(.dark) .rev-panel.rev-panel--quality) {
@@ -4581,7 +4665,6 @@
     cursor: pointer;
     border-radius: 12px;
     transition:
-      transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
       box-shadow 0.2s ease,
       filter 0.2s ease,
       border-color 0.2s ease;
@@ -4619,8 +4702,9 @@
   .rev-quality:hover {
     z-index: 1;
     filter: brightness(1.09);
-    box-shadow: 0 8px 22px rgb(0 0 0 / 35%);
-    transform: scale(1.02);
+    box-shadow:
+      0 8px 22px rgb(0 0 0 / 35%),
+      0 0 64px rgb(34 211 238 / 10%);
   }
 
   :global(html:not(.dark) .rev-quality:nth-child(1)),
@@ -4746,23 +4830,6 @@
   :global(html:not(.dark) .rev-page-fx) {
     opacity: 0.32;
     animation: none;
-  }
-
-  /* 下拉与日期面板（teleported=false 时仍在页内，同步霓虹底） */
-  :global(html.dark .rev-select__popper.el-popper) {
-    overflow: hidden;
-    background: rgb(24 24 27 / 98%) !important;
-    border: 1px solid rgb(96 165 250 / 30%) !important;
-    border-radius: 12px !important;
-    box-shadow:
-      0 18px 52px rgb(0 0 0 / 58%),
-      0 0 0 1px rgb(96 165 250 / 14%),
-      inset 0 1px 0 rgb(186 230 253 / 10%) !important;
-  }
-
-  :global(html:not(.dark) .rev-select__popper.el-popper) {
-    border-radius: 12px !important;
-    box-shadow: 0 14px 40px rgb(15 23 42 / 12%) !important;
   }
 
   /* 固定画布布局：不做响应式重排，保持原型一致 */

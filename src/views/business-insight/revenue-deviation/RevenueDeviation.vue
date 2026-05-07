@@ -5,19 +5,36 @@
     <div class="rd-header rd-entry-1">
       <!-- <div class="rd-page-title">预估收入偏差</div> -->
       <div class="rd-filters">
-        <el-date-picker
+        <AppDatePicker
           v-model="dateRange"
           type="daterange"
+          :shortcuts="dateRangeShortcuts"
           range-separator="~"
           start-placeholder="开始日期"
           end-placeholder="结束日期"
-          format="YYYY/MM/DD"
+          format="YYYY-MM-DD"
           value-format="YYYY-MM-DD"
           class="rd-filter-date"
           :teleported="true"
           popper-class="rd-filter-popper"
         />
-        <el-select
+        <AppPlatformSearchSelect
+          v-model="appFilter"
+          mode="app"
+          class="rd-filter-select rd-filter-app-select"
+          input-class="rd-filter-app-select__input"
+          placeholder="应用"
+          search-placeholder="搜索类别/应用名称/应用简称"
+          all-label="全部应用"
+          dropdown-class="rd-filter-popper"
+          :setting-apps="settingAppsForSelect"
+          :height="32"
+          :min-width="160"
+          :max-width="260"
+          :show-platform-suffix="true"
+        />
+
+        <!-- <el-select
           v-model="platform"
           class="rd-filter-select"
           placeholder="广告平台"
@@ -30,29 +47,25 @@
             :label="item.label"
             :value="item.value"
           />
-        </el-select>
-        <el-select
-          v-model="appFilter"
-          class="rd-filter-select"
-          placeholder="应用"
-          popper-class="rd-filter-popper"
-          :teleported="true"
-        >
-          <el-option
-            v-for="item in appOptions"
-            :key="`app-${item.value}-${item.label}`"
-            :label="item.label"
-            :value="item.value"
-          />
-        </el-select>
+        </el-select> -->
 
-        <el-button type="primary" plain round> 查询 </el-button>
+        <ElButton
+          type="primary"
+          plain
+          round
+          :icon="Search"
+          :loading="querying"
+          :disabled="querying"
+          @click="handleQuery"
+        >
+          查询
+        </ElButton>
       </div>
     </div>
 
     <!-- ========== KPI Cards ========== -->
     <div v-if="loadingKpi" class="rd-kpi-grid rd-entry-2">
-      <div v-for="i in 5" :key="i" class="rd-kpi-card rd-kpi-card--sk">
+      <div v-for="i in 4" :key="i" class="rd-kpi-card rd-kpi-card--sk">
         <ElSkeleton animated :throttle="0">
           <template #template>
             <div class="rd-kpi-sk">
@@ -65,13 +78,6 @@
       </div>
     </div>
     <div v-else-if="kpiOverview" class="rd-kpi-grid rd-entry-2">
-      <div class="rd-kpi-card rd-kpi-card--green">
-        <div class="rd-kpi-card__label">广告收入（预估）</div>
-        <div class="rd-kpi-card__value rd-kpi-card__value--green">
-          {{ formatUsd2(kpiOverview.d_revenue_estimated) }}
-        </div>
-        <div class="rd-kpi-card__sub">广告平台上报 / 客户端埋点展示事件计算</div>
-      </div>
       <div class="rd-kpi-card rd-kpi-card--gold">
         <div class="rd-kpi-card__label">广告收入（真实）</div>
         <div class="rd-kpi-card__value rd-kpi-card__value--gold">
@@ -79,6 +85,14 @@
         </div>
         <div class="rd-kpi-card__sub">实际入账金额 / 平台对账数据</div>
       </div>
+      <div class="rd-kpi-card rd-kpi-card--green">
+        <div class="rd-kpi-card__label">广告收入（预估）</div>
+        <div class="rd-kpi-card__value rd-kpi-card__value--green">
+          {{ formatUsd2(kpiOverview.d_revenue_estimated) }}
+        </div>
+        <div class="rd-kpi-card__sub">广告平台上报 / 客户端埋点展示事件计算</div>
+      </div>
+
       <div class="rd-kpi-card rd-kpi-card--red">
         <div class="rd-kpi-card__header-row">
           <div class="rd-kpi-card__label">偏差金额</div>
@@ -104,13 +118,13 @@
           }}%
         </div>
       </div>
-      <div class="rd-kpi-card rd-kpi-card--blue">
+      <!-- <div class="rd-kpi-card rd-kpi-card--blue">
         <div class="rd-kpi-card__label">影响ROI估算</div>
         <div class="rd-kpi-card__value rd-kpi-card__value--blue">
           {{ fmtRoiPp(kpiOverview.n_roi_impact_pp) }}
         </div>
         <div class="rd-kpi-card__sub">实际ROI将低于预估 / 需校正ROI计算</div>
-      </div>
+      </div> -->
     </div>
     <div v-else class="rd-kpi-empty-wrap rd-entry-2">
       <div class="rd-card rd-kpi-empty-card">
@@ -122,7 +136,7 @@
     <div class="rd-middle-grid rd-entry-3">
       <!-- 趋势图 -->
       <div class="rd-card rd-trend-card">
-        <div class="rd-card__title">收入偏差趋势（30天）</div>
+        <div class="rd-card__title">收入偏差趋势（{{ trendDaySpanText }}）</div>
         <div v-if="loadingTrend" class="rd-chart-sk"></div>
         <div v-else-if="isTrendEmpty" class="rd-card-empty rd-card-empty--trend">
           <ElEmpty description="暂无趋势数据" :image-size="90" />
@@ -139,6 +153,38 @@
         </template>
       </div>
 
+      <!-- 国家偏差分布 Top 10 -->
+      <div class="rd-card rd-country-card">
+        <div class="rd-card__header-row">
+          <div class="rd-card__title">国家偏差分布 Top 10</div>
+          <el-icon class="rd-icon-link"><TopRight /></el-icon>
+        </div>
+        <div class="rd-tab-group">
+          <button
+            v-for="tab in countryTabs"
+            :key="tab.value"
+            class="rd-tab-btn"
+            :class="{ 'rd-tab-btn--active': activeCountryTab === tab.value }"
+            @click="activeCountryTab = tab.value"
+          >
+            {{ tab.label }}
+          </button>
+        </div>
+        <div v-if="loadingCountry" class="rd-chart-sk rd-chart-sk--tall"></div>
+        <div v-else-if="isCountryChartEmpty" class="rd-card-empty rd-card-empty--country">
+          <ElEmpty description="暂无国家分布数据" :image-size="90" />
+        </div>
+        <div v-else ref="countryChartRef" class="rd-country-chart"></div>
+      </div>
+
+      <!-- 右侧模块（偏差原因分析 / 对账建议）已下线：
+           - /api/v1/datacenter/analysis/business-insight/revenue-deviation/overview/reason
+           - /api/v1/datacenter/analysis/business-insight/revenue-deviation/overview/advice
+      -->
+    </div>
+
+    <!-- ========== Bottom Row ========== -->
+    <div class="rd-bottom-grid rd-entry-4">
       <!-- 平台偏差对比 -->
       <div class="rd-card rd-platform-card">
         <div class="rd-card__title">平台偏差对比</div>
@@ -171,16 +217,16 @@
           <thead>
             <tr>
               <th>广告平台</th>
-              <th>预估($)</th>
               <th>真实($)</th>
+              <th>预估($)</th>
               <th>偏差率</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="row in platformTable?.rows ?? []" :key="row.s_source_label">
               <td>{{ row.s_source_label }}</td>
-              <td>{{ formatUsd2(row.d_estimated_usd) }}</td>
               <td>{{ formatUsd2(row.d_real_usd) }}</td>
+              <td>{{ formatUsd2(row.d_estimated_usd) }}</td>
               <td :class="getDeviationClass(fmtPctSigned(row.d_deviation_rate_pct))">
                 {{ fmtPctSigned(row.d_deviation_rate_pct) }}
               </td>
@@ -198,88 +244,6 @@
               </td>
             </tr>
           </tfoot>
-        </table>
-      </div>
-
-      <!-- 右侧模块（偏差原因分析 / 对账建议）已下线：
-           - /api/v1/datacenter/analysis/business-insight/revenue-deviation/overview/reason
-           - /api/v1/datacenter/analysis/business-insight/revenue-deviation/overview/advice
-      -->
-    </div>
-
-    <!-- ========== Bottom Row ========== -->
-    <div class="rd-bottom-grid rd-entry-4">
-      <!-- 国家偏差分布 Top 10 -->
-      <div class="rd-card rd-country-card">
-        <div class="rd-card__header-row">
-          <div class="rd-card__title">国家偏差分布 Top 10</div>
-          <el-icon class="rd-icon-link"><TopRight /></el-icon>
-        </div>
-        <div class="rd-tab-group">
-          <button
-            v-for="tab in countryTabs"
-            :key="tab.value"
-            class="rd-tab-btn"
-            :class="{ 'rd-tab-btn--active': activeCountryTab === tab.value }"
-            @click="activeCountryTab = tab.value"
-          >
-            {{ tab.label }}
-          </button>
-        </div>
-        <div v-if="loadingCountry" class="rd-chart-sk rd-chart-sk--tall"></div>
-        <div v-else-if="isCountryChartEmpty" class="rd-card-empty rd-card-empty--country">
-          <ElEmpty description="暂无国家分布数据" :image-size="90" />
-        </div>
-        <div v-else ref="countryChartRef" class="rd-country-chart"></div>
-      </div>
-
-      <!-- 偏差历史记录 -->
-      <div class="rd-card rd-history-card">
-        <div class="rd-card__title">偏差历史记录</div>
-        <div v-if="loadingHistory" class="rd-table-skeleton rd-table-skeleton--dense">
-          <ElSkeleton animated :throttle="0">
-            <template #template>
-              <div class="rd-table-skeleton__head">
-                <ElSkeletonItem
-                  v-for="h in 4"
-                  :key="`hh-${h}`"
-                  variant="text"
-                  class="rd-table-skeleton__cell"
-                />
-              </div>
-              <div v-for="r in 8" :key="`hr-${r}`" class="rd-table-skeleton__row">
-                <ElSkeletonItem
-                  v-for="c in 4"
-                  :key="`hr-${r}-${c}`"
-                  variant="text"
-                  class="rd-table-skeleton__cell"
-                />
-              </div>
-            </template>
-          </ElSkeleton>
-        </div>
-        <div v-else-if="isHistoryEmpty" class="rd-card-empty rd-card-empty--table">
-          <ElEmpty description="暂无历史记录" :image-size="80" />
-        </div>
-        <table v-else class="rd-table">
-          <thead>
-            <tr>
-              <th>月份</th>
-              <th>预估收入</th>
-              <th>真实收入</th>
-              <th>偏差率</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="row in historyRows" :key="row.t_month">
-              <td>{{ row.t_month }}</td>
-              <td>{{ formatUsd2(row.d_estimated_usd) }}</td>
-              <td>{{ formatUsd2(row.d_real_usd) }}</td>
-              <td :class="getDeviationClass(fmtPctSigned(row.d_deviation_rate_pct))">
-                {{ fmtPctSigned(row.d_deviation_rate_pct) }}
-              </td>
-            </tr>
-          </tbody>
         </table>
       </div>
 
@@ -306,20 +270,26 @@
         <div class="rd-dim-row">
           <span class="rd-dim-label">行维度：</span>
           <span
-            v-for="d in rowDims"
+            v-for="d in rowDimsUi"
             :key="d.value"
             class="rd-dim-chip"
-            :class="{ 'rd-dim-chip--active': activeRowDim === d.value }"
-            @click="activeRowDim = d.value"
+            :class="{
+              'rd-dim-chip--active': activeRowDim === d.value,
+              'rd-dim-chip--disabled': d.disabled
+            }"
+            @click="onRowDimClick(d.value)"
             >{{ d.label }}</span
           >
           <span class="rd-dim-label" style="margin-left: 16px">列维度：</span>
           <span
-            v-for="d in colDims"
+            v-for="d in colDimsUi"
             :key="d.value"
             class="rd-dim-chip"
-            :class="{ 'rd-dim-chip--active': activeColDim === d.value }"
-            @click="activeColDim = d.value"
+            :class="{
+              'rd-dim-chip--active': activeColDim === d.value,
+              'rd-dim-chip--disabled': d.disabled
+            }"
+            @click="onColDimClick(d.value)"
             >{{ d.label }}</span
           >
         </div>
@@ -357,55 +327,62 @@
           <div v-else-if="isMatrixEmpty" class="rd-card-empty rd-card-empty--matrix">
             <ElEmpty description="暂无明细数据" :image-size="80" />
           </div>
-          <table v-else class="rd-table rd-matrix-table">
-            <thead>
-              <tr>
-                <th>应用</th>
-                <th v-for="col in matrixCols" :key="col.name" colspan="1">
-                  <div class="rd-matrix-col-head">
-                    <span>{{ col.name }}</span>
-                    <span class="rd-matrix-col-sub">预估/真实/偏差率</span>
-                  </div>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="row in matrixData" :key="row.app">
-                <td class="rd-matrix-app">
-                  <span class="rd-app-icon" :style="{ background: row.iconColor }">{{
-                    row.icon
-                  }}</span>
-                  {{ row.app }}
-                </td>
-                <td
-                  v-for="col in matrixCols"
-                  :key="col.name"
-                  class="rd-matrix-cell"
-                  :class="getMatrixClass(matrixCell(row, col.key)?.deviation ?? '')"
-                >
-                  <template v-if="matrixCell(row, col.key)">
-                    <span class="rd-matrix-est">{{ matrixCell(row, col.key)?.estimated }}</span>
-                    <span class="rd-matrix-real">/{{ matrixCell(row, col.key)?.real }}</span>
+          <div v-else class="rd-matrix-table-inner">
+            <table class="rd-table rd-matrix-table">
+              <thead>
+                <tr>
+                  <th>{{ matrixFirstColLabel }}</th>
+                  <th v-for="col in matrixCols" :key="col.name" colspan="1">
+                    <div class="rd-matrix-col-head">
+                      <span>{{ col.name }}</span>
+                      <span class="rd-matrix-col-sub">真实/预估/偏差率</span>
+                    </div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="row in matrixData" :key="row.rowKey">
+                  <td class="rd-matrix-app">
+                    <span class="rd-app-icon" :style="{ background: row.iconColor }">{{
+                      row.icon
+                    }}</span>
+                    {{ row.app }}
+                  </td>
+                  <td
+                    v-for="col in matrixCols"
+                    :key="col.name"
+                    class="rd-matrix-cell"
+                    :class="getMatrixClass(matrixCell(row, col.key)?.deviation ?? '')"
+                  >
+                    <template v-if="matrixCell(row, col.key)">
+                      <span class="rd-matrix-real">{{ matrixCell(row, col.key)?.real }}</span>
+                      <span class="rd-matrix-est">/{{ matrixCell(row, col.key)?.estimated }}</span>
+                      <span
+                        class="rd-matrix-dev"
+                        :class="getDeviationClass(matrixCell(row, col.key)?.deviation ?? '')"
+                      >
+                        /{{ matrixCell(row, col.key)?.deviation }}
+                      </span>
+                    </template>
+                  </td>
+                </tr>
+                <!-- 合计行 -->
+                <tr class="rd-table__total">
+                  <td>合计</td>
+                  <td v-for="col in matrixCols" :key="col.name" class="rd-matrix-cell">
+                    <span class="rd-matrix-real">{{ col.total.real }}</span>
+                    <span class="rd-matrix-est">/{{ col.total.estimated }}</span>
                     <span
                       class="rd-matrix-dev"
-                      :class="getDeviationClass(matrixCell(row, col.key)?.deviation ?? '')"
+                      :class="getDeviationClass(col.total.deviation ?? '')"
                     >
-                      /{{ matrixCell(row, col.key)?.deviation }}
+                      /{{ col.total.deviation }}
                     </span>
-                  </template>
-                </td>
-              </tr>
-              <!-- 合计行 -->
-              <tr class="rd-table__total">
-                <td>合计</td>
-                <td v-for="col in matrixCols" :key="col.name" class="rd-matrix-cell">
-                  <span class="rd-matrix-est">{{ col.total.estimated }}</span>
-                  <span class="rd-matrix-real">/{{ col.total.real }}</span>
-                  <span class="rd-matrix-dev rd-text--red">/{{ col.total.deviation }}</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
         <div class="rd-matrix-note">
           说明：预估收入通过客户端埋点展示广告事件计算，真实收入来源于广告平台对账数据，偏差率可用于校正各维度ROI计算。
@@ -426,22 +403,25 @@
     onActivated,
     onDeactivated
   } from 'vue'
-  import { TopRight } from '@element-plus/icons-vue'
-  import * as echarts from 'echarts'
+  import { storeToRefs } from 'pinia'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
+  import { Search, TopRight } from '@element-plus/icons-vue'
+  import { echarts } from '@/plugins/echarts'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import {
     fetchRevenueDeviationMetaFilterOptions,
     fetchRevenueDeviationOverviewCountryTop10,
     fetchRevenueDeviationOverviewKpis,
     fetchRevenueDeviationOverviewTrend,
-    fetchRevenueDeviationTableHistory,
     fetchRevenueDeviationTableMatrix,
     fetchRevenueDeviationTablePlatform
   } from '@/api/revenue-deviation'
   import type {
     RevenueDeviationCountryTop10,
     RevenueDeviationFilterOption,
-    RevenueDeviationHistoryRow,
     RevenueDeviationMatrixRow as RdmRow,
     RevenueDeviationOverviewKpis,
     RevenueDeviationOverviewTrend,
@@ -453,7 +433,10 @@
 
   defineOptions({ name: 'RevenueDeviation' })
 
-  type MatrixPlatformKey = 'admob' | 'facebook' | 'applovin' | 'vungle'
+  const cockpitMetaStore = useCockpitMetaFilterStore()
+  const { data: cockpitMeta } = storeToRefs(cockpitMetaStore)
+  const settingAppsForSelect = computed(() => cockpitMeta.value?.settingApps ?? [])
+  const firstAppId = computed(() => String(settingAppsForSelect.value[0]?.sAppId ?? '').trim())
 
   interface MatrixCell {
     estimated: string
@@ -462,23 +445,53 @@
   }
 
   type MatrixRow = {
+    /** 展示名重复时仍保证列表 key 唯一 */
+    rowKey: string
     app: string
     icon: string
     iconColor: string
-  } & Record<MatrixPlatformKey, MatrixCell>
+    cells: Record<string, MatrixCell | undefined>
+  }
 
   interface MatrixColDef {
     name: string
-    key: MatrixPlatformKey
+    key: string
     total: MatrixCell
   }
 
-  function matrixCell(row: MatrixRow, key: MatrixPlatformKey): MatrixCell | undefined {
-    return row[key]
+  function matrixCell(row: MatrixRow, key: string): MatrixCell | undefined {
+    return row.cells[key]
+  }
+
+  function isMatrixCell(v: unknown): v is MatrixCell {
+    if (v === null || typeof v !== 'object') return false
+    const o = v as Record<string, unknown>
+    return (
+      typeof o.estimated === 'string' &&
+      typeof o.real === 'string' &&
+      typeof o.deviation === 'string'
+    )
+  }
+
+  function toMatrixVmRows(rows: RdmRow[], colKeys: string[]): MatrixRow[] {
+    return rows.map((r, idx) => {
+      const raw = r as Record<string, unknown>
+      const cells: Record<string, MatrixCell | undefined> = {}
+      for (const k of colKeys) {
+        const v = raw[k]
+        cells[k] = isMatrixCell(v) ? v : undefined
+      }
+      return {
+        rowKey: `${String(r.s_app_name)}-${idx}`,
+        app: r.s_app_name,
+        icon: r.s_app_icon_emoji,
+        iconColor: r.s_icon_color,
+        cells
+      }
+    })
   }
 
   const ALL_SOURCE_VALUE = '__ALL_SOURCE__'
-  const ALL_APP_VALUE = '__ALL_APP__'
 
   function toSelectOptions(
     options: RevenueDeviationFilterOption[],
@@ -505,12 +518,10 @@
   // ── State ────────────────────────────────────────────────────────────────────
   const dateRange = ref<[string, string]>(getDefaultDateRange())
   const platform = ref(ALL_SOURCE_VALUE)
-  const appFilter = ref(ALL_APP_VALUE)
+  /** 空字符串 = 不限应用；POST 由 api 层转为 appIds: [] */
+  const appFilter = ref<string | string[]>([])
   const sourceOptions = ref<RevenueDeviationFilterOption[]>([
     { value: ALL_SOURCE_VALUE, label: '全部广告平台' }
-  ])
-  const appOptions = ref<RevenueDeviationFilterOption[]>([
-    { value: ALL_APP_VALUE, label: '全部应用' }
   ])
   const activeCountryTab = ref('amount')
   const matrixPlatform = ref(ALL_SOURCE_VALUE)
@@ -522,7 +533,6 @@
   const trendData = ref<RevenueDeviationOverviewTrend | null>(null)
   const platformTable = ref<RevenueDeviationPlatformTable | null>(null)
   const countryTop10 = ref<RevenueDeviationCountryTop10 | null>(null)
-  const historyRows = ref<RevenueDeviationHistoryRow[]>([])
   const matrixCols = ref<MatrixColDef[]>([])
   const matrixData = ref<MatrixRow[]>([])
 
@@ -533,22 +543,85 @@
 
   const rowDims: { label: string; value: RevenueDeviationMatrixRowDim }[] = [
     { label: '应用', value: 'app' },
-    { label: '平台', value: 'platform' },
+    { label: '广告平台', value: 'platform' },
     { label: '日期', value: 'date' }
   ]
   const colDims: { label: string; value: RevenueDeviationMatrixColDim }[] = [
-    { label: '平台', value: 'platform' },
+    { label: '广告平台', value: 'platform' },
     { label: '日期', value: 'date' }
   ]
 
   const activeRowDim = ref<RevenueDeviationMatrixRowDim>('app')
   const activeColDim = ref<RevenueDeviationMatrixColDim>('platform')
 
+  const MATRIX_DATE_DIM = 'date' as const
+  const MATRIX_PLATFORM_DIM = 'platform' as const
+
+  function isSharedDim(
+    v: RevenueDeviationMatrixRowDim | RevenueDeviationMatrixColDim
+  ): v is RevenueDeviationMatrixColDim {
+    return v === MATRIX_DATE_DIM || v === MATRIX_PLATFORM_DIM
+  }
+
+  function isDimConflict(
+    a: RevenueDeviationMatrixRowDim | RevenueDeviationMatrixColDim,
+    b: RevenueDeviationMatrixRowDim | RevenueDeviationMatrixColDim
+  ) {
+    return isSharedDim(a) && a === b
+  }
+
+  const rowDimsUi = computed(() =>
+    rowDims.map((d) => ({
+      ...d,
+      disabled: isDimConflict(d.value, activeColDim.value)
+    }))
+  )
+
+  const colDimsUi = computed(() =>
+    colDims.map((d) => ({
+      ...d,
+      disabled: isDimConflict(d.value, activeRowDim.value)
+    }))
+  )
+
+  function fallbackColDim(exclude?: RevenueDeviationMatrixColDim): RevenueDeviationMatrixColDim {
+    return colDims.find((d) => d.value !== exclude)?.value ?? MATRIX_PLATFORM_DIM
+  }
+
+  function onRowDimClick(v: RevenueDeviationMatrixRowDim) {
+    if (isDimConflict(v, activeColDim.value)) return
+    activeRowDim.value = v
+  }
+
+  function onColDimClick(v: RevenueDeviationMatrixColDim) {
+    if (isDimConflict(v, activeRowDim.value)) return
+    activeColDim.value = v
+  }
+
+  watch(
+    [activeRowDim, activeColDim],
+    ([r, c]) => {
+      if (isDimConflict(r, c)) {
+        activeColDim.value = fallbackColDim(c)
+      }
+    },
+    { flush: 'sync' }
+  )
+
+  const matrixFirstColLabel = computed(() => {
+    const map: Record<RevenueDeviationMatrixRowDim, string> = {
+      app: '应用',
+      platform: '广告平台',
+      date: '日期'
+    }
+    return map[activeRowDim.value]
+  })
+
   const loadingKpi = ref(false)
   const loadingTrend = ref(false)
   const loadingPlatformTable = ref(false)
   const loadingCountry = ref(false)
-  const loadingHistory = ref(false)
+  const querying = ref(false)
 
   const isTrendEmpty = computed(() => {
     const t = trendData.value
@@ -568,20 +641,17 @@
     return !(list && list.length > 0)
   })
 
-  const isHistoryEmpty = computed(() => historyRows.value.length === 0)
-
   const isMatrixEmpty = computed(
     () => matrixCols.value.length === 0 || matrixData.value.length === 0
   )
 
   async function loadMetaFilterOptions() {
+    await cockpitMetaStore.ensureLoaded()
     try {
       const options = await fetchRevenueDeviationMetaFilterOptions()
       sourceOptions.value = toSelectOptions(options.sources, '全部广告平台', ALL_SOURCE_VALUE)
-      appOptions.value = toSelectOptions(options.apps, '全部应用', ALL_APP_VALUE)
     } catch {
       sourceOptions.value = [{ value: ALL_SOURCE_VALUE, label: '全部广告平台' }]
-      appOptions.value = [{ value: ALL_APP_VALUE, label: '全部应用' }]
     }
   }
 
@@ -590,7 +660,7 @@
       t_start_date: dateRange.value[0]!,
       t_end_date: dateRange.value[1]!,
       source: platform.value === ALL_SOURCE_VALUE ? '' : platform.value,
-      s_app_id: appFilter.value === ALL_APP_VALUE ? '' : appFilter.value,
+      s_app_id: appFilter.value,
       row_dim: activeRowDim.value,
       col_dim: activeColDim.value
     }
@@ -602,18 +672,6 @@
       ...global,
       source: matrixPlatform.value === ALL_SOURCE_VALUE ? '' : matrixPlatform.value
     }
-  }
-
-  function toMatrixVmRows(rows: RdmRow[]): MatrixRow[] {
-    return rows.map((r) => ({
-      app: r.s_app_name,
-      icon: r.s_app_icon_emoji,
-      iconColor: r.s_icon_color,
-      admob: r.admob,
-      facebook: r.facebook,
-      applovin: r.applovin,
-      vungle: r.vungle
-    }))
   }
 
   function cssVar(name: string) {
@@ -633,7 +691,10 @@
         key: c.key,
         total: c.total
       }))
-      matrixData.value = toMatrixVmRows(matrix.rows)
+      matrixData.value = toMatrixVmRows(
+        matrix.rows,
+        matrix.cols.map((c) => c.key)
+      )
     } catch {
       if (id !== matrixRequestId.value) return
       matrixCols.value = []
@@ -655,27 +716,34 @@
     loadingTrend.value = true
     loadingPlatformTable.value = true
     loadingCountry.value = true
-    loadingHistory.value = true
     try {
-      const [kpi, trend, plat, country, hist] = await Promise.allSettled([
+      const [kpi, trend, plat, country] = await Promise.allSettled([
         safeTask(() => fetchRevenueDeviationOverviewKpis(q)),
         safeTask(() => fetchRevenueDeviationOverviewTrend(q)),
         safeTask(() => fetchRevenueDeviationTablePlatform(q)),
-        safeTask(() => fetchRevenueDeviationOverviewCountryTop10(q)),
-        safeTask(() => fetchRevenueDeviationTableHistory(q))
+        safeTask(() => fetchRevenueDeviationOverviewCountryTop10(q))
       ])
 
       if (kpi.status === 'fulfilled') kpiOverview.value = kpi.value
       if (trend.status === 'fulfilled') trendData.value = trend.value
       if (plat.status === 'fulfilled') platformTable.value = plat.value
       if (country.status === 'fulfilled') countryTop10.value = country.value
-      if (hist.status === 'fulfilled') historyRows.value = hist.value
     } finally {
       loadingKpi.value = false
       loadingTrend.value = false
       loadingPlatformTable.value = false
       loadingCountry.value = false
-      loadingHistory.value = false
+    }
+  }
+
+  async function handleQuery() {
+    if (querying.value) return
+    querying.value = true
+    try {
+      await loadAllCards()
+      await loadMatrixOnly()
+    } finally {
+      querying.value = false
     }
   }
 
@@ -702,6 +770,16 @@
     return base
   }
 
+  function fmtUsdPlain(n?: number | null) {
+    if (n === null || n === undefined || Number.isNaN(n)) return '--'
+    return n.toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })
+  }
+
   function fmtPctSigned(n?: number | null) {
     if (n === null || n === undefined || Number.isNaN(n)) return '--'
     if (n === 0) return '0.0%'
@@ -709,25 +787,58 @@
     return `${n.toFixed(1)}%`
   }
 
-  function fmtRoiPp(n?: number | null) {
-    if (n === null || n === undefined || Number.isNaN(n)) return '--'
-    return `${n.toFixed(1)}pp`
+  // function fmtRoiPp(n?: number | null) {
+  //   if (n === null || n === undefined || Number.isNaN(n)) return '--'
+  //   return `${n.toFixed(1)}pp`
+  // }
+
+  function formatCountryBarLabel(value: number) {
+    if (!Number.isFinite(value)) return '--'
+    if (activeCountryTab.value === 'rate') return `${value.toFixed(1)}%`
+    return value.toLocaleString('en-US', { maximumFractionDigits: 0 })
   }
 
+  function parseYmdToUtcMs(ymd: string) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd)
+    if (!m) return NaN
+    const year = Number(m[1])
+    const month = Number(m[2])
+    const day = Number(m[3])
+    return Date.UTC(year, month - 1, day)
+  }
+
+  const trendDaySpanText = computed(() => {
+    const [start, end] = dateRange.value
+    if (!start || !end) return '--天'
+    const startMs = parseYmdToUtcMs(start)
+    const endMs = parseYmdToUtcMs(end)
+    if (!Number.isFinite(startMs) || !Number.isFinite(endMs)) return '--天'
+    const dayMs = 24 * 60 * 60 * 1000
+    const span = Math.floor(Math.abs(endMs - startMs) / dayMs) + 1
+    return `${span}天`
+  })
+
   // ── Helpers ───────────────────────────────────────────────────────────────────
+  /** 接口可能返回 en dash（8–15）或 ASCII 连字符（8-15），分类时统一比较 */
+  function normalizeDeviationBracket(val: string) {
+    return val.replace(/\u2013|\u2014/g, '-')
+  }
+
   function getDeviationClass(val: string) {
     if (!val) return ''
     if (val.startsWith('+')) return 'rd-text--red'
     if (val.startsWith('-')) return 'rd-text--green'
-    if (val.includes('>15')) return 'rd-text--red'
-    if (val.includes('8–15')) return 'rd-text--orange'
+    const n = normalizeDeviationBracket(val)
+    if (n.includes('>15')) return 'rd-text--red'
+    if (n.includes('8-15')) return 'rd-text--orange'
     return 'rd-text--muted'
   }
 
   function getMatrixClass(deviation: string) {
     if (!deviation) return ''
-    if (deviation.includes('>15')) return 'rd-matrix-cell--red'
-    if (deviation.includes('8–15')) return 'rd-matrix-cell--orange'
+    const n = normalizeDeviationBracket(deviation)
+    if (n.includes('>15')) return 'rd-matrix-cell--red'
+    if (n.includes('8-15')) return 'rd-matrix-cell--orange'
     return ''
   }
 
@@ -735,8 +846,8 @@
   const trendChartRef = ref<HTMLElement | null>(null)
   const countryChartRef = ref<HTMLElement | null>(null)
 
-  let trendChart: echarts.ECharts | null = null
-  let countryChart: echarts.ECharts | null = null
+  let trendChart: ReturnType<typeof echarts.init> | null = null
+  let countryChart: ReturnType<typeof echarts.init> | null = null
   let chartResizeObserver: ResizeObserver | null = null
   let windowResizeBound = false
 
@@ -892,15 +1003,48 @@
         : countryTop10.value.tab_rate
     const countries = list.map((i) => i.label_display)
     const amounts = list.map((i) => i.n_value)
+    const tabIsRate = activeCountryTab.value === 'rate'
     countryChart.setOption({
       backgroundColor: 'transparent',
-      grid: { top: 5, right: 20, bottom: 5, left: 60 },
+      grid: { top: 5, right: 76, bottom: 5, left: 60 },
       tooltip: {
         trigger: 'axis',
         axisPointer: { type: 'none' },
         backgroundColor: ttBg,
         borderColor: ttBorder,
-        textStyle: { color: ttText, fontSize: 12 }
+        textStyle: { color: ttText, fontSize: 12 },
+        formatter: (params: unknown) => {
+          const first = (Array.isArray(params) ? params[0] : params) as {
+            name?: string
+            dataIndex?: number
+            value?: number | string
+          }
+          const idx = first?.dataIndex ?? 0
+          const row = list[idx]
+          if (!row) return ''
+          const title = first?.name ?? row.label_display
+          const raw = Number(first?.value ?? row.n_value)
+          const mainLine = tabIsRate
+            ? `偏差率：${Number.isFinite(raw) ? `${raw.toFixed(1)}%` : '--'}`
+            : `偏差金额：${
+                Number.isFinite(raw)
+                  ? raw.toLocaleString('en-US', { maximumFractionDigits: 0 })
+                  : '--'
+              }`
+          const blocks = [
+            `<div style="font-weight:600;margin-bottom:4px">${title}</div>`,
+            `<div>${mainLine}</div>`
+          ]
+          if (row.d_estimated_usd !== undefined && row.d_estimated_usd !== null) {
+            blocks.push(
+              `<div style="margin-top:6px">预估收入：${fmtUsdPlain(row.d_estimated_usd)}</div>`
+            )
+          }
+          if (row.d_real_usd !== undefined && row.d_real_usd !== null) {
+            blocks.push(`<div>真实收入：${fmtUsdPlain(row.d_real_usd)}</div>`)
+          }
+          return blocks.join('')
+        }
       },
       xAxis: {
         type: 'value',
@@ -911,6 +1055,7 @@
       yAxis: {
         type: 'category',
         data: countries,
+        inverse: true,
         axisLine: { show: false },
         axisTick: { show: false },
         axisLabel: { color: axisText, fontSize: 12 }
@@ -920,6 +1065,15 @@
           type: 'bar',
           data: amounts,
           barMaxWidth: 14,
+          label: {
+            show: true,
+            position: 'right',
+            distance: 8,
+            color: axisText,
+            fontSize: 11,
+            formatter: (params: { value: number | string }) =>
+              formatCountryBarLabel(Number(params.value))
+          },
           itemStyle: {
             color: new echarts.graphic.LinearGradient(1, 0, 0, 0, [
               { offset: 0, color: barColor },
@@ -940,6 +1094,9 @@
 
   onMounted(async () => {
     await loadMetaFilterOptions()
+    if (!appFilter.value && firstAppId.value) {
+      appFilter.value = firstAppId.value
+    }
     matrixPlatform.value = platform.value
     await loadAllCards()
     await loadMatrixOnly()
@@ -986,24 +1143,7 @@
     initCountryChart()
   })
 
-  watch(
-    [dateRange, platform, appFilter],
-    async () => {
-      matrixPlatform.value = platform.value
-      matrixLoading.value = true
-      await loadAllCards()
-      await loadMatrixOnly()
-      await nextTick()
-      trendChart?.dispose()
-      trendChart = null
-      countryChart?.dispose()
-      countryChart = null
-      initTrendChart()
-      initCountryChart()
-    },
-    { deep: true }
-  )
-
+  /** 四维度偏差明细表：平台 / 行维 / 列维 切换单独拉矩阵接口，不依赖顶部「查询」 */
   watch([matrixPlatform, activeRowDim, activeColDim], async () => {
     await loadMatrixOnly()
   })
@@ -1228,10 +1368,11 @@
   }
 
   :deep(.rd-filter-date .el-input__wrapper),
-  :deep(.rd-filter-select .el-input__wrapper) {
-    background: color-mix(in srgb, var(--art-primary) 6%, transparent);
-    border: 1px solid color-mix(in srgb, var(--art-primary) 24%, transparent);
-    border-radius: 9999px;
+  :deep(.rd-filter-select .el-select__wrapper),
+  :deep(.rd-filter-app-select) {
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
     box-shadow: none;
     transition:
       border-color var(--duration-normal) var(--ease-out),
@@ -1239,23 +1380,82 @@
       background-color var(--duration-normal) var(--ease-out);
   }
 
+  :deep(.rd-filter-date.el-date-editor.el-date-editor--daterange) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    border-radius: var(--el-border-radius-base, 4px) !important;
+    box-shadow: none !important;
+    transition:
+      border-color var(--duration-normal) var(--ease-out),
+      box-shadow var(--duration-normal) var(--ease-out),
+      background-color var(--duration-normal) var(--ease-out);
+  }
+
+  :deep(.rd-filter-date.el-date-editor.el-date-editor--daterange:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
+  }
+
+  :deep(.rd-filter-date.el-date-editor.el-date-editor--daterange.is-active),
+  :deep(.rd-filter-date.el-date-editor.el-date-editor--daterange:focus-within) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
+  }
+
   :deep(.rd-filter-date .el-input__wrapper:hover),
-  :deep(.rd-filter-select .el-input__wrapper:hover) {
-    border-color: color-mix(in srgb, var(--art-primary) 42%, transparent);
-    box-shadow: 0 0 12px color-mix(in srgb, var(--art-primary) 16%, transparent);
+  :deep(.rd-filter-select .el-select__wrapper:hover),
+  :deep(.rd-filter-app-select:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
   }
 
   :deep(.rd-filter-date .el-input__wrapper.is-focus),
-  :deep(.rd-filter-select .el-input__wrapper.is-focus) {
-    background: color-mix(in srgb, var(--art-primary) 10%, transparent) !important;
-    border-color: color-mix(in srgb, var(--art-primary) 55%, transparent) !important;
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--art-primary) 18%, transparent) !important;
+  :deep(.rd-filter-select .el-select__wrapper.is-focused),
+  :deep(.rd-filter-app-select.is-open) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
   }
 
   :deep(.rd-filter-date .el-input__inner),
-  :deep(.rd-filter-select .el-input__inner) {
+  :deep(.rd-filter-select .el-select__selected-item),
+  :deep(.rd-filter-app-select .app-platform-search-select__text) {
     font-size: 14px;
     color: var(--text-primary);
+  }
+
+  :deep(.rd-filter-date .el-range-separator),
+  :deep(.rd-filter-date .el-range__icon),
+  :deep(.rd-filter-date .el-range__close-icon) {
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+  }
+
+  :deep(.rd-filter-select .el-select__placeholder),
+  :deep(.rd-filter-app-select .app-platform-search-select__text.is-placeholder) {
+    color: var(--el-text-color-placeholder);
+  }
+
+  :deep(.rd-filter-select .el-select__caret),
+  :deep(.rd-filter-select .el-select__suffix),
+  :deep(.rd-filter-select .el-select__icon),
+  :deep(.rd-filter-app-select .app-platform-search-select__suffix) {
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+  }
+
+  .rd-filter-app-select {
+    width: min(260px, 100%);
   }
 
   .rd-filter-action {
@@ -1270,31 +1470,35 @@
   }
 
   .rd-filter-action--apply {
-    --rd-btn-bg: color-mix(in srgb, var(--el-color-primary) 78%, var(--default-box-color));
-    --rd-btn-bg-hover: color-mix(in srgb, var(--el-color-primary) 88%, var(--default-box-color));
-    --rd-btn-border: color-mix(in srgb, var(--el-color-primary) 70%, transparent);
-    --rd-btn-border-hover: color-mix(in srgb, var(--el-color-primary) 86%, transparent);
-    --el-button-bg-color: var(--rd-btn-bg);
-    --el-button-border-color: var(--rd-btn-border);
-    --el-button-hover-bg-color: var(--rd-btn-bg-hover);
-    --el-button-hover-border-color: var(--rd-btn-border-hover);
+    --el-button-bg-color: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    );
+    --el-button-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-button-text-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-button-hover-bg-color: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 10%,
+      transparent
+    );
+    --el-button-hover-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-button-hover-text-color: var(--theme-color, var(--art-primary, #3b82f6));
     --el-button-active-bg-color: color-mix(
       in srgb,
-      var(--el-color-primary) 94%,
-      var(--default-box-color)
+      var(--theme-color, var(--art-primary, #3b82f6)) 12%,
+      transparent
     );
-    --el-button-active-border-color: color-mix(in srgb, var(--el-color-primary) 92%, transparent);
+    --el-button-active-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-button-active-text-color: var(--theme-color, var(--art-primary, #3b82f6));
 
-    color: var(--el-color-white) !important;
-    box-shadow:
-      0 0 18px color-mix(in srgb, var(--el-color-primary) 18%, transparent),
-      0 0 42px color-mix(in srgb, var(--el-color-primary) 10%, transparent);
+    color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: none;
   }
 
   .rd-filter-action--apply:hover {
-    box-shadow:
-      0 0 22px color-mix(in srgb, var(--el-color-primary) 22%, transparent),
-      0 0 50px color-mix(in srgb, var(--el-color-primary) 12%, transparent);
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
     transform: translateY(-2px);
   }
 
@@ -1327,7 +1531,7 @@
 
   @media (width >= 1600px) {
     .rd-kpi-grid {
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(4, 1fr);
     }
   }
 
@@ -1444,13 +1648,13 @@
   /* ── Middle Grid ───────────────────────────────────────────────────── */
   .rd-middle-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(260px, 320px) minmax(240px, 280px);
+    grid-template-columns: minmax(0, 1fr) minmax(340px, 420px);
     gap: 14px;
     align-items: stretch;
     margin-bottom: 16px;
   }
 
-  .rd-platform-card {
+  .rd-middle-grid > .rd-platform-card {
     grid-column: 2 / -1;
     min-width: 0;
   }
@@ -1460,7 +1664,7 @@
       grid-template-columns: 1fr;
     }
 
-    .rd-platform-card {
+    .rd-middle-grid > .rd-platform-card {
       grid-column: auto;
     }
   }
@@ -1525,7 +1729,6 @@
   .rd-reason-card .rd-card__title,
   .rd-advice-card .rd-card__title,
   .rd-country-card .rd-card__title,
-  .rd-history-card .rd-card__title,
   .rd-matrix-card .rd-card__title {
     @include rd-title-gradient;
 
@@ -1631,6 +1834,10 @@
 
   .rd-table tr:hover td {
     background: color-mix(in srgb, var(--art-primary) 6%, transparent);
+  }
+
+  .rd-matrix-table tbody tr:hover td:first-child {
+    background: color-mix(in srgb, var(--art-primary) 6%, var(--default-box-color));
   }
 
   .rd-table__total td {
@@ -1919,18 +2126,14 @@
   /* ── Bottom Grid ───────────────────────────────────────────────────── */
   .rd-bottom-grid {
     display: grid;
-    grid-template-columns: minmax(200px, 240px) minmax(180px, 0.6fr) minmax(min(100%, 420px), 1.4fr);
+    grid-template-columns: minmax(360px, 460px) minmax(0, 1fr);
     gap: 14px;
     align-items: stretch;
   }
 
-  @media (width <= 1399px) {
+  @media (width <= 1199px) {
     .rd-bottom-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .rd-matrix-card {
-      grid-column: 1 / -1;
+      grid-template-columns: 1fr;
     }
   }
 
@@ -1946,13 +2149,12 @@
 
   /* 第三行三列同高 */
   .rd-country-card,
-  .rd-history-card,
   .rd-matrix-card {
+    min-width: 0;
     height: 100%;
     min-height: 0;
   }
 
-  .rd-history-card,
   .rd-matrix-card {
     display: flex;
     flex-direction: column;
@@ -2029,11 +2231,64 @@
     border-color: var(--rd-blue);
   }
 
+  .rd-dim-chip--disabled {
+    cursor: not-allowed;
+    background: color-mix(in srgb, var(--default-box-color) 70%, transparent);
+    border-color: color-mix(in srgb, var(--default-border) 80%, transparent);
+    opacity: 0.45;
+  }
+
   .rd-matrix-scroll {
+    position: relative;
+    z-index: 1;
+    box-sizing: border-box;
     flex: 1;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
     min-height: 0;
     max-height: 340px;
     overflow: auto;
+    overscroll-behavior-x: contain;
+
+    /* 始终显示可拖拽滚动条（覆盖系统「叠加滚动条」观感） */
+    scrollbar-width: auto;
+    scrollbar-color: color-mix(in srgb, var(--art-gray-500) 75%, transparent) var(--default-border);
+  }
+
+  .rd-matrix-scroll::-webkit-scrollbar {
+    width: 11px;
+    height: 11px;
+  }
+
+  .rd-matrix-scroll::-webkit-scrollbar-track {
+    background: color-mix(in srgb, var(--default-border) 65%, transparent);
+    border-radius: 6px;
+  }
+
+  .rd-matrix-scroll::-webkit-scrollbar-thumb {
+    min-width: 40px;
+    min-height: 40px;
+    background: color-mix(in srgb, var(--art-gray-600) 70%, var(--default-border));
+    border: 2px solid color-mix(in srgb, var(--default-border) 65%, transparent);
+    border-radius: 6px;
+  }
+
+  .rd-matrix-scroll::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--art-gray-500) 85%, var(--art-primary));
+  }
+
+  .rd-matrix-scroll::-webkit-scrollbar-corner {
+    background: var(--default-box-color);
+  }
+
+  /*
+   * 块级 + fit-content：min-width 相对 .rd-matrix-scroll 计算，避免 inline-block+table 上 min-width:100% 循环导致表被压成容器宽、横向永远不溢出。
+   */
+  .rd-matrix-table-inner {
+    display: block;
+    width: fit-content;
+    min-width: 100%;
   }
 
   .rd-matrix-scroll--busy {
@@ -2074,8 +2329,15 @@
     max-width: 100%;
   }
 
-  .rd-matrix-table {
-    min-width: 600px;
+  /*
+   * 双类提高优先级，压过 .rd-table { width:100% }；列为每格设 min-width，列少时总宽仍可能超过卡片，才能出现横向条。
+   */
+  .rd-matrix-table.rd-table {
+    width: max-content;
+    max-width: none;
+    table-layout: auto;
+    border-spacing: 0;
+    border-collapse: separate;
   }
 
   .rd-matrix-table thead th {
@@ -2084,6 +2346,32 @@
     z-index: 2;
     background: var(--default-box-color);
     box-shadow: 0 1px 0 color-mix(in srgb, var(--art-primary) 14%, transparent);
+  }
+
+  .rd-matrix-table thead th:first-child {
+    left: 0;
+    z-index: 5;
+    min-width: 7.5rem;
+    box-shadow:
+      0 1px 0 color-mix(in srgb, var(--art-primary) 14%, transparent),
+      1px 0 0 color-mix(in srgb, var(--art-primary) 14%, transparent);
+  }
+
+  .rd-matrix-table thead th:not(:first-child) {
+    min-width: 9.5rem;
+  }
+
+  .rd-matrix-table tbody td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 3;
+    min-width: 7.5rem;
+    background: var(--default-box-color);
+    box-shadow: 1px 0 0 color-mix(in srgb, var(--art-primary) 14%, transparent);
+  }
+
+  .rd-matrix-table tbody td:not(:first-child) {
+    min-width: 9.5rem;
   }
 
   .rd-matrix-col-head {
@@ -2176,7 +2464,8 @@
       max-width: 100% !important;
     }
 
-    .rd-filter-select {
+    .rd-filter-select,
+    .rd-filter-app-select {
       flex: 1 1 calc(50% - 6px);
       width: auto;
       min-width: 0;
@@ -2222,5 +2511,16 @@
 <style lang="scss">
   .rd-filter-popper {
     z-index: var(--z-dropdown);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 12px 36px rgb(0 0 0 / 48%);
+  }
+
+  .rd-filter-popper .el-select-dropdown__item.is-selected {
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 12%,
+      var(--default-box-color)
+    );
   }
 </style>

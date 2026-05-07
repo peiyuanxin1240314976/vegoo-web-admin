@@ -12,7 +12,13 @@
           <el-breadcrumb-item
             :to="{
               path: '/campaign-detail',
-              query: { id: campaignId, appId: route.query.appId, appName: route.query.appName }
+              query: {
+                id: campaignId,
+                appId: route.query.appId,
+                appName: route.query.appName,
+                startDate: filterStartDate,
+                endDate: filterEndDate
+              }
             }"
           >
             {{ loading ? '广告系列详情' : data.campaignName || '广告系列详情' }}
@@ -37,8 +43,14 @@
           </ElSkeleton>
         </div>
         <div class="add-title-row__actions add-sk-actions">
-          <ElSkeletonItem variant="button" style="width: 120px; height: 36px" />
-          <ElSkeletonItem variant="button" style="width: 88px; height: 36px" />
+          <ElSkeleton animated :throttle="0">
+            <template #template>
+              <div class="add-sk-actions__inner">
+                <ElSkeletonItem variant="button" style="width: 120px; height: 36px" />
+                <ElSkeletonItem variant="button" style="width: 88px; height: 36px" />
+              </div>
+            </template>
+          </ElSkeleton>
         </div>
       </div>
       <div class="add-body add-body--skeleton">
@@ -98,14 +110,23 @@
           </span>
         </div>
         <div class="add-title-row__actions">
-          <ElButton type="primary" size="large" round @click="goToEdit">
+          <AppDatePicker
+            v-model="dateRangeValue"
+            type="daterange"
+            value-format="YYYY-MM-DD"
+            range-separator="~"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            class="ap-date-picker"
+          />
+          <!-- <ElButton type="primary" size="large" round @click="goToEdit">
             <el-icon><Edit /></el-icon>
             编辑系列
           </ElButton>
           <ElButton size="large" round class="add-btn-pause" @click="onPauseAd">
             <el-icon><VideoPause /></el-icon>
             暂停
-          </ElButton>
+          </ElButton> -->
         </div>
       </div>
 
@@ -125,14 +146,19 @@
 </template>
 
 <script setup lang="ts">
-  import { onMounted, reactive, ref } from 'vue'
+  import { computed, nextTick, reactive, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { ElMessage } from 'element-plus'
-  import { ArrowLeft, Edit, VideoPause } from '@element-plus/icons-vue'
   import {
-    fetchAdDetailOverview,
-    fetchCampaignDetailAdGroupAction
+    ArrowLeft
+    // Edit, VideoPause
+  } from '@element-plus/icons-vue'
+  import {
+    fetchAdDetailOverview
+    // fetchCampaignDetailAdGroupAction
   } from '@/api/user-growth/ad-performance'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
+  import { getAppTodayYYYYMMDD } from '@/utils/app-now'
   import AdDetailKpiCards from './modules/ad-detail-kpi-cards.vue'
   import AdDetailTrendChart from './modules/ad-detail-trend-chart.vue'
   import AdDetailTargeting from './modules/ad-detail-targeting.vue'
@@ -151,18 +177,72 @@
   const loading = ref(true)
   const campaignId = ref('')
   const data = reactive<AdDetailData>(createEmptyAdDetail())
+  const queryStartDate = String(route.query.startDate ?? '').trim()
+  const queryEndDate = String(route.query.endDate ?? '').trim()
+  const filterStartDate = ref(queryStartDate || getAppTodayYYYYMMDD())
+  const filterEndDate = ref(queryEndDate || getAppTodayYYYYMMDD())
 
-  function goToEdit() {
-    router.push({
-      path: '/campaign-detail/ad-edit',
-      query: {
-        campaignId: campaignId.value,
-        adId: String(route.query.id ?? ''),
-        appId: route.query.appId,
-        appName: route.query.appName
+  const dateRangeValue = computed<[string, string]>({
+    get() {
+      return [filterStartDate.value, filterEndDate.value]
+    },
+    set(v) {
+      const nextStart = String(v?.[0] ?? '').trim()
+      const nextEnd = String(v?.[1] ?? '').trim()
+      if (!nextStart || !nextEnd) {
+        const today = getAppTodayYYYYMMDD()
+        filterStartDate.value = today
+        filterEndDate.value = today
+        return
       }
+      filterStartDate.value = nextStart
+      filterEndDate.value = nextEnd
+    }
+  })
+
+  async function loadAdDetail() {
+    const adId = String(route.query.id ?? '').trim()
+    const cid = campaignId.value.trim()
+    if (!adId || !cid) return
+    const res = await fetchAdDetailOverview({
+      adId,
+      campaignId: cid,
+      startDate: filterStartDate.value,
+      endDate: filterEndDate.value
     })
+    Object.assign(data, normalizeAdDetailFromApi(res))
   }
+
+  function deferUntilAfterPaint(): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, 0))
+  }
+
+  async function loadAdDetailWithSkeleton(errorMessage: string) {
+    loading.value = true
+    await nextTick()
+    await deferUntilAfterPaint()
+    try {
+      await loadAdDetail()
+    } catch {
+      ElMessage.error(errorMessage)
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // function goToEdit() {
+  //   router.push({
+  //     path: '/campaign-detail/ad-edit',
+  //     query: {
+  //       campaignId: campaignId.value,
+  //       adId: String(route.query.id ?? ''),
+  //       appId: route.query.appId,
+  //       appName: route.query.appName,
+  //       startDate: filterStartDate.value,
+  //       endDate: filterEndDate.value
+  //     }
+  //   })
+  // }
 
   function statusText(s: AdDetailStatus): string {
     const map: Record<AdDetailStatus, string> = {
@@ -173,49 +253,55 @@
     return map[s] ?? s
   }
 
-  async function onPauseAd() {
-    const adId = String(route.query.id ?? '')
-    const cid = campaignId.value
-    if (!adId || !cid) {
-      ElMessage.error('缺少广告或系列 ID')
-      return
-    }
-    try {
-      const res = await fetchCampaignDetailAdGroupAction({
-        campaignId: cid,
-        adId,
-        actionType: 'pause'
-      })
-      if (res.message) ElMessage.success(res.message)
-      else ElMessage.success('操作成功')
-      data.status = 'paused'
-    } catch {
-      ElMessage.error('操作失败')
-    }
-  }
+  // async function onPauseAd() {
+  //   const adId = String(route.query.id ?? '')
+  //   const cid = campaignId.value
+  //   if (!adId || !cid) {
+  //     ElMessage.error('缺少广告或系列 ID')
+  //     return
+  //   }
+  //   try {
+  //     const res = await fetchCampaignDetailAdGroupAction({
+  //       campaignId: cid,
+  //       adId,
+  //       actionType: 'pause'
+  //     })
+  //     if (res.message) ElMessage.success(res.message)
+  //     else ElMessage.success('操作成功')
+  //     data.status = 'paused'
+  //   } catch {
+  //     ElMessage.error('操作失败')
+  //   }
+  // }
 
-  onMounted(async () => {
-    const adId = String(route.query.id ?? '')
-    campaignId.value = String(route.query.campaignId ?? '')
-
-    if (!adId || !campaignId.value) {
-      ElMessage.error('缺少广告 ID 或系列 ID')
-      loading.value = false
-      return
-    }
-
-    try {
-      const res = await fetchAdDetailOverview({ adId, campaignId: campaignId.value })
-      Object.assign(data, normalizeAdDetailFromApi(res))
-    } catch {
-      ElMessage.error('加载广告详情失败')
-    } finally {
-      loading.value = false
-    }
+  watch([filterStartDate, filterEndDate], async ([nextStart, nextEnd], [prevStart, prevEnd]) => {
+    if (!nextStart || !nextEnd) return
+    if (nextStart === prevStart && nextEnd === prevEnd) return
+    const adId = String(route.query.id ?? '').trim()
+    if (!adId || !campaignId.value.trim()) return
+    await loadAdDetailWithSkeleton('按日期刷新广告详情失败')
   })
+
+  watch(
+    [() => String(route.query.id ?? '').trim(), () => String(route.query.campaignId ?? '').trim()],
+    async ([adId, cid]) => {
+      campaignId.value = cid
+      if (!adId || !cid) {
+        ElMessage.error('缺少广告 ID 或系列 ID')
+        loading.value = false
+        return
+      }
+      await loadAdDetailWithSkeleton('加载广告详情失败')
+    },
+    { immediate: true }
+  )
 </script>
 
 <style scoped lang="scss">
+  @use '../../../styles/filter-bar-theme.scss' as filterTheme;
+
+  @include filterTheme.date-range-trigger('.ap-date-picker');
+
   .add-page {
     position: relative;
     display: flex;
@@ -439,6 +525,7 @@
   .add-title-row__actions {
     display: flex;
     flex-shrink: 0;
+    flex-wrap: wrap;
     gap: 8px;
     align-items: center;
   }
@@ -452,6 +539,13 @@
     }
 
     .add-sk-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .add-sk-actions__inner {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;

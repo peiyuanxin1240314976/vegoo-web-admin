@@ -7,10 +7,32 @@
     "requestBody": "LarkPushConfig（与 07 的 sampleRequest 结构一致）",
     "note": "此接口仅触发一次性推送，不持久化配置；若需保存并推送，先调 07 再调本接口。"
   },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "飞书推送弹窗点击“立即推送”",
+        "detail": "使用当前配置触发一次即时推送。"
+      },
+      {
+        "moment": "推送成功后",
+        "detail": "前端可立即更新“上次推送”展示，再由 06 接口做最终一致性回读。"
+      }
+    ]
+  },
   "fieldDescription": {
     "request": {
       "groups": { "type": "LarkTarget[]", "required": true, "description": "推送目标群组" },
       "persons": { "type": "LarkTarget[]", "required": true, "description": "推送目标人员" },
+      "lastPushAt": {
+        "type": "string",
+        "required": false,
+        "description": "可选：最近一次推送时间，推送接口可忽略该字段"
+      },
+      "lastPushTarget": {
+        "type": "string",
+        "required": false,
+        "description": "可选：最近一次推送目标群，推送接口可忽略该字段"
+      },
       "daily": {
         "type": "object",
         "required": true,
@@ -21,19 +43,19 @@
       "content": { "type": "object", "required": true, "description": "本次推送的内容开关" }
     },
     "response": {
-      "code": { "type": "number", "required": true, "description": "0 = 推送成功，非 0 = 错误" },
+      "success": { "type": "boolean", "required": true, "description": "推送是否成功" },
       "message": {
         "type": "string",
         "required": true,
         "description": "成功时为 success；失败时返回具体原因"
-      },
-      "data": { "type": "null", "required": true, "description": "固定为 null" },
-      "timestamp": { "type": "number", "required": true, "description": "Unix 时间戳（ms）" }
+      }
     }
   },
   "sampleRequest": {
     "groups": [{ "id": "oc_group_daily_001", "name": "经营日报群" }],
     "persons": [],
+    "lastPushAt": "2026-04-09T08:30:00+08:00",
+    "lastPushTarget": "经营日报群",
     "daily": { "enabled": true, "day": "每天", "time": "09:00", "workdayOnly": false },
     "weekly": { "enabled": false, "day": "每周一", "time": "09:00", "showChange": true },
     "monthly": { "enabled": false, "day": "每月 1 日", "time": "09:00", "showFee": false },
@@ -46,9 +68,14 @@
     }
   },
   "sampleResponse": {
-    "code": 0,
+    "success": true,
     "message": "success",
-    "data": null,
-    "timestamp": 1742688000000
+    "_comment": "网关可额外包裹 code/message/data/timestamp；本示例表示 data 业务体。"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "该接口与 07 共享请求体结构，但语义为“触发动作”，不应覆盖配置持久化状态。",
+      "建议成功后由后端更新最近推送时间与目标，供 06 接口返回。"
+    ]
   }
 }

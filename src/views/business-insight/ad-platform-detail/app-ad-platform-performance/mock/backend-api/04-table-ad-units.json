@@ -1,0 +1,117 @@
+{
+  "_comment": "应用内广告平台表现 — 广告位表现表。对应 index.vue adUnitData。",
+  "interaction": {
+    "route": "/business-insight/ad-platform-detail/app-ad-platform-performance",
+    "surface": "右侧广告位表现表",
+    "triggers": ["查询刷新"]
+  },
+  "fieldDescription": {
+    "request": {
+      "startDate": { "type": "string", "required": true, "description": "YYYY-MM-DD。" },
+      "endDate": { "type": "string", "required": true, "description": "YYYY-MM-DD。" },
+      "countryCode": { "type": "string", "required": true, "description": "国家；空为全部。" },
+      "appId": { "type": "string", "required": true, "description": "应用，来自路由。" },
+      "source": { "type": "string", "required": false, "description": "广告平台上下文。" }
+    },
+    "response": {
+      "records": {
+        "type": "AppAdPlatformAdUnitRow[]",
+        "required": true,
+        "description": "广告位行。"
+      }
+    },
+    "AppAdPlatformAdUnitRow": {
+      "network": { "type": "string", "required": true, "description": "广告网络名。" },
+      "format": { "type": "string", "required": true, "description": "版位中文标签。" },
+      "formatType": {
+        "type": "string",
+        "required": true,
+        "enum": ["banner", "interstitial", "rewarded"],
+        "description": "版位类型键，驱动标签样式。"
+      },
+      "revenue": { "type": "string", "required": true, "description": "收入预格式化文案。" },
+      "ecpm": { "type": "string", "required": true, "description": "eCPM 预格式化。" },
+      "fillRate": { "type": "string", "required": true, "description": "填充率展示，如 99%。" },
+      "impressions": { "type": "string", "required": true, "description": "展示量预格式化。" },
+      "revenueHighlight": {
+        "type": "boolean",
+        "required": true,
+        "description": "是否高亮收入列（如 Top 表现）。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "startDate": "2025-12-01",
+    "endDate": "2025-12-31",
+    "countryCode": "",
+    "appId": "Weather8",
+    "source": "Google"
+  },
+  "sampleResponse": {
+    "records": [
+      {
+        "network": "AdMob",
+        "format": "插屏",
+        "formatType": "interstitial",
+        "revenue": "$2.16M",
+        "ecpm": "$3.80",
+        "fillRate": "99%",
+        "impressions": "12.0M",
+        "revenueHighlight": false
+      },
+      {
+        "network": "Facebook",
+        "format": "横幅",
+        "formatType": "banner",
+        "revenue": "$2.16M",
+        "ecpm": "$3.80",
+        "fillRate": "95%",
+        "impressions": "7.0M",
+        "revenueHighlight": false
+      },
+      {
+        "network": "Unity ads",
+        "format": "激励视频",
+        "formatType": "rewarded",
+        "revenue": "$10.50M",
+        "ecpm": "$3.80",
+        "fillRate": "92%",
+        "impressions": "12.0M",
+        "revenueHighlight": true
+      },
+      {
+        "network": "IronSource",
+        "format": "插屏",
+        "formatType": "interstitial",
+        "revenue": "$2.16M",
+        "ecpm": "$3.80",
+        "fillRate": "99%",
+        "impressions": "12.0M",
+        "revenueHighlight": false
+      },
+      {
+        "network": "Google Ads",
+        "format": "横幅",
+        "formatType": "banner",
+        "revenue": "$13.50M",
+        "ecpm": "$3.80",
+        "fillRate": "95%",
+        "impressions": "12.0M",
+        "revenueHighlight": true
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/business-insight/ad-platform-detail/app-ad-platform-performance/table/ad-units",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "startDate, endDate, countryCode, appId, source?",
+    "responseBody": "{ records }"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "sampleResponse 中 formatType 枚举三类均已出现，便于联调标签色。",
+      "若改为数值列，可改为 revenue/d_ecpm/d_fill_rate/n_impression 由前端格式化。"
+    ]
+  }
+}

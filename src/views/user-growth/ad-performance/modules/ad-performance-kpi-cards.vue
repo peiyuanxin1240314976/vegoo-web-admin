@@ -137,7 +137,6 @@
       inset 0 -10px 28px rgb(0 0 0 / 38%),
       0 0 28px color-mix(in srgb, var(--kpi-accent) 12%, transparent);
     transition:
-      transform 0.36s var(--ease-out),
       box-shadow 0.4s var(--ease-out),
       border-color 0.28s var(--ease-default);
 
@@ -191,12 +190,10 @@
         0 0 60px color-mix(in srgb, var(--kpi-accent) 35%, transparent),
         0 0 100px color-mix(in srgb, var(--kpi-accent) 18%, transparent),
         0 0 140px color-mix(in srgb, var(--kpi-accent-2) 12%, transparent);
-      transform: translateY(-7px) scale(1.04);
     }
 
     &:active {
       transition-duration: 0.12s;
-      transform: translateY(-3px) scale(1.01);
     }
 
     &--spend {

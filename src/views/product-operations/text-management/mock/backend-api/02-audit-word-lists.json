@@ -27,6 +27,12 @@
       }
     }
   },
+  "interaction": {
+    "triggers": [
+      { "moment": "页面初始化", "detail": "文本审核页加载词库配置，驱动违禁词与品牌词检测。" },
+      { "moment": "词库更新后重新进入页面", "detail": "重新拉取词库并按新版本执行审核。" }
+    ]
+  },
   "sampleRequest": {},
   "sampleResponse": {
     "data": {
@@ -49,7 +55,7 @@
     }
   },
   "api": {
-    "url": "GET /api/product-operations/text-management/meta/audit-word-lists",
+    "url": "GET /api/v1/datacenter/analysis/product-operations/text-management/meta/audit-word-lists",
     "method": "GET",
     "priority": "P1",
     "requestBody": "无",

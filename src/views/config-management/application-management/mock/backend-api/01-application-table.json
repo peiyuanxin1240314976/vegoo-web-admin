@@ -78,7 +78,7 @@
     "triggers": [
       {
         "moment": "进入页面 / 筛选变更 / 翻页 / 每页条数变更",
-        "detail": "调用 fetchApplicationTable；页头 KPI 另请求 current=1,size=10000 且无筛选以聚合全量（与 user-management 一致）。",
+        "detail": "调用 fetchApplicationTable；顶部统计卡片见独立契约 06-application-overview-stats.json。",
         "prerequisite": "无"
       }
     ],

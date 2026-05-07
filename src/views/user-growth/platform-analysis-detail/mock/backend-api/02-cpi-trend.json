@@ -1,5 +1,5 @@
 {
-  "_comment": "综合分析详情 - CPI 趋势折线图数据。响应 data 为 ChartTrend（dates + target? + series[]）。对应 types.ts ChartTrend、TrendSeries。",
+  "_comment": "综合分析应用详情 - CPI 趋势折线图。响应 data 为 ChartTrend（dates + target? + series[]）。对应 types: ChartTrend、TrendSeries。",
   "fieldDescription": {
     "request": {
       "name": {
@@ -7,7 +7,31 @@
         "required": true,
         "description": "钻取实体名称。"
       },
-      "from": { "type": "string", "required": false, "description": "来源页标识。" }
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "查询起始日期（含），YYYY-MM-DD。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": true,
+        "description": "查询结束日期（含），YYYY-MM-DD。"
+      },
+      "appId": {
+        "type": "string",
+        "required": true,
+        "description": "应用筛选；空字符串表示全部。"
+      },
+      "source": {
+        "type": "string",
+        "required": true,
+        "description": "广告平台筛选；空字符串表示全部；枚举 string。"
+      },
+      "s_country_code": {
+        "type": "string",
+        "required": true,
+        "description": "国家代码筛选；空字符串表示全部。"
+      }
     },
     "response": {
       "data": {
@@ -20,12 +44,12 @@
       "dates": {
         "type": "string[]",
         "required": true,
-        "description": "横轴标签，如 MM-DD。"
+        "description": "横轴标签，如 MM-DD；与每条 series.data 等长。"
       },
       "target": {
         "type": "number",
         "required": false,
-        "description": "可选目标 CPI，用于图例/辅助线语义。"
+        "description": "目标 CPI 数值，前端可绘水平参考线（与名含「目标」的虚线系列二选一或并存）。"
       },
       "series": {
         "type": "TrendSeries[]",
@@ -35,33 +59,56 @@
     },
     "TrendSeries": {
       "name": { "type": "string", "required": true, "description": "图例名。" },
-      "color": { "type": "string", "required": true, "description": "HEX。" },
-      "data": { "type": "number[]", "required": true, "description": "与 dates 等长。" },
+      "color": { "type": "string", "required": true, "description": "CSS 颜色字符串（如 HEX）。" },
+      "data": {
+        "type": "number[]",
+        "required": true,
+        "description": "与 dates 等长；CPI 建议保留两位小数。"
+      },
       "dashed": { "type": "boolean", "required": false, "description": "虚线目标线。" }
     }
   },
   "sampleRequest": {
     "name": "PhoneTracker",
-    "from": "comprehensive-analysis"
+    "startDate": "2026-02-27",
+    "endDate": "2026-03-05",
+    "appId": "",
+    "source": "",
+    "s_country_code": ""
   },
   "sampleResponse": {
     "data": {
-      "dates": ["03-14", "03-15", "03-16", "03-17", "03-18", "03-19", "03-20"],
+      "dates": ["02-27", "02-28", "03-01", "03-02", "03-03", "03-04", "03-05"],
       "target": 2.5,
       "series": [
         {
           "name": "Google Ads",
           "color": "#3B82F6",
-          "data": [2.2, 2.25, 2.3, 2.45, 2.55, 2.7, 2.85]
+          "data": [2.22, 2.28, 2.35, 2.41, 2.48, 2.55, 2.62]
+        },
+        {
+          "name": "Facebook",
+          "color": "#8B5CF6",
+          "data": [2.45, 2.42, 2.38, 2.36, 2.34, 2.32, 2.3]
         },
         {
           "name": "TikTok",
           "color": "#10B981",
-          "data": [1.95, 2.0, 2.05, 2.08, 2.1, 2.12, 2.15]
+          "data": [1.95, 1.98, 2.02, 2.05, 2.08, 2.1, 2.12]
         },
         {
-          "name": "目标线",
-          "color": "#94a3b8",
+          "name": "Mintegral",
+          "color": "#06B6D4",
+          "data": [2.08, 2.12, 2.15, 2.18, 2.21, 2.24, 2.27]
+        },
+        {
+          "name": "Kwai",
+          "color": "#F97316",
+          "data": [2.55, 2.52, 2.48, 2.45, 2.42, 2.4, 2.38]
+        },
+        {
+          "name": "目标 CPI",
+          "color": "#94A3B8",
           "dashed": true,
           "data": [2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5]
         }
@@ -69,11 +116,17 @@
     }
   },
   "api": {
-    "url": "POST /api/user-growth/comprehensive-analysis/platform-analysis-detail/cpi-trend",
+    "url": "POST /api/v1/datacenter/analysis/user-growth/comprehensive-analysis/platform-analysis-detail/cpi-trend",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "name (必填), from?",
+    "requestBody": "name, startDate, endDate, appId, source, s_country_code",
     "responseBody": "ChartTrend"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "series 条数由产品约定；目标线建议 dashed: true，与 target 数值一致。",
+      "请求体日期与筛选维度与 01-summary 一致；见 backend-fields。"
+    ]
   },
   "interaction": {
     "triggers": [
@@ -83,7 +136,7 @@
         "prerequisite": "无"
       }
     ],
-    "defaultSelection": "与 summary 等共用同一 name/from 口径。",
+    "defaultSelection": "与 summary 等共用同一请求体口径。",
     "dedupe": "切换钻取对象时整页重拉。"
   }
 }

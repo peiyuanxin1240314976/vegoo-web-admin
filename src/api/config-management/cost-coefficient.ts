@@ -5,7 +5,8 @@ import request from '@/utils/http'
 import type {
   CostCoefficientQuery,
   CostCoefficientFormModel,
-  CostCoefficientItem
+  CostCoefficientItem,
+  CostCoefficientOverviewKpi
 } from '@/views/config-management/cost-coefficient/types'
 import {
   CostCoefficientEndpoint,
@@ -19,7 +20,19 @@ export function fetchCostCoefficientTable(params: CostCoefficientQuery) {
     return costCoefficientMock.mockFetchCostCoefficientTable(params)
   }
   return request.post<Api.Common.PaginatedResponse<CostCoefficientItem>>({
-    url: '/api/config-management/cost-coefficient/table',
+    url: '/api/v1/datacenter/analysis/config-management/cost-coefficient/table',
+    data: params,
+    showErrorMessage: false
+  })
+}
+
+/** 成本系数 KPI 概览 */
+export function fetchCostCoefficientOverviewKpi(params: Partial<CostCoefficientQuery>) {
+  if (isCostCoefficientEndpointMock(CostCoefficientEndpoint.CoefficientOverviewKpi)) {
+    return costCoefficientMock.mockFetchCostCoefficientOverviewKpi(params)
+  }
+  return request.post<CostCoefficientOverviewKpi>({
+    url: '/api/v1/datacenter/analysis/config-management/cost-coefficient/overview/kpi',
     data: params,
     showErrorMessage: false
   })
@@ -31,7 +44,7 @@ export function createCostCoefficient(data: CostCoefficientFormModel) {
     return costCoefficientMock.mockCreateCostCoefficient(data)
   }
   return request.post<unknown>({
-    url: '/api/config-management/cost-coefficient',
+    url: '/api/v1/datacenter/analysis/config-management/cost-coefficient',
     data,
     showErrorMessage: false
   })
@@ -43,7 +56,7 @@ export function updateCostCoefficient(id: string, data: Partial<CostCoefficientF
     return costCoefficientMock.mockUpdateCostCoefficient(id, data)
   }
   return request.put<unknown>({
-    url: `/api/config-management/cost-coefficient/${id}`,
+    url: `/api/v1/datacenter/analysis/config-management/cost-coefficient/${id}`,
     data,
     showErrorMessage: false
   })
@@ -55,7 +68,7 @@ export function deleteCostCoefficient(id: string) {
     return costCoefficientMock.mockDeleteCostCoefficient(id)
   }
   return request.del<unknown>({
-    url: `/api/config-management/cost-coefficient/${id}`,
+    url: `/api/v1/datacenter/analysis/config-management/cost-coefficient/${id}`,
     showErrorMessage: false
   })
 }
@@ -66,7 +79,7 @@ export function fetchCostCoefficientHistory(id: string) {
     return costCoefficientMock.mockFetchCostCoefficientHistory(id)
   }
   return request.post<unknown>({
-    url: '/api/config-management/cost-coefficient/history',
+    url: '/api/v1/datacenter/analysis/config-management/cost-coefficient/history',
     data: { id },
     showErrorMessage: false
   })

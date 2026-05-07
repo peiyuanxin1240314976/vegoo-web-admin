@@ -7,15 +7,15 @@
         "required": false,
         "description": "终端平台筛选：空为全部；android / ios。"
       },
-      "app_store": {
+      "appStore": {
         "type": "string",
         "required": false,
         "description": "应用商店维度，空为全部。"
       },
-      "s_app_id": {
+      "appId": {
         "type": "string",
         "required": false,
-        "description": "应用 ID 或名称，空为全部。"
+        "description": "应用筛选 ID（或与页面下拉 value 一致的应用标识）；空为全部。"
       },
       "source": {
         "type": "string",
@@ -27,15 +27,15 @@
         "required": false,
         "description": "推广渠道，空为全部。"
       },
-      "t_date_start": {
+      "startDate": {
         "type": "string",
         "required": false,
-        "description": "统计开始日期 YYYY-MM-DD。"
+        "description": "查询开始日期（含），YYYY-MM-DD。"
       },
-      "t_date_end": {
+      "endDate": {
         "type": "string",
         "required": false,
-        "description": "统计结束日期 YYYY-MM-DD。"
+        "description": "查询结束日期（含），YYYY-MM-DD。"
       },
       "currency": {
         "type": "string",
@@ -86,16 +86,130 @@
         "required": true,
         "description": "推广渠道应用收入分布条形图数据。"
       }
+    },
+    "PlatformCard": {
+      "id": { "type": "string", "required": true, "description": "平台唯一 id。" },
+      "name": { "type": "string", "required": true, "description": "平台名称。" },
+      "icon": { "type": "string", "required": true, "description": "平台图标 key（前端占位）。" },
+      "iconBg": {
+        "type": "string",
+        "required": true,
+        "description": "平台图标背景色（CSS 颜色字符串）。"
+      },
+      "status": {
+        "type": "string",
+        "required": true,
+        "enum": ["connected", "warning", "pending"],
+        "description": "接入状态：connected 已接入、warning 异常、pending 未配置。"
+      },
+      "appCount": { "type": "number", "required": true, "description": "该平台覆盖应用数。" },
+      "lastSync": { "type": "string", "required": true, "description": "最近同步时间或异常描述。" }
+    },
+    "ThirdPartyStoresStatusSummary": {
+      "connectedPlatforms": { "type": "number", "required": true, "description": "已接入平台数。" },
+      "totalApps": { "type": "number", "required": true, "description": "总应用数。" },
+      "pendingSync": { "type": "number", "required": true, "description": "待同步数量。" },
+      "newPlatformsThisMonth": {
+        "type": "number",
+        "required": true,
+        "description": "本月新增平台数。"
+      },
+      "newPlatformName": { "type": "string", "required": true, "description": "本月新增平台名称。" }
+    },
+    "ThirdPartyStoresSummaryMetrics": {
+      "newUsers": { "type": "number", "required": true, "description": "总新用户数（计数）。" },
+      "totalRevenue": {
+        "type": "number",
+        "required": true,
+        "description": "总收入（金额；单位与 currency 一致）。"
+      },
+      "adRevenue": {
+        "type": "number",
+        "required": true,
+        "description": "广告收入（金额；单位与 currency 一致）。"
+      },
+      "paidRevenue": {
+        "type": "number",
+        "required": true,
+        "description": "付费收入（金额；单位与 currency 一致）。"
+      },
+      "arpu": {
+        "type": "number",
+        "required": true,
+        "description": "平均每用户收入（金额；单位与 currency 一致）。"
+      }
+    },
+    "AppStoreRecord": {
+      "key": { "type": "string", "required": true, "description": "树表行唯一 key。" },
+      "app": {
+        "type": "string",
+        "required": true,
+        "description": "应用展示名称；分组行用于显示组名。"
+      },
+      "platform": {
+        "type": "string",
+        "required": true,
+        "description": "平台展示值（如 安卓 / iOS）。"
+      },
+      "adStore": { "type": "string", "required": true, "description": "应用商店展示值。" },
+      "adPlatform": { "type": "string", "required": true, "description": "广告平台/来源展示值。" },
+      "newUsers": { "type": "number", "required": true, "description": "新用户数（计数）。" },
+      "totalRevenue": { "type": "number", "required": true, "description": "总收入（金额）。" },
+      "adRevenue": { "type": "number", "required": true, "description": "广告收入（金额）。" },
+      "paidRevenue": { "type": "number", "required": true, "description": "付费收入（金额）。" },
+      "adRatio": { "type": "number", "required": true, "description": "广告收入占比（0-100）。" },
+      "isGroup": { "type": "boolean", "required": false, "description": "是否分组行（可展开）。" },
+      "expanded": {
+        "type": "boolean",
+        "required": false,
+        "description": "分组是否展开（仅前端使用）。"
+      },
+      "children": {
+        "type": "AppStoreRecord[]",
+        "required": false,
+        "description": "子行数组（树表）。"
+      }
+    },
+    "ChannelRecord": {
+      "key": { "type": "string", "required": true, "description": "树表行唯一 key。" },
+      "app": {
+        "type": "string",
+        "required": true,
+        "description": "应用展示名称；分组行用于显示组名。"
+      },
+      "platform": {
+        "type": "string",
+        "required": true,
+        "description": "平台展示值（如 安卓 / iOS）。"
+      },
+      "channel": { "type": "string", "required": true, "description": "推广渠道展示值。" },
+      "adCampaign": { "type": "string", "required": true, "description": "广告系列展示值。" },
+      "newUsers": { "type": "number", "required": true, "description": "新用户数（计数）。" },
+      "totalRevenue": { "type": "number", "required": true, "description": "总收入（金额）。" },
+      "adRevenue": { "type": "number", "required": true, "description": "广告收入（金额）。" },
+      "paidRevenue": { "type": "number", "required": true, "description": "付费收入（金额）。" },
+      "channelRatio": { "type": "number", "required": true, "description": "渠道占比（0-100）。" },
+      "isGroup": { "type": "boolean", "required": false, "description": "是否分组行（可展开）。" },
+      "expanded": {
+        "type": "boolean",
+        "required": false,
+        "description": "分组是否展开（仅前端使用）。"
+      },
+      "children": {
+        "type": "ChannelRecord[]",
+        "required": false,
+        "description": "子行数组（树表）。"
+      }
     }
   },
   "sampleRequest": {
     "platform": "",
-    "app_store": "",
-    "s_app_id": "",
+    "appStore": "",
+    "appId": "",
     "source": "",
     "channel": "",
-    "t_date_start": "2026-02-26",
-    "t_date_end": "2026-03-05",
+    "startDate": "2026-02-26",
+    "endDate": "2026-03-05",
     "currency": "USD"
   },
   "sampleResponse": {
@@ -114,25 +228,179 @@
         "paidRevenue": 2141,
         "arpu": 12.47
       },
-      "platformCards": [],
-      "appStoreData": [],
-      "channelData": [],
+      "platformCards": [
+        {
+          "id": "google",
+          "name": "Google Play",
+          "icon": "google-play",
+          "iconBg": "#1a73e8",
+          "status": "connected",
+          "appCount": 38,
+          "lastSync": "5min ago"
+        },
+        {
+          "id": "samsung",
+          "name": "Samsung Galaxy Store",
+          "icon": "samsung",
+          "iconBg": "#1428a0",
+          "status": "warning",
+          "appCount": 12,
+          "lastSync": "Sync Error - Auth expired"
+        },
+        {
+          "id": "amazon",
+          "name": "Amazon Appstore",
+          "icon": "amazon",
+          "iconBg": "#232f3e",
+          "status": "pending",
+          "appCount": 0,
+          "lastSync": "Not configured"
+        }
+      ],
+      "appStoreData": [
+        {
+          "key": "weather8",
+          "app": "Weather8",
+          "platform": "安卓",
+          "adStore": "XIAOMI",
+          "adPlatform": "—",
+          "newUsers": 297,
+          "totalRevenue": 380,
+          "adRevenue": 0,
+          "paidRevenue": 0,
+          "adRatio": 0,
+          "isGroup": true,
+          "expanded": true,
+          "children": [
+            {
+              "key": "w8-1",
+              "app": "",
+              "platform": "",
+              "adStore": "XIAOMI",
+              "adPlatform": "organic",
+              "newUsers": 297,
+              "totalRevenue": 380,
+              "adRevenue": 0,
+              "paidRevenue": 0,
+              "adRatio": 0
+            }
+          ]
+        },
+        {
+          "key": "health2",
+          "app": "HealthTracker2",
+          "platform": "安卓",
+          "adStore": "XIAOMI",
+          "adPlatform": "—",
+          "newUsers": 80,
+          "totalRevenue": 540,
+          "adRevenue": 240,
+          "paidRevenue": 0,
+          "adRatio": 44,
+          "isGroup": true,
+          "expanded": false
+        },
+        {
+          "key": "faceme",
+          "app": "FaceMe",
+          "platform": "安卓",
+          "adStore": "XIAOMI",
+          "adPlatform": "organic",
+          "newUsers": 7,
+          "totalRevenue": 60,
+          "adRevenue": 0,
+          "paidRevenue": 0,
+          "adRatio": 0
+        }
+      ],
+      "channelData": [
+        {
+          "key": "faceme-ch",
+          "app": "FaceMe",
+          "platform": "—",
+          "channel": "InAppShare",
+          "adCampaign": "—",
+          "newUsers": 0,
+          "totalRevenue": 680,
+          "adRevenue": 580,
+          "paidRevenue": 100,
+          "channelRatio": 29,
+          "isGroup": true,
+          "expanded": true,
+          "children": [
+            {
+              "key": "f-1",
+              "app": "",
+              "platform": "iOS",
+              "channel": "InAppShare",
+              "adCampaign": "FaceMe_InAppShare",
+              "newUsers": 0,
+              "totalRevenue": 340,
+              "adRevenue": 290,
+              "paidRevenue": 50,
+              "channelRatio": 0
+            }
+          ]
+        },
+        {
+          "key": "yearcam-ch",
+          "app": "YearCam",
+          "platform": "安卓",
+          "channel": "InAppShare",
+          "adCampaign": "YearCam_InAppShare",
+          "newUsers": 0,
+          "totalRevenue": 520,
+          "adRevenue": 420,
+          "paidRevenue": 100,
+          "channelRatio": 22
+        },
+        {
+          "key": "weatherpro-ch",
+          "app": "WeatherPro",
+          "platform": "安卓",
+          "channel": "InAppShare",
+          "adCampaign": "WeatherPro_InAppShare",
+          "newUsers": 0,
+          "totalRevenue": 300,
+          "adRevenue": 220,
+          "paidRevenue": 80,
+          "channelRatio": 13
+        }
+      ],
       "donut": {
         "legend": ["自然流量", "TikTok", "Mintegral", "Kwai"],
-        "slices": [{ "value": 45, "name": "自然流量", "color": "#22c55e" }]
+        "slices": [
+          { "value": 45, "name": "自然流量", "color": "#22c55e" },
+          { "value": 30, "name": "TikTok", "color": "#3b82f6" },
+          { "value": 15, "name": "Mintegral", "color": "#8b5cf6" },
+          { "value": 10, "name": "Kwai", "color": "#f59e0b" }
+        ]
       },
       "bar": {
-        "apps": ["WeatherPro"],
-        "values": [300],
-        "ratios": [13]
+        "apps": ["WeatherPro", "ClapFinder", "Dressup"],
+        "values": [300, 360, 480],
+        "ratios": [13, 15, 21]
       }
     }
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "路由 `/product-operations/third-party-stores` 进入后，在 `index.vue` 的 onMounted 调用 `thirdPartyStoresApi.getOverviewDashboard()` 拉取整页仪表盘数据。"
+      },
+      {
+        "moment": "用户操作",
+        "detail": "点击「查询」或「重置」后重新请求；请求体来自筛选栏：platform/appStore/appId/source/channel + startDate/endDate + currency。"
+      }
+    ],
+    "defaultSelection": "默认日期为最近 7 天（含今日 0 点），currency 默认 USD；其它筛选为空字符串代表全部，提交时可省略字段或传空字符串。"
   },
   "api": {
     "url": "POST /api/product-operations/third-party-stores/overview/dashboard",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "platform?, app_store?, s_app_id?, source?, channel?, t_date_start?, t_date_end?, currency?",
+    "requestBody": "platform?, appStore?, appId?, source?, channel?, startDate?, endDate?, currency?",
     "responseBody": "ThirdPartyStoresDashboardPayload（或网关包裹于 data）"
   },
   "apiSuggestion": {

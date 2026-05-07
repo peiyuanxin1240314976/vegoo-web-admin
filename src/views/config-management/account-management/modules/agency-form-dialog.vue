@@ -90,7 +90,7 @@
       <!-- 合作开始日期 + 合作到期日期 -->
       <div class="form-row">
         <el-form-item label="合作开始日期" prop="startDate" class="form-col">
-          <el-date-picker
+          <AppDatePicker
             v-model="form.startDate"
             type="date"
             placeholder="选择日期"
@@ -101,7 +101,7 @@
           />
         </el-form-item>
         <el-form-item label="合作到期日期" prop="expireDate" class="form-col">
-          <el-date-picker
+          <AppDatePicker
             v-model="form.expireDate"
             type="date"
             placeholder="选择日期"
@@ -143,6 +143,7 @@
 
 <script setup lang="ts">
   import { ref, computed, watch } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import type { FormInstance, FormRules } from 'element-plus'
   import { getAppNowMs } from '@/utils/app-now'
   import { PLATFORM_CONFIGS } from '../types'
@@ -269,6 +270,7 @@
 
   .el-dialog:has(.agency-form-dialog-bd) .el-dialog__headerbtn .el-icon {
     color: var(--cm-dialog-text-muted) !important;
+
     &:hover {
       color: var(--cm-dialog-text-primary) !important;
     }
@@ -328,6 +330,7 @@
       &:hover {
         border-color: rgb(255 255 255 / 18%) !important;
       }
+
       &:focus-within {
         border-color: #3b82f6 !important;
       }
@@ -338,6 +341,7 @@
     :deep(.el-select__selected-item) {
       font-size: 13px;
       color: #e2e8f0;
+
       &::placeholder {
         color: #475569;
       }
@@ -363,12 +367,15 @@
       border-radius: 7px;
       box-shadow: none;
       transition: border-color 0.18s;
+
       &:hover {
         border-color: rgb(255 255 255 / 18%);
       }
+
       &:focus {
         border-color: #3b82f6;
       }
+
       &::placeholder {
         color: #475569;
       }
@@ -409,6 +416,7 @@
       color: #fff !important;
       background: #0d9488 !important;
       border: none !important;
+
       &:hover {
         filter: brightness(1.1);
       }

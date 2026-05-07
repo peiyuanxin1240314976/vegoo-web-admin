@@ -1,0 +1,99 @@
+{
+  "_comment": "配置管理 - 用户管理 - 右侧详情面板保存（角色、可访问应用、备注）。",
+  "fieldDescription": {
+    "request": {
+      "id": { "type": "number", "required": true, "description": "用户主键。" },
+      "role": {
+        "type": "string",
+        "required": true,
+        "enum": ["admin", "ops", "auditor"],
+        "description": "单选角色编码，对应右侧「分配角色」。"
+      },
+      "apps": {
+        "type": "string[]",
+        "required": true,
+        "description": "可访问应用列表，空数组表示无应用权限。"
+      },
+      "remark": { "type": "string", "required": false, "description": "备注。" }
+    },
+    "response": {
+      "success": { "type": "boolean", "required": true, "description": "是否保存成功。" },
+      "updatedUser": { "type": "UserListItem", "required": true, "description": "更新后的用户。" }
+    },
+    "UserListItem": {
+      "id": { "type": "number", "required": true, "description": "用户主键。" },
+      "status": {
+        "type": "string",
+        "required": true,
+        "enum": ["待激活", "活跃", "禁用"],
+        "description": "用户状态文案（待激活、活跃、禁用）。"
+      },
+      "userName": { "type": "string", "required": true, "description": "用户名。" },
+      "nickName": { "type": "string", "required": true, "description": "昵称。" },
+      "userGender": { "type": "string", "required": true, "description": "性别。" },
+      "userPhone": { "type": "string", "required": true, "description": "手机号。" },
+      "userEmail": { "type": "string", "required": true, "description": "邮箱。" },
+      "userRoles": { "type": "string[]", "required": true, "description": "角色编码数组。" },
+      "accessibleApps": {
+        "type": "string[]",
+        "required": false,
+        "description": "可访问应用列表。"
+      },
+      "remark": { "type": "string", "required": false, "description": "备注。" },
+      "createBy": { "type": "string", "required": true, "description": "创建人。" },
+      "createTime": { "type": "string", "required": true, "description": "创建时间。" },
+      "updateBy": { "type": "string", "required": true, "description": "最后更新人。" },
+      "updateTime": { "type": "string", "required": true, "description": "最后更新时间。" }
+    }
+  },
+  "sampleRequest": {
+    "id": 101,
+    "role": "admin",
+    "apps": ["weather5", "phonetracker", "bloodsugar2"],
+    "remark": "负责核心应用权限审批"
+  },
+  "sampleResponse": {
+    "success": true,
+    "updatedUser": {
+      "id": 101,
+      "avatar": "",
+      "status": "活跃",
+      "userName": "alice",
+      "nickName": "Alice",
+      "userGender": "女",
+      "userPhone": "13800130001",
+      "userEmail": "alice@example.com",
+      "userRoles": ["admin"],
+      "accessibleApps": ["weather5", "phonetracker", "bloodsugar2"],
+      "remark": "负责核心应用权限审批",
+      "createBy": "system",
+      "createTime": "2026-03-01 10:00:00",
+      "updateBy": "alice",
+      "updateTime": "2026-04-13 09:40:00"
+    }
+  },
+  "api": {
+    "url": "POST /api/config-management/user-management/permission-update",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "{ id, role, apps, remark? }",
+    "responseBody": "{ success: boolean; updatedUser: UserListItem }"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "该接口对应右侧详情面板的「保存」按钮。",
+      "空 apps 需作为合法值处理，表示回收全部应用权限。"
+    ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "右侧面板修改角色/应用/备注后点击保存触发。",
+        "prerequisite": "左侧已选中用户"
+      }
+    ],
+    "defaultSelection": "默认值来自当前选中用户 userRoles[0]、accessibleApps、remark。",
+    "dedupe": "保存中禁用按钮；保存成功后提示并刷新列表。"
+  }
+}

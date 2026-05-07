@@ -1,0 +1,78 @@
+{
+  "_comment": "整体回收 Tab1 - 日均量构成（柱状）。对应 types.ts: Pick<OverallTabData,'dailyVolume'>。",
+  "fieldDescription": {
+    "request": {
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "统计起始日 YYYY-MM-DD（含）。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": true,
+        "description": "统计结束日 YYYY-MM-DD（含）。"
+      },
+      "appId": { "type": "string", "required": true, "description": "应用；全部 `''`。" },
+      "source": { "type": "string", "required": true, "description": "广告平台；全部 `''`。" },
+      "countryCode": {
+        "type": "string",
+        "required": true,
+        "description": "国家小写码；全部 `''`。"
+      }
+    },
+    "response": {
+      "data": {
+        "type": "DailyVolumeItem[]",
+        "required": true,
+        "description": "键名 dailyVolume；项含 date / paid / organic。"
+      },
+      "DailyVolumeItem": {
+        "date": {
+          "type": "string",
+          "required": true,
+          "description": "展示用日期标签（如 MM-DD）。"
+        },
+        "paid": { "type": "number", "required": true },
+        "organic": { "type": "number", "required": true }
+      }
+    }
+  },
+  "sampleRequest": {
+    "startDate": "2026-02-20",
+    "endDate": "2026-03-21",
+    "appId": "",
+    "source": "",
+    "countryCode": ""
+  },
+  "sampleResponse": {
+    "data": {
+      "dailyVolume": [
+        { "date": "03-01", "paid": 230, "organic": 92 },
+        { "date": "03-02", "paid": 215, "organic": 88 },
+        { "date": "03-03", "paid": 238, "organic": 95 },
+        { "date": "03-04", "paid": 221, "organic": 91 },
+        { "date": "03-05", "paid": 246, "organic": 98 },
+        { "date": "03-06", "paid": 252, "organic": 101 },
+        { "date": "03-07", "paid": 244, "organic": 99 }
+      ]
+    }
+  },
+  "api": {
+    "url": "POST /api/user-growth/overall-recovery/overall-tab/daily-volume",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "同 kpis 公共体",
+    "responseBody": "{ dailyVolume: DailyVolumeItem[] }"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "Tab1 首屏 / 顶栏检索",
+        "detail": "与曲线、ROI 对比等并行；用于右侧「日均量构成」卡片。",
+        "prerequisite": "同 kpis。"
+      }
+    ],
+    "defaultSelection": "同公共筛选。",
+    "dedupe": "同 kpis。"
+  }
+}

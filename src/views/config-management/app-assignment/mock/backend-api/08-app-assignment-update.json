@@ -20,7 +20,11 @@
         "description": "应用 ID（与创建一致，编辑时只读校验）。"
       },
       "platform": { "type": "string", "required": true, "description": "终端平台（只读校验）。" },
-      "adPlatform": { "type": "string", "required": true, "description": "广告平台。" },
+      "source": {
+        "type": "string",
+        "required": true,
+        "description": "广告平台枚举 string，与 cockpit `sourceOptions.value`、列表行 `source` 一致（编辑时通常只读同步）。"
+      },
       "optimizer": { "type": "string", "required": true, "description": "优化师。" },
       "note": { "type": "string", "required": false, "description": "备注。" },
       "configVersionId": { "type": "string", "required": true, "description": "绩效版本 id。" },
@@ -42,7 +46,7 @@
     "id": "asgn-001",
     "appId": "Weather8A",
     "platform": "Android",
-    "adPlatform": "Facebook",
+    "source": "1",
     "optimizer": "张三",
     "note": "负责Weather8-Facebook投放优化",
     "configVersionId": "v3",
@@ -54,6 +58,7 @@
     "appId": "Weather8A",
     "iconColor": "#a78bfa",
     "platform": "Android",
+    "source": "1",
     "adPlatform": "Facebook",
     "optimizer": "张三",
     "configVersionId": "v3",

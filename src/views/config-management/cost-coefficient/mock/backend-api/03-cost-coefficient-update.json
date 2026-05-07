@@ -9,9 +9,7 @@
       "dInstallCost": { "type": "number", "required": false, "description": "安装成本。" },
       "remark": { "type": "string", "required": false, "description": "备注。" }
     },
-    "response": {
-      "updated": { "type": "boolean", "required": true, "description": "更新结果。" }
-    }
+    "response": {}
   },
   "sampleRequest": {
     "id": "CC-001",
@@ -20,13 +18,13 @@
     "dInstallCost": 0.35678,
     "remark": "季度更新"
   },
-  "sampleResponse": { "data": { "updated": true } },
+  "sampleResponse": { "data": {} },
   "api": {
     "url": "PUT /api/config-management/cost-coefficient/:id",
     "method": "PUT",
     "priority": "P0",
     "requestBody": "Partial<CostCoefficientFormModel>",
-    "responseBody": "{ updated }"
+    "responseBody": "{}"
   },
   "interaction": {
     "triggers": [

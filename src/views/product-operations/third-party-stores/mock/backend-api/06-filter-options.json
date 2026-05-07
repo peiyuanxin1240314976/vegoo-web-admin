@@ -1,0 +1,71 @@
+{
+  "_comment": "商品运营 - 三方商店管理：模块独有筛选下拉选项（应用商店/渠道/货币）。通用维度（应用/平台/广告平台/国家等）复用 cockpit meta：页面读 useCockpitMetaFilterStore().data（无模块内 JSON 契约）。对应 types.ts: ThirdPartyStoresFilterOptionsData。",
+  "fieldDescription": {
+    "request": {},
+    "response": {
+      "data": {
+        "type": "ThirdPartyStoresFilterOptionsData",
+        "required": true,
+        "description": "下拉选项集合；网关包裹时位于 data 内。"
+      }
+    },
+    "ThirdPartyStoresFilterOptionsData": {
+      "appStoreOptions": {
+        "type": "SelectOptionItem[]",
+        "required": true,
+        "description": "应用商店选项；value 用于请求体 appStore，空字符串表示全部。"
+      },
+      "channelOptions": {
+        "type": "SelectOptionItem[]",
+        "required": true,
+        "description": "推广渠道选项；value 用于请求体 channel，空字符串表示全部。"
+      },
+      "currencyOptions": {
+        "type": "SelectOptionItem[]",
+        "required": true,
+        "description": "货币选项；value 用于请求体 currency。"
+      }
+    },
+    "SelectOptionItem": {
+      "label": { "type": "string", "required": true, "description": "展示文案。" },
+      "value": {
+        "type": "string",
+        "required": true,
+        "description": "选项值；筛选「全部」统一空字符串。"
+      }
+    }
+  },
+  "sampleRequest": {},
+  "sampleResponse": {
+    "data": {
+      "appStoreOptions": [
+        { "label": "全部", "value": "" },
+        { "label": "XIAOMI", "value": "XIAOMI" },
+        { "label": "OPPO", "value": "OPPO" }
+      ],
+      "channelOptions": [
+        { "label": "全部", "value": "" },
+        { "label": "InAppShare", "value": "InAppShare" }
+      ],
+      "currencyOptions": [
+        { "label": "USD", "value": "USD" },
+        { "label": "CNY", "value": "CNY" }
+      ]
+    }
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "页面进入时拉取模块独有下拉（appStore/channel/currency）。通用维度（app/platform/source/country）不在本模块拉取，直接读 cockpit store。"
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/product-operations/third-party-stores/meta/filter-options",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "无",
+    "responseBody": "ThirdPartyStoresFilterOptionsData（或网关包裹于 data）"
+  }
+}

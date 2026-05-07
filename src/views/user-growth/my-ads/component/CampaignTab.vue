@@ -1,11 +1,17 @@
 <script setup lang="ts">
   import { ref, computed, watch, onMounted } from 'vue'
+  import { storeToRefs } from 'pinia'
   import { useRouter } from 'vue-router'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
+  import { buildAppSelectionRequestBody, toAppIdsRequestBody } from '@/utils/app-id-request'
   import { fetchMyAdsCampaign, fetchMyAdsMetaFilterOptions } from '@/api/user-growth'
 
   defineOptions({ name: 'CampaignTab' })
 
   const router = useRouter()
+  const cockpitMetaStore = useCockpitMetaFilterStore()
+  const { data: cockpitMeta } = storeToRefs(cockpitMetaStore)
 
   const props = defineProps<{
     staffId: string
@@ -15,9 +21,10 @@
   type CampaignRow = Api.UserGrowth.MyAdsCampaignRowDto
 
   const loading = ref(false)
+  const isInitializing = ref(false)
   const campaignData = ref<Api.UserGrowth.MyAdsCampaignTableDto | null>(null)
   const filterScope = ref<string | undefined>(undefined)
-  const filterApp = ref<string | undefined>(undefined)
+  const filterApp = ref<string | string[]>([])
   const filterPlatform = ref<string | undefined>(undefined)
   const filterCountry = ref<string | undefined>(undefined)
   const filterStatus = ref<string | undefined>(undefined)
@@ -57,7 +64,8 @@
 
   function buildParams() {
     const [startDate = '', endDate = ''] = props.dateRange
-    const app = (filterApp.value ?? '').trim()
+    const appSelection = buildAppSelectionRequestBody(filterApp.value, filterAppSettingApps.value)
+    const app = appSelection.appIds[0] ?? ''
     const country = (filterCountry.value ?? '').trim()
     const kw = searchText.value.trim()
     const staff = (props.staffId ?? '').trim()
@@ -69,6 +77,8 @@
     const staffIdVal = scope === '全部' ? '' : staff
     return {
       appId: app || '',
+      appIds: appSelection.appIds,
+      apps: appSelection.apps,
       countryCode: country || '',
       currentPage: Math.max(1, currentPage.value),
       endDate: endDate.trim() || '',
@@ -98,6 +108,15 @@
   const appOptions = ref<Api.UserGrowth.MyAdsFilterOptionDto[]>([])
   const platformOptions = ref<Api.UserGrowth.MyAdsFilterOptionDto[]>([])
   const countryOptions = ref<Api.UserGrowth.MyAdsFilterOptionDto[]>([])
+  const filterAppSettingApps = computed(() => {
+    const cockpitSettingApps = cockpitMeta.value?.settingApps ?? []
+    if (cockpitSettingApps.length === 0) return []
+    const appIdSet = new Set(
+      appOptions.value.map((item) => String(item.value ?? '').trim()).filter(Boolean)
+    )
+    if (appIdSet.size === 0) return cockpitSettingApps
+    return cockpitSettingApps.filter((item) => appIdSet.has(String(item.sAppId ?? '').trim()))
+  })
 
   async function loadMetaFilterOptions() {
     try {
@@ -113,8 +132,22 @@
   }
 
   onMounted(() => {
-    loadMetaFilterOptions()
-    loadCampaigns()
+    void (async () => {
+      isInitializing.value = true
+      try {
+        await cockpitMetaStore.ensureLoaded()
+        await loadMetaFilterOptions()
+        if (
+          toAppIdsRequestBody(filterApp.value).length === 0 &&
+          String(filterAppSettingApps.value[0]?.sAppId ?? '').trim()
+        ) {
+          filterApp.value = [String(filterAppSettingApps.value[0].sAppId)]
+        }
+        await loadCampaigns()
+      } finally {
+        isInitializing.value = false
+      }
+    })()
   })
 
   watch(
@@ -130,6 +163,7 @@
       searchText.value
     ],
     () => {
+      if (isInitializing.value) return
       currentPage.value = 1
       loadCampaigns()
     }
@@ -140,21 +174,21 @@
   })
 
   /* ── 筛选 ── */
-  const scopeOptions = [
-    { value: '全部', label: '全部' },
-    { value: '我负责的', label: '我负责的' }
-  ]
+  // const scopeOptions = [
+  //   { value: '全部', label: '全部' },
+  //   { value: '我负责的', label: '我负责的' }
+  // ]
 
-  const statusOptions = [
-    { value: 'active' as const, label: '激活' },
-    { value: 'warn' as const, label: '超预算' },
-    { value: 'inactive' as const, label: '未启动' }
-  ]
+  // const statusOptions = [
+  //   { value: 'active' as const, label: '激活' },
+  //   { value: 'warn' as const, label: '超预算' },
+  //   { value: 'inactive' as const, label: '未启动' }
+  // ]
 
-  const typeOptions = [
-    { value: 'with_agency' as const, label: '含代投' },
-    { value: 'pure' as const, label: '仅直投' }
-  ]
+  // const typeOptions = [
+  //   { value: 'with_agency' as const, label: '含代投' },
+  //   { value: 'pure' as const, label: '仅直投' }
+  // ]
 
   /** 接口返回當前頁列表 */
   const pagedCampaigns = computed(() => campaigns.value)
@@ -175,7 +209,7 @@
 
   function resetFilters() {
     filterScope.value = undefined
-    filterApp.value = undefined
+    filterApp.value = []
     filterPlatform.value = undefined
     filterCountry.value = undefined
     filterStatus.value = undefined
@@ -219,11 +253,6 @@
     if (v == null) return { color: '#4b5563' }
     if (v < 0) return { color: '#ef4444' }
     return { color: '#10b981' }
-  }
-  function minProfitStyle(v: number | null | undefined) {
-    if (v == null) return { color: '#4b5563' }
-    if (v < 0) return { color: '#ef4444' }
-    return { color: '#a78bfa' }
   }
 
   function platformColor(p: string) {
@@ -322,7 +351,7 @@
     <!-- ── 筛选栏 ── -->
     <div class="filter-bar">
       <div class="filter-selects">
-        <div class="filter-select-wrap">
+        <!-- <div class="filter-select-wrap">
           <ElSelect
             v-model="filterScope"
             class="filter-el"
@@ -333,18 +362,23 @@
           >
             <ElOption v-for="o in scopeOptions" :key="o.value" :label="o.label" :value="o.value" />
           </ElSelect>
-        </div>
+        </div> -->
         <div class="filter-select-wrap">
-          <ElSelect
+          <AppPlatformSearchSelect
             v-model="filterApp"
-            class="filter-el filter-el--app"
+            class="filter-el--app"
             placeholder="请选择应用"
-            clearable
-            popper-class="campaign-tab-filter-popper"
-            :teleported="true"
-          >
-            <ElOption v-for="o in appOptions" :key="o.value" :label="o.label" :value="o.value" />
-          </ElSelect>
+            search-placeholder="搜索类别/应用名称/应用简称"
+            mode="app"
+            :clearable="true"
+            :setting-apps="filterAppSettingApps"
+            :height="30"
+            :min-width="240"
+            :max-width="240"
+            radius="6px"
+            input-class="campaign-tab-app-filter-input"
+            dropdown-class="campaign-tab-filter-popper campaign-tab-filter-popper--app"
+          />
         </div>
         <div class="filter-select-wrap">
           <ElSelect
@@ -380,7 +414,7 @@
             />
           </ElSelect>
         </div>
-        <div class="filter-select-wrap">
+        <!-- <div class="filter-select-wrap">
           <ElSelect
             v-model="filterStatus"
             class="filter-el"
@@ -391,8 +425,8 @@
           >
             <ElOption v-for="o in statusOptions" :key="o.value" :label="o.label" :value="o.value" />
           </ElSelect>
-        </div>
-        <div class="filter-select-wrap">
+        </div> -->
+        <!-- <div class="filter-select-wrap">
           <ElSelect
             v-model="filterType"
             class="filter-el"
@@ -403,7 +437,7 @@
           >
             <ElOption v-for="o in typeOptions" :key="o.value" :label="o.label" :value="o.value" />
           </ElSelect>
-        </div>
+        </div> -->
       </div>
       <div class="filter-right">
         <input v-model="searchText" class="search-input" placeholder="输入广告系列名称搜索" />
@@ -432,7 +466,6 @@
             <th>代投消耗</th>
             <th>首日ROI</th>
             <th>预估利润</th>
-            <th>最低消耗</th>
             <th>CPI</th>
             <th>趋势</th>
             <th>操作</th>
@@ -529,11 +562,6 @@
               <span :style="profitStyle(c.estProfit)" style="font-weight: 600">
                 {{ fmtNum(c.estProfit) }}
               </span>
-            </td>
-
-            <!-- 最低消耗（API: minSpend） -->
-            <td>
-              <span :style="minProfitStyle(c.minSpend)">{{ fmtNum(c.minSpend) }}</span>
             </td>
 
             <!-- CPI（API 可選） -->
@@ -668,10 +696,11 @@
   }
 
   .filter-el--app {
-    min-width: 120px;
+    min-width: 240px;
   }
 
-  .filter-select-wrap :deep(.el-select__wrapper) {
+  .filter-select-wrap :deep(.el-select__wrapper),
+  .filter-select-wrap :deep(.app-platform-search-select) {
     gap: 6px;
     min-height: 30px;
     padding: 5px 28px 5px 12px;
@@ -684,11 +713,13 @@
     transition: border-color 0.2s;
   }
 
-  .filter-select-wrap :deep(.el-select__wrapper.is-hovering) {
+  .filter-select-wrap :deep(.el-select__wrapper.is-hovering),
+  .filter-select-wrap :deep(.app-platform-search-select:hover) {
     border-color: #2a4060;
   }
 
-  .filter-select-wrap :deep(.el-select__wrapper.is-focused) {
+  .filter-select-wrap :deep(.el-select__wrapper.is-focused),
+  .filter-select-wrap :deep(.app-platform-search-select.is-open) {
     border-color: var(--teal);
     box-shadow: none;
   }
@@ -707,6 +738,40 @@
   .filter-select-wrap :deep(.el-select__caret) {
     font-size: 10px;
     color: var(--text-dim);
+  }
+
+  .filter-select-wrap :deep(.app-platform-search-select__text) {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-secondary);
+  }
+
+  .filter-select-wrap :deep(.app-platform-search-select__text.is-placeholder) {
+    color: var(--text-dim);
+  }
+
+  .filter-select-wrap :deep(.app-platform-search-select__suffix) {
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+
+  /* 应用筛选：强制对齐旁边 ElSelect 的边框与交互态 */
+  .filter-select-wrap :deep(.campaign-tab-app-filter-input.app-platform-search-select) {
+    min-height: 30px;
+    padding: 5px 28px 5px 12px;
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border) !important;
+    box-shadow: none !important;
+  }
+
+  .filter-select-wrap :deep(.campaign-tab-app-filter-input.app-platform-search-select:hover) {
+    border-color: #2a4060 !important;
+    box-shadow: none !important;
+  }
+
+  .filter-select-wrap :deep(.campaign-tab-app-filter-input.app-platform-search-select.is-open) {
+    border-color: var(--teal) !important;
+    box-shadow: none !important;
   }
 
   .filter-right {
@@ -754,13 +819,13 @@
     transition:
       background 0.2s ease,
       border-color 0.2s ease,
-      transform 0.2s ease;
+      box-shadow 0.2s ease;
   }
 
   .reset-btn:hover {
     background: var(--teal-dim);
     border-color: rgb(0 212 170 / 45%);
-    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgb(0 212 170 / 18%);
   }
 
   /* ── 表格 ── */
@@ -962,15 +1027,13 @@
     transition:
       background 0.2s ease,
       border-color 0.2s ease,
-      box-shadow 0.2s ease,
-      transform 0.2s ease;
+      box-shadow 0.2s ease;
   }
 
   .detail-btn:hover {
     background: var(--teal-dim);
     border-color: var(--teal);
     box-shadow: 0 2px 10px rgb(0 212 170 / 18%);
-    transform: translateY(-1px);
   }
 
   /* ── 分页（对齐原自定义 .page-info / .page-btn / .page-size-select 视觉） ── */
@@ -1175,6 +1238,38 @@
   }
 
   .campaign-tab-filter-popper .el-select-dropdown__item.is-selected {
+    font-weight: 600;
+    color: #00d4aa;
+  }
+
+  .campaign-tab-filter-popper--app.app-platform-search-select__popper.el-popper {
+    background: #0f1929 !important;
+    border: 1px solid #1e2f45 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 12px 32px rgb(0 0 0 / 28%) !important;
+  }
+
+  .campaign-tab-filter-popper--app .app-platform-search-select__panel {
+    gap: 8px;
+    padding: 6px 0;
+    background: #0f1929;
+  }
+
+  .campaign-tab-filter-popper--app .app-platform-search-select__search {
+    padding: 0 8px;
+  }
+
+  .campaign-tab-filter-popper--app .app-platform-search-select__row span {
+    font-size: 12px;
+    color: #e2e8f0;
+  }
+
+  .campaign-tab-filter-popper--app .app-platform-search-select__row:hover,
+  .campaign-tab-filter-popper--app .app-platform-search-select__row.is-active {
+    background: rgb(0 212 170 / 12%);
+  }
+
+  .campaign-tab-filter-popper--app .app-platform-search-select__row.is-active span {
     font-weight: 600;
     color: #00d4aa;
   }

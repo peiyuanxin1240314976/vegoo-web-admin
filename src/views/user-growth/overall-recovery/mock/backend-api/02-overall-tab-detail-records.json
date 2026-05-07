@@ -1,0 +1,177 @@
+{
+  "_comment": "整体回收 Tab1 - 明细数据表（含卡片内子筛选）。对应 types.ts: Pick<OverallTabData,'detailRows'>。",
+  "fieldDescription": {
+    "request": {
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "统计起始日 YYYY-MM-DD（含）；与顶栏统计周期一致。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": true,
+        "description": "统计结束日 YYYY-MM-DD（含）。"
+      },
+      "appId": { "type": "string", "required": true, "description": "顶栏应用；全部 `''`。" },
+      "source": { "type": "string", "required": true, "description": "顶栏广告平台；全部 `''`。" },
+      "countryCode": { "type": "string", "required": true, "description": "顶栏国家；全部 `''`。" },
+      "detailApp": {
+        "type": "string",
+        "required": true,
+        "description": "明细卡片内「应用」子筛。UI 选「全部」映射 `''`；否则与行字段 detailApp、下拉的 value 一致（如 weather5）。服务端按此过滤或聚合。"
+      },
+      "detailChannel": {
+        "type": "string",
+        "required": true,
+        "description": "明细卡片内「广告平台」子筛。UI 选「全部」映射 `''`；否则与行字段 detailChannel、下拉 value 一致（如 google、facebook）。"
+      }
+    },
+    "response": {
+      "data": {
+        "type": "RecoveryDetailRow[]",
+        "required": true,
+        "description": "键名 detailRows；行内 detailApp/detailChannel 可选，与明细子筛 value 对齐。"
+      },
+      "RecoveryDetailRow": {
+        "detailApp": {
+          "type": "string",
+          "required": false,
+          "description": "拆应用维度时与请求 detailApp 对齐。"
+        },
+        "detailChannel": {
+          "type": "string",
+          "required": false,
+          "description": "拆广告平台维度时与请求 detailChannel、下拉的 value（如 google、facebook）对齐。"
+        },
+        "date": { "type": "string", "required": true },
+        "adSpend": { "type": "number", "required": true },
+        "cpi": { "type": "number", "required": true },
+        "paidUsers": { "type": "number", "required": true },
+        "totalUsers": { "type": "number", "required": true },
+        "organicUsers": { "type": "number", "required": true },
+        "roiDay0": { "type": "number", "required": true },
+        "roiDay1": { "type": "number", "required": true },
+        "roiDay2": { "type": "number", "required": true },
+        "roiDay3": { "type": "number", "required": true },
+        "roiDay5": { "type": "number", "required": true },
+        "roiDay7": { "type": "number", "required": true },
+        "rush": { "type": "number", "required": true },
+        "threeStar": { "type": "number", "required": true },
+        "sevenStar": { "type": "number", "required": true },
+        "retDay1": { "type": "number", "required": true },
+        "retDay3": { "type": "number", "required": true },
+        "retDay7": { "type": "number", "required": true }
+      }
+    }
+  },
+  "sampleRequest": {
+    "startDate": "2026-02-20",
+    "endDate": "2026-03-21",
+    "appId": "",
+    "source": "",
+    "countryCode": "",
+    "detailApp": "",
+    "detailChannel": ""
+  },
+  "sampleResponse": {
+    "data": {
+      "detailRows": [
+        {
+          "detailApp": "weather5",
+          "detailChannel": "google",
+          "date": "03-09",
+          "adSpend": 8754,
+          "cpi": 1.13,
+          "paidUsers": 9557,
+          "totalUsers": 12400,
+          "organicUsers": 2843,
+          "roiDay0": 5.2,
+          "roiDay1": 9.7,
+          "roiDay2": 15.4,
+          "roiDay3": 21.2,
+          "roiDay5": 33.8,
+          "roiDay7": 43.1,
+          "rush": 53,
+          "threeStar": 62,
+          "sevenStar": 71,
+          "retDay1": 38.2,
+          "retDay3": 25.6,
+          "retDay7": 18.4
+        },
+        {
+          "detailApp": "weather5",
+          "detailChannel": "facebook",
+          "date": "03-08",
+          "adSpend": 9216,
+          "cpi": 1.13,
+          "paidUsers": 9557,
+          "totalUsers": 12400,
+          "organicUsers": 2843,
+          "roiDay0": 5.1,
+          "roiDay1": 9.7,
+          "roiDay2": 15.4,
+          "roiDay3": 21.2,
+          "roiDay5": 33.8,
+          "roiDay7": 43.1,
+          "rush": 53,
+          "threeStar": 62,
+          "sevenStar": 71,
+          "retDay1": 37.8,
+          "retDay3": 24.9,
+          "retDay7": 17.8
+        },
+        {
+          "detailApp": "weather5",
+          "detailChannel": "google",
+          "date": "03-07",
+          "adSpend": 9521,
+          "cpi": 1.13,
+          "paidUsers": 9557,
+          "totalUsers": 12400,
+          "organicUsers": 2843,
+          "roiDay0": 5.6,
+          "roiDay1": 10.2,
+          "roiDay2": 16.8,
+          "roiDay3": 23.5,
+          "roiDay5": 36.2,
+          "roiDay7": 46.4,
+          "rush": 55,
+          "threeStar": 65,
+          "sevenStar": 74,
+          "retDay1": 39.1,
+          "retDay3": 26.3,
+          "retDay7": 19.2
+        }
+      ]
+    }
+  },
+  "api": {
+    "url": "POST /api/user-growth/overall-recovery/overall-tab/detail-records",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "公共筛选 + detailApp + detailChannel",
+    "responseBody": "{ detailRows: RecoveryDetailRow[] }"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "明细「检索」应触发本接口重拉：子筛从 UI 的 all 映射为 `''`，勿传字面量 all。",
+      "若后端在 detailApp/detailChannel 均为 `''` 时返回汇总行，可不返回行级 detailApp/detailChannel；用户再选子筛后应返回匹配行或聚合行。"
+    ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "Tab1 首屏 / 顶栏检索",
+        "detail": "与其它 Tab1 接口并行，`detailApp`/`detailChannel` 均为 `''`（全部）。",
+        "prerequisite": "同 kpis。"
+      },
+      {
+        "moment": "明细卡片内点击「检索」",
+        "detail": "`tab-overall.vue` 仅请求本接口，入参带上当前子筛（全部则 `''`）；**不应**只做前端过滤若后端已支持服务端筛选。",
+        "prerequisite": "已有 Tab1 其它数据或至少已应用顶栏筛选。"
+      }
+    ],
+    "defaultSelection": "子筛默认「全部」→ `detailApp: ''`, `detailChannel: ''`。",
+    "dedupe": "明细检索可单独 debounce；与首屏批量请求分开取消键。"
+  }
+}

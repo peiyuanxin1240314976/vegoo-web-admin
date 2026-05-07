@@ -1,6 +1,7 @@
 /**
  * 优化师管理 Mock，与 `mock/backend-api` 契约 unwrap 后的 `data` 形态一致。
  */
+import FileSaver from 'file-saver'
 import { getAppNow } from '@/utils/app-now'
 import type { OptimizerItem } from '../types'
 import { cloneOptimizerMockList, systemUsers } from './data'
@@ -126,9 +127,40 @@ export function mockUpdateOptimizer(
   return Promise.resolve(next as Api.ConfigManagement.Optimizer.ListItem)
 }
 
-export function mockExportOptimizerList(
+function csvCell(value: string) {
+  if (/[,"\n\r]/.test(value)) return `"${value.replace(/"/g, '""')}"`
+  return value
+}
+
+/** Mock：按列表筛选生成 CSV 并触发下载（模拟文件流） */
+export async function mockExportOptimizerList(
   params: Partial<Api.ConfigManagement.Optimizer.TableQuery>
-): Promise<Api.ConfigManagement.Optimizer.ExportResponse> {
-  void params
-  return Promise.resolve({ fileToken: `optimizer-export-${getAppNow().getTime()}` })
+): Promise<void> {
+  const q: Api.ConfigManagement.Optimizer.TableQuery = {
+    keyword: params.keyword ?? '',
+    status: params.status ?? '',
+    current: 1,
+    size: 10000
+  }
+  const rows = filterTable(mockList, q)
+  const header = '序号,名称,版本号,代号,代号2,最低消耗要求,检验码,状态'
+  const lines = [
+    '\uFEFF' + header,
+    ...rows.map((r) =>
+      [
+        String(r.no),
+        r.userName,
+        `v${r.version}`,
+        r.sCode,
+        r.sCode2 || '',
+        `$${r.minConsumption.toFixed(2)}`,
+        r.checkCode,
+        r.status
+      ]
+        .map((c) => csvCell(String(c)))
+        .join(',')
+    )
+  ]
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' })
+  FileSaver.saveAs(blob, `optimizers-mock_${getAppNow().getTime()}.csv`)
 }

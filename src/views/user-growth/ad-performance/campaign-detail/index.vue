@@ -1,7 +1,7 @@
 <template>
   <div class="cd-page">
     <!-- ── 顶部导航栏 ─────────────────────────────────────── -->
-    <div class="cd-topbar">
+    <div class="cd-topbar campaign-detail-filters">
       <div class="cd-topbar__left">
         <button type="button" class="cd-back-btn" @click="router.back()">
           <el-icon><ArrowLeft /></el-icon>
@@ -11,6 +11,15 @@
           <el-breadcrumb-item>广告系列详情</el-breadcrumb-item>
         </el-breadcrumb>
       </div>
+      <AppDatePicker
+        v-model="dateRangeValue"
+        type="daterange"
+        value-format="YYYY-MM-DD"
+        range-separator="~"
+        start-placeholder="开始日期"
+        end-placeholder="结束日期"
+        class="ap-date-picker"
+      />
     </div>
 
     <!-- ── 首屏骨架（远程加载中不展示本地 Mock）── -->
@@ -27,10 +36,16 @@
           </ElSkeleton>
         </div>
         <div class="cd-title-row__actions cd-sk-actions">
-          <ElSkeletonItem variant="button" style="width: 92px; height: 28px" />
-          <ElSkeletonItem variant="button" style="width: 72px; height: 28px" />
-          <ElSkeletonItem variant="button" style="width: 56px; height: 28px" />
-          <ElSkeletonItem variant="button" style="width: 56px; height: 28px" />
+          <ElSkeleton animated :throttle="0">
+            <template #template>
+              <div class="cd-sk-actions__inner">
+                <ElSkeletonItem variant="button" style="width: 92px; height: 28px" />
+                <ElSkeletonItem variant="button" style="width: 72px; height: 28px" />
+                <ElSkeletonItem variant="button" style="width: 56px; height: 28px" />
+                <ElSkeletonItem variant="button" style="width: 56px; height: 28px" />
+              </div>
+            </template>
+          </ElSkeleton>
         </div>
       </div>
       <div class="cd-body cd-body--skeleton">
@@ -99,11 +114,11 @@
           </span>
         </div>
         <div class="cd-title-row__actions">
-          <ElButton type="primary" size="small" plain round @click="goToEdit">
+          <!-- <ElButton type="primary" size="small" plain round @click="goToEdit">
             <el-icon><Edit /></el-icon>
             编辑系列
-          </ElButton>
-          <ElButton
+          </ElButton> -->
+          <!-- <ElButton
             size="small"
             plain
             round
@@ -114,7 +129,7 @@
             暂停
           </ElButton>
           <ElButton size="small" plain round @click="onCampaignAction('copy')">复制</ElButton>
-          <ElButton size="small" plain round @click="onCampaignAction('archive')">归档</ElButton>
+          <ElButton size="small" plain round @click="onCampaignAction('archive')">归档</ElButton> -->
         </div>
       </div>
 
@@ -132,7 +147,9 @@
           <CampaignAdList
             :rows="data.adRows"
             :campaign-id="String(route.query.id ?? '')"
+            :status="adListStatus"
             @refresh-ad-list="reloadAdList"
+            @change-status="onChangeAdListStatus"
           />
         </div>
         <div class="cd-col cd-col--right">
@@ -145,17 +162,24 @@
 </template>
 
 <script setup lang="ts">
-  import { onMounted, reactive, ref } from 'vue'
+  import { computed, nextTick, reactive, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { ElMessage } from 'element-plus'
-  import { ArrowLeft, SuccessFilled, Edit, VideoPause } from '@element-plus/icons-vue'
+  import {
+    ArrowLeft,
+    SuccessFilled
+    // Edit
+    // VideoPause
+  } from '@element-plus/icons-vue'
   import {
     fetchCampaignDetailAdList,
     fetchCampaignDetailAiInsights,
-    fetchCampaignDetailCampaignAction,
+    // fetchCampaignDetailCampaignAction,
     fetchCampaignDetailCreativeTop5,
     fetchCampaignDetailOverview
   } from '@/api/user-growth/ad-performance'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
+  import { getAppTodayYYYYMMDD } from '@/utils/app-now'
   import CampaignInfoCards from './modules/campaign-info-cards.vue'
   import CampaignCoreTrend from './modules/campaign-core-trend.vue'
   import CampaignAdList from './modules/campaign-ad-list.vue'
@@ -164,7 +188,7 @@
   import {
     createEmptyCampaignDetail,
     normalizeCampaignDetailFromApi,
-    type CampaignDetailCampaignActionType,
+    // type CampaignDetailCampaignActionType,
     type CampaignDetailData,
     type CampaignStatus
   } from './types'
@@ -175,17 +199,35 @@
   const route = useRoute()
   const loading = ref(true)
   const data = reactive<CampaignDetailData>(createEmptyCampaignDetail())
+  const adListStatus = ref<'all' | 'active' | 'paused' | 'completed'>('all')
+  const queryStartDate = String(route.query.startDate ?? '').trim()
+  const queryEndDate = String(route.query.endDate ?? '').trim()
+  const filterStartDate = ref(queryStartDate || getAppTodayYYYYMMDD())
+  const filterEndDate = ref(queryEndDate || getAppTodayYYYYMMDD())
 
-  function goToEdit() {
-    router.push({
-      path: '/campaign-detail/ad-edit',
-      query: {
-        campaignId: String(route.query.id ?? ''),
-        appId: String(route.query.appId ?? ''),
-        appName: String(route.query.appName ?? '')
-      }
-    })
-  }
+  const dateRangeValue = computed<[string, string]>({
+    get() {
+      return [filterStartDate.value, filterEndDate.value]
+    },
+    set(v) {
+      const nextStart = String(v?.[0] ?? '').trim()
+      const nextEnd = String(v?.[1] ?? '').trim()
+      if (!nextStart || !nextEnd) return
+      filterStartDate.value = nextStart
+      filterEndDate.value = nextEnd
+    }
+  })
+
+  // function goToEdit() {
+  //   router.push({
+  //     path: '/campaign-detail/ad-edit',
+  //     query: {
+  //       campaignId: String(route.query.id ?? ''),
+  //       appId: String(route.query.appId ?? ''),
+  //       appName: String(route.query.appName ?? '')
+  //     }
+  //   })
+  // }
 
   async function loadCampaignDetail() {
     const campaignId = String(route.query.id ?? '')
@@ -193,44 +235,97 @@
       ElMessage.error('缺少广告系列 ID')
       return
     }
+    const dateFilter = {
+      startDate: filterStartDate.value,
+      endDate: filterEndDate.value
+    }
     const [o, ads, cr, ai] = await Promise.all([
-      fetchCampaignDetailOverview({ campaignId }),
-      fetchCampaignDetailAdList({ campaignId, status: 'all' }),
-      fetchCampaignDetailCreativeTop5({ campaignId }),
-      fetchCampaignDetailAiInsights({ campaignId })
+      fetchCampaignDetailOverview({ campaignId, ...dateFilter }),
+      fetchCampaignDetailAdList({ campaignId, status: adListStatus.value, ...dateFilter }),
+      fetchCampaignDetailCreativeTop5({ campaignId, ...dateFilter }),
+      fetchCampaignDetailAiInsights({ campaignId, ...dateFilter })
     ])
     Object.assign(data, normalizeCampaignDetailFromApi(o, ads, cr, ai))
+  }
+
+  /** 让浏览器至少有机会绘制一帧骨架，再开始极快的 Mock/缓存请求（否则 loading 在同一帧内结束，看起来像未生效） */
+  function deferUntilAfterPaint(): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, 0))
+  }
+
+  async function loadCampaignDetailWithSkeleton(errorMessage: string) {
+    loading.value = true
+    await nextTick()
+    await deferUntilAfterPaint()
+    try {
+      await loadCampaignDetail()
+    } catch {
+      ElMessage.error(errorMessage)
+    } finally {
+      loading.value = false
+    }
   }
 
   async function reloadAdList() {
     const campaignId = String(route.query.id ?? '')
     if (!campaignId) return
     try {
-      const ads = await fetchCampaignDetailAdList({ campaignId, status: 'all' })
+      const adListBody = {
+        campaignId,
+        status: adListStatus.value,
+        startDate: filterStartDate.value,
+        endDate: filterEndDate.value
+      }
+      const ads = await fetchCampaignDetailAdList(adListBody)
       data.adRows = Array.isArray(ads?.rows) ? ads.rows : []
     } catch {
       ElMessage.error('刷新广告列表失败')
     }
   }
 
-  async function onCampaignAction(actionType: CampaignDetailCampaignActionType) {
-    const campaignId = String(route.query.id ?? '')
-    if (!campaignId) {
-      ElMessage.error('缺少广告系列 ID')
-      return
-    }
-    try {
-      const res = await fetchCampaignDetailCampaignAction({ campaignId, actionType })
-      if (res.message) ElMessage.success(res.message)
-      else ElMessage.success('操作成功')
-      if (actionType === 'copy' && res.newCampaignId) {
-        ElMessage.info(`新系列 ID：${res.newCampaignId}`)
-      }
-      await loadCampaignDetail()
-    } catch {
-      ElMessage.error('操作失败')
-    }
+  async function onChangeAdListStatus(v: 'all' | 'active' | 'paused' | 'completed') {
+    adListStatus.value = v
+    await reloadAdList()
   }
+
+  watch([filterStartDate, filterEndDate], async ([nextStart, nextEnd], [prevStart, prevEnd]) => {
+    if (!nextStart || !nextEnd) return
+    if (nextStart === prevStart && nextEnd === prevEnd) return
+    if (!String(route.query.id ?? '').trim()) return
+    await loadCampaignDetailWithSkeleton('按日期刷新系列详情失败')
+  })
+
+  watch(
+    () => String(route.query.id ?? '').trim(),
+    async (campaignId) => {
+      if (!campaignId) {
+        ElMessage.error('缺少广告系列 ID')
+        loading.value = false
+        return
+      }
+      await loadCampaignDetailWithSkeleton('加载系列详情失败')
+    },
+    { immediate: true }
+  )
+
+  // async function onCampaignAction(actionType: CampaignDetailCampaignActionType) {
+  //   const campaignId = String(route.query.id ?? '')
+  //   if (!campaignId) {
+  //     ElMessage.error('缺少广告系列 ID')
+  //     return
+  //   }
+  //   try {
+  //     const res = await fetchCampaignDetailCampaignAction({ campaignId, actionType })
+  //     if (res.message) ElMessage.success(res.message)
+  //     else ElMessage.success('操作成功')
+  //     if (actionType === 'copy' && res.newCampaignId) {
+  //       ElMessage.info(`新系列 ID：${res.newCampaignId}`)
+  //     }
+  //     await loadCampaignDetail()
+  //   } catch {
+  //     ElMessage.error('操作失败')
+  //   }
+  // }
 
   function statusText(s: CampaignStatus): string {
     const map: Record<CampaignStatus, string> = {
@@ -241,25 +336,13 @@
     }
     return map[s] ?? s
   }
-
-  onMounted(async () => {
-    const campaignId = String(route.query.id ?? '')
-    if (!campaignId) {
-      ElMessage.error('缺少广告系列 ID')
-      loading.value = false
-      return
-    }
-    try {
-      await loadCampaignDetail()
-    } catch {
-      ElMessage.error('加载系列详情失败')
-    } finally {
-      loading.value = false
-    }
-  })
 </script>
 
 <style scoped lang="scss">
+  @use '../../styles/filter-bar-theme.scss' as filterTheme;
+
+  @include filterTheme.date-range-trigger('.ap-date-picker');
+
   .cd-page {
     position: relative;
     display: flex;
@@ -341,8 +424,9 @@
   // ── 顶部导航栏 ──────────────────────────────────────────────
   .cd-topbar {
     display: flex;
-    flex-shrink: 0;
+    // flex-shrink: 0;
     align-items: center;
+    justify-content: space-between;
     animation: cd-slide-down 0.45s var(--ease-out) both;
   }
 
@@ -506,6 +590,13 @@
     }
 
     .cd-sk-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .cd-sk-actions__inner {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;

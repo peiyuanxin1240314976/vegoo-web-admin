@@ -6,16 +6,15 @@ import type {
   RevenueDeviationAdvice,
   RevenueDeviationCountryTop10,
   RevenueDeviationHistoryRow,
-  RevenueDeviationMatrixQuery,
   RevenueDeviationMatrixTable,
   RevenueDeviationOverviewKpis,
   RevenueDeviationOverviewTrend,
   RevenueDeviationPlatformTable,
-  RevenueDeviationQuery,
+  RevenueDeviationPostBody,
   RevenueDeviationReasonSegment
 } from '../types'
 
-function noopFilter<T>(_q: RevenueDeviationQuery, data: T): T {
+function noopFilter<T>(_q: RevenueDeviationPostBody, data: T): T {
   return data
 }
 
@@ -210,36 +209,34 @@ export const MOCK_TABLE_MATRIX: RevenueDeviationMatrixTable = {
   ]
 }
 
-export function mockFetchRevenueDeviationOverviewKpis(q: RevenueDeviationQuery) {
+export function mockFetchRevenueDeviationOverviewKpis(q: RevenueDeviationPostBody) {
   return Promise.resolve(noopFilter(q, { ...MOCK_OVERVIEW_KPIS }))
 }
 
-export function mockFetchRevenueDeviationOverviewTrend(q: RevenueDeviationQuery) {
+export function mockFetchRevenueDeviationOverviewTrend(q: RevenueDeviationPostBody) {
   return Promise.resolve(noopFilter(q, { ...MOCK_OVERVIEW_TREND }))
 }
 
-export function mockFetchRevenueDeviationTablePlatform(q: RevenueDeviationQuery) {
+export function mockFetchRevenueDeviationTablePlatform(q: RevenueDeviationPostBody) {
   return Promise.resolve(noopFilter(q, structuredClone(MOCK_TABLE_PLATFORM)))
 }
 
-export function mockFetchRevenueDeviationOverviewReason(q: RevenueDeviationQuery) {
+export function mockFetchRevenueDeviationOverviewReason(q: RevenueDeviationPostBody) {
   return Promise.resolve(noopFilter(q, [...MOCK_OVERVIEW_REASON]))
 }
 
-export function mockFetchRevenueDeviationOverviewAdvice(q: RevenueDeviationQuery) {
+export function mockFetchRevenueDeviationOverviewAdvice(q: RevenueDeviationPostBody) {
   return Promise.resolve(noopFilter(q, { ...MOCK_OVERVIEW_ADVICE }))
 }
 
-export function mockFetchRevenueDeviationOverviewCountryTop10(q: RevenueDeviationQuery) {
+export function mockFetchRevenueDeviationOverviewCountryTop10(q: RevenueDeviationPostBody) {
   return Promise.resolve(noopFilter(q, structuredClone(MOCK_COUNTRY_TOP10)))
 }
 
-export function mockFetchRevenueDeviationTableHistory(q: RevenueDeviationQuery) {
+export function mockFetchRevenueDeviationTableHistory(q: RevenueDeviationPostBody) {
   return Promise.resolve(noopFilter(q, [...MOCK_TABLE_HISTORY]))
 }
 
-export function mockFetchRevenueDeviationTableMatrix(q: RevenueDeviationQuery) {
-  return Promise.resolve(
-    noopFilter(q as RevenueDeviationMatrixQuery, structuredClone(MOCK_TABLE_MATRIX))
-  )
+export function mockFetchRevenueDeviationTableMatrix(q: RevenueDeviationPostBody) {
+  return Promise.resolve(noopFilter(q, structuredClone(MOCK_TABLE_MATRIX)))
 }

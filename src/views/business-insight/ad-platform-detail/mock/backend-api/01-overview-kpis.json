@@ -1,0 +1,133 @@
+{
+  "_comment": "商业洞察 · 广告平台详情 — 顶部 KPI 四卡。对应页面 index.vue: kpiCards。",
+  "interaction": {
+    "route": "/business-insight/ad-platform-detail",
+    "surface": "KPI 卡片区",
+    "triggers": ["进入页面首次查询", "修改日期/应用/国家后点击「查询」"]
+  },
+  "fieldDescription": {
+    "request": {
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "统计区间起始日（含），YYYY-MM-DD。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": true,
+        "description": "统计区间结束日（含），YYYY-MM-DD。"
+      },
+      "appId": {
+        "type": "string",
+        "required": true,
+        "description": "应用筛选；空字符串表示全部应用。"
+      },
+      "countryCode": {
+        "type": "string",
+        "required": true,
+        "description": "国家代码（小写 ISO 3166-1 alpha-2）；空字符串表示全部国家。"
+      },
+      "source": {
+        "type": "string",
+        "required": false,
+        "description": "广告平台（与路由 query `source` 一致；展示名或枚举 string 以联调为准）；空表示非钻取入口或未限定。"
+      }
+    },
+    "response": {
+      "kpis": {
+        "type": "AdPlatformDetailKpiItem[]",
+        "required": true,
+        "description": "固定 4 张卡片顺序：总收入、平均 eCPM、平均填充率、总展示次数（顺序可由产品约定）。"
+      }
+    },
+    "AdPlatformDetailKpiItem": {
+      "id": { "type": "string", "required": true, "description": "卡片键，如 total_revenue。" },
+      "label": { "type": "string", "required": true, "description": "卡片标题文案。" },
+      "valueText": {
+        "type": "string",
+        "required": true,
+        "description": "主指标展示文案（允许后端预格式化，如金额缩写）。"
+      },
+      "changeText": {
+        "type": "string",
+        "required": true,
+        "description": "环比/同比展示文案（含符号或百分号）。"
+      },
+      "positive": {
+        "type": "boolean",
+        "required": true,
+        "description": "变化方向是否为正向（影响涨跌色）。"
+      },
+      "color": {
+        "type": "string",
+        "required": true,
+        "description": "卡片强调色，CSS 颜色字符串（如 HEX）。"
+      },
+      "chartData": {
+        "type": "number[]",
+        "required": true,
+        "description": "迷你趋势序列，长度由产品约定（如 12 点）。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "startDate": "2025-10-01",
+    "endDate": "2025-10-31",
+    "appId": "",
+    "countryCode": "",
+    "source": "Google"
+  },
+  "sampleResponse": {
+    "kpis": [
+      {
+        "id": "total_revenue",
+        "label": "总收入",
+        "valueText": "$1.25M",
+        "changeText": "+12.3%",
+        "positive": true,
+        "color": "#38bdf8",
+        "chartData": [18, 22, 19, 25, 28, 24, 30, 27, 33, 31, 36, 38]
+      },
+      {
+        "id": "avg_ecpm",
+        "label": "平均eCPM",
+        "valueText": "$3.45",
+        "changeText": "+12.3%",
+        "positive": true,
+        "color": "#a78bfa",
+        "chartData": [2.8, 3.0, 2.9, 3.1, 3.2, 3.0, 3.3, 3.2, 3.4, 3.3, 3.5, 3.45]
+      },
+      {
+        "id": "avg_fill_rate",
+        "label": "平均填充率",
+        "valueText": "92.8%",
+        "changeText": "-3.2%",
+        "positive": false,
+        "color": "#34d399",
+        "chartData": [96, 95, 97, 94, 93, 96, 95, 93, 94, 92, 93, 92.8]
+      },
+      {
+        "id": "total_impressions",
+        "label": "总展示次数",
+        "valueText": "362M",
+        "changeText": "+5.2%",
+        "positive": true,
+        "color": "#fb923c",
+        "chartData": [280, 290, 295, 300, 305, 310, 318, 325, 340, 348, 355, 362]
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/business-insight/ad-platform-detail/overview/kpis",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "startDate, endDate, appId, countryCode, source?",
+    "responseBody": "{ kpis: AdPlatformDetailKpiItem[] }"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "主指标若改为纯数值，前端需统一 formatUsd2 / 百分比两位小数。",
+      "与 `02-overview-trend.json` 日期区间入参保持一致便于缓存。"
+    ]
+  }
+}

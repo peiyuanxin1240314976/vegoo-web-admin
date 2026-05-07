@@ -8,8 +8,6 @@
  * 默认全部为 `false`（联调线上）；单接口改 `true` 可只 Mock 该请求。
  */
 export enum IapAnalysisEndpoint {
-  /** 01-meta-filter-options */
-  MetaFilterOptions = 'metaFilterOptions',
   /** 02-overview-kpi */
   OverviewKpi = 'overviewKpi',
   /** 03-overview-trend */
@@ -34,7 +32,6 @@ export enum IapAnalysisEndpoint {
 
 /** 是否对该接口使用 Mock（逐项修改） */
 export const IAP_ANALYSIS_USE_MOCK: Record<IapAnalysisEndpoint, boolean> = {
-  [IapAnalysisEndpoint.MetaFilterOptions]: false,
   [IapAnalysisEndpoint.OverviewKpi]: false,
   [IapAnalysisEndpoint.OverviewTrend]: false,
   [IapAnalysisEndpoint.OverviewAppCards]: false,

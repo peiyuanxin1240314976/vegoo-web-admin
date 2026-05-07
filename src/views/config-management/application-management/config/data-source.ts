@@ -7,6 +7,9 @@
 
 export enum ApplicationEndpoint {
   Table = 'table',
+  OverviewStats = 'overview-stats',
+  FilterFormOptions = 'filter-form-options',
+  UploadIcon = 'upload-icon',
   Create = 'create',
   Update = 'update',
   Delete = 'delete',
@@ -16,11 +19,14 @@ export enum ApplicationEndpoint {
 type UseMock = boolean
 
 const ApplicationApiMockDefaults: Record<ApplicationEndpoint, UseMock> = {
-  [ApplicationEndpoint.Table]: true,
-  [ApplicationEndpoint.Create]: true,
-  [ApplicationEndpoint.Update]: true,
-  [ApplicationEndpoint.Delete]: true,
-  [ApplicationEndpoint.Export]: true
+  [ApplicationEndpoint.Table]: false,
+  [ApplicationEndpoint.OverviewStats]: false,
+  [ApplicationEndpoint.FilterFormOptions]: false,
+  [ApplicationEndpoint.UploadIcon]: false,
+  [ApplicationEndpoint.Create]: false,
+  [ApplicationEndpoint.Update]: false,
+  [ApplicationEndpoint.Delete]: false,
+  [ApplicationEndpoint.Export]: false
 }
 
 export function isApplicationEndpointMock(endpoint: ApplicationEndpoint): boolean {

@@ -1,0 +1,50 @@
+{
+  "_comment": "商品运营 - 三方商店管理：新增平台（对应页面右上角「新增平台」）。对应 types.ts: ThirdPartyStoresPlatformCreateResponse。",
+  "fieldDescription": {
+    "request": {
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "平台名称（展示用）。"
+      }
+    },
+    "response": {
+      "data": {
+        "type": "ThirdPartyStoresPlatformCreateResponse",
+        "required": true,
+        "description": "创建结果。网关包裹时位于 data 内。"
+      }
+    },
+    "ThirdPartyStoresPlatformCreateResponse": {
+      "id": {
+        "type": "string",
+        "required": true,
+        "description": "新建平台 id（后续用于详情/配置/修复认证等）。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "name": "Amazon Appstore"
+  },
+  "sampleResponse": {
+    "data": {
+      "id": "p_amazon_appstore_101"
+    }
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "点击页面右上角「新增平台」→ 表单提交时调用。成功后建议刷新 `overview/dashboard` 以更新平台卡片与统计。"
+      }
+    ],
+    "dedupe": "提交按钮需防重复提交；可在前端禁用按钮并展示 loading。"
+  },
+  "api": {
+    "url": "POST /api/product-operations/third-party-stores/platform/create",
+    "method": "POST",
+    "priority": "P2",
+    "requestBody": "name（必填）",
+    "responseBody": "ThirdPartyStoresPlatformCreateResponse（或网关包裹于 data）"
+  }
+}

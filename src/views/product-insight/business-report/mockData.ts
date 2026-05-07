@@ -14,8 +14,6 @@ import type {
   CampaignRow,
   PlatformCountryRow,
   ApcOsEntry,
-  CompareAppData,
-  CompareMetricRow,
   LarkPushConfig
 } from './types'
 
@@ -1791,7 +1789,7 @@ export const platformCountryData: PlatformCountryRow[] = [
 ]
 
 // ── Compare Mode Data ──────────────────────────────────────────
-export const compareApps: CompareAppData[] = [
+export const compareApps = [
   {
     id: 'overall',
     name: '整体',
@@ -1844,7 +1842,7 @@ export const compareApps: CompareAppData[] = [
     adChange: 4.8
   }
 ]
-export const compareMetrics: CompareMetricRow[] = [
+export const compareMetrics = [
   {
     metric: 'MAU',
     values: { overall: '8,234万', health: '2,456万', ai: '1,654万' },
@@ -1868,16 +1866,11 @@ export const compareMetrics: CompareMetricRow[] = [
     metric: '预估利润增长',
     values: { overall: '+8.3%', health: '+14.1%', ai: '+4.2%' },
     bestId: 'health'
-  },
-  {
-    metric: '费用抄扣收缴比',
-    values: { overall: '1.75%', health: '1.74%', ai: '1.79%' },
-    bestId: 'health'
   }
 ]
 
 // ── AdPlatformByCountry 结构化数据（ApcOsEntry[]）─────────────
-// 对应 GET /api/v1/datacenter/analysis/report/platform-country → osEntries
+// 对应 POST /api/v1/datacenter/analysis/report/{period}/platform-country → osEntries
 export const adPlatformByCountryData: ApcOsEntry[] = [
   {
     id: 'android',
@@ -2577,6 +2570,8 @@ export const larkPushConfigMock: LarkPushConfig = {
     { id: 'ou_person_001', name: '王总' },
     { id: 'ou_person_002', name: '李总' }
   ],
+  lastPushAt: '2026-04-09T08:30:00+08:00',
+  lastPushTarget: '经营日报群',
   daily: { enabled: true, day: '每天', time: '09:00', workdayOnly: true },
   weekly: { enabled: true, day: '每周一', time: '09:00', showChange: true },
   monthly: { enabled: true, day: '每月 1 日', time: '09:00', showFee: true },

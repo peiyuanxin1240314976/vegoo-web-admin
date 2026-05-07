@@ -1,0 +1,178 @@
+{
+  "_comment": "BC 管理页面 - BC 分页列表。对应 BcTableQuery / BcItem。",
+  "fieldDescription": {
+    "request": {
+      "current": { "type": "number", "required": true, "default": 1, "description": "当前页码。" },
+      "size": { "type": "number", "required": true, "default": 10, "description": "每页条数。" },
+      "keyword": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "关键词（BM ID / 名称）。"
+      },
+      "source": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "广告平台筛选。"
+      },
+      "status": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "enum": ["", "健康", "可用", "不再使用", "封禁", "其他"],
+        "description": "状态筛选。"
+      },
+      "ownerType": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "enum": ["", "企业户", "个人户", "小额广告户"],
+        "description": "开户主体筛选。"
+      },
+      "banRecord": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "enum": ["", "有", "无"],
+        "description": "封户记录筛选。"
+      }
+    },
+    "response": {
+      "records": { "type": "BcItem[]", "required": true, "description": "当前页记录。" },
+      "total": { "type": "number", "required": true, "description": "总条数。" },
+      "current": { "type": "number", "required": true, "description": "当前页。" },
+      "size": { "type": "number", "required": true, "description": "页大小。" }
+    }
+  },
+  "sampleRequest": {
+    "current": 1,
+    "size": 10,
+    "keyword": "",
+    "source": "",
+    "status": "",
+    "ownerType": "",
+    "banRecord": ""
+  },
+  "sampleResponse": {
+    "code": 200,
+    "message": "success",
+    "data": {
+      "records": [
+        {
+          "id": "BM-101",
+          "bmId": "823456789012345",
+          "bmName": "Vegoo主务BC",
+          "source": "Meta Ads",
+          "group": "Google组",
+          "status": "健康",
+          "ownerType": "企业户",
+          "manager": "张三",
+          "banRecord": "无",
+          "banDesc": "",
+          "createTime": "2025-12-15",
+          "remark": "主投放账户组",
+          "linkedAccounts": 45,
+          "activeAccounts": 41,
+          "inactiveAccounts": 4,
+          "monthSpend": 128450,
+          "monthOpenCount": 8
+        },
+        {
+          "id": "BM-102",
+          "bmId": "834567890123456",
+          "bmName": "Agency-A-BM",
+          "source": "Meta Ads",
+          "group": "Agency-A组",
+          "status": "可用",
+          "ownerType": "企业户",
+          "manager": "李四",
+          "banRecord": "有",
+          "banDesc": "历史封户已解封",
+          "createTime": "2026-01-08",
+          "remark": "",
+          "linkedAccounts": 26,
+          "activeAccounts": 22,
+          "inactiveAccounts": 4,
+          "monthSpend": 78320,
+          "monthOpenCount": 4
+        },
+        {
+          "id": "BM-103",
+          "bmId": "845678901234567",
+          "bmName": "TT-主务BM",
+          "source": "TikTok Ads",
+          "group": "TikTok组",
+          "status": "封禁",
+          "ownerType": "小额广告户",
+          "manager": "王五",
+          "banRecord": "有",
+          "banDesc": "风控封禁",
+          "createTime": "2026-01-22",
+          "remark": "",
+          "linkedAccounts": 10,
+          "activeAccounts": 0,
+          "inactiveAccounts": 10,
+          "monthSpend": 0,
+          "monthOpenCount": 0
+        },
+        {
+          "id": "BM-104",
+          "bmId": "856789012345678",
+          "bmName": "备用BM-01",
+          "source": "Meta Ads",
+          "group": "备用组",
+          "status": "不再使用",
+          "ownerType": "个人户",
+          "manager": "赵六",
+          "banRecord": "无",
+          "banDesc": "",
+          "createTime": "2025-08-01",
+          "remark": "历史备用",
+          "linkedAccounts": 0,
+          "activeAccounts": 0,
+          "inactiveAccounts": 0,
+          "monthSpend": 0,
+          "monthOpenCount": 0
+        },
+        {
+          "id": "BM-105",
+          "bmId": "867890123456789",
+          "bmName": "TT-实验BM",
+          "source": "TikTok Ads",
+          "group": "实验组",
+          "status": "其他",
+          "ownerType": "企业户",
+          "manager": "孙七",
+          "banRecord": "无",
+          "banDesc": "",
+          "createTime": "2026-02-11",
+          "remark": "灰度实验",
+          "linkedAccounts": 6,
+          "activeAccounts": 5,
+          "inactiveAccounts": 1,
+          "monthSpend": 12430,
+          "monthOpenCount": 1
+        }
+      ],
+      "total": 5,
+      "current": 1,
+      "size": 10
+    }
+  },
+  "api": {
+    "url": "POST /api/account-management/bc-management/table",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "BcTableQuery",
+    "responseBody": "PaginatedResponse<BcItem>"
+  },
+  "interaction": {
+    "triggers": [
+      { "moment": "页面初始化", "detail": "bc-tab 挂载时加载列表。" },
+      { "moment": "用户操作", "detail": "筛选/分页变化后刷新列表。" }
+    ],
+    "defaultSelection": "current=1,size=10。",
+    "dedupe": "无"
+  }
+}

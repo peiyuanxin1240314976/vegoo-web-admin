@@ -10,9 +10,9 @@
     <!-- 编辑模式：应用信息锁定条 -->
     <div v-if="isEdit && editData" class="app-lock-bar">
       <div class="app-lock-icon" :style="{ background: editData.iconColor }">
-        {{ editData.appName.charAt(0) }}
+        {{ getAppInitial(editData.appName) }}
       </div>
-      <span class="app-lock-name">{{ editData.appName }}</span>
+      <span class="app-lock-name">{{ getDisplayAppName(editData.appName) }}</span>
       <span class="lock-sep">|</span>
       <span class="app-lock-meta">{{ editData.platform === 'Android' ? '安卓' : 'iOS' }}</span>
       <span class="lock-sep">|</span>
@@ -45,9 +45,9 @@
                   :value="opt.value"
                 >
                   <span class="app-opt-icon" :style="{ background: opt.iconColor }">
-                    {{ opt.appName.charAt(0) }}
+                    {{ getAppInitial(opt.appName) }}
                   </span>
-                  <span class="app-opt-label">{{ opt.appName }}</span>
+                  <span class="app-opt-label">{{ getDisplayAppName(opt.appName) }}</span>
                 </el-option>
               </el-select>
             </el-form-item>
@@ -75,14 +75,14 @@
             <div class="form-item">
               <div class="form-label">广告平台 <span class="required">*</span></div>
               <div class="form-hint">根据应用的绩效配置自动筛选</div>
-              <el-form-item prop="adPlatform">
+              <el-form-item prop="source">
                 <el-select
-                  v-model="form.adPlatform"
+                  v-model="form.source"
                   placeholder="请选择广告平台..."
                   class="dark-select full-width"
                 >
                   <el-option
-                    v-for="opt in adPlatformOptions"
+                    v-for="opt in sourceOptions"
                     :key="opt.value"
                     :label="opt.label"
                     :value="opt.value"
@@ -221,7 +221,7 @@
         </div>
 
         <!-- 已选配置预览 -->
-        <div v-if="selectedVersion" class="config-preview">
+        <!-- <div v-if="selectedVersion" class="config-preview">
           <div class="preview-header">
             <span class="preview-title">已选配置预览：</span>
             <button class="preview-link" type="button">查看完整配置 →</button>
@@ -233,7 +233,7 @@
             <span class="preview-tag">最低：{{ selectedVersion.minRate }}</span>
             <span class="preview-tag">系数：{{ selectedVersion.difficulty }}</span>
           </div>
-        </div>
+        </div> -->
 
         <!-- 草稿版本警告 -->
         <div v-if="selectedVersion?.status === '草稿'" class="draft-warning">
@@ -281,6 +281,7 @@
   import { ref, reactive, computed, watch, nextTick } from 'vue'
   import { Lock, ArrowDown, Check, Warning } from '@element-plus/icons-vue'
   import type { FormInstance, FormRules } from 'element-plus'
+  import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
   import type {
     AppAssignmentItem,
     AssignmentAssignableSelectOption,
@@ -310,14 +311,14 @@
     defineProps<{
       visible: boolean
       editData?: AppAssignmentItem | null
-      adPlatformOptions: { label: string; value: string }[]
+      sourceOptions: CockpitMetaOptionItem[]
       optimizerOptions: { label: string; value: string }[]
       assignableApps: AssignmentAssignableSelectOption[]
       loadVersions: (appId: string) => Promise<PerformanceVersion[]>
     }>(),
     {
       editData: null,
-      adPlatformOptions: () => [],
+      sourceOptions: () => [],
       optimizerOptions: () => [],
       assignableApps: () => [],
       loadVersions: () => Promise.resolve([])
@@ -367,7 +368,7 @@
   const defaultForm = (): AssignmentFormModel => ({
     appId: '',
     platform: 'Android',
-    adPlatform: '',
+    source: '',
     optimizer: '',
     note: '',
     configVersionId: '',
@@ -387,7 +388,7 @@
       if (val) {
         form.appId = val.appId
         form.platform = val.platform
-        form.adPlatform = val.adPlatform
+        form.source = val.source
         form.optimizer = val.optimizer
         form.note = val.note
         form.configVersionId = val.configVersionId
@@ -401,7 +402,7 @@
 
   // 新建时，切换 app 时请求绩效版本列表
   const handleAppChange = async () => {
-    form.adPlatform = ''
+    form.source = ''
     form.configVersionId = ''
     if (!form.appId) {
       availableVersions.value = []
@@ -424,6 +425,9 @@
   const verStatusClass = (status: string) =>
     ({ 已发布: 'published', 草稿: 'draft', 已归档: 'archived' })[status] ?? 'published'
 
+  const getDisplayAppName = (appName?: string | null) => (appName?.trim() ? appName : '未命名应用')
+  const getAppInitial = (appName?: string | null) => getDisplayAppName(appName).charAt(0)
+
   // ─── 变更检测（编辑模式） ─────────────────────────────────
   const optimizerChanged = computed(
     () => isEdit.value && form.optimizer !== props.editData?.optimizer
@@ -443,7 +447,7 @@
   const rules = computed<FormRules>(() => ({
     appId: [{ required: !isEdit.value, message: '请选择应用', trigger: 'change' }],
     platform: [{ required: !isEdit.value, message: '请选择平台', trigger: 'change' }],
-    adPlatform: [{ required: !isEdit.value, message: '请选择广告平台', trigger: 'change' }],
+    source: [{ required: !isEdit.value, message: '请选择广告平台', trigger: 'change' }],
     optimizer: [{ required: true, message: '请选择负责优化师', trigger: 'change' }],
     configVersionId: [{ required: true, message: '请选择绩效配置版本', trigger: 'change' }],
     changeReason: [
@@ -477,48 +481,71 @@
 
 <style lang="scss">
   .assignment-form-dialog {
-    --bg-dialog: #0f1829;
-    --bg-inner: #0f1829;
-    --border: rgb(255 255 255 / 8%);
-    --text-primary: #e2e8f0;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
-    --accent: #2dd4bf;
-    --accent-dim: rgb(45 212 191 / 10%);
-    --red: #ef4444;
-    --amber: #f59e0b;
+    --afd-accent: var(--el-color-primary);
+    --afd-accent-dim: color-mix(in srgb, var(--el-color-primary) 12%, transparent);
+    --afd-border: color-mix(in srgb, var(--el-color-primary) 18%, transparent);
+    --afd-border-soft: color-mix(in srgb, white 8%, transparent);
+    --afd-surface: color-mix(in srgb, var(--default-box-color) 88%, black 8%);
+    --afd-surface-2: color-mix(in srgb, var(--default-box-color) 78%, black 12%);
+    --afd-text: var(--text-primary);
+    --afd-text-2: var(--text-secondary);
+    --afd-text-3: var(--text-tertiary);
+    --afd-danger: var(--art-danger);
+    --afd-warning: var(--art-warning);
 
     .el-dialog {
       overflow: hidden;
-      background: var(--bg-dialog) !important;
-      border: 1px solid var(--border);
+      background: linear-gradient(180deg, var(--afd-surface), var(--afd-surface-2)) !important;
+      border: 1px solid var(--afd-border);
       border-radius: 12px !important;
-      box-shadow: 0 32px 80px rgb(0 0 0 / 65%) !important;
+      box-shadow:
+        0 32px 80px color-mix(in srgb, black 62%, transparent),
+        0 0 0 1px color-mix(in srgb, var(--el-color-primary) 9%, transparent),
+        inset 0 1px 0 color-mix(in srgb, white 7%, transparent) !important;
     }
 
     .el-dialog__header {
       padding: 18px 24px 16px;
       margin: 0;
-      background: var(--bg-inner);
-      border-bottom: 1px solid var(--border);
+      background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--default-box-color) 64%, transparent),
+        color-mix(in srgb, var(--default-box-color) 46%, transparent)
+      );
+      border-bottom: 1px solid var(--afd-border);
+
+      &::after {
+        display: block;
+        height: 2px;
+        margin-top: 14px;
+        content: '';
+        background: linear-gradient(
+          90deg,
+          transparent 0%,
+          color-mix(in srgb, var(--el-color-primary) 46%, transparent) 35%,
+          color-mix(in srgb, var(--theme-color) 34%, transparent) 65%,
+          transparent 100%
+        );
+        opacity: 0.9;
+      }
     }
 
     .el-dialog__title {
       font-size: 16px !important;
       font-weight: 600 !important;
-      color: var(--text-primary) !important;
+      color: var(--afd-text) !important;
     }
 
     .el-dialog__headerbtn .el-icon {
-      color: var(--text-muted) !important;
+      color: var(--afd-text-3) !important;
 
       &:hover {
-        color: var(--text-primary) !important;
+        color: var(--afd-text) !important;
       }
     }
 
     .el-dialog__body {
-      max-height: 70vh;
+      max-height: 55vh;
       padding: 0 !important;
       overflow-y: auto;
 
@@ -527,15 +554,19 @@
       }
 
       &::-webkit-scrollbar-thumb {
-        background: rgb(255 255 255 / 8%);
+        background: color-mix(in srgb, var(--default-box-color) 50%, transparent);
         border-radius: 2px;
       }
     }
 
     .el-dialog__footer {
       padding: 0 !important;
-      background: var(--bg-inner);
-      border-top: 1px solid var(--border);
+      background: linear-gradient(
+        180deg,
+        transparent 0%,
+        color-mix(in srgb, var(--default-box-color) 42%, transparent) 100%
+      );
+      border-top: 1px solid var(--afd-border);
     }
 
     .el-form-item {
@@ -545,7 +576,7 @@
     .el-form-item__error {
       margin-top: 2px;
       font-size: 11px;
-      color: var(--red);
+      color: var(--afd-danger);
     }
   }
 </style>
@@ -558,9 +589,9 @@
     align-items: center;
     padding: 10px 24px;
     font-size: 13px;
-    color: #94a3b8;
-    background: rgb(45 212 191 / 5%);
-    border-bottom: 1px solid rgb(45 212 191 / 15%);
+    color: var(--afd-text-2);
+    background: color-mix(in srgb, var(--afd-accent) 9%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--afd-accent) 18%, transparent);
   }
 
   .app-lock-icon {
@@ -572,31 +603,34 @@
     height: 24px;
     font-size: 12px;
     font-weight: 700;
-    color: #fff;
+    color: white;
     border-radius: 5px;
+    box-shadow:
+      0 14px 36px color-mix(in srgb, black 48%, transparent),
+      inset 0 1px 0 color-mix(in srgb, white 14%, transparent);
   }
 
   .app-lock-name {
     font-weight: 600;
-    color: #e2e8f0;
+    color: var(--afd-text);
   }
 
   .lock-sep {
-    color: #334155;
+    color: color-mix(in srgb, var(--afd-accent) 12%, transparent);
   }
 
   .app-lock-meta {
-    color: #94a3b8;
+    color: var(--afd-text-2);
   }
 
   .lock-icon {
     font-size: 12px;
-    color: #64748b;
+    color: var(--afd-text-3);
   }
 
   .lock-tip {
     font-size: 12px;
-    color: #64748b;
+    color: var(--afd-text-3);
   }
 
   // ─── 表单主体 ────────────────────────────────────────────
@@ -606,7 +640,7 @@
 
   .form-section {
     padding: 18px 24px;
-    border-bottom: 1px solid rgb(255 255 255 / 6%);
+    border-bottom: 1px solid color-mix(in srgb, var(--afd-accent) 10%, transparent);
 
     &--last {
       border-bottom: none;
@@ -614,7 +648,7 @@
 
     &--reason {
       padding-top: 0;
-      border-top: 1px solid rgb(255 255 255 / 6%);
+      border-top: 1px solid color-mix(in srgb, var(--afd-accent) 10%, transparent);
       border-bottom: none;
     }
   }
@@ -624,8 +658,8 @@
     margin-bottom: 14px;
     font-size: 12px;
     font-weight: 600;
-    color: #2dd4bf;
-    border-left: 3px solid #2dd4bf;
+    color: var(--afd-accent);
+    border-left: 3px solid var(--afd-accent);
   }
 
   .form-row {
@@ -646,18 +680,18 @@
 
   .form-label {
     font-size: 12px;
-    color: #94a3b8;
+    color: var(--afd-text-2);
   }
 
   .form-hint {
     margin-top: -3px;
     font-size: 11px;
-    color: #475569;
+    color: var(--afd-text-3);
   }
 
   .required {
     margin-left: 2px;
-    color: #ef4444;
+    color: var(--afd-danger);
   }
 
   // ─── 平台 Radio ──────────────────────────────────────────
@@ -672,21 +706,27 @@
     align-items: center;
     padding: 7px 12px;
     font-size: 13px;
-    color: #94a3b8;
+    color: var(--afd-text-2);
     cursor: pointer;
-    background: rgb(255 255 255 / 3%);
-    border: 1.5px solid rgb(255 255 255 / 8%);
+    background: color-mix(in srgb, var(--default-box-color) 28%, transparent);
+    border: 1.5px solid color-mix(in srgb, var(--afd-accent) 16%, transparent);
     border-radius: 7px;
-    transition: all 0.15s;
+    transition:
+      transform var(--duration-normal) var(--ease-out),
+      border-color var(--duration-normal) var(--ease-out),
+      background-color var(--duration-normal) var(--ease-out),
+      color var(--duration-normal) var(--ease-out),
+      box-shadow var(--duration-normal) var(--ease-out);
 
     &.is-checked {
-      color: #2dd4bf;
-      background: rgb(45 212 191 / 8%);
-      border-color: rgb(45 212 191 / 40%);
+      color: var(--afd-accent);
+      background: color-mix(in srgb, var(--afd-accent) 10%, transparent);
+      border-color: color-mix(in srgb, var(--afd-accent) 46%, transparent);
+      box-shadow: 0 12px 26px color-mix(in srgb, var(--afd-accent) 14%, transparent);
 
       .radio-dot {
-        background: #2dd4bf;
-        border-color: #2dd4bf;
+        background: var(--afd-accent);
+        border-color: var(--afd-accent);
 
         &::after {
           opacity: 1;
@@ -701,9 +741,11 @@
     width: 14px;
     height: 14px;
     background: transparent;
-    border: 1.5px solid #475569;
+    border: 1.5px solid color-mix(in srgb, var(--afd-accent) 18%, transparent);
     border-radius: 50%;
-    transition: all 0.15s;
+    transition:
+      border-color var(--duration-normal) var(--ease-out),
+      background-color var(--duration-normal) var(--ease-out);
 
     &::after {
       position: absolute;
@@ -712,7 +754,7 @@
       width: 6px;
       height: 6px;
       content: '';
-      background: #fff;
+      background: white;
       border-radius: 50%;
       opacity: 0;
       transition: opacity 0.15s;
@@ -724,8 +766,8 @@
   .change-indicator {
     padding: 4px 8px;
     font-size: 11px;
-    color: #f59e0b;
-    background: rgb(245 158 11 / 8%);
+    color: var(--afd-warning);
+    background: color-mix(in srgb, var(--afd-warning) 10%, transparent);
     border-radius: 4px;
   }
 
@@ -742,17 +784,21 @@
     width: 100%;
     padding: 9px 12px;
     font-size: 13px;
-    color: #e2e8f0;
+    color: var(--afd-text);
     text-align: left;
     cursor: pointer;
-    background: rgb(255 255 255 / 4%);
-    border: 1px solid rgb(255 255 255 / 10%);
+    background: color-mix(in srgb, var(--default-box-color) 30%, transparent);
+    border: 1px solid color-mix(in srgb, var(--afd-accent) 16%, transparent);
     border-radius: 7px;
-    transition: all 0.15s;
+    transition:
+      transform var(--duration-normal) var(--ease-out),
+      border-color var(--duration-normal) var(--ease-out),
+      box-shadow var(--duration-normal) var(--ease-out);
 
     &:hover,
     &.is-open {
-      border-color: rgb(45 212 191 / 40%);
+      border-color: color-mix(in srgb, var(--afd-accent) 46%, transparent);
+      box-shadow: 0 12px 28px color-mix(in srgb, var(--afd-accent) 12%, transparent);
     }
   }
 
@@ -765,17 +811,17 @@
   .active-star {
     font-size: 11px;
     font-weight: 600;
-    color: #2dd4bf;
+    color: var(--afd-accent);
   }
 
   .trigger-placeholder {
-    color: #475569;
+    color: var(--afd-text-3);
   }
 
   .trigger-arrow {
     flex-shrink: 0;
     font-size: 12px;
-    color: #64748b;
+    color: var(--afd-text-3);
   }
 
   .version-option {
@@ -784,7 +830,7 @@
     align-items: flex-start;
     padding: 12px 14px;
     cursor: pointer;
-    border-bottom: 1px solid rgb(255 255 255 / 5%);
+    border-bottom: 1px solid color-mix(in srgb, var(--afd-accent) 10%, transparent);
     transition: background 0.12s;
 
     &:last-child {
@@ -792,11 +838,11 @@
     }
 
     &:hover:not(.version-option--archived) {
-      background: rgb(45 212 191 / 6%);
+      background: color-mix(in srgb, var(--afd-accent) 8%, transparent);
     }
 
     &--selected {
-      background: rgb(45 212 191 / 8%) !important;
+      background: color-mix(in srgb, var(--afd-accent) 10%, transparent) !important;
     }
 
     &--archived {
@@ -816,11 +862,11 @@
     width: 14px;
     height: 14px;
     background: transparent;
-    border: 1.5px solid #475569;
+    border: 1.5px solid color-mix(in srgb, var(--afd-accent) 18%, transparent);
     border-radius: 50%;
 
     .version-option--selected & {
-      border-color: #2dd4bf;
+      border-color: var(--afd-accent);
     }
   }
 
@@ -828,7 +874,7 @@
     display: block;
     width: 7px;
     height: 7px;
-    background: #2dd4bf;
+    background: var(--afd-accent);
     border-radius: 50%;
   }
 
@@ -848,7 +894,7 @@
   .ver-label {
     font-size: 13px;
     font-weight: 600;
-    color: #e2e8f0;
+    color: var(--afd-text);
   }
 
   .ver-status {
@@ -857,18 +903,18 @@
     border-radius: 3px;
 
     &--published {
-      color: #2dd4bf;
-      background: rgb(45 212 191 / 12%);
+      color: var(--afd-accent);
+      background: color-mix(in srgb, var(--afd-accent) 12%, transparent);
     }
 
     &--draft {
-      color: #f59e0b;
-      background: rgb(245 158 11 / 12%);
+      color: var(--afd-warning);
+      background: color-mix(in srgb, var(--afd-warning) 12%, transparent);
     }
 
     &--archived {
-      color: #64748b;
-      background: rgb(255 255 255 / 5%);
+      color: var(--afd-text-3);
+      background: color-mix(in srgb, var(--default-box-color) 26%, transparent);
     }
   }
 
@@ -876,38 +922,38 @@
     padding: 1px 6px;
     font-size: 11px;
     font-weight: 600;
-    color: #2dd4bf;
-    background: rgb(45 212 191 / 15%);
-    border: 1px solid rgb(45 212 191 / 30%);
+    color: var(--afd-accent);
+    background: color-mix(in srgb, var(--afd-accent) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--afd-accent) 30%, transparent);
     border-radius: 3px;
   }
 
   .ver-archived-badge {
     padding: 1px 6px;
     font-size: 11px;
-    color: #64748b;
-    background: rgb(255 255 255 / 5%);
-    border: 1px solid rgb(255 255 255 / 8%);
+    color: var(--afd-text-3);
+    background: color-mix(in srgb, var(--default-box-color) 26%, transparent);
+    border: 1px solid color-mix(in srgb, var(--afd-accent) 10%, transparent);
     border-radius: 3px;
   }
 
   .ver-check {
     margin-left: auto;
     font-size: 14px;
-    color: #2dd4bf;
+    color: var(--afd-accent);
   }
 
   .ver-opt-meta {
     font-size: 11px;
-    color: #64748b;
+    color: var(--afd-text-3);
   }
 
   // ─── 配置预览 ────────────────────────────────────────────
   .config-preview {
     padding: 10px 12px;
     margin-top: 8px;
-    background: rgb(255 255 255 / 2%);
-    border: 1px solid rgb(255 255 255 / 6%);
+    background: color-mix(in srgb, var(--default-box-color) 18%, transparent);
+    border: 1px solid color-mix(in srgb, var(--afd-accent) 10%, transparent);
     border-radius: 7px;
   }
 
@@ -920,12 +966,12 @@
 
   .preview-title {
     font-size: 12px;
-    color: #64748b;
+    color: var(--afd-text-3);
   }
 
   .preview-link {
     font-size: 12px;
-    color: #2dd4bf;
+    color: var(--afd-accent);
     cursor: pointer;
     background: none;
     border: none;
@@ -944,9 +990,9 @@
   .preview-tag {
     padding: 2px 8px;
     font-size: 12px;
-    color: #94a3b8;
-    background: rgb(255 255 255 / 4%);
-    border: 1px solid rgb(255 255 255 / 8%);
+    color: var(--afd-text-2);
+    background: color-mix(in srgb, var(--default-box-color) 30%, transparent);
+    border: 1px solid color-mix(in srgb, var(--afd-accent) 12%, transparent);
     border-radius: 4px;
   }
 
@@ -958,9 +1004,9 @@
     padding: 9px 12px;
     margin-top: 8px;
     font-size: 12px;
-    color: #f59e0b;
-    background: rgb(245 158 11 / 8%);
-    border: 1px solid rgb(245 158 11 / 25%);
+    color: var(--afd-warning);
+    background: color-mix(in srgb, var(--afd-warning) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--afd-warning) 28%, transparent);
     border-radius: 6px;
   }
 
@@ -968,8 +1014,8 @@
   .change-count-hint {
     padding: 4px 8px;
     font-size: 11px;
-    color: #f59e0b;
-    background: rgb(245 158 11 / 6%);
+    color: var(--afd-warning);
+    background: color-mix(in srgb, var(--afd-warning) 8%, transparent);
     border-radius: 4px;
   }
 
@@ -983,26 +1029,42 @@
 
   .btn-cancel {
     padding: 8px 20px !important;
-    color: #94a3b8 !important;
-    background: transparent !important;
-    border: 1px solid rgb(255 255 255 / 10%) !important;
+    color: var(--afd-text-2) !important;
+    background: color-mix(in srgb, var(--default-box-color) 22%, transparent) !important;
+    border: 1px solid color-mix(in srgb, var(--afd-accent) 16%, transparent) !important;
     border-radius: 8px !important;
+    transition:
+      transform var(--duration-normal) var(--ease-out),
+      border-color var(--duration-normal) var(--ease-out),
+      box-shadow var(--duration-normal) var(--ease-out),
+      color var(--duration-normal) var(--ease-out) !important;
 
     &:hover {
-      color: #e2e8f0 !important;
+      color: var(--afd-text) !important;
+      border-color: color-mix(in srgb, var(--afd-accent) 36%, transparent) !important;
+      box-shadow: 0 14px 32px color-mix(in srgb, var(--afd-accent) 12%, transparent) !important;
+      transform: translateY(-1px);
     }
   }
 
   .btn-submit {
     padding: 8px 28px !important;
     font-weight: 600 !important;
-    color: #0b1120 !important;
-    background: #2dd4bf !important;
+    color: color-mix(in srgb, black 78%, transparent) !important;
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--el-color-primary) 88%, white 8%),
+      color-mix(in srgb, var(--theme-color) 86%, white 10%)
+    ) !important;
     border: none !important;
     border-radius: 8px !important;
+    box-shadow:
+      0 16px 36px color-mix(in srgb, var(--afd-accent) 22%, transparent),
+      inset 0 1px 0 color-mix(in srgb, white 18%, transparent) !important;
 
     &:hover {
       filter: brightness(1.1);
+      transform: translateY(-1px);
     }
   }
 
@@ -1033,49 +1095,63 @@
     }
 
     :deep(.el-select__wrapper) {
-      color: #e2e8f0;
-      background: rgb(255 255 255 / 4%) !important;
-      border: 1px solid rgb(255 255 255 / 10%) !important;
+      color: var(--afd-text);
+      background: color-mix(in srgb, var(--default-box-color) 30%, transparent) !important;
+      border: 1px solid color-mix(in srgb, var(--afd-accent) 16%, transparent) !important;
       border-radius: 7px !important;
       box-shadow: none !important;
 
       &:hover {
-        border-color: rgb(45 212 191 / 40%) !important;
+        border-color: color-mix(in srgb, var(--afd-accent) 46%, transparent) !important;
       }
     }
 
     :deep(.el-select__placeholder) {
-      color: #475569 !important;
+      color: var(--afd-text-3) !important;
     }
   }
 
   .dark-textarea {
     :deep(.el-textarea__inner) {
       font-size: 13px;
-      color: #e2e8f0;
-      background: rgb(255 255 255 / 4%) !important;
-      border: 1px solid rgb(255 255 255 / 10%) !important;
+      color: var(--afd-text);
+      background: color-mix(in srgb, var(--default-box-color) 30%, transparent) !important;
+      border: 1px solid color-mix(in srgb, var(--afd-accent) 16%, transparent) !important;
       border-radius: 7px !important;
       box-shadow: none !important;
 
       &::placeholder {
-        color: #475569;
+        color: var(--afd-text-3);
       }
 
       &:hover,
       &:focus {
-        border-color: rgb(45 212 191 / 40%) !important;
+        border-color: color-mix(in srgb, var(--afd-accent) 46%, transparent) !important;
       }
     }
 
     &--highlight {
       :deep(.el-textarea__inner) {
-        border-color: rgb(245 158 11 / 40%) !important;
+        border-color: color-mix(in srgb, var(--afd-warning) 42%, transparent) !important;
 
         &:focus {
-          border-color: #f59e0b !important;
+          border-color: var(--afd-warning) !important;
         }
       }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .platform-radio,
+    .version-trigger,
+    .btn-cancel,
+    .btn-submit {
+      transition: none !important;
+    }
+
+    .btn-cancel:hover,
+    .btn-submit:hover {
+      transform: none !important;
     }
   }
 </style>
@@ -1083,11 +1159,26 @@
 <!-- Teleport 渲染到 body，scoped 无效，需要全局样式 -->
 <style lang="scss">
   .version-dropdown-portal {
+    --vdp-accent: var(--el-color-primary);
+    --vdp-accent-dim: color-mix(in srgb, var(--el-color-primary) 10%, transparent);
+    --vdp-border: color-mix(in srgb, var(--el-color-primary) 16%, transparent);
+    --vdp-surface: color-mix(in srgb, var(--default-box-color) 86%, black 10%);
+    --vdp-text: var(--text-primary);
+    --vdp-text-2: var(--text-secondary);
+    --vdp-text-3: var(--text-tertiary);
+    --vdp-warning: var(--art-warning);
+
     overflow: hidden;
-    background: #1a2540;
-    border: 1px solid rgb(255 255 255 / 10%);
+    background: linear-gradient(
+      180deg,
+      var(--vdp-surface),
+      color-mix(in srgb, var(--vdp-surface) 88%, black 12%)
+    );
+    border: 1px solid var(--vdp-border);
     border-radius: 8px;
-    box-shadow: 0 12px 40px rgb(0 0 0 / 55%);
+    box-shadow:
+      0 12px 44px color-mix(in srgb, black 60%, transparent),
+      0 0 0 1px color-mix(in srgb, var(--el-color-primary) 9%, transparent);
 
     .version-option {
       display: flex;
@@ -1095,7 +1186,7 @@
       align-items: flex-start;
       padding: 12px 14px;
       cursor: pointer;
-      border-bottom: 1px solid rgb(255 255 255 / 5%);
+      border-bottom: 1px solid color-mix(in srgb, var(--vdp-accent) 10%, transparent);
       transition: background 0.12s;
 
       &:last-child {
@@ -1103,14 +1194,14 @@
       }
 
       &:hover:not(.version-option--archived) {
-        background: rgb(45 212 191 / 6%);
+        background: color-mix(in srgb, var(--vdp-accent) 8%, transparent);
       }
 
       &--selected {
-        background: rgb(45 212 191 / 8%) !important;
+        background: color-mix(in srgb, var(--vdp-accent) 10%, transparent) !important;
 
         .ver-radio {
-          border-color: #2dd4bf;
+          border-color: var(--vdp-accent);
         }
       }
 
@@ -1131,7 +1222,7 @@
       width: 14px;
       height: 14px;
       background: transparent;
-      border: 1.5px solid #475569;
+      border: 1.5px solid color-mix(in srgb, var(--vdp-accent) 18%, transparent);
       border-radius: 50%;
     }
 
@@ -1139,7 +1230,7 @@
       display: block;
       width: 7px;
       height: 7px;
-      background: #2dd4bf;
+      background: var(--vdp-accent);
       border-radius: 50%;
     }
 
@@ -1159,7 +1250,7 @@
     .ver-label {
       font-size: 13px;
       font-weight: 600;
-      color: #e2e8f0;
+      color: var(--vdp-text);
     }
 
     .ver-status {
@@ -1168,18 +1259,18 @@
       border-radius: 3px;
 
       &--published {
-        color: #2dd4bf;
-        background: rgb(45 212 191 / 12%);
+        color: var(--vdp-accent);
+        background: color-mix(in srgb, var(--vdp-accent) 12%, transparent);
       }
 
       &--draft {
-        color: #f59e0b;
-        background: rgb(245 158 11 / 12%);
+        color: var(--vdp-warning);
+        background: color-mix(in srgb, var(--vdp-warning) 12%, transparent);
       }
 
       &--archived {
-        color: #64748b;
-        background: rgb(255 255 255 / 5%);
+        color: var(--vdp-text-3);
+        background: color-mix(in srgb, var(--default-box-color) 26%, transparent);
       }
     }
 
@@ -1187,36 +1278,36 @@
       padding: 1px 6px;
       font-size: 11px;
       font-weight: 600;
-      color: #2dd4bf;
-      background: rgb(45 212 191 / 15%);
-      border: 1px solid rgb(45 212 191 / 30%);
+      color: var(--vdp-accent);
+      background: color-mix(in srgb, var(--vdp-accent) 14%, transparent);
+      border: 1px solid color-mix(in srgb, var(--vdp-accent) 30%, transparent);
       border-radius: 3px;
     }
 
     .ver-archived-badge {
       padding: 1px 6px;
       font-size: 11px;
-      color: #64748b;
-      background: rgb(255 255 255 / 5%);
-      border: 1px solid rgb(255 255 255 / 8%);
+      color: var(--vdp-text-3);
+      background: color-mix(in srgb, var(--default-box-color) 26%, transparent);
+      border: 1px solid color-mix(in srgb, var(--vdp-accent) 10%, transparent);
       border-radius: 3px;
     }
 
     .ver-check {
       margin-left: auto;
       font-size: 14px;
-      color: #2dd4bf;
+      color: var(--vdp-accent);
     }
 
     .ver-opt-meta {
       font-size: 11px;
-      color: #64748b;
+      color: var(--vdp-text-3);
     }
 
     .ver-empty {
       padding: 16px 14px;
       font-size: 12px;
-      color: #64748b;
+      color: var(--vdp-text-3);
       text-align: center;
     }
   }

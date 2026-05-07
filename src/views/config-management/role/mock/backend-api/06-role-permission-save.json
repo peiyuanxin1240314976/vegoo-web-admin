@@ -1,0 +1,148 @@
+{
+  "_comment": "角色管理 - 保存角色的页面权限与日期权限配置，对应中间面板统一保存按钮。",
+  "fieldDescription": {
+    "request": {
+      "roleId": { "type": "number", "required": true, "description": "本次更新的角色 ID。" },
+      "routePermissions": {
+        "type": "RoutePermissionPayload",
+        "required": true,
+        "description": "页面权限保存结构。"
+      },
+      "datePermissions": {
+        "type": "DatePermissionPayload",
+        "required": true,
+        "description": "日期权限保存结构。"
+      },
+      "buttonPermissions": {
+        "type": "ButtonPermissionPayload",
+        "required": true,
+        "description": "按钮级权限预留结构，本期 codes 固定为空数组。"
+      }
+    },
+    "RoutePermissionPayload": {
+      "routeNames": {
+        "type": "string[]",
+        "required": true,
+        "description": "最终提交的 routeName 列表，建议包含半选父节点。"
+      }
+    },
+    "DatePermissionPayload": {
+      "defaultDateScope": {
+        "type": "DateScopeConfig",
+        "required": true,
+        "description": "全局默认日期权限。"
+      },
+      "pageDateScopes": {
+        "type": "PageDateScope[]",
+        "required": true,
+        "description": "页面覆盖规则，空数据时传 []。"
+      }
+    },
+    "DateScopeConfig": {
+      "maxHistoryDays": {
+        "type": "number",
+        "required": true,
+        "description": "最大可回看天数；-1 表示不限。"
+      },
+      "defaultRangeDays": { "type": "number", "required": true, "description": "默认展示天数。" },
+      "allowCustomRange": {
+        "type": "boolean",
+        "required": true,
+        "description": "是否允许自定义日期。"
+      }
+    },
+    "PageDateScope": {
+      "pageKey": { "type": "string", "required": true, "description": "页面唯一标识。" },
+      "maxHistoryDays": {
+        "type": "number",
+        "required": true,
+        "description": "该页面允许查看的最大历史天数；-1 表示不限。"
+      },
+      "defaultRangeDays": {
+        "type": "number",
+        "required": true,
+        "description": "该页面默认展示天数。"
+      },
+      "allowCustomRange": {
+        "type": "boolean",
+        "required": true,
+        "description": "该页面是否允许自定义日期。"
+      }
+    },
+    "ButtonPermissionPayload": {
+      "codes": {
+        "type": "string[]",
+        "required": true,
+        "description": "按钮级权限编码预留字段，本期建议传 []。"
+      }
+    },
+    "response": {
+      "success": { "type": "boolean", "required": true, "description": "是否保存成功。" },
+      "message": { "type": "string", "required": false, "description": "保存结果提示文案。" }
+    }
+  },
+  "sampleRequest": {
+    "roleId": 3,
+    "routePermissions": {
+      "routeNames": [
+        "UserGrowth",
+        "MyAds",
+        "PerformanceAnalysis",
+        "ComprehensiveAnalysis",
+        "BusinessInsight",
+        "AgencyAnalysis"
+      ]
+    },
+    "datePermissions": {
+      "defaultDateScope": {
+        "maxHistoryDays": 90,
+        "defaultRangeDays": 7,
+        "allowCustomRange": true
+      },
+      "pageDateScopes": [
+        {
+          "pageKey": "AdMobDetail",
+          "maxHistoryDays": 3,
+          "defaultRangeDays": 1,
+          "allowCustomRange": false
+        },
+        {
+          "pageKey": "MyAds",
+          "maxHistoryDays": 60,
+          "defaultRangeDays": 7,
+          "allowCustomRange": true
+        }
+      ]
+    },
+    "buttonPermissions": {
+      "codes": []
+    }
+  },
+  "sampleResponse": {
+    "success": true,
+    "message": "save success"
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/config-management/role/permissions/update",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "roleId, routePermissions, datePermissions, buttonPermissions",
+    "responseBody": "success, message"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "点击中间面板底部保存权限配置",
+        "detail": "前端汇总页面权限树与日期权限表单后统一提交。"
+      }
+    ],
+    "defaultSelection": "buttonPermissions.codes 当前固定传空数组，以便未来按钮权限扩展时保持契约稳定。",
+    "dedupe": "保存按钮建议防重复提交，成功后刷新摘要与右侧角色成员信息。"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "后端保存后建议返回最终落库结果或版本号，便于后续支持并发覆盖校验。",
+      "各业务查询接口应以当前角色对应的日期权限为准做真正校验。"
+    ]
+  }
+}

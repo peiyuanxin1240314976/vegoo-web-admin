@@ -27,10 +27,11 @@ const _MOCK_ROWS: ConversionMappingItem[] = [
     id: '1',
     platform: 'android',
     mccAccount: '560-369-9741',
-    appPackage: 'com.locate.phone.track',
+    appId: '10001',
     conversionName: 'Phone Tracker: Family Locator (Android) app_store_subscription_convert',
     conversionId: '7217482984',
     platformConversionType: 'PHONE_CALL_LEAD',
+    conversionDisplayType: 'PHONE_CALL_LEAD',
     systemDisplayName: '订阅转化',
     billingType: 'CPA',
     status: 'enabled'
@@ -39,10 +40,11 @@ const _MOCK_ROWS: ConversionMappingItem[] = [
     id: '2',
     platform: 'android',
     mccAccount: '560-369-9741',
-    appPackage: 'com.locate.phone.track',
+    appId: '10001',
     conversionName: 'Phone Tracker install',
     conversionId: '7217482985',
     platformConversionType: 'DOWNLOAD',
+    conversionDisplayType: 'DOWNLOAD',
     systemDisplayName: '首次安装',
     billingType: 'CPI',
     status: 'enabled'
@@ -51,10 +53,11 @@ const _MOCK_ROWS: ConversionMappingItem[] = [
     id: '3',
     platform: 'android',
     mccAccount: '560-369-9741',
-    appPackage: 'com.locate.phone.track',
+    appId: '10001',
     conversionName: 'IAP purchase complete',
     conversionId: '7217482986',
     platformConversionType: 'PURCHASE',
+    conversionDisplayType: 'PURCHASE',
     systemDisplayName: 'IAP购买',
     billingType: 'CPA',
     status: 'enabled'
@@ -63,10 +66,11 @@ const _MOCK_ROWS: ConversionMappingItem[] = [
     id: '4',
     platform: 'android',
     mccAccount: '560-369-9742',
-    appPackage: 'com.example.shop',
+    appId: '10002',
     conversionName: 'add_to_cart_event',
     conversionId: '7217482987',
     platformConversionType: 'ADD_TO_CART',
+    conversionDisplayType: 'ADD_TO_CART',
     systemDisplayName: '加购',
     billingType: 'CPE',
     status: 'enabled'
@@ -75,10 +79,11 @@ const _MOCK_ROWS: ConversionMappingItem[] = [
     id: '5',
     platform: 'android',
     mccAccount: '560-369-9742',
-    appPackage: 'com.example.shop',
+    appId: '10002',
     conversionName: 'page_view_landing',
     conversionId: '7217482988',
     platformConversionType: 'PAGE_VIEW',
+    conversionDisplayType: 'PAGE_VIEW',
     systemDisplayName: '页面浏览',
     billingType: '',
     status: 'enabled'
@@ -87,10 +92,11 @@ const _MOCK_ROWS: ConversionMappingItem[] = [
     id: '6',
     platform: 'android',
     mccAccount: '560-369-9742',
-    appPackage: 'com.example.shop',
+    appId: '10002',
     conversionName: 'begin_checkout',
     conversionId: '7217482989',
     platformConversionType: 'BEGIN_CHECKOUT',
+    conversionDisplayType: 'BEGIN_CHECKOUT',
     systemDisplayName: '发起结账',
     billingType: 'CPA',
     status: 'enabled'
@@ -99,10 +105,11 @@ const _MOCK_ROWS: ConversionMappingItem[] = [
     id: '7',
     platform: 'android',
     mccAccount: '560-369-9743',
-    appPackage: 'com.locate.phone.track',
+    appId: '10001',
     conversionName: 'lead_form_submit',
     conversionId: '7217482990',
     platformConversionType: 'PHONE_CALL_LEAD',
+    conversionDisplayType: 'PHONE_CALL_LEAD',
     systemDisplayName: '订阅转化',
     billingType: 'CPA',
     status: 'duplicate'
@@ -111,10 +118,11 @@ const _MOCK_ROWS: ConversionMappingItem[] = [
     id: '8',
     platform: 'android',
     mccAccount: '560-369-9743',
-    appPackage: 'com.other.app',
+    appId: '10003',
     conversionName: 'unknown_conversion',
     conversionId: '7217482991',
     platformConversionType: 'PAGE_VIEW',
+    conversionDisplayType: 'PAGE_VIEW',
     systemDisplayName: '',
     billingType: '',
     status: 'unmapped'
@@ -123,14 +131,16 @@ const _MOCK_ROWS: ConversionMappingItem[] = [
 for (let i = 9; i <= 18; i++) {
   const typeIndex = (i - 1) % PLATFORM_TYPES.length
   const billingIndex = (i - 1) % BILLING.length
+  const metaVal = PLATFORM_TYPES[typeIndex]
   _MOCK_ROWS.push({
     id: String(i),
     platform: 'android',
     mccAccount: `560-369-97${40 + (i % 10)}`,
-    appPackage: i % 2 ? 'com.locate.phone.track' : 'com.example.shop',
+    appId: i % 2 ? '10001' : '10002',
     conversionName: `Conversion Event ${i}`,
     conversionId: String(7217482990 + i),
-    platformConversionType: PLATFORM_TYPES[typeIndex],
+    platformConversionType: metaVal,
+    conversionDisplayType: metaVal,
     systemDisplayName: SYSTEM_NAMES[typeIndex] ?? SYSTEM_NAMES[0],
     billingType: BILLING[billingIndex],
     status: i === 10 || i === 11 ? 'duplicate' : i === 12 ? 'unmapped' : 'enabled'
@@ -145,13 +155,20 @@ export const MOCK_PLATFORM_OPTIONS = [
   { label: 'iOS', value: 'ios' }
 ]
 
-/** 筛选 - 应用选项 */
-export const MOCK_APP_OPTIONS = [
+/** name Tab / Data Tab 筛选与弹窗应用下拉 — `value` 为自有应用 ID（契约 `appId`） */
+export const MOCK_DATA_TAB_APP_OPTIONS = [
   { label: '全部应用', value: '' },
-  { label: 'com.locate.phone.track', value: 'com.locate.phone.track' },
-  { label: 'com.example.shop', value: 'com.example.shop' },
-  { label: 'com.other.app', value: 'com.other.app' }
+  { label: 'com.locate.phone.track', value: '10001' },
+  { label: 'com.example.shop', value: '10002' },
+  { label: 'com.other.app', value: '10003' }
 ]
+
+/** mock：自有应用 ID → 包名（keyword 展示名匹配；列表行主键字段为 `appId`） */
+export const MOCK_APP_ID_TO_PACKAGE: Record<string, string> = {
+  '10001': 'com.locate.phone.track',
+  '10002': 'com.example.shop',
+  '10003': 'com.other.app'
+}
 
 /** 弹窗 - 广告平台选项 */
 export const MOCK_AD_PLATFORM_OPTIONS = [
@@ -169,8 +186,8 @@ export const MOCK_MCC_BY_PLATFORM: Record<string, { label: string; value: string
   mintegral: [{ label: '560-369-9744', value: '560-369-9744' }]
 }
 
-/** 弹窗 - 应用包名下拉（从广告平台接口获取，复用应用选项去掉“全部”） */
-export const MOCK_APP_OPTIONS_FOR_DIALOG = MOCK_APP_OPTIONS.filter((o) => o.value !== '')
+/** 弹窗 - 应用下拉（无「全部」；与 `mappings-create` 的 `appId` 一致） */
+export const MOCK_APP_OPTIONS_FOR_DIALOG = MOCK_DATA_TAB_APP_OPTIONS.filter((o) => o.value !== '')
 
 /** 弹窗 - 转化类型展示选项（付费/激活/行为/收入） */
 export const MOCK_CONVERSION_DISPLAY_TYPE_OPTIONS = [
@@ -221,30 +238,30 @@ export const MOCK_PLATFORM_STATS: PlatformStats = {
 export function fetchConversionMappingListMock(
   params: ConversionFilterParams
 ): Promise<Api.Common.PaginatedResponse<ConversionMappingItem>> {
-  const {
-    current = 1,
-    size = 20,
-    platform,
-    appPackage,
-    app,
-    conversionType,
-    status,
-    keyword
-  } = params
+  const { current = 1, size = 20, platform, appId, conversionType, status, keyword } = params
   let list = [...MOCK_CONVERSION_LIST]
   if (platform) list = list.filter((r) => r.platform === platform)
-  const appFilter = appPackage || app
-  if (appFilter) list = list.filter((r) => r.appPackage === appFilter)
-  if (conversionType) list = list.filter((r) => r.platformConversionType === conversionType)
+  if (appId) list = list.filter((r) => r.appId === appId)
+  if (conversionType) {
+    const ct = conversionType.toLowerCase()
+    list = list.filter(
+      (r) =>
+        String(r.platformConversionType).toLowerCase() === ct ||
+        String(r.conversionDisplayType ?? '').toLowerCase() === ct
+    )
+  }
   if (status) list = list.filter((r) => r.status === status)
   if (keyword) {
     const k = keyword.toLowerCase()
-    list = list.filter(
-      (r) =>
+    list = list.filter((r) => {
+      const pkg = (MOCK_APP_ID_TO_PACKAGE[r.appId] ?? '').toLowerCase()
+      return (
         r.conversionName.toLowerCase().includes(k) ||
-        r.appPackage.toLowerCase().includes(k) ||
+        r.appId.toLowerCase().includes(k) ||
+        pkg.includes(k) ||
         r.systemDisplayName.toLowerCase().includes(k)
-    )
+      )
+    })
   }
   const total = list.length
   const start = (current - 1) * size

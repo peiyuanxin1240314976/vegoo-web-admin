@@ -1,0 +1,131 @@
+{
+  "_comment": "角色管理 - 中间面板日期权限 Tab，控制默认日期范围与页面级覆盖规则。",
+  "fieldDescription": {
+    "request": {
+      "roleId": { "type": "number", "required": true, "description": "当前选中的角色 ID。" }
+    },
+    "response": {
+      "defaultDateScope": {
+        "type": "DateScopeConfig",
+        "required": true,
+        "description": "角色的全局默认日期权限。"
+      },
+      "pageDateScopes": {
+        "type": "PageDateScope[]",
+        "required": true,
+        "description": "页面级覆盖规则，空数据时返回 []。"
+      },
+      "pageOptions": {
+        "type": "PageOption[]",
+        "required": true,
+        "description": "可配置页面选项列表，供前端新增覆盖规则时使用。"
+      }
+    },
+    "DateScopeConfig": {
+      "maxHistoryDays": {
+        "type": "number",
+        "required": true,
+        "description": "最大可回看天数；-1 表示不限。"
+      },
+      "defaultRangeDays": {
+        "type": "number",
+        "required": true,
+        "description": "页面首次进入时默认展示的日期范围天数。"
+      },
+      "allowCustomRange": {
+        "type": "boolean",
+        "required": true,
+        "description": "是否允许用户手动选择自定义日期区间。"
+      }
+    },
+    "PageDateScope": {
+      "pageKey": {
+        "type": "string",
+        "required": true,
+        "description": "页面唯一标识，建议与 routeName 保持一致。"
+      },
+      "maxHistoryDays": {
+        "type": "number",
+        "required": true,
+        "description": "该页面覆盖后的最大可回看天数；-1 表示不限。"
+      },
+      "defaultRangeDays": {
+        "type": "number",
+        "required": true,
+        "description": "该页面覆盖后的默认展示天数。"
+      },
+      "allowCustomRange": {
+        "type": "boolean",
+        "required": true,
+        "description": "该页面是否允许自定义日期。"
+      }
+    },
+    "PageOption": {
+      "pageKey": { "type": "string", "required": true, "description": "页面唯一标识。" },
+      "pageName": { "type": "string", "required": true, "description": "页面展示名称。" }
+    }
+  },
+  "sampleRequest": {
+    "roleId": 3
+  },
+  "sampleResponse": {
+    "defaultDateScope": {
+      "maxHistoryDays": 90,
+      "defaultRangeDays": 7,
+      "allowCustomRange": true
+    },
+    "pageDateScopes": [
+      {
+        "pageKey": "AdMobDetail",
+        "maxHistoryDays": 3,
+        "defaultRangeDays": 1,
+        "allowCustomRange": false
+      },
+      {
+        "pageKey": "MyAds",
+        "maxHistoryDays": 60,
+        "defaultRangeDays": 7,
+        "allowCustomRange": true
+      },
+      {
+        "pageKey": "PerformanceAnalysis",
+        "maxHistoryDays": 30,
+        "defaultRangeDays": 7,
+        "allowCustomRange": true
+      }
+    ],
+    "pageOptions": [
+      { "pageKey": "AdMobDetail", "pageName": "menus.userGrowth.realTimeData" },
+      { "pageKey": "MyAds", "pageName": "menus.userGrowth.myAds" },
+      { "pageKey": "PerformanceAnalysis", "pageName": "menus.userGrowth.performanceAnalysis" }
+    ]
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/config-management/role/permissions/date",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "roleId",
+    "responseBody": "defaultDateScope, pageDateScopes, pageOptions"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "切换到日期权限 Tab 或切换左侧角色",
+        "detail": "拉取角色的默认日期规则和页面覆盖规则。",
+        "prerequisite": "selectedRole.roleId 已存在。"
+      },
+      {
+        "moment": "点击重置按钮",
+        "detail": "恢复当前角色最近一次保存的日期权限配置。"
+      }
+    ],
+    "defaultSelection": "前端使用 defaultDateScope 作为全局表单初始值，pageDateScopes 作为覆盖规则列表初始值。",
+    "dedupe": "角色快速切换时以后返回的最后一次结果为准。"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "日期权限只是前端交互限制，真实查询接口仍需按当前用户角色做后端兜底校验。",
+      "pageOptions 建议仅下发支持日期筛选的页面，避免配置无效页面。"
+    ]
+  }
+}

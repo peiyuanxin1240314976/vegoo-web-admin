@@ -61,9 +61,15 @@
               <span class="app-name">{{ app.name }}</span>
               <span class="app-category">{{ app.category }}</span>
               <template v-if="!isSelected(app.id)">
-                <span class="app-revenue plain-revenue">{{ formatRevenue(app.revenue) }}</span>
-                <span :class="['app-change', app.revenueChange >= 0 ? 'positive' : 'negative']">
-                  {{ app.revenueChange >= 0 ? '+' : '' }}{{ app.revenueChange }}%
+                <span class="app-revenue plain-revenue">{{ compareRevenueText(app.id) }}</span>
+                <span
+                  :class="[
+                    'app-change',
+                    compareRevenueChange(app.id) >= 0 ? 'positive' : 'negative'
+                  ]"
+                >
+                  {{ compareRevenueChange(app.id) >= 0 ? '+' : ''
+                  }}{{ compareRevenueChange(app.id) }}%
                 </span>
               </template>
             </div>
@@ -72,10 +78,16 @@
             <template v-if="isSelected(app.id)">
               <div class="app-revenue-row">
                 <span class="app-revenue-big" :style="{ color: app.iconColor }">
-                  {{ formatRevenue(app.revenue) }}
+                  {{ compareRevenueText(app.id) }}
                 </span>
-                <span :class="['app-change', app.revenueChange >= 0 ? 'positive' : 'negative']">
-                  {{ app.revenueChange >= 0 ? '+' : '' }}{{ app.revenueChange }}%
+                <span
+                  :class="[
+                    'app-change',
+                    compareRevenueChange(app.id) >= 0 ? 'positive' : 'negative'
+                  ]"
+                >
+                  {{ compareRevenueChange(app.id) >= 0 ? '+' : ''
+                  }}{{ compareRevenueChange(app.id) }}%
                 </span>
                 <SparklineChart
                   class="app-sparkline"
@@ -87,7 +99,7 @@
               </div>
               <div class="app-meta">
                 <span class="meta-label">MAU</span>
-                <span class="meta-val">{{ app.mau }}万</span>
+                <span class="meta-val">{{ compareUserText(app.id) }}</span>
                 <span class="meta-label">预估利润</span>
                 <span class="meta-val">{{ formatRevenue(app.profit) }}</span>
               </div>
@@ -121,12 +133,37 @@
           </span>
         </div>
         <div class="period-controls">
-          <button class="period-nav">‹</button>
-          <span class="period-label">2025年12月</span>
-          <button class="period-nav">›</button>
-          <span class="compare-toggle-label">对比上月</span>
-          <div class="mini-toggle active"><span class="mini-knob" /></div>
-          <span class="toggle-on-text">ON</span>
+          <AppDatePicker
+            v-if="props.period === 'daily'"
+            v-model="localStartDate"
+            class="compare-date-picker compare-date-picker--single"
+            size="small"
+            type="date"
+            value-format="YYYY-MM-DD"
+            format="YYYY-MM-DD"
+            :clearable="false"
+          />
+          <AppDatePicker
+            v-else
+            v-model="localDateRange"
+            class="compare-date-picker"
+            size="small"
+            type="daterange"
+            value-format="YYYY-MM-DD"
+            format="YYYY-MM-DD"
+            range-separator="~"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            :clearable="false"
+          />
+          <span class="compare-toggle-label">{{ localCompareLabel }}</span>
+          <ElSwitch
+            v-model="localCompareEnabled"
+            size="small"
+            inline-prompt
+            active-text="ON"
+            inactive-text="OFF"
+          />
         </div>
       </div>
 
@@ -152,9 +189,17 @@
               <!-- Main revenue row -->
               <div class="card-revenue-row">
                 <span class="card-revenue-val" :style="{ color: app.iconColor }">
-                  {{ formatRevenue(app.revenue) }}
+                  {{ compareRevenueText(app.id) }}
                 </span>
-                <span class="card-change positive">+{{ app.revenueChange }}%</span>
+                <span
+                  :class="[
+                    'card-change',
+                    compareRevenueChange(app.id) >= 0 ? 'positive' : 'negative'
+                  ]"
+                >
+                  {{ compareRevenueChange(app.id) >= 0 ? '+' : ''
+                  }}{{ compareRevenueChange(app.id) }}%
+                </span>
               </div>
               <!-- Sub metrics -->
               <div v-for="m in getSubMetrics(app)" :key="m.label" class="card-sub-metric">
@@ -171,7 +216,7 @@
         <!-- MAU Chart -->
         <div class="mau-chart-panel">
           <div class="chart-header">
-            <span class="chart-title">MAU 对比（月报专有）</span>
+            <span class="chart-title">{{ userChartTitle }}</span>
             <div class="chart-legend">
               <span v-for="app in selectedApps" :key="app.id" class="legend-item">
                 <span class="legend-dot" :style="{ background: app.iconColor }" />
@@ -188,7 +233,7 @@
         <!-- Trend Chart -->
         <div class="trend-section">
           <div class="trend-header">
-            <span class="section-title">总收尾走势对比（近 6 个月）</span>
+            <span class="section-title">{{ trendTitle }}</span>
             <div class="trend-legend">
               <span v-for="app in selectedApps" :key="app.id" class="legend-item">
                 <span class="legend-line" :style="{ background: app.iconColor }" />
@@ -245,11 +290,27 @@
 
 <script setup lang="ts">
   import { ref, computed, watch, onMounted, onUnmounted, nextTick, inject } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import * as echarts from 'echarts'
   import SparklineChart from './SparklineChart.vue'
   import { businessReportContextKey } from '../composables/business-report-context'
-  import { appList } from '../mockData'
-  import type { AppListItem } from '../types'
+  import { getCompareMetrics, getCompareOverview, getCompareTrends } from '../reportService'
+  import type {
+    AppListItem,
+    CompareMetricsResponse,
+    CompareOverviewResponse,
+    CompareQueryParams,
+    CompareTrendsResponse,
+    ReportPeriod
+  } from '../types'
+
+  const props = defineProps<{
+    period: ReportPeriod
+    startDate: string
+    endDate: string
+    compareStartDate: string
+    compareEndDate: string
+  }>()
 
   // ── State ─────────────────────────────────────────────────────
   const platformFilter = ref('全部')
@@ -257,15 +318,17 @@
 
   const ctx = inject(businessReportContextKey)
 
-  const baseAppList = computed(() => {
-    const api = ctx?.summary.value?.appList
-    if (api && api.length) return api
-    return appList
-  })
+  const baseAppList = computed(() => ctx?.sidebarAppList.value ?? [])
 
   type EnrichedApp = AppListItem & { sparklineData: number[] }
   const enrichedApps = ref<EnrichedApp[]>([])
   const selectedApps = ref<EnrichedApp[]>([])
+  const compareOverview = ref<CompareOverviewResponse | null>(null)
+  const compareTrends = ref<CompareTrendsResponse | null>(null)
+  const compareMetrics = ref<CompareMetricsResponse | null>(null)
+  const localStartDate = ref(props.startDate)
+  const localEndDate = ref(props.endDate)
+  const localCompareEnabled = ref(true)
 
   watch(
     baseAppList,
@@ -276,7 +339,10 @@
           Math.floor(app.revenue * (0.6 + i * 0.035 + Math.random() * 0.05))
         )
       }))
-      selectedApps.value = enrichedApps.value.slice(0, Math.min(3, enrichedApps.value.length))
+      selectedApps.value = enrichedApps.value.slice(
+        0,
+        Math.min(3, Math.max(enrichedApps.value.length, 0))
+      )
     },
     { immediate: true }
   )
@@ -322,85 +388,95 @@
     return '$' + val
   }
 
-  // ── Compare Card Metrics ──────────────────────────────────────
-  // Sub-metrics for compare cards (revenue shown separately as main row)
+  function parseYmd(ymd: string): Date {
+    const [y, m, d] = ymd.split('-').map(Number)
+    return new Date(y, m - 1, d, 12, 0, 0, 0)
+  }
+  function formatYmd(d: Date): string {
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${y}-${m}-${day}`
+  }
+  function addDays(ymd: string, n: number): string {
+    const d = parseYmd(ymd)
+    d.setDate(d.getDate() + n)
+    return formatYmd(d)
+  }
+  function addMonths(ymd: string, n: number): string {
+    const d = parseYmd(ymd)
+    d.setMonth(d.getMonth() + n)
+    return formatYmd(d)
+  }
+  const localDateRange = computed<string[]>({
+    get: () => [localStartDate.value, localEndDate.value],
+    set: (val: string[]) => {
+      if (!Array.isArray(val) || val.length !== 2) return
+      localStartDate.value = val[0]
+      localEndDate.value = val[1]
+    }
+  })
+  const localCompareLabel = computed(() => {
+    if (props.period === 'monthly') return '对比上月'
+    if (props.period === 'weekly') return '对比上周'
+    return '对比昨日'
+  })
+  const userChartTitle = computed(() => (props.period === 'monthly' ? 'MAU 对比' : 'DAU 对比'))
+  const trendTitle = computed(() => {
+    if (props.period === 'monthly') return '总收尾走势对比（近 6 个月）'
+    if (props.period === 'weekly') return '总收尾走势对比（近 8 周）'
+    return '总收尾走势对比（近 7 天）'
+  })
+  const localCompareStartDate = computed(() => {
+    if (!localCompareEnabled.value) return localStartDate.value
+    if (props.period === 'daily') return addDays(localStartDate.value, -1)
+    if (props.period === 'weekly') return addDays(localStartDate.value, -7)
+    return addMonths(localStartDate.value, -1)
+  })
+  const localCompareEndDate = computed(() => {
+    if (!localCompareEnabled.value) return localEndDate.value
+    if (props.period === 'daily') return addDays(localEndDate.value, -1)
+    if (props.period === 'weekly') return addDays(localEndDate.value, -7)
+    return addMonths(localEndDate.value, -1)
+  })
+
+  function compareRevenueText(appId: string): string {
+    return overviewMap.value.get(appId)?.revenue ?? '-'
+  }
+
+  function compareRevenueChange(appId: string): number {
+    return overviewMap.value.get(appId)?.revenueChange ?? 0
+  }
+
+  function compareUserText(appId: string): string {
+    const entry = overviewMap.value.get(appId)
+    const user = entry?.metrics.find(
+      (m) => m.label === (props.period === 'monthly' ? 'MAU' : 'DAU')
+    )
+    return user?.value ?? '-'
+  }
+
+  const overviewMap = computed(() => {
+    const map = new Map<string, CompareOverviewResponse['apps'][number]>()
+    for (const item of compareOverview.value?.apps ?? []) map.set(item.id, item)
+    return map
+  })
+
   function getSubMetrics(app: AppListItem) {
-    return [
-      { label: 'MAU', value: `${app.mau}万`, change: '+4.4%', changeType: 'positive' },
-      {
-        label: '预估利润',
-        value: formatRevenue(app.profit),
-        change: '+8.3%',
-        changeType: 'positive'
-      },
-      {
-        label: '付费收尾',
-        value: formatRevenue(Math.floor(app.revenue * 0.27)),
-        change: '+9.9%',
-        changeType: 'positive'
-      },
-      {
-        label: '费用抄扣',
-        value: '-' + formatRevenue(Math.floor(app.revenue * 0.018)),
-        change: '+12.3%',
-        changeType: 'negative'
-      }
-    ]
+    return overviewMap.value.get(app.id)?.metrics ?? []
   }
 
   // ── Comparison Table ─────────────────────────────────────────
-  const compareMetricRows = computed(() => [
-    { metric: 'MAU', values: selectedApps.value.map((a) => `${a.mau}万`), higher: true },
-    {
-      metric: 'MAU增长',
-      values: selectedApps.value.map((a) => `+${(a.revenueChange * 0.45).toFixed(1)}%`),
-      higher: true
-    },
-    {
-      metric: '首日ROI',
-      values: selectedApps.value.map((_, i) => ['36%', '34%', '31%', '33%', '35%'][i] || '32%'),
-      higher: true
-    },
-    {
-      metric: '7日ROI',
-      values: selectedApps.value.map((_, i) => ['96%', '91%', '84%', '89%', '93%'][i] || '87%'),
-      higher: true
-    },
-    {
-      metric: '14日ROI',
-      values: selectedApps.value.map((_, i) => ['101%', '96%', '89%', '94%', '98%'][i] || '91%'),
-      higher: true
-    },
-    {
-      metric: '30日ROI',
-      values: selectedApps.value.map(
-        (_, i) => ['113%', '108%', '99%', '105%', '110%'][i] || '102%'
-      ),
-      higher: true
-    },
-    {
-      metric: '收尾增长',
-      values: selectedApps.value.map((a) => `+${a.revenueChange}%`),
-      higher: true
-    },
-    {
-      metric: '预估利润增长',
-      values: selectedApps.value.map((a) => `+${(a.revenueChange * 0.85).toFixed(1)}%`),
-      higher: true
-    },
-    {
-      metric: '费用抄扣占收尾比',
-      values: selectedApps.value.map(
-        (_, i) => ['1.75%', '1.74%', '1.79%', '1.77%', '1.72%'][i] || '1.76%'
-      ),
-      higher: false
-    }
-  ])
+  const compareMetricRows = computed(() =>
+    (compareMetrics.value?.rows ?? []).map((row) => ({
+      metric: row.metric,
+      values: selectedApps.value.map((app) => row.values[app.id] ?? '-'),
+      bestId: row.bestId
+    }))
+  )
 
-  function getBestApp(row: { values: string[]; higher: boolean }) {
-    const nums = row.values.map((v) => parseFloat(v))
-    const bestIdx = row.higher ? nums.indexOf(Math.max(...nums)) : nums.indexOf(Math.min(...nums))
-    return selectedApps.value[bestIdx]
+  function getBestApp(row: { bestId: string }) {
+    return selectedApps.value.find((app) => app.id === row.bestId)
   }
 
   // ── Charts ────────────────────────────────────────────────────
@@ -409,7 +485,7 @@
   let mauChart: echarts.ECharts | null = null
   let trendChart: echarts.ECharts | null = null
 
-  const months = ['7月', '8月', '9月', '10月', '11月', '12月']
+  const months = computed(() => compareTrends.value?.labels ?? [])
   const palette = ['#00D4A1', '#8B5CF6', '#4A9EF5', '#FB923C', '#F472B6']
 
   function initMauChart() {
@@ -426,19 +502,19 @@
 
   function updateMauChart() {
     if (!mauChart) return
-    const series = selectedApps.value.map((app, i) => ({
-      name: app.name,
+    const series = (compareTrends.value?.userSeries ?? []).map((item, i) => ({
+      name: item.name,
       type: 'bar',
       barMaxWidth: 28,
-      itemStyle: { color: palette[i] || '#666', borderRadius: [3, 3, 0, 0] },
-      data: months.map((_, mi) => Math.floor((app.mau || 100) * (0.55 + mi * 0.09)))
+      itemStyle: { color: item.color || palette[i] || '#666', borderRadius: [3, 3, 0, 0] },
+      data: item.values
     }))
     mauChart.setOption({
       backgroundColor: 'transparent',
       grid: { left: 36, right: 10, top: 10, bottom: 30 },
       xAxis: {
         type: 'category',
-        data: months,
+        data: months.value,
         axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } },
         axisLabel: { color: 'rgba(255,255,255,0.4)', fontSize: 10 }
       },
@@ -464,27 +540,25 @@
 
   function updateTrendChart() {
     if (!trendChart) return
-    const series = selectedApps.value.map((app, i) => {
-      const base = app.revenue * 0.45
-      const data = months.map((_, mi) => Math.floor(base * (0.55 + mi * 0.085)))
+    const series = (compareTrends.value?.revenueSeries ?? []).map((item, i) => {
       return {
-        name: app.name,
+        name: item.name,
         type: 'line',
         smooth: true,
         symbol: 'circle',
         symbolSize: 5,
-        lineStyle: { color: palette[i], width: 2 },
-        itemStyle: { color: palette[i] },
+        lineStyle: { color: item.color || palette[i], width: 2 },
+        itemStyle: { color: item.color || palette[i] },
         areaStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: (palette[i] || '#00D4A1') + '30' },
-            { offset: 1, color: (palette[i] || '#00D4A1') + '00' }
+            { offset: 0, color: (item.color || palette[i] || '#00D4A1') + '30' },
+            { offset: 1, color: (item.color || palette[i] || '#00D4A1') + '00' }
           ])
         },
-        data,
+        data: item.values,
         endLabel: {
           show: true,
-          color: palette[i],
+          color: item.color || palette[i],
           formatter: (p: any) => {
             const v = p.value
             return v >= 1000000 ? (v / 1000000).toFixed(2) + 'M' : (v / 1000).toFixed(0) + 'K'
@@ -498,7 +572,7 @@
       grid: { left: 56, right: 64, top: 20, bottom: 30 },
       xAxis: {
         type: 'category',
-        data: months,
+        data: months.value,
         axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } },
         axisLabel: { color: 'rgba(255,255,255,0.4)', fontSize: 11 }
       },
@@ -527,15 +601,92 @@
     })
   }
 
+  async function refreshCompareData() {
+    if (!selectedApps.value.length) {
+      compareOverview.value = { apps: [] }
+      compareTrends.value = { labels: [], revenueSeries: [], userSeries: [] }
+      compareMetrics.value = { rows: [] }
+      return
+    }
+    const f = ctx?.topBarFilters.value ?? {
+      appIds: [],
+      platformList: [],
+      sourceList: [],
+      countryCodeList: []
+    }
+    const params: CompareQueryParams = {
+      period: props.period,
+      startDate: localStartDate.value,
+      endDate: localEndDate.value,
+      compareStartDate: localCompareStartDate.value,
+      compareEndDate: localCompareEndDate.value,
+      compareEnabled: localCompareEnabled.value,
+      appId: '',
+      account: '',
+      ...f,
+      compareAppIds: selectedApps.value.map((app) => app.id)
+    }
+    const [overviewRes, trendsRes, metricsRes] = await Promise.all([
+      getCompareOverview(params),
+      getCompareTrends(params),
+      getCompareMetrics(params)
+    ])
+    compareOverview.value = overviewRes
+    compareTrends.value = trendsRes
+    compareMetrics.value = metricsRes
+    nextTick(() => {
+      updateMauChart()
+      updateTrendChart()
+    })
+  }
+
   watch(
-    selectedApps,
+    () => [
+      props.period,
+      localStartDate.value,
+      localEndDate.value,
+      localCompareEnabled.value,
+      localCompareStartDate.value,
+      localCompareEndDate.value,
+      ...selectedApps.value.map((a) => a.id),
+      JSON.stringify(ctx?.topBarFilters.value ?? {})
+    ],
     () => {
-      nextTick(() => {
-        updateMauChart()
-        updateTrendChart()
-      })
+      void refreshCompareData()
     },
-    { deep: true }
+    { deep: true, immediate: true }
+  )
+
+  watch(
+    () => props.period,
+    () => {
+      localStartDate.value = props.startDate
+      localEndDate.value = props.endDate
+      localCompareEnabled.value = true
+    }
+  )
+
+  watch(
+    () => localStartDate.value,
+    (val) => {
+      if (props.period === 'daily') {
+        localEndDate.value = val
+        return
+      }
+      if (localEndDate.value < val) {
+        localEndDate.value = val
+      }
+    }
+  )
+
+  watch(
+    () => localEndDate.value,
+    (val) => {
+      if (props.period === 'daily') return
+      if (val < localStartDate.value) {
+        localStartDate.value = val
+      }
+    }
   )
 
   // Resize handler
@@ -887,43 +1038,17 @@
     font-size: 12px;
   }
 
-  .period-nav {
-    padding: 1px 6px;
-    color: var(--rp-muted);
-    cursor: pointer;
-    background: none;
-    border: 1px solid var(--rp-border);
-    border-radius: 3px;
+  .compare-date-picker {
+    width: 260px;
+  }
+
+  .compare-date-picker--single {
+    width: 150px;
   }
 
   .compare-toggle-label {
     font-size: 11px;
     color: var(--rp-muted);
-  }
-
-  .mini-toggle {
-    position: relative;
-    width: 36px;
-    height: 18px;
-    cursor: pointer;
-    background: var(--rp-accent);
-    border-radius: 9px;
-  }
-
-  .mini-knob {
-    position: absolute;
-    top: 2px;
-    right: 2px;
-    width: 14px;
-    height: 14px;
-    background: #fff;
-    border-radius: 50%;
-  }
-
-  .toggle-on-text {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--rp-accent);
   }
 
   /* ── Top Grid ── */
@@ -1131,18 +1256,14 @@
     padding: 8px 10px;
     font-weight: 500;
     color: var(--rp-muted);
-    text-align: right;
+    text-align: left;
     white-space: nowrap;
     border-bottom: 1px solid var(--rp-border);
   }
 
-  .metrics-table th:first-child {
-    text-align: left;
-  }
-
   .metrics-table td {
     padding: 7px 10px;
-    text-align: right;
+    text-align: left;
     white-space: nowrap;
     border-bottom: 1px solid rgb(255 255 255 / 3%);
   }
@@ -1153,7 +1274,7 @@
   }
 
   .best-cell {
-    text-align: right;
+    text-align: left;
   }
 
   .best-tag {

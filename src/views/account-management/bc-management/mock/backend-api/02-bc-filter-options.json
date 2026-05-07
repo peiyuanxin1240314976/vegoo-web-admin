@@ -1,0 +1,65 @@
+{
+  "_comment": "BC 管理页面 - 筛选项接口（状态、开户主体、封户记录）。",
+  "fieldDescription": {
+    "request": {},
+    "response": {
+      "statusOptions": {
+        "type": "FilterOptionItem[]",
+        "required": true,
+        "description": "状态筛选项。"
+      },
+      "ownerTypeOptions": {
+        "type": "FilterOptionItem[]",
+        "required": true,
+        "description": "开户主体筛选项。"
+      },
+      "banRecordOptions": {
+        "type": "FilterOptionItem[]",
+        "required": true,
+        "description": "封户记录筛选项。"
+      }
+    },
+    "FilterOptionItem": {
+      "label": { "type": "string", "required": true, "description": "显示文本。" },
+      "value": { "type": "string", "required": true, "description": "选项值，全部为\"\"。" }
+    }
+  },
+  "sampleRequest": {},
+  "sampleResponse": {
+    "code": 200,
+    "message": "success",
+    "data": {
+      "statusOptions": [
+        { "label": "全部", "value": "" },
+        { "label": "健康", "value": "健康" },
+        { "label": "可用", "value": "可用" },
+        { "label": "不再使用", "value": "不再使用" },
+        { "label": "封禁", "value": "封禁" },
+        { "label": "其他", "value": "其他" }
+      ],
+      "ownerTypeOptions": [
+        { "label": "全部", "value": "" },
+        { "label": "企业户", "value": "企业户" },
+        { "label": "个人户", "value": "个人户" },
+        { "label": "小额广告户", "value": "小额广告户" }
+      ],
+      "banRecordOptions": [
+        { "label": "全部", "value": "" },
+        { "label": "有封户记录", "value": "有" },
+        { "label": "无封户记录", "value": "无" }
+      ]
+    }
+  },
+  "api": {
+    "url": "POST /api/account-management/bc-management/filter-options",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "{}",
+    "responseBody": "{ statusOptions, ownerTypeOptions, banRecordOptions }"
+  },
+  "interaction": {
+    "triggers": [{ "moment": "页面初始化", "detail": "筛选区渲染前加载筛选项。" }],
+    "defaultSelection": "全部。",
+    "dedupe": "通常初始化一次即可。"
+  }
+}

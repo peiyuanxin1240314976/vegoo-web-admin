@@ -6,19 +6,26 @@
  */
 import request from '@/utils/http'
 import { BUSINESS_REPORT_DATA_BASE } from '@/views/product-insight/business-report/config/api-base'
+import { toAppsRequestBody } from '@/utils/app-id-request'
 import type {
   ReportQueryParams,
+  ReportAppListQueryParams,
+  ReportAppListResponse,
   SummaryResponse,
   AdPlatformResponse,
   ByCountryResponse,
   PlatformCountryResponse,
   CampaignsResponse,
-  LarkPushConfig
+  LarkPushConfig,
+  CompareQueryParams,
+  CompareOverviewResponse,
+  CompareTrendsResponse,
+  CompareMetricsResponse
 } from '@/views/product-insight/business-report/types'
 
-const LARK_BASE = '/api/v1/lark'
+const LARK_BASE = '/api/v1/datacenter/lark'
 
-/** 兼容网关在业务 data 外再包一层或多层 `data`（axios 已解包 BaseResponse.data） */
+/** 向下剥离网关嵌套的 `data`，直至得到业务体（axios 已解包一层 BaseResponse.data） */
 function unwrapReportPayload<T>(raw: unknown, maxDepth = 4): T {
   let cur: unknown = raw
   let depth = 0
@@ -35,44 +42,130 @@ function unwrapReportPayload<T>(raw: unknown, maxDepth = 4): T {
   return cur as T
 }
 
-function reportQueryParams(params: ReportQueryParams): Record<string, string> {
-  const q: Record<string, string> = { period: params.period }
-  if (params.appId) q.appId = params.appId
-  if (params.date) q.date = params.date
-  return q
+/**
+ * 报告类 POST 业务体（与 `mock/backend-api/README.md` 一致；`period` 仅在 URL 路径，不进 body）。
+ * 键名须与后端契约 camelCase 对齐：`appId` 整体/不限为 `""`；四个 `*List`/filter 数组空表示该维度不限。
+ */
+function reportBody(params: ReportQueryParams): Record<string, unknown> {
+  const body: Record<string, unknown> = {
+    startDate: params.startDate,
+    endDate: params.endDate,
+    appId: params.appId,
+    appIds: params.appIds ?? [],
+    apps: toAppsRequestBody(params.appIds ?? []),
+    platformList: params.platformList ?? [],
+    sourceList: params.sourceList ?? [],
+    countryCodeList: params.countryCodeList ?? [],
+    account: params.account ?? ''
+  }
+  if (typeof params.currentPage === 'number') {
+    body.currentPage = params.currentPage
+  }
+  if (typeof params.pageSize === 'number') {
+    body.pageSize = params.pageSize
+  }
+  return body
 }
 
-async function reportGet<T>(path: string, params: ReportQueryParams): Promise<T> {
-  const raw = await request.get<unknown>({
+async function reportPost<T>(path: string, params: ReportQueryParams): Promise<T> {
+  const raw = await request.post<unknown>({
     url: `${BUSINESS_REPORT_DATA_BASE}${path}`,
-    params: reportQueryParams(params)
+    data: reportBody(params)
   })
   return unwrapReportPayload<T>(raw)
 }
 
-/** GET …/datacenter/analysis/report/summary */
+function appListBody(params: ReportAppListQueryParams): Record<string, unknown> {
+  return {
+    startDate: params.startDate,
+    endDate: params.endDate,
+    appId: '',
+    appIds: params.appIds ?? [],
+    apps: toAppsRequestBody(params.appIds ?? []),
+    platformList: params.platformList ?? [],
+    sourceList: params.sourceList ?? [],
+    countryCodeList: params.countryCodeList ?? [],
+    account: params.account ?? '',
+    tab: params.tab
+  }
+}
+
+async function reportAppListPost<T>(path: string, params: ReportAppListQueryParams): Promise<T> {
+  const raw = await request.post<unknown>({
+    url: `${BUSINESS_REPORT_DATA_BASE}${path}`,
+    data: appListBody(params)
+  })
+  return unwrapReportPayload<T>(raw)
+}
+
+function reportPeriodPath(period: ReportQueryParams['period'], feature: string): string {
+  return `/${period}/${feature}`
+}
+
+/** POST …/datacenter/analysis/report/{period}/app-list */
+export function fetchBusinessReportAppList(params: ReportAppListQueryParams) {
+  return reportAppListPost<ReportAppListResponse>(
+    reportPeriodPath(params.period, 'app-list'),
+    params
+  )
+}
+
+/** POST …/datacenter/analysis/report/{period}/overview */
 export function fetchBusinessReportSummary(params: ReportQueryParams) {
-  return reportGet<SummaryResponse>('/summary', params)
+  return reportPost<SummaryResponse>(reportPeriodPath(params.period, 'overview'), params)
 }
 
-/** GET …/datacenter/analysis/report/ad-platform */
+/** POST …/datacenter/analysis/report/{period}/ad-platform */
 export function fetchBusinessReportAdPlatform(params: ReportQueryParams) {
-  return reportGet<AdPlatformResponse>('/ad-platform', params)
+  return reportPost<AdPlatformResponse>(reportPeriodPath(params.period, 'ad-platform'), params)
 }
 
-/** GET …/datacenter/analysis/report/by-country */
+/** POST …/datacenter/analysis/report/{period}/by-country */
 export function fetchBusinessReportByCountry(params: ReportQueryParams) {
-  return reportGet<ByCountryResponse>('/by-country', params)
+  return reportPost<ByCountryResponse>(reportPeriodPath(params.period, 'by-country'), params)
 }
 
-/** GET …/datacenter/analysis/report/platform-country */
+/** POST …/datacenter/analysis/report/{period}/platform-country */
 export function fetchBusinessReportPlatformCountry(params: ReportQueryParams) {
-  return reportGet<PlatformCountryResponse>('/platform-country', params)
+  return reportPost<PlatformCountryResponse>(
+    reportPeriodPath(params.period, 'platform-country'),
+    params
+  )
 }
 
-/** GET …/datacenter/analysis/report/campaigns */
+/** POST …/datacenter/analysis/report/{period}/campaigns */
 export function fetchBusinessReportCampaigns(params: ReportQueryParams) {
-  return reportGet<CampaignsResponse>('/campaigns', params)
+  return reportPost<CampaignsResponse>(reportPeriodPath(params.period, 'campaigns'), params)
+}
+
+function compareBody(params: CompareQueryParams): Record<string, unknown> {
+  return {
+    ...reportBody(params),
+    compareAppIds: params.compareAppIds,
+    compareEnabled: params.compareEnabled,
+    compareStartDate: params.compareStartDate,
+    compareEndDate: params.compareEndDate
+  }
+}
+
+async function comparePost<T>(feature: string, params: CompareQueryParams): Promise<T> {
+  const raw = await request.post<unknown>({
+    url: `${BUSINESS_REPORT_DATA_BASE}${reportPeriodPath(params.period, feature)}`,
+    data: compareBody(params)
+  })
+  return unwrapReportPayload<T>(raw)
+}
+
+export function fetchBusinessReportCompareOverview(params: CompareQueryParams) {
+  return comparePost<CompareOverviewResponse>('compare-overview', params)
+}
+
+export function fetchBusinessReportCompareTrends(params: CompareQueryParams) {
+  return comparePost<CompareTrendsResponse>('compare-trends', params)
+}
+
+export function fetchBusinessReportCompareMetrics(params: CompareQueryParams) {
+  return comparePost<CompareMetricsResponse>('compare-metrics', params)
 }
 
 /** GET …/lark/push-config */

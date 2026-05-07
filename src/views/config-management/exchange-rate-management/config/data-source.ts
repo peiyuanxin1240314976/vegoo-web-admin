@@ -12,6 +12,10 @@ type UseMock = boolean
 /** 与契约文件、`fetch*` 一一对应，避免散落字符串 key */
 export enum ExchangeRateEndpoint {
   RateTable = 'rateTable',
+  OverviewKpi = 'overviewKpi',
+  TrendSeries = 'trendSeries',
+  SyncConfigDetail = 'syncConfigDetail',
+  SyncMetaOptions = 'syncMetaOptions',
   ManualCreate = 'manualCreate',
   SyncRates = 'syncRates',
   SaveSyncConfig = 'saveSyncConfig',
@@ -20,12 +24,16 @@ export enum ExchangeRateEndpoint {
 }
 
 export const ExchangeRateApiSource: Record<ExchangeRateEndpoint, UseMock> = {
-  [ExchangeRateEndpoint.RateTable]: true,
-  [ExchangeRateEndpoint.ManualCreate]: true,
-  [ExchangeRateEndpoint.SyncRates]: true,
-  [ExchangeRateEndpoint.SaveSyncConfig]: true,
-  [ExchangeRateEndpoint.RateOverride]: true,
-  [ExchangeRateEndpoint.ExportRates]: true
+  [ExchangeRateEndpoint.RateTable]: false,
+  [ExchangeRateEndpoint.OverviewKpi]: false,
+  [ExchangeRateEndpoint.TrendSeries]: false,
+  [ExchangeRateEndpoint.SyncConfigDetail]: false,
+  [ExchangeRateEndpoint.SyncMetaOptions]: false,
+  [ExchangeRateEndpoint.ManualCreate]: false,
+  [ExchangeRateEndpoint.SyncRates]: false,
+  [ExchangeRateEndpoint.SaveSyncConfig]: false,
+  [ExchangeRateEndpoint.RateOverride]: false,
+  [ExchangeRateEndpoint.ExportRates]: false
 }
 
 /** 读取方：`src/api/config-management.ts` 汇率段（`ExchangeRateApiSource` 可继续作说明/导出默认值） */

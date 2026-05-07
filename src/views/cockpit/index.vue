@@ -1,6 +1,5 @@
 <template>
   <div class="cockpit-page flex flex-col">
-    <div class="cockpit-page-fx" aria-hidden="true"></div>
     <!-- 1. 日期范围 + 2. 顶部操作栏 -->
     <div class="cockpit-page__section cockpit-page__section--header cockpit-entry-1">
       <div class="cockpit-header">
@@ -50,19 +49,19 @@
     <div class="cockpit-entry-3">
       <!-- 第二排：三列（左25% | 中50% 业务分布地图 | 右25%） -->
       <ElRow :gutter="16" class="cockpit-body cockpit-row-2">
-        <ElCol :xs="24" :md="6">
-          <ElSkeleton :loading="moduleLoading.spendPace" animated>
+        <ElCol :xs="24" :md="7">
+          <ElSkeleton :loading="moduleLoading.channelRoi" animated>
             <template #template>
               <div class="cockpit-skeleton-panel">
                 <ElSkeletonItem
                   v-for="i in 8"
-                  :key="`spend-${i}`"
+                  :key="`roi-${i}`"
                   variant="p"
                   class="cockpit-s-line w92"
                 />
               </div>
             </template>
-            <CockpitSpendPaceMonitor :list="overview?.spendPace ?? []" />
+            <CockpitRevenueCostTrend :list="overview?.channelRoiInstall" />
           </ElSkeleton>
         </ElCol>
         <ElCol :xs="24" :md="12">
@@ -83,7 +82,7 @@
             />
           </ElSkeleton>
         </ElCol>
-        <ElCol :xs="24" :md="6">
+        <ElCol :xs="24" :md="5">
           <div class="cockpit-col3-row1">
             <ElSkeleton :loading="moduleLoading.top3" animated>
               <template #template>
@@ -96,86 +95,100 @@
                   />
                 </div>
               </template>
-              <CockpitTop3Panels
-                :top-revenue="overview?.topRevenue ?? []"
-                :top-bad-review="overview?.topBadReview ?? []"
-                :top-user="overview?.topUser ?? []"
-              />
+              <div class="cockpit-top3-panels-wrap">
+                <CockpitTop3Panels
+                  :top-revenue="overview?.topRevenue ?? []"
+                  :top-bad-review="overview?.topBadReview ?? []"
+                  :top-user="overview?.topUser ?? []"
+                  :date-range="dateRange"
+                />
+              </div>
             </ElSkeleton>
           </div>
         </ElCol>
       </ElRow>
 
-      <!-- 第三排：三列（左25% | 中50% 近7日收入结构流向 | 右25%） -->
+      <!-- 第三排：左侧保留，右侧两块上下结构 -->
       <ElRow :gutter="16" class="cockpit-body cockpit-row-3">
-        <ElCol :xs="24" :md="6">
-          <ElSkeleton :loading="moduleLoading.channelRoi" animated>
+        <ElCol :xs="24" :md="7">
+          <ElSkeleton :loading="moduleLoading.spendPace" animated>
             <template #template>
               <div class="cockpit-skeleton-panel">
                 <ElSkeletonItem
                   v-for="i in 8"
-                  :key="`roi-${i}`"
+                  :key="`spend-${i}`"
                   variant="p"
                   class="cockpit-s-line w92"
                 />
               </div>
             </template>
-            <CockpitRevenueCostTrend :list="overview?.channelRoiInstall" />
+            <CockpitSpendPaceMonitor :list="overview?.spendPace ?? []" />
           </ElSkeleton>
         </ElCol>
-        <ElCol :xs="24" :md="12">
-          <ElSkeleton :loading="moduleLoading.revenueFlow" animated>
-            <template #template>
-              <div class="cockpit-skeleton-panel">
-                <ElSkeletonItem
-                  v-for="i in 10"
-                  :key="`flow-${i}`"
-                  variant="p"
-                  class="cockpit-s-line w95"
-                />
-              </div>
-            </template>
-            <CockpitRevenueStructureFlow :flow-data="overview?.revenueStructureFlow" />
-          </ElSkeleton>
-        </ElCol>
-        <ElCol :xs="24" :md="6">
-          <ElSkeleton :loading="moduleLoading.smartAlerts" animated>
-            <template #template>
-              <div class="cockpit-skeleton-panel">
-                <ElSkeletonItem
-                  v-for="i in 8"
-                  :key="`smart-${i}`"
-                  variant="p"
-                  class="cockpit-s-line w92"
-                />
-              </div>
-            </template>
-            <CockpitSmartAlerts :alerts="overview?.smartAlerts ?? []" />
-          </ElSkeleton>
+
+        <ElCol :xs="24" :md="17">
+          <div class="cockpit-row-3-stack">
+            <ElSkeleton :loading="moduleLoading.revenueFlow" animated>
+              <template #template>
+                <div class="cockpit-skeleton-panel">
+                  <ElSkeletonItem
+                    v-for="i in 10"
+                    :key="`flow-${i}`"
+                    variant="p"
+                    class="cockpit-s-line w95"
+                  />
+                </div>
+              </template>
+              <CockpitRevenueStructureFlow :flow-data="overview?.revenueStructureFlow" />
+            </ElSkeleton>
+
+            <ElSkeleton :loading="moduleLoading.smartAlerts" animated>
+              <template #template>
+                <div class="cockpit-skeleton-panel">
+                  <ElSkeletonItem
+                    v-for="i in 8"
+                    :key="`smart-${i}`"
+                    variant="p"
+                    class="cockpit-s-line w92"
+                  />
+                </div>
+              </template>
+              <CockpitSmartAlerts :alerts="overview?.smartAlerts ?? []" />
+            </ElSkeleton>
+          </div>
         </ElCol>
       </ElRow>
     </div>
 
-    <ScenarioSimulationDialog v-model="showScenarioSimulation" />
+    <ScenarioSimulationDialog v-if="showScenarioSimulation" v-model="showScenarioSimulation" />
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ref, watch } from 'vue'
+  import { ref, watch, defineAsyncComponent } from 'vue'
+  import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
   import { useCockpitData } from './composables/useCockpitData'
   import type { CockpitDateRange } from './types'
   import CockpitDateRangeTabs from './modules/date-range-tabs.vue'
   import CockpitTopBarActions from './modules/top-bar-actions.vue'
   import CockpitGlobalKpiCards from './modules/global-kpi-cards.vue'
   import CockpitAlertMessages from './modules/alert-messages.vue'
-  import CockpitRevenueCostTrend from './modules/revenue-cost-trend.vue'
-  import CockpitSpendPaceMonitor from './modules/spend-pace-monitor.vue'
-  import CockpitBusinessMap from './modules/business-map.vue'
-  import CockpitTop3Panels from './modules/top3-panels.vue'
-  import CockpitSmartAlerts from './modules/smart-alerts.vue'
-  import CockpitRevenueStructureFlow from './modules/revenue-structure-flow.vue'
-  import ScenarioSimulationDialog from './modules/scenario-simulation-dialog.vue'
-  // dev测试提交
+  /** 重组件异步分包，减轻首进驾驶舱的 parse/执行与离页卸载峰值 */
+  const CockpitRevenueCostTrend = defineAsyncComponent(
+    () => import('./modules/revenue-cost-trend.vue')
+  )
+  const CockpitSpendPaceMonitor = defineAsyncComponent(
+    () => import('./modules/spend-pace-monitor.vue')
+  )
+  const CockpitBusinessMap = defineAsyncComponent(() => import('./modules/business-map.vue'))
+  const CockpitTop3Panels = defineAsyncComponent(() => import('./modules/top3-panels.vue'))
+  const CockpitSmartAlerts = defineAsyncComponent(() => import('./modules/smart-alerts.vue'))
+  const CockpitRevenueStructureFlow = defineAsyncComponent(
+    () => import('./modules/revenue-structure-flow.vue')
+  )
+  const ScenarioSimulationDialog = defineAsyncComponent(
+    () => import('./modules/scenario-simulation-dialog.vue')
+  )
   defineOptions({ name: 'Cockpit' })
 
   const showScenarioSimulation = ref(false)
@@ -189,7 +202,7 @@
     load({ dateRange: value })
   }
 
-  // 顶部日期选择器（单日）变更时，刷新全量模块接口
+  // 顶部日期选择器（单日）变更时：与付费分析一致可走快捷「今天 / 昨天」；同步 Tab 与 overall 的日期口径后再刷新
   watch(
     date,
     (v, oldV) => {
@@ -198,6 +211,15 @@
         suppressNextDateWatch.value = false
         return
       }
+      const today = formatYYYYMMDD(getAppNow())
+      const y = cloneAppDate(getAppNow())
+      y.setDate(y.getDate() - 1)
+      const yesterdayStr = formatYYYYMMDD(y)
+      let nextRange = dateRange.value
+      if (v === today) nextRange = 'today'
+      else if (v === yesterdayStr) nextRange = 'yesterday'
+      else if (nextRange === 'today' || nextRange === 'yesterday') nextRange = 'week'
+      if (nextRange !== dateRange.value) dateRange.value = nextRange
       load({ date: v, dateRange: dateRange.value })
     },
     { flush: 'post' }
@@ -206,9 +228,25 @@
 
 <style scoped lang="scss">
   .cockpit-page {
+    --cockpit-border: rgb(110 164 255 / 22%);
+    --cockpit-highlight: rgb(255 255 255 / 13%);
+    --cockpit-shadow: 0 22px 54px rgb(2 6 23 / 52%), 0 10px 24px rgb(2 6 23 / 36%);
+
     position: relative;
     min-width: 0;
-    padding: 20px 24px 28px;
+    padding: 14px 14px 18px;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 12% 10%, rgb(23 84 255 / 18%), transparent 26%),
+      radial-gradient(circle at 82% 8%, rgb(94 57 255 / 14%), transparent 24%),
+      radial-gradient(circle at 70% 34%, rgb(18 169 255 / 10%), transparent 24%),
+      linear-gradient(180deg, #040816 0%, #050b18 34%, #030712 100%);
+    border: 1px solid rgb(72 120 255 / 10%);
+    border-radius: 24px;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 5%),
+      0 0 0 1px rgb(10 19 43 / 82%),
+      0 28px 90px rgb(2 6 23 / 44%);
 
     &::before {
       position: absolute;
@@ -218,28 +256,26 @@
       content: '';
       background:
         radial-gradient(
-          ellipse 70% 50% at 6% 6%,
-          rgb(16 185 129 / 42%) 0%,
-          rgb(6 182 212 / 20%) 38%,
-          transparent 58%
+          ellipse 66% 42% at 6% 3%,
+          rgb(23 166 255 / 30%) 0%,
+          rgb(80 70 255 / 16%) 36%,
+          transparent 60%
         ),
         radial-gradient(
-          ellipse 55% 42% at 94% 8%,
-          rgb(59 130 246 / 38%) 0%,
-          rgb(139 92 246 / 18%) 38%,
-          transparent 58%
+          ellipse 55% 42% at 98% 4%,
+          rgb(118 92 255 / 26%) 0%,
+          rgb(31 140 255 / 16%) 32%,
+          transparent 60%
         ),
-        radial-gradient(ellipse 40% 35% at 48% 18%, rgb(168 85 247 / 18%) 0%, transparent 55%),
+        radial-gradient(ellipse 42% 28% at 50% 18%, rgb(0 214 255 / 8%) 0%, transparent 56%),
         radial-gradient(
-          ellipse 55% 42% at 76% 4%,
-          rgb(34 211 238 / 22%) 0%,
-          rgb(59 130 246 / 10%) 40%,
-          transparent 58%
+          ellipse 64% 44% at 76% 4%,
+          rgb(255 138 61 / 11%) 0%,
+          rgb(35 125 255 / 10%) 40%,
+          transparent 60%
         );
-      mask-image: linear-gradient(to bottom, black 0%, black 28%, transparent 58%);
-      animation:
-        cockpit-aurora-drift 14s ease-in-out infinite alternate,
-        cockpit-bg-flow 22s ease-in-out infinite alternate;
+      opacity: 0.9;
+      mask-image: linear-gradient(to bottom, black 0%, black 34%, transparent 72%);
     }
 
     &::after {
@@ -249,78 +285,20 @@
       pointer-events: none;
       content: '';
       background-image:
-        linear-gradient(rgb(186 230 253 / 5%) 1px, transparent 1px),
-        linear-gradient(90deg, rgb(186 230 253 / 5%) 1px, transparent 1px),
-        radial-gradient(circle, rgb(6 182 212 / 8%) 1px, transparent 1px);
+        linear-gradient(rgb(148 163 184 / 4.5%) 1px, transparent 1px),
+        linear-gradient(90deg, rgb(148 163 184 / 4.5%) 1px, transparent 1px),
+        radial-gradient(circle, rgb(56 189 248 / 7%) 1px, transparent 1px);
       background-size:
-        40px 40px,
-        40px 40px,
-        80px 80px;
-      mask-image: linear-gradient(to bottom, black 0%, black 18%, transparent 45%);
+        42px 42px,
+        42px 42px,
+        84px 84px;
+      opacity: 0.8;
+      mask-image: linear-gradient(to bottom, black 0%, black 60%, transparent 100%);
     }
 
-    > *:not(.cockpit-page-fx) {
+    > * {
       position: relative;
       z-index: 1;
-    }
-  }
-
-  .cockpit-page-fx {
-    position: absolute;
-    inset: 0 0 40%;
-    z-index: 0;
-    pointer-events: none;
-    background: conic-gradient(
-      from 0deg at 50% 50%,
-      transparent 0deg,
-      rgb(59 130 246 / 14%) 55deg,
-      rgb(6 182 212 / 10%) 80deg,
-      transparent 130deg,
-      rgb(16 185 129 / 12%) 200deg,
-      rgb(52 211 153 / 8%) 225deg,
-      transparent 285deg,
-      rgb(168 85 247 / 10%) 330deg,
-      rgb(249 115 22 / 6%) 350deg,
-      transparent 360deg
-    );
-    opacity: 0.85;
-    mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 85%);
-    animation: cockpit-fx-spin 52s linear infinite;
-    will-change: transform;
-  }
-
-  @keyframes cockpit-aurora-drift {
-    0% {
-      opacity: 0.72;
-      transform: scale(1) translate(0, 0);
-    }
-
-    50% {
-      opacity: 1;
-      transform: scale(1.06) translate(1.2%, -1.2%);
-    }
-
-    100% {
-      opacity: 0.82;
-      transform: scale(1) translate(-1.2%, 1.2%);
-    }
-  }
-
-  @keyframes cockpit-bg-flow {
-    0% {
-      opacity: 0.7;
-      transform: scaleY(1);
-    }
-
-    100% {
-      opacity: 1;
-      transform: scaleY(1.04);
-    }
-  }
-
-  @keyframes cockpit-fx-spin {
-    to {
-      transform: rotate(360deg);
     }
   }
 
@@ -354,25 +332,30 @@
   }
 
   .cockpit-page__section--header {
-    margin-bottom: 20px;
+    margin-bottom: 12px;
   }
 
   .cockpit-skeleton-card-list {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 12px;
-    margin-bottom: 16px;
+    gap: 14px;
+    margin-bottom: 12px;
   }
 
   .cockpit-skeleton-block,
   .cockpit-skeleton-panel {
     display: grid;
-    gap: 10px;
-    padding: 12px;
-    margin-bottom: 16px;
-    background: #131d2f;
-    border: 1px solid rgb(148 163 184 / 25%);
-    border-radius: 10px;
+    gap: 12px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    background:
+      linear-gradient(180deg, rgb(13 21 42 / 90%), rgb(8 14 30 / 92%)),
+      radial-gradient(circle at top, rgb(59 130 246 / 12%), transparent 54%);
+    border: 1px solid var(--cockpit-border);
+    border-radius: 18px;
+    box-shadow:
+      inset 0 1px 0 var(--cockpit-highlight),
+      var(--cockpit-shadow);
   }
 
   .cockpit-skeleton-panel {
@@ -403,28 +386,115 @@
   .cockpit-header {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 14px;
     align-items: center;
     justify-content: space-between;
     margin-bottom: 0;
   }
 
   .cockpit-body {
-    margin-bottom: 16px;
+    margin-bottom: 18px;
 
     .cockpit-panel,
-    .cockpit-map-panel {
-      margin-bottom: 16px;
+    .cockpit-map-kpi {
+      margin-bottom: 18px;
     }
   }
 
-  .cockpit-row-2 .cockpit-col3-row1 {
-    margin-bottom: 0;
+  .cockpit-row-2 {
+    align-items: stretch;
+
+    .cockpit-col3-row1 {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      margin-bottom: 0;
+    }
+  }
+
+  .cockpit-row-2 :deep(.channel-roi-panel) {
+    min-height: 100%;
+  }
+
+  .cockpit-row-2 :deep(.channel-roi-panel .panel-header) {
+    padding: 10px 14px;
+  }
+
+  .cockpit-row-2 :deep(.channel-roi-panel .panel-body) {
+    padding: 8px 10px 10px;
+  }
+
+  .cockpit-row-2 :deep(.channel-roi-panel .roi-table) {
+    font-size: 12px;
+  }
+
+  .cockpit-row-2 :deep(.cockpit-map-kpi .cockpit-map-panel > .el-card__header) {
+    padding: 10px 14px;
+  }
+
+  .cockpit-row-2 :deep(.cockpit-map-kpi .map-wrap) {
+    min-height: 0;
+  }
+
+  .cockpit-row-2 :deep(.cockpit-map-kpi .map-chart) {
+    height: clamp(300px, 46vh, 460px);
+  }
+
+  .cockpit-row-2 :deep(.cockpit-map-kpi .map-empty) {
+    min-height: clamp(300px, 43vh, 440px);
+  }
+
+  .cockpit-row-2 :deep(.cockpit-top3-panels) {
+    gap: 10px;
+  }
+
+  .cockpit-row-2 :deep(.top3-module__header) {
+    padding: 10px 12px;
+  }
+
+  .cockpit-row-2 :deep(.top3-module__list) {
+    padding: 6px 10px 10px;
+  }
+
+  .cockpit-row-2 :deep(.top3-row) {
+    min-height: 32px;
+    padding: 4px 0;
+  }
+
+  .cockpit-row-2 :deep(.top3-row__app-icon) {
+    width: 24px;
+    height: 24px;
+  }
+
+  .cockpit-row-2 :deep(.top3-row__medal) {
+    font-size: 20px;
+  }
+
+  .cockpit-row-3-stack {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+
+  .cockpit-row-roi__col {
+    min-width: 0;
+  }
+
+  .cockpit-top3-panels-wrap {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .cockpit-top3-panels-wrap :deep(.cockpit-top3-panels) {
+    height: 100%;
   }
 
   @media (width <= 768px) {
     .cockpit-page {
-      padding-bottom: 16px;
+      padding: 12px 12px 16px;
+      border-radius: 18px;
     }
   }
 
@@ -435,18 +505,11 @@
       /* content: none 完全移除伪元素，不再占用任何合成层或绘制资源 */
       content: none;
     }
-
-    .cockpit-page-fx {
-      /* display: none 移除元素 + 撤销 will-change，彻底释放 GPU 纹理分配 */
-      display: none;
-      will-change: auto;
-    }
   }
 
   @media (prefers-reduced-motion: reduce) {
     .cockpit-page::before,
-    .cockpit-page::after,
-    .cockpit-page-fx {
+    .cockpit-page::after {
       animation: none;
     }
 
@@ -469,11 +532,41 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    border-radius: 12px;
+    background:
+      linear-gradient(180deg, rgb(8 14 30 / 92%), rgb(5 10 24 / 96%)),
+      radial-gradient(circle at 12% -6%, rgb(37 99 235 / 14%), transparent 34%),
+      radial-gradient(circle at 88% -4%, rgb(168 85 247 / 12%), transparent 28%);
+    border: 1px solid rgb(92 140 255 / 22%);
+    border-radius: 20px;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 8%),
+      0 18px 42px rgb(2 6 23 / 44%),
+      0 0 0 1px rgb(30 41 59 / 40%);
 
     @include ap-neon-bg;
     @include ap-card-mesh;
     @include ap-panel-hover;
+
+    &:hover,
+    &:active {
+      transform: none !important;
+    }
+
+    &:active {
+      transition-duration: var(--duration-fast);
+    }
+
+    &::after {
+      position: absolute;
+      inset: 1px;
+      pointer-events: none;
+      content: '';
+      background:
+        linear-gradient(180deg, rgb(255 255 255 / 5%), transparent 16%),
+        radial-gradient(circle at top, rgb(96 165 250 / 10%), transparent 34%);
+      border-radius: inherit;
+      opacity: 0.9;
+    }
   }
 
   html.dark .el-card.cockpit-panel .el-card__header,
@@ -481,7 +574,7 @@
     position: relative;
     z-index: 1;
     background: transparent;
-    border-bottom: 1px solid rgb(96 165 250 / 14%);
+    border-bottom: 1px solid rgb(96 165 250 / 12%);
   }
 
   html.dark .el-card.cockpit-panel .el-card__body,
@@ -506,7 +599,6 @@
       0 10px 30px rgb(15 23 42 / 40%),
       inset 0 0 0 1px rgb(15 23 42 / 85%);
     transition:
-      transform 0.38s var(--ease-out),
       box-shadow 0.42s var(--ease-out),
       border-color 0.32s var(--ease-default);
 
@@ -518,49 +610,10 @@
         0 18px 40px rgb(15 23 42 / 45%),
         0 0 0 1px rgb(96 165 250 / 15%),
         inset 0 1px 0 rgb(186 230 253 / 10%);
-      transform: translateY(-4px);
     }
   }
 
-  html.dark .cockpit-pace-panel {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    border-radius: 12px;
-
-    @include ap-neon-bg;
-    @include ap-card-mesh;
-    @include ap-panel-hover;
-
-    .pace-header {
-      position: relative;
-      z-index: 1;
-      background: transparent;
-      border-bottom: 1px solid rgb(96 165 250 / 14%);
-    }
-
-    .pace-body {
-      position: relative;
-      z-index: 1;
-      background: transparent;
-    }
-  }
-
-  html:not(.dark) .cockpit-pace-panel {
-    position: relative;
-    overflow: hidden;
-    background: var(--el-bg-color);
-    border-radius: 12px;
-
-    @include ap-card-mesh;
-
-    .pace-header,
-    .pace-body {
-      position: relative;
-      z-index: 1;
-    }
-  }
+  /* 消耗节奏监控已在模块内部改为 KPI 卡片外壳（旋转边框/深浅色），此处不再做全局覆盖 */
 
   /* 面板头部：左标题 + 右侧操作区 */
   .cockpit-panel__header {

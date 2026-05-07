@@ -393,7 +393,7 @@
     "endpoint": "GET /api/user-growth/account-performance",
     "query": {
       "source": "广告平台筛选（tiktok/facebook/google 或空=全部）",
-      "platform": "应用筛选（应用名或应用ID，空=全部）",
+      "appIds": "应用筛选：string[]，不限 []，单选 [应用ID]",
       "ownerId": "负责人 ID（可选，空=全部）",
       "dateStart": "开始日期（YYYY-MM-DD）",
       "dateEnd": "结束日期（YYYY-MM-DD）",

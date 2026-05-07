@@ -1,5 +1,5 @@
 <template>
-  <DailyByCountry variant="weekly" />
+  <DailyByCountry variant="monthly" />
 </template>
 
 <script setup lang="ts">

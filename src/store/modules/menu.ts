@@ -34,6 +34,23 @@ import { AppRouteRecord } from '@/types/router'
 import { getFirstMenuPath } from '@/utils'
 import { HOME_PAGE_PATH } from '@/router'
 
+const normalizePath = (path: string): string => (path.startsWith('/') ? path : `/${path}`)
+
+const hasRoutePath = (routes: AppRouteRecord[], targetPath: string): boolean => {
+  return routes.some((route) => {
+    if (route.path && normalizePath(route.path) === targetPath) {
+      return true
+    }
+
+    return route.children?.length ? hasRoutePath(route.children, targetPath) : false
+  })
+}
+
+const resolveHomePath = (list: AppRouteRecord[]): string => {
+  const firstMenuPath = getFirstMenuPath(list)
+  return hasRoutePath(list, HOME_PAGE_PATH) ? HOME_PAGE_PATH : firstMenuPath
+}
+
 /**
  * 菜单状态管理
  * 管理应用的菜单列表、首页路径、菜单宽度和动态路由移除函数
@@ -54,7 +71,7 @@ export const useMenuStore = defineStore('menuStore', () => {
    */
   const setMenuList = (list: AppRouteRecord[]) => {
     menuList.value = list
-    setHomePath(HOME_PAGE_PATH || getFirstMenuPath(list))
+    setHomePath(resolveHomePath(list))
   }
 
   /**

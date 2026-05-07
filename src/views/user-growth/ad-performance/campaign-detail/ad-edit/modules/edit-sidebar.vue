@@ -60,6 +60,7 @@
 
   const chartEl = ref<HTMLElement | null>(null)
   let chart: echarts.ECharts | null = null
+  let initRetryTimer: number | null = null
 
   const DEFAULT_FORECAST = [480, 510, 495, 520, 505, 530, 515, 540, 525, 550, 535, 560, 545, 580]
 
@@ -121,15 +122,48 @@
 
   const ro = new ResizeObserver(() => chart?.resize())
 
+  function clearInitRetryTimer() {
+    if (initRetryTimer != null) {
+      window.clearTimeout(initRetryTimer)
+      initRetryTimer = null
+    }
+  }
+
+  function canInitChart(el: HTMLElement) {
+    return el.clientWidth > 0 && el.clientHeight > 0
+  }
+
+  function scheduleInitRetry() {
+    if (initRetryTimer != null) return
+    initRetryTimer = window.setTimeout(() => {
+      initRetryTimer = null
+      initChartWhenReady()
+    }, 80)
+  }
+
+  function initChartWhenReady() {
+    const el = chartEl.value
+    if (!el) return
+    if (!canInitChart(el)) {
+      scheduleInitRetry()
+      return
+    }
+    clearInitRetryTimer()
+    if (!chart) {
+      chart = echarts.init(el)
+      ro.observe(el)
+    }
+    chart.setOption(buildOption())
+    chart.resize()
+  }
+
   onMounted(async () => {
     await nextTick()
-    if (!chartEl.value) return
-    chart = echarts.init(chartEl.value)
-    chart.setOption(buildOption())
-    ro.observe(chartEl.value)
+    initChartWhenReady()
   })
 
   onBeforeUnmount(() => {
+    clearInitRetryTimer()
     ro.disconnect()
     chart?.dispose()
   })
@@ -137,7 +171,7 @@
   watch(
     sidebar,
     () => {
-      chart?.setOption(buildOption())
+      initChartWhenReady()
     },
     { deep: true }
   )

@@ -58,7 +58,7 @@ export function mockFetchMyPerformanceSpendProgress(
   const page = slicePage(body)
   return Promise.resolve({
     title: page.spendProgress.title,
-    data: page.spendProgress.data
+    list: page.spendProgress.list
   })
 }
 
@@ -77,8 +77,20 @@ export function mockFetchMyPerformanceAppDimensionTable(
 ): Promise<MyPerformanceAppDimensionTableResponse> {
   const page = slicePage(body)
   return Promise.resolve({
-    title: page.appTable.title,
-    list: page.appTable.list,
-    summary: page.appTable.summary
+    title: page.appDimensionTable.title,
+    list: page.appDimensionTable.list,
+    summary: page.appDimensionTable.summary
+  })
+}
+
+export function mockFetchMyPerformanceAppDimensionTableByDateRange(
+  body: MyPerformanceQueryBody
+): Promise<MyPerformanceAppDimensionTableResponse> {
+  const page = slicePage(body)
+  return Promise.resolve({
+    title: page.appDateRangeTable.title,
+    list: page.appDateRangeTable.list,
+    summary: page.appDateRangeTable.summary,
+    excelTables: page.appDateRangeTable.excelTables
   })
 }

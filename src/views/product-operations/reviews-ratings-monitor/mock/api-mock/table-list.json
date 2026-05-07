@@ -13,12 +13,45 @@
       "platform": "google_play",
       "appName": "ClapFinder",
       "appVersion": "2.0.8",
-      "countryCode": "CN",
+      "countryCode": "cn",
       "language": "zh",
       "sentiment": "negative",
       "replied": true,
       "autoReplied": false,
       "replyContent": "感谢您的反馈，我们正在修复中。"
+    },
+    {
+      "id": "6",
+      "userId": "u6",
+      "userName": "Alex T.",
+      "starRating": 5,
+      "content": "Great app! Works perfectly after the update.",
+      "date": "2026-03-04",
+      "platform": "app_store",
+      "appName": "ClapFinder",
+      "appVersion": "2.0.8",
+      "countryCode": "us",
+      "language": "en",
+      "sentiment": "positive",
+      "replied": true,
+      "autoReplied": true,
+      "replyContent": "Thank you for your support!"
+    },
+    {
+      "id": "9",
+      "userId": "u9",
+      "userName": "Lee",
+      "starRating": 3,
+      "content": "还可以，无功无过，期待后续优化",
+      "date": "2026-03-03",
+      "platform": "google_play",
+      "appName": "Weather5",
+      "appVersion": "1.2.0",
+      "countryCode": "es",
+      "language": "zh",
+      "sentiment": "neutral",
+      "replied": false,
+      "autoReplied": false
     }
   ]
 }

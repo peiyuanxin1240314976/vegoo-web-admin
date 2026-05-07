@@ -1,23 +1,60 @@
 {
-  "_comment": "综合分析 - 国家 CPI 地图分布 + Top8 列表。对应 types.ts: CountryCpiMapItem[] + CountryCpiTopItem[]。",
+  "_comment": "综合分析 - 国家 CPI 地图分布 + Top8。对应 types: CountryCpiMapItem[] + CountryCpiTopItem[]。",
+  "interaction": {
+    "route": "/user-growth/comprehensive-analysis",
+    "surface": "中部第三列地图 + 第四列 Top8 列表",
+    "trigger": "fetchComprehensiveAnalysisData 内单次 POST 返回 mapItems 与 top8；s_country_code 非空时缩窄为单国。"
+  },
   "fieldDescription": {
     "request": {
-      "date_start": { "type": "string", "required": true },
-      "date_end": { "type": "string", "required": true },
-      "s_app_id": { "type": "string", "required": true },
-      "source": { "type": "string", "required": true },
+      "date_start": {
+        "type": "string",
+        "required": true,
+        "description": "统计区间开始 YYYY-MM-DD（含）。"
+      },
+      "date_end": {
+        "type": "string",
+        "required": true,
+        "description": "统计区间结束 YYYY-MM-DD（含）。"
+      },
+      "s_app_id": { "type": "string", "required": true, "description": "应用 ID；'' 全部。" },
+      "source": { "type": "string", "required": true, "description": "广告平台；'' 全部。" },
       "s_country_code": {
         "type": "string",
         "required": true,
-        "description": "'' 全部；非空则仅返回指定国家数据。"
+        "description": "'' 返回多国；非空则仅该国（地图与 Top8 同步过滤）。"
       }
     },
     "response": {
       "data": {
         "type": "{ mapItems: CountryCpiMapItem[]; top8: CountryCpiTopItem[] }",
         "required": true,
-        "description": "地图气泡点（country/code/cpi/x/y）+ 右侧 Top8 列表（country/code/cpi）。"
+        "description": "地图气泡与右侧排行同源不同展示。"
       }
+    },
+    "CountryCpiMapItem": {
+      "country": { "type": "string", "required": true, "description": "国家中文名。" },
+      "code": {
+        "type": "string",
+        "required": true,
+        "description": "ISO 3166-1 alpha-2 大写，与国旗 fi-* 类名一致。"
+      },
+      "cpi": { "type": "number", "required": true, "description": "CPI（USD）。" },
+      "x": {
+        "type": "number",
+        "required": true,
+        "description": "世界地图上的横向位置百分比 0–100。"
+      },
+      "y": {
+        "type": "number",
+        "required": true,
+        "description": "世界地图上的纵向位置百分比 0–100。"
+      }
+    },
+    "CountryCpiTopItem": {
+      "country": { "type": "string", "required": true, "description": "国家中文名。" },
+      "code": { "type": "string", "required": true, "description": "ISO 3166-1 alpha-2 大写。" },
+      "cpi": { "type": "number", "required": true, "description": "CPI（USD）。" }
     }
   },
   "sampleRequest": {
@@ -53,12 +90,12 @@
     "method": "POST",
     "priority": "P1",
     "requestBody": "date_start, date_end, s_app_id, source, s_country_code",
-    "responseBody": "{ mapItems: CountryCpiMapItem[]; top8: CountryCpiTopItem[] }"
+    "responseBody": "{ mapItems; top8 }"
   },
   "apiSuggestion": {
     "notes": [
-      "地图与 Top8 同属一个地理维度视图，合为一接口可减少请求次数。",
-      "x/y 为前端渲染坐标（百分比），若后端不存储坐标可由前端维护 code→坐标映射表。"
+      "若后端不存 x/y，可约定由前端维护 code→坐标；契约须注明口径。",
+      "地图与 Top8 的 code 应可对应，便于联动高亮。"
     ]
   }
 }

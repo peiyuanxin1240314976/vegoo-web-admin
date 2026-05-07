@@ -20,15 +20,10 @@
         "enum": ["", "android", "ios"],
         "description": "终端平台筛选。空字符串表示全部。"
       },
-      "appPackage": {
+      "appId": {
         "type": "string",
         "required": false,
-        "description": "应用包名筛选（推荐字段）。空字符串表示全部。"
-      },
-      "app": {
-        "type": "string",
-        "required": false,
-        "description": "历史兼容字段，语义同 appPackage。前端目前会同时传 app/appPackage，后端优先取 appPackage。"
+        "description": "应用筛选（自有应用 ID）。空字符串表示全部。见 backend-fields「接口请求 · 应用筛选（appId）」；与 `meta-filter-options.appOptions.value` 一致。"
       },
       "conversionType": {
         "type": "string",
@@ -44,7 +39,7 @@
       "keyword": {
         "type": "string",
         "required": false,
-        "description": "关键字搜索（建议匹配 conversionName/appPackage/systemDisplayName/conversionId 等）。空字符串表示不筛选。"
+        "description": "关键字搜索（建议匹配 conversionName/appId/包名展示名/systemDisplayName/conversionId 等）。空字符串表示不筛选。"
       }
     },
     "response": {
@@ -87,11 +82,11 @@
         "example": "560-369-9741",
         "description": "MCC 账号（广告账户归属标识）。"
       },
-      "appPackage": {
+      "appId": {
         "type": "string",
         "required": true,
-        "example": "com.locate.phone.track",
-        "description": "应用包名（唯一标识应用）。"
+        "example": "10001",
+        "description": "自有应用 ID（与筛选、meta 下拉的 value 一致）。"
       },
       "conversionName": {
         "type": "string",
@@ -106,12 +101,20 @@
       "platformConversionType": {
         "type": "string",
         "required": true,
-        "description": "平台转化类型（与设计稿/业务枚举一致）。"
+        "enum": [
+          "PHONE_CALL_LEAD",
+          "DOWNLOAD",
+          "PURCHASE",
+          "ADD_TO_CART",
+          "PAGE_VIEW",
+          "BEGIN_CHECKOUT"
+        ],
+        "description": "平台转化类型（与表格 TYPE 色条、设计稿一致；详见 types PlatformConversionType）。"
       },
       "systemDisplayName": {
         "type": "string",
         "required": true,
-        "description": "系统内展示名称（业务侧自定义，如：订阅转化/首次安装/IAP购买）。"
+        "description": "系统内展示名称（业务自定义；示例宜覆盖：订阅转化、首次安装、IAP购买、加购、页面浏览、发起结账，与 platformConversionType 六类一一对应便于联调）。"
       },
       "billingType": {
         "type": "string",
@@ -131,8 +134,7 @@
     "current": 1,
     "size": 20,
     "platform": "android",
-    "appPackage": "com.locate.phone.track",
-    "app": "com.locate.phone.track",
+    "appId": "10001",
     "conversionType": "DOWNLOAD",
     "status": "enabled",
     "keyword": "install"
@@ -143,30 +145,107 @@
         "id": "2",
         "platform": "android",
         "mccAccount": "560-369-9741",
-        "appPackage": "com.locate.phone.track",
+        "appId": "10001",
         "conversionName": "Phone Tracker install",
         "conversionId": "7217482985",
         "platformConversionType": "DOWNLOAD",
         "systemDisplayName": "首次安装",
         "billingType": "CPI",
         "status": "enabled"
+      },
+      {
+        "id": "3",
+        "platform": "ios",
+        "mccAccount": "560-369-9741",
+        "appId": "10002",
+        "conversionName": "IAP purchase complete",
+        "conversionId": "7217482986",
+        "platformConversionType": "PURCHASE",
+        "systemDisplayName": "IAP购买",
+        "billingType": "CPA",
+        "status": "duplicate"
+      },
+      {
+        "id": "4",
+        "platform": "android",
+        "mccAccount": "560-369-0000",
+        "appId": "10003",
+        "conversionName": "Lead form submit",
+        "conversionId": "8300100200",
+        "platformConversionType": "PHONE_CALL_LEAD",
+        "systemDisplayName": "订阅转化",
+        "billingType": "CPE",
+        "status": "unmapped"
+      },
+      {
+        "id": "5",
+        "platform": "ios",
+        "mccAccount": "560-369-9741",
+        "appId": "10001",
+        "conversionName": "Page view main",
+        "conversionId": "7217482999",
+        "platformConversionType": "PAGE_VIEW",
+        "systemDisplayName": "页面浏览",
+        "billingType": "",
+        "status": "enabled"
+      },
+      {
+        "id": "6",
+        "platform": "android",
+        "mccAccount": "560-369-9742",
+        "appId": "10002",
+        "conversionName": "add_to_cart_event",
+        "conversionId": "7217482987",
+        "platformConversionType": "ADD_TO_CART",
+        "systemDisplayName": "加购",
+        "billingType": "CPA",
+        "status": "enabled"
+      },
+      {
+        "id": "7",
+        "platform": "ios",
+        "mccAccount": "560-369-9742",
+        "appId": "10002",
+        "conversionName": "begin_checkout",
+        "conversionId": "7217482989",
+        "platformConversionType": "BEGIN_CHECKOUT",
+        "systemDisplayName": "发起结账",
+        "billingType": "CPI",
+        "status": "duplicate"
       }
     ],
     "current": 1,
     "size": 20,
-    "total": 1
+    "total": 6
   },
   "api": {
-    "url": "POST /api/user-growth/conversion-management/mappings-list",
+    "url": "POST /api/v1/datacenter/analysis/user-growth/conversion-management/mappings-list",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "current, size, platform, appPackage|app, conversionType, status, keyword（均为 body 字段）",
+    "requestBody": "current, size, platform, appId, conversionType, status, keyword（均为 body 字段）",
     "responseBody": "records (ConversionMappingItem[]), current, size, total"
   },
   "apiSuggestion": {
     "notes": [
-      "前端兼容字段：appPackage 与 app 语义相同；后端优先取 appPackage。",
-      "conversionId 必须返回 string（不要返回 number）。"
+      "应用筛选仅使用 appId（string）；勿再传 app/appPackage 作为筛选主字段。",
+      "conversionId 必须返回 string（不要返回 number）。",
+      "sampleResponse.records：platform/status/billingType 闭合 enum 写全；platformConversionType 六类写全；systemDisplayName 与 `mock/data.ts` 一致覆盖「订阅转化、首次安装、IAP购买、加购、页面浏览、发起结账」，与六类 platform 转化一一对应。"
     ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面初始化",
+        "detail": "`index.vue` name Tab 下 `useTable` 挂载后首次 `getData()`，api 当前为 `fetchConversionMappingListMock`，接真接口后改为 `fetch*`。",
+        "prerequisite": "无"
+      },
+      {
+        "moment": "用户操作",
+        "detail": "`conversion-filters.vue` 点搜索 → `handleSearch` 合并筛选到 `searchParams` 后 `getData()`；表格换页 `handleSizeChange` / `handleCurrentChange`。",
+        "prerequisite": "无"
+      }
+    ],
+    "defaultSelection": "current=1,size=20；platform/appId/conversionType/status/keyword 默认空或空串表示全部。",
+    "dedupe": "与 mappings-stats 建议使用相同筛选快照；列表与统计可并行请求。"
   }
 }

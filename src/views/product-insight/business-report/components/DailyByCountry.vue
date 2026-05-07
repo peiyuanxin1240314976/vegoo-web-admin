@@ -5,10 +5,8 @@
       <div class="dbc-title-left">
         <span class="dbc-title-app">整体</span>
         <span class="dbc-title-app">全部平台</span>
-        <span class="dbc-title-badge">{{ isWeekly ? '周报' : '日报' }}</span>
-        <span class="dbc-title-date">{{
-          isWeekly ? '2026年第10周（3/9-3/15）' : '2026年3月13日'
-        }}</span>
+        <span class="dbc-title-badge">{{ isWeekly ? '周报' : isMonthly ? '月报' : '日报' }}</span>
+        <span class="dbc-title-date">{{ titleDateText }}</span>
       </div>
     </div>
 
@@ -20,7 +18,7 @@
             <tr>
               <th class="sticky-col">国家</th>
               <th>平均DAU</th>
-              <th>{{ isWeekly ? '总收益' : '总收缴' }}</th>
+              <th>{{ isWeekly ? '总收益' : isMonthly ? '总收缴' : '总收缴' }}</th>
               <th>付费收缴</th>
               <th>预估利润</th>
               <th>计算利润</th>
@@ -48,9 +46,9 @@
             >
               <td class="sticky-col country-cell">
                 <span
-                  v-if="isWeekly && countryFiClass(row.name)"
+                  v-if="countryFiClass(row)"
                   class="fi country-fi"
-                  :class="countryFiClass(row.name)"
+                  :class="countryFiClass(row)"
                 />
                 <span v-else class="flag">{{ row.flag }}</span>
                 <span>{{ row.name }}</span>
@@ -146,38 +144,44 @@
             <!-- 合计行 -->
             <tr class="total-row">
               <td class="sticky-col">合计</td>
-              <td>78.3万</td>
-              <td class="revenue-cell">$152,300</td>
-              <td>$43,200</td>
-              <td>$108,900</td>
-              <td>$97,200</td>
-              <td>40.2万</td>
-              <td>14.5万</td>
-              <td>36%</td>
+              <td>{{ totals.avgDau }}</td>
+              <td class="revenue-cell">{{ totals.revenue }}</td>
+              <td>{{ totals.paidRevenue }}</td>
+              <td>{{ totals.profit }}</td>
+              <td>{{ totals.calcProfit }}</td>
+              <td>{{ totals.newUsers }}</td>
+              <td>{{ totals.organic }}</td>
+              <td>{{ totals.organicRate }}</td>
               <td>
                 <div v-if="isWeekly" class="dau-share-wrap dau-share-wrap--bar-first">
                   <div class="dau-bar">
-                    <div class="dau-bar-fill total-bar"></div>
+                    <div
+                      class="dau-bar-fill total-bar"
+                      :style="{ width: Math.min(totals.dauShare * 3, 100) + '%' }"
+                    ></div>
                   </div>
-                  <span class="dau-pct">100%</span>
+                  <span class="dau-pct">{{ totals.dauShare }}%</span>
                 </div>
                 <div v-else class="dau-share-wrap">
-                  <span class="dau-pct">100%</span>
+                  <span class="dau-pct">{{ totals.dauShare }}%</span>
                   <div class="dau-bar">
-                    <div class="dau-bar-fill total-bar"></div>
+                    <div
+                      class="dau-bar-fill total-bar"
+                      :style="{ width: Math.min(totals.dauShare * 3, 100) + '%' }"
+                    ></div>
                   </div>
                 </div>
               </td>
-              <td>$9.80</td>
-              <td>1.94</td>
-              <td>$41,100</td>
-              <td>$1.60</td>
-              <td>$9.80</td>
-              <td>$0.38</td>
-              <td>25.7万</td>
-              <td>14</td>
-              <td class="roi-orange">36%</td>
-              <td class="roi-orange">96%</td>
+              <td>{{ totals.ecpm }}</td>
+              <td>{{ totals.arpdau }}</td>
+              <td>{{ totals.adSpend }}</td>
+              <td>{{ totals.cpi }}</td>
+              <td>{{ totals.cpm }}</td>
+              <td>{{ totals.cpc }}</td>
+              <td>{{ totals.acquisitions }}</td>
+              <td>{{ totals.campaigns }}</td>
+              <td :class="roiColor(totals.roi1d)">{{ totals.roi1d }}</td>
+              <td :class="roiColor(totals.roi7d)">{{ totals.roi7d }}</td>
             </tr>
           </tbody>
         </table>
@@ -186,13 +190,9 @@
 
     <!-- ── 底部推送栏 ───────────────────────────────────────── -->
     <div class="dbc-push-bar">
-      <span class="dbc-count">共 22 个国家</span>
+      <span class="dbc-count">共 {{ countryCount }} 个国家</span>
       <div class="dbc-push-right">
-        <span class="dbc-push-last">{{
-          isWeekly
-            ? '上次推送：本周一 08:30 飞书群《经营周报》'
-            : '上次推送：今日 08:30 飞书群《经营日报》'
-        }}</span>
+        <span class="dbc-push-last">{{ pushText }}</span>
         <button class="dbc-push-btn" type="button" @click="openPushModal()">立即推送</button>
       </div>
     </div>
@@ -207,8 +207,8 @@
 
   const props = withDefaults(
     defineProps<{
-      /** 周报分国家：斑马纹、合计行、国旗等细节样式 */
-      variant?: 'daily' | 'weekly'
+      /** 周期样式：日报/周报/月报 */
+      variant?: 'daily' | 'weekly' | 'monthly'
     }>(),
     { variant: 'daily' }
   )
@@ -219,9 +219,102 @@
   const ctx = inject(businessReportContextKey)
 
   const isWeekly = computed(() => props.variant === 'weekly')
+  const isMonthly = computed(() => props.variant === 'monthly')
 
   const countries = computed(() => ctx?.byCountry.value?.rows ?? countryData)
   const othersRow = computed(() => ctx?.byCountry.value?.othersRow ?? countryOthersRow)
+  const reportLabel = computed(() => (isWeekly.value ? '周报' : isMonthly.value ? '月报' : '日报'))
+  const titleDateText = computed(() => {
+    const range = ctx?.reportRange.value
+    if (!range) return '--'
+    if (isMonthly.value) return range.startDate.slice(0, 7)
+    if (isWeekly.value) return `${range.startDate} - ${range.endDate}`
+    return range.startDate
+  })
+  const pushText = computed(
+    () =>
+      ctx?.getLastPushText?.(ctx?.period.value ?? props.variant) ??
+      `上次推送：-- 飞书群《经营${reportLabel.value}》`
+  )
+
+  function parseDisplayNumber(value: string | number | null | undefined): number {
+    if (typeof value === 'number') return Number.isFinite(value) ? value : 0
+    if (value == null) return 0
+    const raw = String(value)
+      .trim()
+      .replace(/[$,%\s,]/g, '')
+    if (!raw) return 0
+    if (raw.endsWith('亿')) return Number(raw.slice(0, -1)) * 100000000
+    if (raw.endsWith('万')) return Number(raw.slice(0, -1)) * 10000
+    const parsed = Number(raw)
+    return Number.isFinite(parsed) ? parsed : 0
+  }
+  function formatCompactCn(value: number): string {
+    if (value >= 100000000) return `${(value / 100000000).toFixed(1)}亿`
+    if (value >= 10000) return `${(value / 10000).toFixed(1)}万`
+    return value.toLocaleString('en-US', { maximumFractionDigits: 0 })
+  }
+  function formatUsd(value: number, digits = 0): string {
+    return `$${value.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits })}`
+  }
+  function formatPercent(value: number): string {
+    return `${value.toLocaleString('en-US', { maximumFractionDigits: 0 })}%`
+  }
+
+  const allRows = computed(() => [...countries.value, othersRow.value])
+  const countryCount = computed(() => {
+    const otherMatch = othersRow.value.subLabel?.match(/\d+/)
+    const othersCount = otherMatch ? Number(otherMatch[0]) : 0
+    return countries.value.length + othersCount
+  })
+  const totals = computed(() => {
+    const rows = allRows.value
+    const spendTotal = rows.reduce((sum, row) => sum + parseDisplayNumber(row.adSpend), 0)
+    const count = rows.length || 1
+    const newUsersTotal = rows.reduce((sum, row) => sum + parseDisplayNumber(row.newUsers), 0)
+    const organicTotal = rows.reduce((sum, row) => sum + parseDisplayNumber(row.organic), 0)
+    return {
+      avgDau: formatCompactCn(rows.reduce((sum, row) => sum + parseDisplayNumber(row.avgDau), 0)),
+      revenue: formatUsd(
+        rows.reduce((sum, row) => sum + parseDisplayNumber(row.revenue), 0),
+        0
+      ),
+      paidRevenue: formatUsd(
+        rows.reduce((sum, row) => sum + parseDisplayNumber(row.paidRevenue), 0),
+        0
+      ),
+      profit: formatUsd(
+        rows.reduce((sum, row) => sum + parseDisplayNumber(row.profit), 0),
+        0
+      ),
+      calcProfit: formatUsd(
+        rows.reduce((sum, row) => sum + parseDisplayNumber(row.calcProfit), 0),
+        0
+      ),
+      newUsers: formatCompactCn(newUsersTotal),
+      organic: formatCompactCn(organicTotal),
+      organicRate: formatPercent(newUsersTotal > 0 ? (organicTotal / newUsersTotal) * 100 : 0),
+      dauShare: rows.reduce((sum, row) => sum + row.dauShare, 0),
+      ecpm: formatUsd(rows.reduce((sum, row) => sum + parseDisplayNumber(row.ecpm), 0) / count, 2),
+      arpdau: (
+        rows.reduce((sum, row) => sum + parseDisplayNumber(row.arpdau), 0) / count
+      ).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      adSpend: formatUsd(spendTotal, 0),
+      cpi: formatUsd(rows.reduce((sum, row) => sum + parseDisplayNumber(row.cpi), 0) / count, 2),
+      cpm: formatUsd(rows.reduce((sum, row) => sum + parseDisplayNumber(row.cpm), 0) / count, 2),
+      cpc: formatUsd(rows.reduce((sum, row) => sum + parseDisplayNumber(row.cpc), 0) / count, 2),
+      acquisitions: formatCompactCn(
+        rows.reduce((sum, row) => sum + parseDisplayNumber(row.acquisitions), 0)
+      ),
+      campaigns: rows.reduce((sum, row) => sum + row.campaigns, 0),
+      roi1d: formatPercent(
+        rows.reduce((sum, row) => sum + parseDisplayNumber(row.roi1d), 0) / count
+      ),
+      roi7d: formatPercent(
+        rows.reduce((sum, row) => sum + parseDisplayNumber(row.roi7d), 0) / count
+      )
+    }
+  })
 
   /** 国家名称 → flag-icons 的 `fi-xx`（与 mock 国家名一致） */
   const COUNTRY_FI: Record<string, string> = {
@@ -249,8 +342,27 @@
     波兰: 'pl'
   }
 
-  function countryFiClass(name: string): string | undefined {
-    const code = COUNTRY_FI[name]
+  function parseCountryCodeFromEmoji(flag: string): string | undefined {
+    const symbols = [...flag].filter((char) => {
+      const codePoint = char.codePointAt(0) ?? 0
+      return codePoint >= 0x1f1e6 && codePoint <= 0x1f1ff
+    })
+    if (symbols.length < 2) return undefined
+    const code = symbols
+      .slice(0, 2)
+      .map((char) => {
+        const codePoint = char.codePointAt(0) ?? 0
+        const offset = codePoint - 0x1f1e6
+        return String.fromCharCode(97 + offset)
+      })
+      .join('')
+      .toLowerCase()
+    return /^[a-z]{2}$/.test(code) ? code : undefined
+  }
+
+  function countryFiClass(row: { name: string; flag: string }): string | undefined {
+    const emojiCode = parseCountryCodeFromEmoji(row.flag)
+    const code = emojiCode || COUNTRY_FI[row.name]
     return code ? `fi-${code}` : undefined
   }
 

@@ -39,7 +39,7 @@
       "progressList": {
         "type": "array",
         "required": true,
-        "description": "消耗进度表行；progress 为 0-100；statusType: ok|warn|inactive。"
+        "description": "消耗进度表行。progress 可为超出 100 的百分比。statusType: ok|warn|inactive|null。roi 为预格式化文案；无 roi 时用 roi1（数值，百分比非 0-1）由前端格式化为两位小数 + %。"
       }
     }
   },
@@ -115,6 +115,16 @@
         }
       ],
       "progressList": [
+        {
+          "id": "6906353663222",
+          "name": "PT_FB_639_ZZW_VO_BR_0128",
+          "platformIcon": "f",
+          "progress": 331.98,
+          "statusType": null,
+          "spend": "2323.85",
+          "budget": "700.00",
+          "roi1": 36.31
+        },
         {
           "name": "Weather5 US Google",
           "spend": "$5,200",

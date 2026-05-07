@@ -18,10 +18,15 @@
         "required": false,
         "description": "MCC 账号。传了可进一步过滤 apps/conversions。"
       },
-      "appPackage": {
+      "appId": {
         "type": "string",
         "required": false,
-        "description": "应用包名。传了可进一步过滤 conversions。"
+        "description": "自有应用 ID（与 `apps` 选项 value、列表/表单 `appId` 一致）。传了可进一步过滤 conversions。"
+      },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "description": "终端平台，与公用 GET cockpit/meta-filter-options 的 platformOptions.value 一致（如 android、ios）。可与 source、mccAccount、appId 组合用于过滤 conversions。"
       }
     },
     "response": {
@@ -38,12 +43,12 @@
       "apps": {
         "type": "Option[]",
         "required": false,
-        "description": "应用选项（受 source+mccAccount 影响）。"
+        "description": "应用选项（受 source+mccAccount 影响）；`value` 为自有应用 ID。"
       },
       "conversions": {
         "type": "ConversionOption[]",
         "required": false,
-        "description": "转化选项（受 source+mccAccount+appPackage 影响）。"
+        "description": "转化选项（受 source+mccAccount+appId 影响）。"
       }
     },
     "Option": {
@@ -55,7 +60,7 @@
       "value": {
         "type": "string",
         "required": true,
-        "description": "实际值。"
+        "description": "实际值（如 `adPlatforms` 为平台枚举，`apps` 为自有应用 ID / `appId`）。"
       }
     },
     "ConversionOption": {
@@ -92,8 +97,9 @@
   },
   "sampleRequest": {
     "source": "google",
+    "platform": "android",
     "mccAccount": "560-369-9741",
-    "appPackage": "com.locate.phone.track"
+    "appId": "10001"
   },
   "sampleResponse": {
     "adPlatforms": [
@@ -104,8 +110,8 @@
     ],
     "mccAccounts": [{ "label": "560-369-9741", "value": "560-369-9741" }],
     "apps": [
-      { "label": "com.locate.phone.track", "value": "com.locate.phone.track" },
-      { "label": "com.example.shop", "value": "com.example.shop" }
+      { "label": "com.locate.phone.track", "value": "10001" },
+      { "label": "com.example.shop", "value": "10002" }
     ],
     "conversions": [
       {
@@ -125,10 +131,10 @@
     ]
   },
   "api": {
-    "url": "POST /api/user-growth/conversion-management/meta-dialog-options",
+    "url": "POST /api/v1/datacenter/analysis/user-growth/conversion-management/meta-dialog-options",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "source|adPlatform?, mccAccount?, appPackage?",
+    "requestBody": "source|adPlatform?, platform?, mccAccount?, appId?",
     "responseBody": "adPlatforms, mccAccounts?, apps?, conversions? (ConversionOption[]，含 conversionId string)"
   },
   "apiSuggestion": {
@@ -137,5 +143,16 @@
       "conversionId 必须返回 string。",
       "若 conversions 数据量大，建议分页或支持 keyword 搜索（conversionName 模糊匹配）。"
     ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "弹窗内级联（待接）",
+        "detail": "`conversion-mapping-dialog.vue` 打开后随 source/mccAccount/appId 变更请求或本地缓存；当前 Mock 未走此接口。",
+        "prerequisite": "新增/编辑均可能依赖。"
+      }
+    ],
+    "defaultSelection": "source 与 adPlatform 对齐；未选时 body 可为 `{}` 仅返回 adPlatforms。",
+    "dedupe": "级联变更时建议取消上一次未完成的请求。"
   }
 }

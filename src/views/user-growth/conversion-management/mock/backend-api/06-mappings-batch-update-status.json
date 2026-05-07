@@ -19,15 +19,10 @@
             "enum": ["", "android", "ios"],
             "description": "终端平台筛选。"
           },
-          "appPackage": {
+          "appId": {
             "type": "string",
             "required": false,
-            "description": "应用包名筛选（推荐字段）。"
-          },
-          "app": {
-            "type": "string",
-            "required": false,
-            "description": "历史兼容字段，语义同 appPackage。"
+            "description": "应用筛选（自有应用 ID）。空字符串表示全部。与 mappings-list 一致。"
           },
           "conversionType": {
             "type": "string",
@@ -99,8 +94,7 @@
     "mode": "byFilter",
     "filters": {
       "platform": "android",
-      "appPackage": "",
-      "app": "",
+      "appId": "",
       "conversionType": "",
       "status": "",
       "keyword": ""
@@ -114,7 +108,7 @@
     "message": "已批量启用"
   },
   "api": {
-    "url": "POST /api/user-growth/conversion-management/mappings-batch-update-status",
+    "url": "POST /api/v1/datacenter/analysis/user-growth/conversion-management/mappings-batch-update-status",
     "method": "POST",
     "priority": "P2",
     "requestBody": "mode (byFilter|byIds), filters? (与列表一致), ids? (string[]), targetStatus (enabled|unmapped)",
@@ -125,5 +119,16 @@
       "也可拆成两个接口：/batch-enable 与 /batch-disable，但合并后更易维护。",
       "请保证批量接口与列表筛选口径一致，否则前端无法保证“看到什么就批量什么”。"
     ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作（待接）",
+        "detail": "`conversion-side-panel.vue` / `conversion-side-quick-actions.vue` 触发批量启用、禁用；当前 `handleBatchEnable/Disable` 为 ElMessage 占位，接接口后按 mode=byFilter 携带当前列表筛选或 byIds。",
+        "prerequisite": "与 mappings-list 筛选一致。"
+      }
+    ],
+    "defaultSelection": "mode 由 UI 决定：全选当前筛选结果用 byFilter；勾选行用 byIds。",
+    "dedupe": "二次确认与按钮 loading。"
   }
 }

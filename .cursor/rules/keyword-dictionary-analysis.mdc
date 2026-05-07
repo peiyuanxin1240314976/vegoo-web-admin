@@ -1,0 +1,33 @@
+---
+description: >-
+  datacenter analysis 域关键字字典：凡明确要求生成新的 mock/backend-api 契约时必须遵守；
+  本规则 alwaysApply，无需 @。与 backend-fields、api-contract 分层协作；存量不强制回迁。
+alwaysApply: true
+---
+
+# 关键字字典（analysis 域 · 必读）
+
+## 触发条件（生成新 mock 契约）
+
+- **凡任务、需求或对话中明确指出需要「新建 / 生成 / 补充」`mock/backend-api` 契约**（新增 `*.json` 或等价契约文件）时，**必须**按本文与 **`docs/关键字字典规则.md`**、**`docs/关键字字典规则-前端落地边界.md`** 编写字段与指标（含 analysis/报表类 ROI、收入、`*Pct` 等）。
+- **本规则为 `alwaysApply: true`**，Agent 与开发者 **无需** 在对话里 `@keyword-dictionary-analysis.mdc` 或 `@` 本文件；任务一旦出现「要生成新 mock 契约」即应自动遵守。需要核查条文时用工具 **Read** 仓库内上述 **`docs/**`** 文件即可。
+
+## 适用范围
+
+- **文档**：[`docs/关键字字典规则.md`](../../docs/关键字字典规则.md)（查询维度 + 指标字段、禁用 `roi`/`revenue`、`*Pct`/`*Ratio` 等）、[`docs/关键字字典规则-前端落地边界.md`](../../docs/关键字字典规则-前端落地边界.md)（与本仓库 `backend-fields.mdc`、cockpit 顶栏、**string/int** 筛选口径的衔接）。
+- **对象**：**后续新开发的页面、组件、**`mock/backend-api`** 契约、**`src/api`** 联调类型**，且对接 **`com.vegoo.datacenter.analysis`** 或同类报表/广告指标接口时，**须严格遵守**上述文档。
+- **存量**：已生成 mock 或已接入真实接口的模块 **不强制** 按本规则回迁（除非单独迁移项）。
+
+## 与现有规则的关系（禁止混用文档口径）
+
+- **全局筛选维度**（`appId`、`platform`、`source`、`countryCode`、`account`）、**camelCase、无下划线**、**cockpit 公用 meta**：仍以 **`.cursor/rules/backend-fields.mdc`**、**`api-contract-and-mock-conventions.mdc`** 为准。
+- **analysis 域指标键名**（如 `totalRoiPct`、`totalRevenue`、`roi7Pct`、环比同比字段等）：以 **`docs/关键字字典规则.md`** 为准；**新增字段**须在 **同一 PR** 补字典条目（主文档 1.3）。
+- **筛选维度类型**（例如 `source`/`platform` 为 **string** 与 cockpit 一致，还是后端 DTO 为 **int**）由 **`docs/关键字字典规则-前端落地边界.md`** 二选一说明；须在 **`mock/backend-api` 的 `fieldDescription` + `sampleRequest`** 与实现中 **写死一种**，不得仅口头约定。
+
+## Agent / 开发自检
+
+**生成新** `mock/backend-api` **契约或** PR 涉及 analysis 新指标字段时：
+
+- [ ] 已用工具 **Read**（或打开）**`docs/关键字字典规则.md`**、**`docs/关键字字典规则-前端落地边界.md`** 相关章节（**不必** `@` 规则 `.mdc` 文件）。
+- [ ] 契约中无裸 **`roi`**、**`roiPct`**、**`revenue`** 等业务键名；百分比指标以 **`Pct`** 结尾（或主文档已列名）。
+- [ ] 新字段已同步登记 **`docs/关键字字典规则.md`**（及需要的 **`backend-fields.mdc`**），避免两处矛盾。

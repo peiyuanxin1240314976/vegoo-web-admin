@@ -1,9 +1,33 @@
 {
-  "_comment": "综合分析详情 - 广告平台×国家树形表及表脚合计。对应 types: MatrixTableData（rows: PlatformRow[]，total）。国家子行须含 s_country_code。",
+  "_comment": "综合分析应用详情 - 广告平台×国家树形表及表脚合计。对应 types: MatrixTableData。国家子行须含 s_country_code（ISO 3166-1 alpha-2）；勿返回国旗 emoji。",
   "fieldDescription": {
     "request": {
       "name": { "type": "string", "required": true, "description": "钻取实体名称。" },
-      "from": { "type": "string", "required": false, "description": "来源页标识。" }
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "查询起始日期（含），YYYY-MM-DD。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": true,
+        "description": "查询结束日期（含），YYYY-MM-DD。"
+      },
+      "appId": {
+        "type": "string",
+        "required": true,
+        "description": "应用筛选；空字符串表示全部。"
+      },
+      "source": {
+        "type": "string",
+        "required": true,
+        "description": "广告平台筛选；空字符串表示全部。"
+      },
+      "s_country_code": {
+        "type": "string",
+        "required": true,
+        "description": "国家代码筛选；空字符串表示全部。"
+      }
     },
     "response": {
       "data": {
@@ -21,13 +45,111 @@
       "total": {
         "type": "object",
         "required": true,
-        "description": "与表列对齐：adSpend, cpi, cpm, cpc, roiD1, roiD3, roiD7, profit（走势列前端占位）。"
+        "description": "与表列对齐：adSpend, cpi, cpm, cpc, roiD1, roiD3, roiD7, profit（走势列为前端 sparkline，合计行可占位或与业务约定）。"
       }
+    },
+    "PlatformRow": {
+      "id": { "type": "string", "required": true, "description": "行唯一 id。" },
+      "isCountry": {
+        "type": "boolean",
+        "required": true,
+        "description": "平台根行固定 false。"
+      },
+      "platform": { "type": "string", "required": true, "description": "广告平台名称。" },
+      "countryCount": {
+        "type": "string",
+        "required": true,
+        "description": "下属国家数，预格式化展示。"
+      },
+      "adSpend": { "type": "string", "required": true, "description": "广告支出。" },
+      "cpi": { "type": "string", "required": true, "description": "CPI 展示。" },
+      "cpiLevel": {
+        "type": "string",
+        "required": true,
+        "enum": ["good", "near", "over"],
+        "description": "CPI 档位，驱动标签色。"
+      },
+      "cpm": { "type": "string", "required": true, "description": "CPM。" },
+      "cpc": { "type": "string", "required": true, "description": "CPC。" },
+      "roiD1": { "type": "string", "required": true, "description": "首日 ROI。" },
+      "roiD1Level": {
+        "type": "string",
+        "required": true,
+        "enum": ["good", "warn", "danger"],
+        "description": "首日 ROI 档位。"
+      },
+      "roiD3": { "type": "string", "required": true, "description": "3 日 ROI。" },
+      "roiD7": { "type": "string", "required": true, "description": "7 日 ROI。" },
+      "profit": { "type": "string", "required": true, "description": "预估利润。" },
+      "profitNeg": {
+        "type": "boolean",
+        "required": false,
+        "description": "是否负利润样式（平台汇总行可选用）。"
+      },
+      "sparkline": {
+        "type": "number[]",
+        "required": true,
+        "description": "迷你走势序列，长度由产品约定（示例 7 点）。"
+      },
+      "children": {
+        "type": "CountryRow[]",
+        "required": true,
+        "description": "国家明细行。"
+      }
+    },
+    "CountryRow": {
+      "id": { "type": "string", "required": true, "description": "行唯一 id。" },
+      "isCountry": {
+        "type": "boolean",
+        "required": true,
+        "description": "国家行固定 true。"
+      },
+      "platform": {
+        "type": "string",
+        "required": true,
+        "description": "所属广告平台名（与父行一致）。"
+      },
+      "country": { "type": "string", "required": true, "description": "国家中文/展示名。" },
+      "s_country_code": {
+        "type": "string",
+        "required": true,
+        "description": "ISO 3166-1 alpha-2，大写；前端映射 fi-xx 展示国旗。"
+      },
+      "adSpend": { "type": "string", "required": true, "description": "广告支出。" },
+      "cpi": { "type": "string", "required": true, "description": "CPI。" },
+      "cpiLevel": {
+        "type": "string",
+        "required": true,
+        "enum": ["good", "near", "over"],
+        "description": "CPI 档位。"
+      },
+      "cpm": { "type": "string", "required": true, "description": "CPM。" },
+      "cpc": { "type": "string", "required": true, "description": "CPC。" },
+      "roiD1": { "type": "string", "required": true, "description": "首日 ROI。" },
+      "roiD1Level": {
+        "type": "string",
+        "required": true,
+        "enum": ["good", "warn", "danger"],
+        "description": "首日 ROI 档位。"
+      },
+      "roiD3": { "type": "string", "required": true, "description": "3 日 ROI。" },
+      "roiD7": { "type": "string", "required": true, "description": "7 日 ROI。" },
+      "profit": { "type": "string", "required": true, "description": "预估利润。" },
+      "profitNeg": {
+        "type": "boolean",
+        "required": false,
+        "description": "负利润高亮。"
+      },
+      "sparkline": { "type": "number[]", "required": true, "description": "迷你走势。" }
     }
   },
   "sampleRequest": {
     "name": "PhoneTracker",
-    "from": "comprehensive-analysis"
+    "startDate": "2026-02-27",
+    "endDate": "2026-03-05",
+    "appId": "",
+    "source": "",
+    "s_country_code": ""
   },
   "sampleResponse": {
     "data": {
@@ -37,16 +159,16 @@
           "isCountry": false,
           "platform": "Google Ads",
           "countryCount": "3",
-          "adSpend": "$24.5k",
+          "adSpend": "$24.50k",
           "cpi": "$2.92",
           "cpiLevel": "near",
-          "cpm": "$12.8",
+          "cpm": "$12.80",
           "cpc": "$0.44",
-          "roiD1": "104%",
+          "roiD1": "104.00%",
           "roiD1Level": "good",
-          "roiD3": "111%",
-          "roiD7": "118%",
-          "profit": "$8.2k",
+          "roiD3": "111.00%",
+          "roiD7": "118.00%",
+          "profit": "$8.20k",
           "sparkline": [2.4, 2.42, 2.45, 2.5, 2.52, 2.55, 2.58],
           "children": [
             {
@@ -55,16 +177,16 @@
               "platform": "Google Ads",
               "country": "美国",
               "s_country_code": "US",
-              "adSpend": "$12.1k",
+              "adSpend": "$12.10k",
               "cpi": "$2.88",
               "cpiLevel": "good",
-              "cpm": "$12.2",
+              "cpm": "$12.20",
               "cpc": "$0.42",
-              "roiD1": "106%",
+              "roiD1": "106.00%",
               "roiD1Level": "good",
-              "roiD3": "112%",
-              "roiD7": "119%",
-              "profit": "$4.1k",
+              "roiD3": "112.00%",
+              "roiD7": "119.00%",
+              "profit": "$4.10k",
               "sparkline": [2.3, 2.35, 2.4, 2.44, 2.48, 2.5, 2.52]
             },
             {
@@ -73,16 +195,16 @@
               "platform": "Google Ads",
               "country": "德国",
               "s_country_code": "DE",
-              "adSpend": "$11.7k",
-              "cpi": "$2.88",
+              "adSpend": "$11.70k",
+              "cpi": "$2.95",
               "cpiLevel": "near",
-              "cpm": "$12.6",
+              "cpm": "$12.60",
               "cpc": "$0.43",
-              "roiD1": "107%",
+              "roiD1": "107.00%",
               "roiD1Level": "good",
-              "roiD3": "113%",
-              "roiD7": "120%",
-              "profit": "$3.9k",
+              "roiD3": "113.00%",
+              "roiD7": "120.00%",
+              "profit": "$3.90k",
               "sparkline": [2.34, 2.37, 2.41, 2.46, 2.49, 2.52, 2.55]
             },
             {
@@ -91,17 +213,73 @@
               "platform": "Google Ads",
               "country": "日本",
               "s_country_code": "JP",
-              "adSpend": "$10.5k",
-              "cpi": "$2.87",
-              "cpiLevel": "near",
-              "cpm": "$12.9",
+              "adSpend": "$10.50k",
+              "cpi": "$3.12",
+              "cpiLevel": "over",
+              "cpm": "$12.90",
               "cpc": "$0.45",
-              "roiD1": "109%",
-              "roiD1Level": "good",
-              "roiD3": "114%",
-              "roiD7": "121%",
-              "profit": "$3.6k",
+              "roiD1": "109.00%",
+              "roiD1Level": "warn",
+              "roiD3": "114.00%",
+              "roiD7": "121.00%",
+              "profit": "$3.60k",
               "sparkline": [2.36, 2.39, 2.43, 2.48, 2.51, 2.54, 2.57]
+            }
+          ]
+        },
+        {
+          "id": "phonetracker-facebook",
+          "isCountry": false,
+          "platform": "Facebook",
+          "countryCount": "2",
+          "adSpend": "$18.00k",
+          "cpi": "$2.65",
+          "cpiLevel": "near",
+          "cpm": "$11.20",
+          "cpc": "$0.38",
+          "roiD1": "102.00%",
+          "roiD1Level": "good",
+          "roiD3": "109.00%",
+          "roiD7": "115.00%",
+          "profit": "$6.10k",
+          "sparkline": [2.5, 2.48, 2.46, 2.44, 2.42, 2.4, 2.38],
+          "children": [
+            {
+              "id": "phonetracker-facebook-in",
+              "isCountry": true,
+              "platform": "Facebook",
+              "country": "印度",
+              "s_country_code": "IN",
+              "adSpend": "$9.50k",
+              "cpi": "$2.40",
+              "cpiLevel": "good",
+              "cpm": "$10.10",
+              "cpc": "$0.35",
+              "roiD1": "105.00%",
+              "roiD1Level": "good",
+              "roiD3": "110.00%",
+              "roiD7": "117.00%",
+              "profit": "$3.20k",
+              "sparkline": [2.2, 2.22, 2.25, 2.28, 2.3, 2.32, 2.34]
+            },
+            {
+              "id": "phonetracker-facebook-br",
+              "isCountry": true,
+              "platform": "Facebook",
+              "country": "巴西",
+              "s_country_code": "BR",
+              "adSpend": "$8.50k",
+              "cpi": "$2.92",
+              "cpiLevel": "near",
+              "cpm": "$11.80",
+              "cpc": "$0.40",
+              "roiD1": "98.00%",
+              "roiD1Level": "danger",
+              "roiD3": "104.00%",
+              "roiD7": "110.00%",
+              "profit": "$2.90k",
+              "profitNeg": true,
+              "sparkline": [2.6, 2.62, 2.64, 2.66, 2.68, 2.7, 2.72]
             }
           ]
         },
@@ -110,16 +288,16 @@
           "isCountry": false,
           "platform": "TikTok",
           "countryCount": "2",
-          "adSpend": "$14.2k",
+          "adSpend": "$14.20k",
           "cpi": "$2.18",
           "cpiLevel": "good",
-          "cpm": "$9.6",
+          "cpm": "$9.60",
           "cpc": "$0.31",
-          "roiD1": "112%",
+          "roiD1": "112.00%",
           "roiD1Level": "good",
-          "roiD3": "119%",
-          "roiD7": "124%",
-          "profit": "$5.4k",
+          "roiD3": "119.00%",
+          "roiD7": "124.00%",
+          "profit": "$5.40k",
           "sparkline": [2.02, 2.06, 2.08, 2.1, 2.12, 2.13, 2.15],
           "children": [
             {
@@ -128,17 +306,16 @@
               "platform": "TikTok",
               "country": "美国",
               "s_country_code": "US",
-              "adSpend": "$8.8k",
+              "adSpend": "$8.80k",
               "cpi": "$2.90",
               "cpiLevel": "near",
-              "cpm": "$10.3",
+              "cpm": "$10.30",
               "cpc": "$0.33",
-              "roiD1": "101%",
+              "roiD1": "101.00%",
               "roiD1Level": "warn",
-              "roiD3": "108%",
-              "roiD7": "116%",
-              "profit": "$3.1k",
-              "profitNeg": false,
+              "roiD3": "108.00%",
+              "roiD7": "116.00%",
+              "profit": "$3.10k",
               "sparkline": [2.25, 2.3, 2.34, 2.36, 2.38, 2.4, 2.41]
             },
             {
@@ -147,40 +324,46 @@
               "platform": "TikTok",
               "country": "英国",
               "s_country_code": "GB",
-              "adSpend": "$7.9k",
-              "cpi": "$2.88",
-              "cpiLevel": "near",
-              "cpm": "$9.9",
+              "adSpend": "$7.90k",
+              "cpi": "$3.25",
+              "cpiLevel": "over",
+              "cpm": "$9.90",
               "cpc": "$0.32",
-              "roiD1": "99%",
+              "roiD1": "94.00%",
               "roiD1Level": "danger",
-              "roiD3": "105%",
-              "roiD7": "112%",
-              "profit": "$3.5k",
+              "roiD3": "100.00%",
+              "roiD7": "108.00%",
+              "profit": "$3.50k",
               "profitNeg": true,
-              "sparkline": [2.2, 2.26, 2.32, 2.35, 2.37, 2.38, 2.4]
+              "sparkline": [2.85, 2.88, 2.9, 2.92, 2.94, 2.96, 2.98]
             }
           ]
         }
       ],
       "total": {
-        "adSpend": "$38.7k",
-        "cpi": "$2.55",
-        "cpm": "$11.2",
-        "cpc": "$0.39",
-        "roiD1": "106%",
-        "roiD3": "112%",
-        "roiD7": "120%",
-        "profit": "$13.6k"
+        "adSpend": "$56.70k",
+        "cpi": "$2.58",
+        "cpm": "$11.10",
+        "cpc": "$0.38",
+        "roiD1": "105.50%",
+        "roiD3": "112.00%",
+        "roiD7": "118.50%",
+        "profit": "$19.70k"
       }
     }
   },
   "api": {
-    "url": "POST /api/user-growth/comprehensive-analysis/platform-analysis-detail/matrix-table",
+    "url": "POST /api/v1/datacenter/analysis/user-growth/comprehensive-analysis/platform-analysis-detail/matrix-table",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "name (必填), from?",
+    "requestBody": "name, startDate, endDate, appId, source, s_country_code",
     "responseBody": "MatrixTableData"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "主表格数组至少 3 个完整节点（含跨层）；示例含 3 个平台根行 + 多国子行。",
+      "cpiLevel、roiD1Level 闭合枚举须在示例中各至少出现一次。"
+    ]
   },
   "interaction": {
     "triggers": [
@@ -190,7 +373,7 @@
         "prerequisite": "无"
       }
     ],
-    "defaultSelection": "与 summary 共用 name/from。",
+    "defaultSelection": "与 summary 共用请求体。",
     "dedupe": "数据量大时可后续拆懒加载子节点（另契约）；当前为整表返回。"
   }
 }

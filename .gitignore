@@ -4,9 +4,13 @@ node_modules
 .vscode
 dist
 dist-ssr
+app
 *.local
+.env
 
 # Auto-generated files
 src/types/import/auto-imports.d.ts
 src/types/import/components.d.ts
 .auto-import.json
+.codex-vite.err.log
+.codex-vite.log

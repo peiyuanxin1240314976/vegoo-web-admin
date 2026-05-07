@@ -1,0 +1,53 @@
+{
+  "_comment": "国家管理 - 国旗图标上传。multipart 单文件；成功返回可写入 `CountryFormModel.flagIconUrl` / `CountryItem.flagIconUrl` 的 HTTPS URL（或网关约定的静态资源路径）。Mock 时前端可用 data URL 模拟。",
+  "fieldDescription": {
+    "request": {
+      "file": {
+        "type": "file (multipart field name)",
+        "required": true,
+        "description": "图片二进制；字段名 `file`。建议限制类型 png/jpeg/webp/svg，大小由产品与网关约定（如 ≤512KB）。"
+      }
+    },
+    "response": {
+      "url": {
+        "type": "string",
+        "required": true,
+        "description": "上传成功后的图标访问地址；须为 `https://` 或站内绝对路径；写入国家新建/编辑表单的 `flagIconUrl`。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "_note": "multipart/form-data，非 JSON；此处仅作说明。",
+    "file": "<binary>"
+  },
+  "sampleResponse": {
+    "code": 200,
+    "data": {
+      "url": "https://cdn.example.com/flags/us-20260324120000.png"
+    }
+  },
+  "api": {
+    "url": "POST /api/config-management/country/flag-icon/upload",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "multipart/form-data: file",
+    "responseBody": "{ url }（unwrap 后 data）"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "禁止在「国家创建/更新」JSON 接口中内嵌整图 Base64 作为主方案；图标须先上传或走对象存储后得 `url`。",
+      "Mock：`uploadCountryFlagIcon` 走 `mockUploadCountryFlagIcon`，以 FileReader 返回 data URL 作为 `url`，便于离线联调。",
+      "前端 `src/api/config-management/country-management.ts` 中 `uploadCountryFlagIcon`；开关见 `CountryEndpoint.FlagIconUpload`。"
+    ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "`country-form-dialog` 选择图片后调用 `uploadCountryFlagIcon`，将返回的 `url` 写入表单 `flagIconUrl`。"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "上传中禁用重复选择或显示 loading。"
+  }
+}

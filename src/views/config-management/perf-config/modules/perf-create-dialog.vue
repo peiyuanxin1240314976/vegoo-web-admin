@@ -29,72 +29,62 @@
       <div class="step-section-title">基本信息</div>
 
       <el-form ref="form1Ref" :model="step1" :rules="rules1" label-position="top" class="pf-form">
-        <!-- 应用名称 -->
-        <el-form-item label="应用名称" prop="appName" required>
+        <!-- 应用 -->
+        <el-form-item label="应用" prop="appId" required>
           <el-select
-            v-model="step1.appName"
+            v-model="step1.appId"
             filterable
-            placeholder="请选择应用..."
+            placeholder="请选择应用"
             class="full-w"
             popper-class="pc-popper"
+            @change="onAppIdChange"
           >
-            <el-option v-for="a in APP_LIST" :key="a" :value="a" :label="a">
+            <el-option
+              v-for="opt in metaAppOptions"
+              :key="opt.value"
+              :value="opt.value"
+              :label="opt.label"
+            >
               <div class="app-opt">
-                <span class="app-opt-icon" :style="{ background: APP_ICON_COLORS[a] ?? '#475569' }">
-                  {{ a.charAt(0) }}
+                <span class="app-opt-icon" :style="{ background: appOptionColor(opt.label) }">
+                  {{ opt.label.charAt(0) }}
                 </span>
-                {{ a }}
+                {{ opt.label }}
               </div>
             </el-option>
           </el-select>
-          <div class="field-hint">应用列表来自应用管理</div>
         </el-form-item>
 
-        <!-- 平台 + 广告平台 -->
+        <!-- 终端平台 + 广告平台 -->
         <div class="form-row-2">
-          <el-form-item label="平台" prop="appPlatform" required>
-            <div class="radio-group">
-              <label
-                v-for="p in APP_PLATFORMS"
-                :key="p.value"
-                :class="['radio-card', step1.appPlatform === p.value && 'radio-card--active']"
-              >
-                <input
-                  v-model="step1.appPlatform"
-                  type="radio"
-                  :value="p.value"
-                  class="hidden-radio"
-                />
-                {{ p.label }}
-              </label>
-            </div>
+          <el-form-item label="终端平台" prop="platform" required>
+            <el-select v-model="step1.platform" placeholder="请选择终端平台" class="full-w">
+              <el-option
+                v-for="opt in metaPlatformOptions"
+                :key="opt.value"
+                :label="opt.label"
+                :value="opt.value"
+              />
+            </el-select>
           </el-form-item>
 
-          <el-form-item label="广告平台" prop="adPlatforms" required>
-            <div class="ad-platform-tags">
-              <span
-                v-for="p in VISIBLE_AD_PLATFORMS"
-                :key="p"
-                :class="['ad-tag', step1.adPlatforms.includes(p) && 'ad-tag--active']"
-                @click="toggleAdPlatform(p)"
-              >
-                {{ p }}
-                <ElIcon v-if="step1.adPlatforms.includes(p)" class="ad-tag-check"><Check /></ElIcon>
-              </span>
-              <span class="ad-tag ad-tag--more" @click="showMorePlatforms = !showMorePlatforms"
-                >+ 更多</span
-              >
-            </div>
-            <div v-if="showMorePlatforms" class="ad-platform-more">
-              <span
-                v-for="p in MORE_AD_PLATFORMS"
-                :key="p"
-                :class="['ad-tag', step1.adPlatforms.includes(p) && 'ad-tag--active']"
-                @click="toggleAdPlatform(p)"
-              >
-                {{ p }}
-              </span>
-            </div>
+          <el-form-item label="广告平台" prop="sourceList" required>
+            <el-select
+              v-model="step1.sourceList"
+              multiple
+              filterable
+              collapse-tags
+              collapse-tags-tooltip
+              placeholder="请选择广告平台（可多选）"
+              class="full-w"
+            >
+              <el-option
+                v-for="opt in metaSourceOptions"
+                :key="opt.value"
+                :label="opt.label"
+                :value="opt.value"
+              />
+            </el-select>
           </el-form-item>
         </div>
 
@@ -134,7 +124,7 @@
       <!-- 提示条 -->
       <div class="tip-bar">
         <ElIcon class="tip-icon"><InfoFilled /></ElIcon>
-        应用名称 × 平台 × 广告平台 构成唯一配置记录，重复组合将提示已存在配置
+        应用 × 终端平台 × 广告平台 构成唯一配置记录，重复组合将提示已存在配置
       </div>
     </div>
 
@@ -143,8 +133,7 @@
       <!-- 已选摘要 -->
       <div class="selected-bar">
         <span class="selected-text">
-          已选择：{{ step1.appName }} | {{ step1.appPlatform === 'android' ? '安卓' : 'iOS' }} |
-          {{ step1.adPlatforms.join('、') }}
+          已选择：{{ step1.appName }} | {{ platformStepLabel }} | {{ sourceStepLabels }}
         </span>
         <ElIcon class="selected-edit" @click="currentStep = 0"><Edit /></ElIcon>
       </div>
@@ -282,19 +271,14 @@
       <!-- 预览卡 -->
       <div class="preview-card">
         <div class="preview-card-header">
-          <span
-            class="preview-app-icon"
-            :style="{ background: APP_ICON_COLORS[step1.appName] ?? '#475569' }"
-          >
-            {{ step1.appName.charAt(0) }}
+          <span class="preview-app-icon" :style="{ background: appOptionColor(step1.appName) }">
+            {{ (step1.appName || '?').charAt(0) }}
           </span>
           <div class="preview-app-info">
-            <span class="preview-app-name">{{ step1.appName }}</span>
+            <span class="preview-app-name">{{ step1.appName || '—' }}</span>
             <div class="preview-app-tags">
-              <span class="preview-tag">{{
-                step1.appPlatform === 'android' ? '安卓' : 'iOS'
-              }}</span>
-              <span v-for="p in step1.adPlatforms" :key="p" class="preview-tag">{{ p }}</span>
+              <span class="preview-tag">{{ platformStepLabel }}</span>
+              <span v-for="t in sourceStepLabelParts" :key="t" class="preview-tag">{{ t }}</span>
               <span class="preview-tag preview-tag--run">{{ runStatusLabel }}</span>
             </div>
           </div>
@@ -377,8 +361,8 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, reactive } from 'vue'
-  import type { FormRules } from 'element-plus'
+  import { ref, computed, reactive, watch, onMounted } from 'vue'
+  import { ElMessage, type FormRules } from 'element-plus'
   import {
     Check,
     InfoFilled,
@@ -387,54 +371,41 @@
     WarningFilled,
     Promotion
   } from '@element-plus/icons-vue'
-  import { APP_LIST, AD_PLATFORMS, APP_ICON_COLORS } from '../mock/data'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
+  import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
+  import { APP_ICON_COLORS } from '../mock/data'
   import type { PerfConfigItem, PerfStep1Form, PerfStep2Form, SaveMode } from '../types'
   import { getAppNow } from '@/utils/app-now'
 
   defineOptions({ name: 'PerfCreateDialog' })
 
-  defineProps<{ visible: boolean }>()
+  const props = defineProps<{ visible: boolean }>()
   const emit = defineEmits<{
     (e: 'update:visible', v: boolean): void
     (e: 'success', item: PerfConfigItem): void
   }>()
 
-  // ─── 步骤 ──────────────────────────────────────────────
-  const STEPS = ['基本信息', '绩效指标', '确认保存']
-  const currentStep = ref(0)
-  const saveMode = ref<SaveMode>('draft')
+  const cockpitMetaStore = useCockpitMetaFilterStore()
 
-  const stepClass = (i: number) => ({
-    'step--done': i < currentStep.value,
-    'step--current': i === currentStep.value,
-    'step--pending': i > currentStep.value
-  })
+  const metaAppOptions = computed(() => cockpitMetaStore.data?.appOptions ?? [])
+  const metaPlatformOptions = computed(() => cockpitMetaStore.data?.platformOptions ?? [])
+  const metaSourceOptions = computed(() => cockpitMetaStore.data?.sourceOptions ?? [])
 
-  // ─── 静态选项 ──────────────────────────────────────────
-  const APP_PLATFORMS = [
-    { value: 'android', label: '安卓 🤖' },
-    { value: 'ios', label: 'iOS 🍎' }
-  ]
-  const RUN_STATUS_OPTIONS = [
-    { value: 'running', label: '投放中' },
-    { value: 'paused', label: '未投放' },
-    { value: 'stopped', label: '已停止' }
-  ]
-  const VISIBLE_AD_PLATFORMS = AD_PLATFORMS.slice(0, 6)
-  const MORE_AD_PLATFORMS = AD_PLATFORMS.slice(6)
-  const showMorePlatforms = ref(false)
-
-  const toggleAdPlatform = (p: string) => {
-    const idx = step1.adPlatforms.indexOf(p as any)
-    if (idx >= 0) step1.adPlatforms.splice(idx, 1)
-    else step1.adPlatforms.push(p as any)
+  function optionLabel(options: CockpitMetaOptionItem[], value: string): string {
+    if (!value) return ''
+    return options.find((o) => o.value === value)?.label ?? value
   }
 
-  // ─── 表单数据 ──────────────────────────────────────────
+  function appOptionColor(label: string) {
+    if (!label) return '#475569'
+    return APP_ICON_COLORS[label] ?? '#475569'
+  }
+
   const step1 = reactive<PerfStep1Form>({
+    appId: '',
     appName: '',
-    appPlatform: 'android',
-    adPlatforms: ['Google'],
+    platform: '',
+    sourceList: [],
     runStatus: 'running',
     allowMulti: true
   })
@@ -449,13 +420,77 @@
     extraCondition: ''
   })
 
+  const platformStepLabel = computed(
+    () => optionLabel(metaPlatformOptions.value, step1.platform) || step1.platform || '—'
+  )
+
+  const sourceStepLabels = computed(() =>
+    step1.sourceList
+      .map((c) => optionLabel(metaSourceOptions.value, c) || c)
+      .filter(Boolean)
+      .join('、')
+  )
+
+  const sourceStepLabelParts = computed(() =>
+    step1.sourceList.map((c) => optionLabel(metaSourceOptions.value, c) || c).filter(Boolean)
+  )
+
+  function applyStep1DefaultsFromMeta() {
+    const apps = metaAppOptions.value
+    const plats = metaPlatformOptions.value
+    const srcs = metaSourceOptions.value
+    if (!step1.appId && apps[0]) {
+      step1.appId = apps[0].value
+      step1.appName = apps[0].label
+    }
+    if (!step1.platform && plats[0]) step1.platform = plats[0].value
+    if (!step1.sourceList.length && srcs[0]) step1.sourceList = [srcs[0].value]
+  }
+
+  function onAppIdChange() {
+    const o = metaAppOptions.value.find((x) => x.value === step1.appId)
+    step1.appName = o?.label ?? step1.appId
+  }
+
+  watch(
+    () => props.visible,
+    (v) => {
+      if (v) {
+        void cockpitMetaStore.ensureLoaded().then(() => applyStep1DefaultsFromMeta())
+      }
+    }
+  )
+
+  onMounted(() => {
+    void cockpitMetaStore.ensureLoaded().then(() => applyStep1DefaultsFromMeta())
+  })
+
+  // ─── 步骤 ──────────────────────────────────────────────
+  const STEPS = ['基本信息', '绩效指标', '确认保存']
+  const currentStep = ref(0)
+  const saveMode = ref<SaveMode>('draft')
+
+  const stepClass = (i: number) => ({
+    'step--done': i < currentStep.value,
+    'step--current': i === currentStep.value,
+    'step--pending': i > currentStep.value
+  })
+
+  // ─── 静态选项 ──────────────────────────────────────────
+  const RUN_STATUS_OPTIONS = [
+    { value: 'running', label: '投放中' },
+    { value: 'paused', label: '未投放' },
+    { value: 'stopped', label: '已停止' }
+  ]
+
   // ─── 校验规则 ──────────────────────────────────────────
   const form1Ref = ref()
   const form2Ref = ref()
 
   const rules1: FormRules = {
-    appName: [{ required: true, message: '请选择应用名称', trigger: 'change' }],
-    adPlatforms: [
+    appId: [{ required: true, message: '请选择应用', trigger: 'change' }],
+    platform: [{ required: true, message: '请选择终端平台', trigger: 'change' }],
+    sourceList: [
       {
         required: true,
         type: 'array' as const,
@@ -481,11 +516,15 @@
   const handleNext = async () => {
     if (currentStep.value === 0) {
       await form1Ref.value?.validate()
-      if (!step1.appName) {
-        ElMessage.warning('请选择应用名称')
+      if (!step1.appId) {
+        ElMessage.warning('请选择应用')
         return
       }
-      if (!step1.adPlatforms.length) {
+      if (!step1.platform) {
+        ElMessage.warning('请选择终端平台')
+        return
+      }
+      if (!step1.sourceList.length) {
         ElMessage.warning('请至少选择一个广告平台')
         return
       }
@@ -520,12 +559,15 @@
       isActive: true
     }
 
+    const primarySource = step1.sourceList[0] ?? ''
     const newItem: PerfConfigItem = {
       id: String(Date.now()),
+      appId: step1.appId,
       appName: step1.appName,
-      appIcon: APP_ICON_COLORS[step1.appName] ?? '#475569',
-      appPlatform: step1.appPlatform,
-      adPlatform: step1.adPlatforms[0],
+      appIcon: appOptionColor(step1.appName),
+      platform: step1.platform,
+      source: primarySource,
+      sourceList: [...step1.sourceList],
       runStatus: step1.runStatus,
       allowMulti: step1.allowMulti,
       activeVersion: newVersion,
@@ -541,12 +583,14 @@
     currentStep.value = 0
     saveMode.value = 'draft'
     Object.assign(step1, {
+      appId: '',
       appName: '',
-      appPlatform: 'android',
-      adPlatforms: ['Google'],
+      platform: '',
+      sourceList: [],
       runStatus: 'running',
       allowMulti: true
     })
+    void cockpitMetaStore.ensureLoaded().then(() => applyStep1DefaultsFromMeta())
     Object.assign(step2, {
       evalMethod: 'ROI',
       evalDays: 3,

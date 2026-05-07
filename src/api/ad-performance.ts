@@ -3,6 +3,7 @@
  */
 import request from '@/utils/http'
 import { ANALYSIS_API_BASE, ANALYSIS_API_MIDDLE_PREFIX } from '@/api/analysis-api-base'
+import { buildAppSelectionRequestBody } from '@/utils/app-id-request'
 import {
   AdPerformanceAdDetailEndpoint,
   AdPerformanceAdEditEndpoint,
@@ -56,6 +57,7 @@ export const AD_PERFORMANCE_BASE = `${ANALYSIS_API_BASE}${ANALYSIS_API_MIDDLE_PR
 export const AD_PERFORMANCE_CAMPAIGN_DETAIL_BASE = `${AD_PERFORMANCE_BASE}/campaign-detail`
 
 type CompatibleDateRange = 'today' | 'yesterday' | 'last7d' | 'month'
+type CampaignDetailDateFilter = { startDate?: string; endDate?: string }
 
 function resolvePresetRange(key: CompatibleDateRange): { startDate: string; endDate: string } {
   const today = getAppNow()
@@ -104,7 +106,7 @@ function filterBody(f: AdPerformanceFilter) {
     startDate: f.startDate,
     endDate: f.endDate,
     ...(compat ? { dateRange: compat } : {}),
-    app: f.app ?? '',
+    ...buildAppSelectionRequestBody(f.appId),
     adPlatform: f.adPlatform ?? '',
     account: f.account ?? '',
     country: f.country ?? ''
@@ -183,22 +185,155 @@ export function fetchAdPerformanceTableAccount(query: AdPerformanceTableQuery) {
 export function fetchAdPerformanceCampaignDetailDrawer(
   body: AdPerformanceCampaignDetailDrawerBody
 ) {
+  /**
+   * 兼容后端/历史字段命名差异：
+   * - spendRoiTrend: {date,value} -> {date,spend}
+   * - cpiTrend: {date,roi} -> {date,cpi}
+   * 并补齐前端依赖的默认结构（dailyRows 等）。
+   */
+  function normalizeCampaignDetailDrawer(
+    d: AdPerformanceCampaignDetail | null | undefined
+  ): AdPerformanceCampaignDetail {
+    const safe = (d ?? ({} as AdPerformanceCampaignDetail)) as AdPerformanceCampaignDetail
+    const tabs: any = safe.tabs ?? {}
+    const dateTab: any = tabs.date ?? {}
+    const normalizeSpendRoiTrend = (arr: any[]) =>
+      arr.map((it: any) => ({
+        date: String(it?.date ?? ''),
+        spend: it?.spend ?? it?.value ?? 0,
+        roi1: it?.roi1 ?? it?.roi ?? 0
+      }))
+    const normalizeCpiTrend = (arr: any[]) =>
+      arr.map((it: any) => ({
+        date: String(it?.date ?? ''),
+        cpi: it?.cpi ?? it?.value ?? it?.roi ?? 0
+      }))
+
+    const datasetsRaw: any = dateTab.datasets
+    const datasets =
+      datasetsRaw && typeof datasetsRaw === 'object'
+        ? {
+            last7d: datasetsRaw.last7d ?? {},
+            last14d: datasetsRaw.last14d ?? {},
+            month: datasetsRaw.month ?? {}
+          }
+        : null
+
+    const spendRoiTrendRaw: any[] = Array.isArray(dateTab.spendRoiTrend)
+      ? dateTab.spendRoiTrend
+      : []
+    const cpiTrendRaw: any[] = Array.isArray(dateTab.cpiTrend) ? dateTab.cpiTrend : []
+    return {
+      header: {
+        title: safe.header?.title ?? '',
+        statusText: safe.header?.statusText ?? ''
+      },
+      topKpi: {
+        totalSpend: safe.topKpi?.totalSpend ?? 0,
+        cpi: safe.topKpi?.cpi ?? 0,
+        roi1: safe.topKpi?.roi1 ?? 0,
+        budgetProgressPercent: safe.topKpi?.budgetProgressPercent ?? 0
+      },
+      roiSummary: {
+        roi1: safe.roiSummary?.roi1 ?? 0,
+        roi3: safe.roiSummary?.roi3 ?? 0,
+        roi7: safe.roiSummary?.roi7 ?? 0,
+        roiTotal: safe.roiSummary?.roiTotal ?? 0,
+        estimatedProfit: safe.roiSummary?.estimatedProfit ?? 0
+      },
+      tabs: {
+        adGroup: {
+          marketSummaryText: tabs.adGroup?.marketSummaryText ?? '',
+          sortHintText: tabs.adGroup?.sortHintText ?? '',
+          adGroups: Array.isArray(tabs.adGroup?.adGroups) ? tabs.adGroup.adGroups : [],
+          spendDistribution: Array.isArray(tabs.adGroup?.spendDistribution)
+            ? tabs.adGroup.spendDistribution
+            : [],
+          quickCards: Array.isArray(tabs.adGroup?.quickCards) ? tabs.adGroup.quickCards : [],
+          insightTitle: tabs.adGroup?.insightTitle ?? '',
+          insightText: tabs.adGroup?.insightText ?? ''
+        },
+        date: {
+          range: dateTab.range ?? 'last7d',
+          roiTarget: dateTab.roiTarget ?? 80,
+          cpiTarget: dateTab.cpiTarget ?? 2.5,
+          datasets: {
+            last7d: {
+              spendRoiTrend: normalizeSpendRoiTrend(
+                Array.isArray(datasets?.last7d?.spendRoiTrend)
+                  ? datasets.last7d.spendRoiTrend
+                  : spendRoiTrendRaw
+              ),
+              cpiTrend: normalizeCpiTrend(
+                Array.isArray(datasets?.last7d?.cpiTrend) ? datasets.last7d.cpiTrend : cpiTrendRaw
+              ),
+              dailyRows: Array.isArray(datasets?.last7d?.dailyRows)
+                ? datasets.last7d.dailyRows
+                : Array.isArray(dateTab.dailyRows)
+                  ? dateTab.dailyRows
+                  : []
+            },
+            last14d: {
+              spendRoiTrend: normalizeSpendRoiTrend(
+                Array.isArray(datasets?.last14d?.spendRoiTrend)
+                  ? datasets.last14d.spendRoiTrend
+                  : []
+              ),
+              cpiTrend: normalizeCpiTrend(
+                Array.isArray(datasets?.last14d?.cpiTrend) ? datasets.last14d.cpiTrend : []
+              ),
+              dailyRows: Array.isArray(datasets?.last14d?.dailyRows)
+                ? datasets.last14d.dailyRows
+                : []
+            },
+            month: {
+              spendRoiTrend: normalizeSpendRoiTrend(
+                Array.isArray(datasets?.month?.spendRoiTrend) ? datasets.month.spendRoiTrend : []
+              ),
+              cpiTrend: normalizeCpiTrend(
+                Array.isArray(datasets?.month?.cpiTrend) ? datasets.month.cpiTrend : []
+              ),
+              dailyRows: Array.isArray(datasets?.month?.dailyRows) ? datasets.month.dailyRows : []
+            }
+          },
+
+          // 兼容旧结构：组件会在 datasets 缺失时回退读取这些字段
+          spendRoiTrend: normalizeSpendRoiTrend(spendRoiTrendRaw),
+          cpiTrend: normalizeCpiTrend(cpiTrendRaw),
+          dailyRows: Array.isArray(dateTab.dailyRows) ? dateTab.dailyRows : []
+        },
+        country: {
+          marketSummaryText: tabs.country?.marketSummaryText ?? '',
+          sortHintText: tabs.country?.sortHintText ?? '',
+          spendRows: Array.isArray(tabs.country?.spendRows) ? tabs.country.spendRows : [],
+          marketRows: Array.isArray(tabs.country?.marketRows) ? tabs.country.marketRows : [],
+          insightTitle: tabs.country?.insightTitle ?? '',
+          insightText: tabs.country?.insightText ?? ''
+        }
+      }
+    }
+  }
+
   if (isAdPerformanceEndpointMock(AdPerformanceEndpoint.CampaignDetailDrawer)) {
-    return adPerfMock.mockFetchAdPerformanceCampaignDetailDrawer(body)
+    return adPerfMock
+      .mockFetchAdPerformanceCampaignDetailDrawer(body)
+      .then((d) => normalizeCampaignDetailDrawer(d))
   }
   const compat =
     body.startDate && body.endDate
       ? inferCompatibleDateRange(body.startDate, body.endDate)
       : undefined
-  return request.post<AdPerformanceCampaignDetail>({
-    url: `${AD_PERFORMANCE_BASE}/campaign-detail`,
-    data: {
-      campaignId: body.campaignId,
-      ...(body.startDate ? { startDate: body.startDate } : {}),
-      ...(body.endDate ? { endDate: body.endDate } : {}),
-      ...(compat ? { dateRange: compat } : {})
-    }
-  })
+  return request
+    .post<AdPerformanceCampaignDetail>({
+      url: `${AD_PERFORMANCE_BASE}/campaign-detail`,
+      data: {
+        campaignId: body.campaignId,
+        ...(body.startDate ? { startDate: body.startDate } : {}),
+        ...(body.endDate ? { endDate: body.endDate } : {}),
+        ...(compat ? { dateRange: compat } : {})
+      }
+    })
+    .then((d) => normalizeCampaignDetailDrawer(d))
 }
 
 export function fetchAdPerformanceExport(body: AdPerformanceExportBody) {
@@ -225,7 +360,9 @@ export function fetchAdPerformanceAlertAction(body: AdPerformanceAlertActionBody
   })
 }
 
-export function fetchCampaignDetailOverview(body: { campaignId: string }) {
+export function fetchCampaignDetailOverview(
+  body: { campaignId: string } & CampaignDetailDateFilter
+) {
   if (isAdPerformanceCampaignDetailEndpointMock(AdPerformanceCampaignDetailEndpoint.Overview)) {
     return adPerfMock.mockFetchCampaignDetailOverview(body)
   }
@@ -235,10 +372,12 @@ export function fetchCampaignDetailOverview(body: { campaignId: string }) {
   })
 }
 
-export function fetchCampaignDetailAdList(body: {
-  campaignId: string
-  status?: 'all' | 'active' | 'paused' | 'completed'
-}) {
+export function fetchCampaignDetailAdList(
+  body: {
+    campaignId: string
+    status?: 'all' | 'active' | 'paused' | 'completed'
+  } & CampaignDetailDateFilter
+) {
   if (isAdPerformanceCampaignDetailEndpointMock(AdPerformanceCampaignDetailEndpoint.AdList)) {
     return adPerfMock.mockFetchCampaignDetailAdList(body)
   }
@@ -248,7 +387,9 @@ export function fetchCampaignDetailAdList(body: {
   })
 }
 
-export function fetchCampaignDetailCreativeTop5(body: { campaignId: string }) {
+export function fetchCampaignDetailCreativeTop5(
+  body: { campaignId: string } & CampaignDetailDateFilter
+) {
   if (isAdPerformanceCampaignDetailEndpointMock(AdPerformanceCampaignDetailEndpoint.CreativeTop5)) {
     return adPerfMock.mockFetchCampaignDetailCreativeTop5(body)
   }
@@ -258,7 +399,9 @@ export function fetchCampaignDetailCreativeTop5(body: { campaignId: string }) {
   })
 }
 
-export function fetchCampaignDetailAiInsights(body: { campaignId: string }) {
+export function fetchCampaignDetailAiInsights(
+  body: { campaignId: string } & CampaignDetailDateFilter
+) {
   if (isAdPerformanceCampaignDetailEndpointMock(AdPerformanceCampaignDetailEndpoint.AiInsights)) {
     return adPerfMock.mockFetchCampaignDetailAiInsights(body)
   }
@@ -293,7 +436,9 @@ export function fetchCampaignDetailAdGroupAction(body: CampaignDetailAdGroupActi
 }
 
 /** 单广告详情页概览（路由：campaign-detail/ad-detail） */
-export function fetchAdDetailOverview(body: { adId: string; campaignId: string }) {
+export function fetchAdDetailOverview(
+  body: { adId: string; campaignId: string } & CampaignDetailDateFilter
+) {
   if (isAdPerformanceAdDetailEndpointMock(AdPerformanceAdDetailEndpoint.Overview)) {
     return adPerfMock.mockFetchAdDetailOverview(body)
   }

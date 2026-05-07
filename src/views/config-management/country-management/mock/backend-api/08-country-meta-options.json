@@ -1,0 +1,56 @@
+{
+  "_comment": "国家管理 - 时区/地区/货币选项元数据。页面筛选与新建/编辑弹窗共用；响应为字符串数组集合。",
+  "fieldDescription": {
+    "request": {},
+    "response": {
+      "timezoneOptions": {
+        "type": "string[]",
+        "required": true,
+        "description": "时区选项数组，如 `GMT+8`。用于国家表单 `timezone` 下拉。"
+      },
+      "regionOptions": {
+        "type": "string[]",
+        "required": true,
+        "description": "地区选项数组，如 `亚太`、`欧洲`。用于列表筛选与表单 `region` 下拉。"
+      },
+      "currencyOptions": {
+        "type": "string[]",
+        "required": true,
+        "description": "货币选项数组，如 `USD - 美元`。用于列表筛选与表单 `currency` 下拉。"
+      }
+    }
+  },
+  "sampleRequest": {},
+  "sampleResponse": {
+    "code": 200,
+    "data": {
+      "timezoneOptions": ["GMT-5", "GMT+0", "GMT+8", "GMT+9"],
+      "regionOptions": ["亚太", "欧洲", "北美", "其他"],
+      "currencyOptions": ["USD - 美元", "EUR - 欧元", "CNY - 人民币", "JPY - 日元"]
+    }
+  },
+  "api": {
+    "url": "POST /api/config-management/country/meta-options",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "{}",
+    "responseBody": "{ timezoneOptions, regionOptions, currencyOptions }"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "可按账号权限裁剪可见项；但返回字段 shape 保持稳定，空数据时返回空数组。",
+      "列表筛选与表单下拉应共用本接口，避免页面内散落硬编码常量。",
+      "Mock：`fetchCountryMetaOptions` 走 `mockFetchCountryMetaOptions`，数据来源 `mock/data.ts`。"
+    ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面初始化",
+        "detail": "`country-management/index.vue` onMounted 先拉取一次，再用于头部筛选与传递给 `CountryFormDialog`。"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "页面级缓存，进入页时拉取一次。"
+  }
+}

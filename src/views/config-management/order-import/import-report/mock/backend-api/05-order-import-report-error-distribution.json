@@ -1,0 +1,73 @@
+{
+  "_comment": "导入报告失败原因分布，供异常态右侧分布条使用。",
+  "fieldDescription": {
+    "request": {
+      "taskId": { "type": "string", "required": true, "description": "任务 ID。" }
+    },
+    "response": {
+      "items": {
+        "type": "ErrorDistributionItem[]",
+        "required": true,
+        "description": "失败原因分布列表。"
+      }
+    },
+    "ErrorDistributionItem": {
+      "type": {
+        "type": "string",
+        "required": true,
+        "enum": ["missing_field", "amount_format", "date_format", "country_code", "other"],
+        "description": "错误类型。"
+      },
+      "label": { "type": "string", "required": true, "description": "错误类型文案。" },
+      "count": { "type": "number", "required": true, "description": "条数。" },
+      "pct": { "type": "number", "required": true, "description": "占比百分比 0~100。" },
+      "color": { "type": "string", "required": true, "description": "图表颜色值。" }
+    }
+  },
+  "sampleRequest": { "taskId": "IMP-020" },
+  "sampleResponse": {
+    "data": {
+      "items": [
+        {
+          "type": "missing_field",
+          "label": "必填字段缺失",
+          "count": 12,
+          "pct": 40,
+          "color": "#ef4444"
+        },
+        {
+          "type": "amount_format",
+          "label": "金额格式异常",
+          "count": 10,
+          "pct": 33,
+          "color": "#f59e0b"
+        },
+        {
+          "type": "country_code",
+          "label": "国家代码异常",
+          "count": 8,
+          "pct": 27,
+          "color": "#f59e0b"
+        }
+      ]
+    }
+  },
+  "api": {
+    "url": "POST /api/config-management/order-import/report/error-distribution",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "{ taskId }",
+    "responseBody": "{ items }"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "并行调用 `fetchOrderImportReportErrorDistribution(taskId)`，渲染失败分布。",
+        "prerequisite": "`OrderImportReportApiSource.reportErrorDistribution`。"
+      }
+    ],
+    "defaultSelection": "taskId 必填。",
+    "dedupe": "taskId 不变时可复用缓存。"
+  }
+}

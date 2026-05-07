@@ -98,14 +98,18 @@
         </div>
 
         <!-- 通知设置：左右两列 -->
-        <div v-show="activeTab === 'notification'" class="art-card-sm">
-          <h2 class="p-4 text-lg font-medium border-b border-g-300">通知设置</h2>
+        <div
+          v-show="activeTab === 'notification'"
+          class="art-card-sm"
+          v-loading="notificationDetailLoading"
+        >
+          <!-- <h2 class="p-4 text-lg font-medium border-b border-g-300">通知设置</h2> -->
           <div class="p-5">
             <div class="notification-two-cols grid grid-cols-1 lg:grid-cols-2 gap-6">
               <!-- 左列：飞书通知 + 预警级别配置 -->
               <div class="flex flex-col gap-8">
                 <!-- 飞书通知 -->
-                <div>
+                <!-- <div>
                   <div class="flex items-center gap-2 mb-4">
                     <span class="text-base font-medium">飞书通知</span>
                     <ArtSvgIcon icon="ri:notification-3-line" class="text-lg text-g-600" />
@@ -133,10 +137,10 @@
                       </template>
                     </ElTableColumn>
                   </ElTable>
-                </div>
+                </div> -->
 
                 <!-- 预警级别配置 -->
-                <div>
+                <!-- <div>
                   <div class="text-base font-medium mb-4">预警级别配置</div>
                   <div class="grid grid-cols-3 gap-4">
                     <div
@@ -153,19 +157,14 @@
                         class="flex flex-col gap-1.5"
                       >
                         <ElCheckbox value="feishu" size="small" class="!mr-0">飞书卡片</ElCheckbox>
-                        <ElCheckbox value="email" size="small" class="!mr-0">邮件</ElCheckbox>
-                        <ElCheckbox value="platform" size="small" class="!mr-0"
-                          >平台内消息</ElCheckbox
-                        >
                       </ElCheckboxGroup>
                     </div>
                   </div>
-                </div>
+                </div> -->
               </div>
 
               <!-- 右列：推送时间设置 + 订阅的报表 -->
-              <div class="flex flex-col gap-8">
-                <!-- 推送时间设置 -->
+              <!-- <div class="flex flex-col gap-8">
                 <div>
                   <div class="text-base font-medium mb-4">推送时间设置</div>
                   <div class="flex flex-col gap-4">
@@ -207,47 +206,20 @@
                     </div>
                   </div>
                 </div>
-
-                <!-- 订阅的报表 -->
-                <div>
-                  <div class="text-base font-medium mb-4">订阅的报表</div>
-                  <ElTable :data="subscribedReports" border stripe class="subscribed-reports-table">
-                    <ElTableColumn label="报表名称" min-width="140" prop="name">
-                      <template #default="{ row }">
-                        <span class="font-medium">{{ row.name }}</span>
-                      </template>
-                    </ElTableColumn>
-                    <ElTableColumn label="推送时间" min-width="120" prop="pushTime">
-                      <template #default="{ row }">
-                        <span class="text-g-600">{{ row.pushTime }}</span>
-                      </template>
-                    </ElTableColumn>
-                    <ElTableColumn label="推送广告平台" min-width="100" prop="channel">
-                      <template #default="{ row }">
-                        <span class="text-g-600">{{ row.channel }}</span>
-                      </template>
-                    </ElTableColumn>
-                    <ElTableColumn label="开关" width="70" align="center">
-                      <template #default="{ row }">
-                        <ElSwitch v-model="row.enabled" />
-                      </template>
-                    </ElTableColumn>
-                    <ElTableColumn label="操作" width="80" align="center">
-                      <template #default="{ row }">
-                        <ElButton link type="primary" size="small" @click="editReport(row)">
-                          编辑
-                        </ElButton>
-                      </template>
-                    </ElTableColumn>
-                  </ElTable>
-                  <ElButton class="mt-3" :icon="Plus" @click="addReport"> 添加订阅 </ElButton>
-                </div>
-              </div>
+              </div> -->
             </div>
 
-            <div class="flex justify-end pt-6 mt-2 border-t border-g-300">
-              <ElButton type="primary" v-ripple @click="saveNotification"> 保存设置 </ElButton>
-            </div>
+            <!-- <div class="flex justify-end pt-6 mt-2 border-t border-g-300">
+              <ElButton
+                type="primary"
+                v-ripple
+                :loading="notificationSaveLoading"
+                :disabled="notificationDetailLoading"
+                @click="saveNotification"
+              >
+                保存设置
+              </ElButton>
+            </div> -->
           </div>
         </div>
 
@@ -294,16 +266,16 @@
         </div>
 
         <!-- 飞书绑定 -->
-        <div v-show="activeTab === 'feishu'" class="art-card-sm">
+        <!-- <div v-show="activeTab === 'feishu'" class="art-card-sm">
           <h2 class="p-4 text-lg font-medium border-b border-g-300">飞书绑定</h2>
           <div class="p-8 text-center text-g-600"> 飞书账号绑定功能开发中，敬请期待。 </div>
-        </div>
+        </div> -->
 
         <!-- 登录记录 -->
-        <div v-show="activeTab === 'login-log'" class="art-card-sm">
+        <!-- <div v-show="activeTab === 'login-log'" class="art-card-sm">
           <h2 class="p-4 text-lg font-medium border-b border-g-300">登录记录</h2>
           <div class="p-8 text-center text-g-600"> 登录记录功能开发中，敬请期待。 </div>
-        </div>
+        </div> -->
       </div>
     </div>
   </div>
@@ -312,9 +284,13 @@
 <script setup lang="ts">
   import { useUserStore } from '@/store/modules/user'
   import { fetchChangeEmail, fetchChangePwd } from '@/api/auth'
+  import {
+    fetchUserCenterNotificationSettings
+    // fetchUserCenterNotificationSettingsSave
+  } from '@/api/user-center'
   import type { FormInstance, FormRules } from 'element-plus'
   import { ElMessage, ElMessageBox } from 'element-plus'
-  import { Plus } from '@element-plus/icons-vue'
+  // import { Plus } from '@element-plus/icons-vue'
 
   defineOptions({ name: 'UserCenter' })
 
@@ -322,13 +298,13 @@
   const userInfo = computed(() => userStore.getUserInfo)
 
   type TabKey = 'basic' | 'notification' | 'password' | 'feishu' | 'login-log'
-  const activeTab = ref<TabKey>('notification')
+  const activeTab = ref<TabKey>('basic')
   const navItems: { key: TabKey; label: string; icon: string }[] = [
     { key: 'basic', label: '基本信息', icon: 'ri:user-3-line' },
-    { key: 'notification', label: '通知设置', icon: 'ri:notification-3-line' },
-    { key: 'password', label: '密码安全', icon: 'ri:lock-line' },
-    { key: 'feishu', label: '飞书绑定', icon: 'ri:link' },
-    { key: 'login-log', label: '登录记录', icon: 'ri:file-list-3-line' }
+    // { key: 'notification', label: '通知设置', icon: 'ri:notification-3-line' },
+    { key: 'password', label: '密码安全', icon: 'ri:lock-line' }
+    // { key: 'feishu', label: '飞书绑定', icon: 'ri:link' },
+    // { key: 'login-log', label: '登录记录', icon: 'ri:file-list-3-line' }
   ]
 
   const userInitials = computed(() => {
@@ -373,7 +349,6 @@
     form.email = info?.email ?? ''
   }
 
-  onMounted(syncFormFromUserInfo)
   watch(userInfo, syncFormFromUserInfo, { deep: true })
 
   const pwdForm = reactive({
@@ -386,81 +361,111 @@
     email: [{ type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }]
   })
 
-  type FeishuNotifyKey = 'alert' | 'daily' | 'weekly' | 'approval' | 'dataAbnormal'
-  const feishuNotifyList: { key: FeishuNotifyKey; label: string; desc: string }[] = [
-    { key: 'alert', label: '预警通知', desc: '当系统检测到异常时推送' },
-    { key: 'daily', label: '日报推送', desc: '每日 08:00 推送经营日报' },
-    { key: 'weekly', label: '周报推送', desc: '每周一 09:00 推送周报' },
-    { key: 'approval', label: '审批通知', desc: '有待审批事项时推送' },
-    { key: 'dataAbnormal', label: '数据异常', desc: '数据质量问题时推送' }
-  ]
+  // type FeishuNotifyKey = 'alert' | 'daily'
+  // const feishuNotifyList: { key: FeishuNotifyKey; label: string; desc: string }[] = [
+  //   { key: 'alert', label: '预警通知', desc: '当系统检测到异常时推送' },
+  //   { key: 'daily', label: '日报推送', desc: '每日 08:00 推送经营日报' }
+  //   // { key: 'weekly', label: '周报推送', desc: '每周一 09:00 推送周报' },
+  //   // { key: 'approval', label: '审批通知', desc: '有待审批事项时推送' },
+  //   // { key: 'dataAbnormal', label: '数据异常', desc: '数据质量问题时推送' }
+  // ]
 
-  const weekdayLabels = ['一', '二', '三', '四', '五', '六', '日']
+  // const weekdayLabels = ['一', '二', '三', '四', '五', '六', '日']
 
-  type AlertLevelKey = 'high' | 'medium' | 'low'
-  const notificationForm = reactive<{
-    feishu: Record<FeishuNotifyKey, boolean>
-    pushInWorkTime: boolean
-    pushStartTime: string
-    pushEndTime: string
-    pushWeekdays: number[]
-    alertChannels: Record<AlertLevelKey, string[]>
-  }>({
+  // type AlertLevelKey = 'high'
+  const notificationForm = reactive<Api.UserCenter.UserNotificationSettings>({
     feishu: {
       alert: true,
-      daily: true,
-      weekly: false,
-      approval: true,
-      dataAbnormal: false
+      daily: true
     },
     pushInWorkTime: true,
     pushStartTime: '08:00',
     pushEndTime: '22:00',
     pushWeekdays: [1, 2, 3, 4, 5],
     alertChannels: {
-      high: ['feishu', 'email', 'platform'],
-      medium: ['feishu', 'platform'],
-      low: ['feishu', 'platform']
+      high: ['feishu']
     }
   })
 
-  const alertLevels: { key: AlertLevelKey; label: string; bgClass: string; labelClass: string }[] =
-    [
-      {
-        key: 'high',
-        label: '高优先级',
-        bgClass: 'bg-red-50 dark:bg-red-950/30',
-        labelClass: 'text-red-600'
-      },
-      {
-        key: 'medium',
-        label: '中优先级',
-        bgClass: 'bg-amber-50 dark:bg-amber-950/30',
-        labelClass: 'text-amber-600'
-      },
-      {
-        key: 'low',
-        label: '低优先级',
-        bgClass: 'bg-sky-50 dark:bg-sky-950/30',
-        labelClass: 'text-sky-600'
-      }
-    ]
+  const notificationDetailLoading = ref(false)
+  // const notificationSaveLoading = ref(false)
+  let notificationFetchSeq = 0
 
-  interface SubscribedReport {
-    id: number
-    name: string
-    pushTime: string
-    channel: string
-    enabled: boolean
+  function applyNotificationSettings(data: Api.UserCenter.UserNotificationSettings) {
+    notificationForm.feishu.alert = data.feishu.alert
+    notificationForm.feishu.daily = data.feishu.daily
+    notificationForm.alertChannels.high = [
+      ...(data.alertChannels.high?.length ? data.alertChannels.high : ['feishu'])
+    ]
+    notificationForm.pushInWorkTime = data.pushInWorkTime
+    notificationForm.pushStartTime = data.pushStartTime
+    notificationForm.pushEndTime = data.pushEndTime
+    notificationForm.pushWeekdays = [...data.pushWeekdays]
   }
 
-  const subscribedReports = ref<SubscribedReport[]>([
-    { id: 1, name: '每日经营快报', pushTime: '每日 08:00', channel: '飞书卡片', enabled: true },
-    { id: 2, name: '每周投放复盘', pushTime: '每周一 09:00', channel: '飞书卡片', enabled: true },
-    { id: 3, name: '月度经营分析', pushTime: '每月1日 09:00', channel: '飞书卡片', enabled: true }
-  ])
+  async function loadNotificationSettings() {
+    const seq = ++notificationFetchSeq
+    notificationDetailLoading.value = true
+    try {
+      const data = await fetchUserCenterNotificationSettings()
+      if (seq !== notificationFetchSeq) return
+      applyNotificationSettings(data)
+    } catch {
+      // 请求层已提示；保留表单默认值以便继续操作
+    } finally {
+      if (seq === notificationFetchSeq) notificationDetailLoading.value = false
+    }
+  }
 
-  let reportIdCounter = 4
+  watch(
+    () => activeTab.value,
+    (tab) => {
+      if (tab === 'notification') void loadNotificationSettings()
+    }
+  )
+
+  onMounted(() => {
+    syncFormFromUserInfo()
+    if (activeTab.value === 'notification') void loadNotificationSettings()
+  })
+
+  // const alertLevels: { key: AlertLevelKey; label: string; bgClass: string; labelClass: string }[] =
+  //   [
+  //     {
+  //       key: 'high',
+  //       label: '',
+  //       bgClass: 'bg-red-50 dark:bg-red-950/30',
+  //       labelClass: 'text-red-600'
+  //     }
+  //     // {
+  //     //   key: 'medium',
+  //     //   label: '中优先级',
+  //     //   bgClass: 'bg-amber-50 dark:bg-amber-950/30',
+  //     //   labelClass: 'text-amber-600'
+  //     // },
+  //     // {
+  //     //   key: 'low',
+  //     //   label: '低优先级',
+  //     //   bgClass: 'bg-sky-50 dark:bg-sky-950/30',
+  //     //   labelClass: 'text-sky-600'
+  //     // }
+  //   ]
+
+  // interface SubscribedReport {
+  //   id: number
+  //   name: string
+  //   pushTime: string
+  //   channel: string
+  //   enabled: boolean
+  // }
+
+  // const subscribedReports = ref<SubscribedReport[]>([
+  //   { id: 1, name: '每日经营快报', pushTime: '每日 08:00', channel: '飞书卡片', enabled: true },
+  //   { id: 2, name: '每周投放复盘', pushTime: '每周一 09:00', channel: '飞书卡片', enabled: true },
+  //   { id: 3, name: '月度经营分析', pushTime: '每月1日 09:00', channel: '飞书卡片', enabled: true }
+  // ])
+
+  // let reportIdCounter = 4
 
   /** 保存基本信息：二次确认后调用修改邮箱接口并更新本地 */
   const saveBasicInfo = async () => {
@@ -508,39 +513,55 @@
     pwdForm.confirmPassword = ''
   }
 
-  const setFeishuNotify = (key: FeishuNotifyKey, value: boolean) => {
-    notificationForm.feishu[key] = value
-  }
+  // const setFeishuNotify = (key: FeishuNotifyKey, value: boolean) => {
+  //   notificationForm.feishu[key] = value
+  // }
 
-  const getFeishuNotifyValue = (row: { key: FeishuNotifyKey }) => {
-    return notificationForm.feishu[row.key]
-  }
+  // const getFeishuNotifyValue = (row: { key: FeishuNotifyKey }) => {
+  //   return notificationForm.feishu[row.key]
+  // }
 
-  const onFeishuNotifyChange = (
-    row: { key: FeishuNotifyKey },
-    value: string | number | boolean
-  ) => {
-    setFeishuNotify(row.key, Boolean(value))
-  }
+  // const onFeishuNotifyChange = (
+  //   row: { key: FeishuNotifyKey },
+  //   value: string | number | boolean
+  // ) => {
+  //   setFeishuNotify(row.key, Boolean(value))
+  // }
 
-  const saveNotification = () => {
-    ElMessage.success('通知设置已保存')
-  }
+  // const saveNotification = async () => {
+  //   const payload: Api.UserCenter.UserNotificationSettings = {
+  //     feishu: { ...notificationForm.feishu },
+  //     alertChannels: { high: [...notificationForm.alertChannels.high] },
+  //     pushInWorkTime: notificationForm.pushInWorkTime,
+  //     pushStartTime: notificationForm.pushStartTime,
+  //     pushEndTime: notificationForm.pushEndTime,
+  //     pushWeekdays: [...notificationForm.pushWeekdays]
+  //   }
+  //   notificationSaveLoading.value = true
+  //   try {
+  //     await fetchUserCenterNotificationSettingsSave(payload)
+  //     ElMessage.success('通知设置已保存')
+  //   } catch {
+  //     // 请求层已提示
+  //   } finally {
+  //     notificationSaveLoading.value = false
+  //   }
+  // }
 
-  const addReport = () => {
-    subscribedReports.value.push({
-      id: reportIdCounter++,
-      name: '新订阅报表',
-      pushTime: '每日 08:00',
-      channel: '飞书卡片',
-      enabled: true
-    })
-    ElMessage.info('请点击「编辑」设置报表与推送时间')
-  }
+  // const addReport = () => {
+  //   subscribedReports.value.push({
+  //     id: reportIdCounter++,
+  //     name: '新订阅报表',
+  //     pushTime: '每日 08:00',
+  //     channel: '飞书卡片',
+  //     enabled: true
+  //   })
+  //   ElMessage.info('请点击「编辑」设置报表与推送时间')
+  // }
 
-  const editReport = (report: SubscribedReport) => {
-    ElMessage.info(`编辑订阅「${report.name}」功能开发中`)
-  }
+  // const editReport = (report: SubscribedReport) => {
+  //   ElMessage.info(`编辑订阅「${report.name}」功能开发中`)
+  // }
 </script>
 
 <style scoped>

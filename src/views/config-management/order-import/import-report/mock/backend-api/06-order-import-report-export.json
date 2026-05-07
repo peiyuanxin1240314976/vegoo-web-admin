@@ -1,0 +1,51 @@
+{
+  "_comment": "导出导入报告失败数据，采用 HTTP 文件流。",
+  "fieldDescription": {
+    "request": {
+      "taskId": { "type": "string", "required": true, "description": "任务 ID。" }
+    },
+    "response": {
+      "httpBody": {
+        "type": "binary",
+        "required": true,
+        "description": "文件二进制流（CSV/XLSX）。"
+      },
+      "contentType": {
+        "type": "string",
+        "required": true,
+        "description": "如 `text/csv;charset=utf-8` 或 `application/octet-stream`。"
+      },
+      "contentDisposition": {
+        "type": "string",
+        "required": true,
+        "description": "附件文件名响应头，如 `attachment; filename=import_report_IMP-020.csv`。"
+      }
+    }
+  },
+  "sampleRequest": { "taskId": "IMP-020" },
+  "sampleResponse": {
+    "data": {
+      "httpBody": "<binary stream>",
+      "contentType": "text/csv;charset=utf-8",
+      "contentDisposition": "attachment; filename=import_report_IMP-020_failed.csv"
+    }
+  },
+  "api": {
+    "url": "POST /api/config-management/order-import/report/export",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "{ taskId }",
+    "responseBody": "HTTP binary stream"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "报告页点击「下载失败数据」触发 `exportOrderImportReport(taskId)`。",
+        "prerequisite": "`OrderImportReportApiSource.exportReport`。"
+      }
+    ],
+    "defaultSelection": "taskId 为当前报告任务。",
+    "dedupe": "同一任务可重复导出。"
+  }
+}

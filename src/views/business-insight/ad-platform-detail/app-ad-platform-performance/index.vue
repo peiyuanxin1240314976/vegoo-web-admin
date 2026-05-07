@@ -16,34 +16,51 @@
           </svg>
           返回
         </button>
-        <span class="page-title">AdMob在Weather 8 中的表现详情</span>
+        <span class="page-title" :title="pageDetailTitle">{{ pageDetailTitle }}</span>
       </div>
 
-      <div class="filters filters-panel">
+      <div class="filters aapp-filter-panel">
         <div class="filter-item filter-field">
-          <span class="filter-label">日期范围</span>
-          <el-select v-model="dateRange" class="custom-select filter-select filter-select--date">
-            <el-option label="2025年12月01日 - 2025年12月31日" value="2025-12" />
-            <el-option label="2025年11月01日 - 2025年11月30日" value="2025-11" />
-            <el-option label="2025年10月01日 - 2025年10月31日" value="2025-10" />
-          </el-select>
+          <AppDatePicker
+            v-model="dateRange"
+            type="daterange"
+            :shortcuts="dateRangeShortcuts"
+            range-separator="～"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            value-format="YYYY-MM-DD"
+            unlink-panels
+            class="aapp-filter-date"
+            popper-class="aapp-filter__popper"
+          />
         </div>
         <div class="filter-item filter-field">
-          <span class="filter-label">国家</span>
-          <el-select v-model="country" class="custom-select filter-select filter-select--country">
-            <el-option label="全部国家" value="all" />
-            <el-option label="中国" value="cn" />
-            <el-option label="美国" value="us" />
-            <el-option label="日本" value="jp" />
+          <el-select
+            :model-value="countryFilter"
+            class="aapp-filter-select"
+            popper-class="aapp-filter__popper"
+            filterable
+            clearable
+            @update:model-value="onCountryFilterUpdate"
+            placeholder="国家"
+          >
+            <el-option :label="tr('adPerformance.filterAll', '全部')" value="" />
+            <el-option
+              v-for="opt in countryOptionsForSelect"
+              :key="String(opt.value)"
+              :label="opt.label"
+              :value="opt.value"
+            />
           </el-select>
         </div>
 
         <el-button
-          class="filter-query-btn"
+          class="aapp-query-btn"
           type="primary"
+          plain
           round
           :loading="pendingQuery"
-          :disabled="pendingQuery || !isQueryDirty"
+          :disabled="pendingQuery"
           @click="runQuery"
         >
           查询
@@ -53,109 +70,102 @@
 
     <!-- 主体内容：左右分栏 -->
     <div class="main-layout">
+      <!-- 鱼骨屏骨架（loading） -->
+      <div v-if="pendingQuery" class="fishbone-skeleton" aria-hidden="true">
+        <div class="fishbone-skeleton__left">
+          <div class="fishbone-skeleton__kpis">
+            <div v-for="i in 4" :key="i" class="fishbone-card">
+              <div class="fishbone-line fishbone-line--sm" />
+              <div class="fishbone-line fishbone-line--lg" />
+              <div class="fishbone-bones" />
+            </div>
+          </div>
+          <div class="fishbone-panel">
+            <div class="fishbone-panel__header">
+              <div class="fishbone-line fishbone-line--md" />
+              <div class="fishbone-chip-row">
+                <span v-for="i in 3" :key="i" class="fishbone-chip" />
+              </div>
+            </div>
+            <div class="fishbone-chart" />
+          </div>
+          <div class="fishbone-panel">
+            <div class="fishbone-panel__header">
+              <div class="fishbone-line fishbone-line--md" />
+              <div class="fishbone-chip-row">
+                <span v-for="i in 4" :key="i" class="fishbone-chip" />
+              </div>
+            </div>
+            <div class="fishbone-list">
+              <div v-for="i in 6" :key="i" class="fishbone-row">
+                <span class="fishbone-dot" />
+                <span class="fishbone-line fishbone-line--row" />
+                <span class="fishbone-line fishbone-line--row2" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="fishbone-skeleton__right">
+          <div class="fishbone-panel">
+            <div class="fishbone-panel__header">
+              <div class="fishbone-line fishbone-line--md" />
+            </div>
+            <div class="fishbone-table">
+              <div class="fishbone-table__head">
+                <span v-for="i in 6" :key="i" class="fishbone-line fishbone-line--th" />
+              </div>
+              <div v-for="i in 7" :key="i" class="fishbone-table__tr">
+                <span v-for="j in 6" :key="j" class="fishbone-line fishbone-line--td" />
+              </div>
+            </div>
+          </div>
+          <div class="fishbone-panel">
+            <div class="fishbone-panel__header">
+              <div class="fishbone-line fishbone-line--md" />
+            </div>
+            <div class="fishbone-ai">
+              <div v-for="i in 3" :key="i" class="fishbone-ai__card">
+                <div class="fishbone-line fishbone-line--sm" />
+                <div class="fishbone-line fishbone-line--row" />
+                <div class="fishbone-line fishbone-line--row2" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- 左侧主内容 -->
-      <div class="left-panel">
+      <div class="left-panel" :class="{ 'is-loading': pendingQuery }">
         <!-- KPI 卡片区 -->
         <div class="kpi-grid">
-          <!-- 收入卡片 -->
           <div
-            class="kpi-card kpi-revenue"
-            :class="{ 'is-active': activeKpi === 'revenue' }"
-            @click="activeKpi = 'revenue'"
+            v-for="card in appKpiCards"
+            :key="card.id"
+            class="kpi-card"
+            :class="[kpiCardRootClass(card.id), { 'is-active': activeKpi === card.id }]"
+            @click="activeKpi = card.id"
           >
-            <div class="kpi-bg-glow revenue-glow" />
-            <div class="kpi-label">收入</div>
-            <div class="kpi-value revenue-value">
-              <span class="kpi-number" ref="revenueEl">$937.5K</span>
-            </div>
-            <div class="kpi-sparkline">
-              <svg viewBox="0 0 80 24" fill="none" preserveAspectRatio="none">
-                <polyline
-                  points="0,20 10,14 20,18 30,8 40,12 50,6 60,10 70,4 80,8"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                  fill="none"
-                  opacity="0.8"
-                />
-              </svg>
-            </div>
-          </div>
-
-          <!-- eCPM 卡片 -->
-          <div
-            class="kpi-card kpi-ecpm"
-            :class="{ 'is-active': activeKpi === 'ecpm' }"
-            @click="activeKpi = 'ecpm'"
-          >
-            <div class="kpi-bg-glow ecpm-glow" />
-            <div class="kpi-label">eCPM</div>
-            <div class="kpi-value ecpm-value">
-              <span class="kpi-number">¥3.10</span>
-              <div class="kpi-badge badge-up">
+            <div class="kpi-bg-glow" :class="kpiGlowClass(card.id)" />
+            <div class="kpi-label">{{ card.label }}</div>
+            <div class="kpi-value" :class="kpiValueClass(card.id)">
+              <span class="kpi-number">{{ card.valueText }}</span>
+              <div
+                v-if="card.changeText"
+                class="kpi-badge"
+                :class="card.positive ? 'badge-up' : 'badge-down'"
+              >
                 <svg width="10" height="10" viewBox="0 0 10 10">
-                  <path d="M5 2L8 6H2L5 2Z" fill="currentColor" />
+                  <path v-if="card.positive" d="M5 2L8 6H2L5 2Z" fill="currentColor" />
+                  <path v-else d="M5 8L2 4H8L5 8Z" fill="currentColor" />
                 </svg>
-                +12.3%
+                {{ card.changeText }}
               </div>
             </div>
             <div class="kpi-sparkline">
               <svg viewBox="0 0 80 24" fill="none" preserveAspectRatio="none">
                 <polyline
-                  points="0,16 10,12 20,14 30,8 40,10 50,4 60,6 70,2 80,4"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                  fill="none"
-                  opacity="0.8"
-                />
-              </svg>
-            </div>
-          </div>
-
-          <!-- 填充率卡片 -->
-          <div
-            class="kpi-card kpi-fill"
-            :class="{ 'is-active': activeKpi === 'fill' }"
-            @click="activeKpi = 'fill'"
-          >
-            <div class="kpi-bg-glow fill-glow" />
-            <div class="kpi-label">填充率</div>
-            <div class="kpi-value fill-value">
-              <span class="kpi-number">98%</span>
-              <div class="kpi-badge badge-down">
-                <svg width="10" height="10" viewBox="0 0 10 10">
-                  <path d="M5 8L2 4H8L5 8Z" fill="currentColor" />
-                </svg>
-                -3.2%
-              </div>
-            </div>
-            <div class="kpi-sparkline">
-              <svg viewBox="0 0 80 24" fill="none" preserveAspectRatio="none">
-                <polyline
-                  points="0,8 10,10 20,6 30,12 40,8 50,14 60,10 70,16 80,12"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                  fill="none"
-                  opacity="0.8"
-                />
-              </svg>
-            </div>
-          </div>
-
-          <!-- 展示次数卡片 -->
-          <div
-            class="kpi-card kpi-impression"
-            :class="{ 'is-active': activeKpi === 'impression' }"
-            @click="activeKpi = 'impression'"
-          >
-            <div class="kpi-bg-glow impression-glow" />
-            <div class="kpi-label">展示次数</div>
-            <div class="kpi-value impression-value">
-              <span class="kpi-number">302M</span>
-            </div>
-            <div class="kpi-sparkline">
-              <svg viewBox="0 0 80 24" fill="none" preserveAspectRatio="none">
-                <polyline
-                  points="0,12 10,8 20,14 30,6 40,10 50,4 60,8 70,2 80,6"
+                  :points="sparkPolylinePoints(card.chartData)"
                   stroke="currentColor"
                   stroke-width="1.5"
                   fill="none"
@@ -185,54 +195,10 @@
           </div>
           <div ref="chartRef" class="echarts-container" />
         </div>
-
-        <!-- 瀑布流设置 -->
-        <div class="waterfall-panel">
-          <h3 class="panel-title">瀑布流设置</h3>
-          <el-tabs v-model="waterfallTab" class="custom-tabs">
-            <el-tab-pane label="横幅" name="banner" />
-            <el-tab-pane label="插屏" name="interstitial" />
-            <el-tab-pane label="激励" name="rewarded" />
-            <el-tab-pane label="其他" name="other" />
-          </el-tabs>
-          <div class="waterfall-grid">
-            <div
-              v-for="(item, idx) in waterfallItems[waterfallTab]"
-              :key="idx"
-              class="waterfall-item"
-              :draggable="true"
-              @dragstart="dragStart(idx)"
-              @dragover.prevent
-              @drop="dragDrop(idx)"
-              :class="{ 'drag-over': dragOverIdx === idx }"
-              @dragenter="dragOverIdx = idx"
-              @dragleave="dragOverIdx = -1"
-            >
-              <div class="drag-handle">
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <circle cx="4" cy="3" r="1" fill="currentColor" />
-                  <circle cx="8" cy="3" r="1" fill="currentColor" />
-                  <circle cx="4" cy="6" r="1" fill="currentColor" />
-                  <circle cx="8" cy="6" r="1" fill="currentColor" />
-                  <circle cx="4" cy="9" r="1" fill="currentColor" />
-                  <circle cx="8" cy="9" r="1" fill="currentColor" />
-                </svg>
-              </div>
-              <div class="network-icon" :style="{ background: item.color }">
-                <span>{{ item.icon }}</span>
-              </div>
-              <span class="network-name">{{ item.name }}</span>
-              <div class="item-actions">
-                <span class="item-ecpm">¥{{ item.ecpm }}</span>
-                <el-switch v-model="item.enabled" size="small" class="custom-switch" />
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- 右侧面板 -->
-      <div class="right-panel">
+      <div class="right-panel" :class="{ 'is-loading': pendingQuery }">
         <!-- 广告位表现 -->
         <div class="table-panel">
           <h3 class="panel-title">广告位表现</h3>
@@ -240,7 +206,7 @@
             <div class="table-header">
               <span>广告位</span>
               <span>格式</span>
-              <span>收入</span>
+              <span>广告收入</span>
               <span>eCPM</span>
               <span>填充率</span>
               <span>展示次数</span>
@@ -253,7 +219,15 @@
               @mouseenter="hoverRow = idx"
               @mouseleave="hoverRow = -1"
             >
-              <span class="col-network">{{ row.network }}</span>
+              <span class="col-network-cell">
+                <el-tooltip
+                  :content="String(row.network ?? '')"
+                  placement="top"
+                  :disabled="!row.network"
+                >
+                  <span class="col-network">{{ row.network }}</span>
+                </el-tooltip>
+              </span>
               <span class="col-format">
                 <span class="format-tag" :class="`format-${row.formatType}`">{{ row.format }}</span>
               </span>
@@ -353,30 +327,226 @@
 
 <script setup lang="ts">
   import { computed, ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
-  import { useRouter } from 'vue-router'
-  import * as echarts from 'echarts'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
+  import { storeToRefs } from 'pinia'
+  import { useRoute, useRouter } from 'vue-router'
+  import { useI18n } from 'vue-i18n'
+  import type { LocationQueryValue } from 'vue-router'
+  import { ElMessage } from 'element-plus'
+  import { echarts, type EChartsOption } from '@/plugins/echarts'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
+  import {
+    fetchAppAdPlatformPerformanceAiInsights,
+    fetchAppAdPlatformPerformanceOverviewKpis,
+    fetchAppAdPlatformPerformanceOverviewTrend,
+    fetchAppAdPlatformPerformanceTableAdUnits
+  } from '@/api/ad-platform-detail'
+  import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
+  import type {
+    AdPlatformDetailKpiItem,
+    AppAdPlatformAdUnitRow,
+    AppAdPlatformAiInsightRow
+  } from '../types'
+
+  defineOptions({ name: 'AppAdPlatformPerformance' })
 
   const router = useRouter()
+  const route = useRoute()
 
-  function goBack() {
-    router.push({ name: 'AdPlatformDetail' })
+  const { t, te } = useI18n()
+  const tr = (key: string, fallback: string) => (te(key) ? t(key) : fallback)
+
+  const cockpitMetaStore = useCockpitMetaFilterStore()
+  const { data: cockpitMeta } = storeToRefs(cockpitMetaStore)
+
+  function toApiCountryCode(value: string): string {
+    const v = String(value ?? '').trim()
+    return v === '' || v.toLowerCase() === 'all' ? '' : value
   }
 
-  // ─── 筛选器状态 ───────────────────────────────────────────────
-  const dateRange = ref('2025-12')
-  const country = ref('all')
+  /** 国家下拉：去掉 meta 中占位「全部」，首项由模板 ElOption value="" 提供 */
+  const countryOptionsForSelect = computed(() =>
+    (cockpitMeta.value?.countryOptions ?? []).filter((o) => {
+      const v = String(o.value ?? '')
+        .trim()
+        .toLowerCase()
+      return v !== '' && v !== 'all'
+    })
+  )
 
-  // ─── KPI ──────────────────────────────────────────────────────
+  function querySourceLabelString(
+    v: LocationQueryValue | LocationQueryValue[] | undefined
+  ): string {
+    if (v === undefined || v === null) return ''
+    if (Array.isArray(v)) {
+      const first = v[0]
+      return first == null || first === '' ? '' : first
+    }
+    return v === '' ? '' : v
+  }
+
+  function safeDecodeURIComponent(s: string): string {
+    try {
+      return decodeURIComponent(s)
+    } catch {
+      return s
+    }
+  }
+
+  const platformTitlePart = computed(() => {
+    const src = safeDecodeURIComponent(querySourceLabelString(route.query['platform-name']).trim())
+    if (src) return src
+    const s = safeDecodeURIComponent(querySourceLabelString(route.query.sourceLabel).trim())
+    return s || '广告平台'
+  })
+
+  const routeAppQueryDecoded = computed(() =>
+    safeDecodeURIComponent(querySourceLabelString(route.query.app).trim())
+  )
+
+  /** 接口请求体 `appId`：优先 `query.appId`（列表行自有 ID），兼容仅传 `query.app`（展示名或历史） */
+  const routeAppIdForApi = computed(() => {
+    const byId = safeDecodeURIComponent(querySourceLabelString(route.query.appId).trim())
+    if (byId) return byId
+    return routeAppQueryDecoded.value
+  })
+
+  /** 应用由路由 `query.app` 固定，不提供筛选；展示名即入参原文或后续接口回填 */
+  const selectedAppDisplayName = computed(() => routeAppQueryDecoded.value || '应用')
+
+  const pageDetailTitle = computed(
+    () => `${selectedAppDisplayName.value}在${platformTitlePart.value}中的表现详情`
+  )
+
+  /** 回到父页，示例：`/business-insight/ad-platform-detail?platform-name=Liftoff&source=8` */
+  function goBack() {
+    const source = querySourceLabelString(route.query.source).trim()
+    const sourceLabel = querySourceLabelString(route.query.sourceLabel).trim()
+    const platformName = querySourceLabelString(route.query['platform-name']).trim()
+
+    const query: Record<string, string> = {}
+    if (platformName) query['platform-name'] = platformName
+    if (source) query.source = source
+    else if (sourceLabel) query.sourceLabel = sourceLabel
+
+    router.push({
+      path: '/business-insight/ad-platform-detail',
+      query
+    })
+  }
+
+  // ─── 筛选器状态（仅日期 + 国家；应用固定为路由 query.app）────────────────
+  function buildDefaultDateRangeStrings(): [string, string] {
+    const end = cloneAppDate(getAppNow())
+    end.setHours(0, 0, 0, 0)
+    const start = cloneAppDate(end)
+    start.setDate(end.getDate() - 29)
+    return [formatYYYYMMDD(start), formatYYYYMMDD(end)]
+  }
+
+  const initialDateRange = buildDefaultDateRangeStrings()
+  /** `YYYY-MM-DD` 起止；与接口 `startDate` / `endDate` 一致 */
+  const dateRange = ref<[string, string] | null>(initialDateRange)
+  /** 与 meta `countryOptions` 对齐，「全部」为 `""`；请求前由 `toApiCountryCode` 映射 */
+  const countryFilter = ref('')
+
+  function onCountryFilterUpdate(v: string | undefined | null) {
+    countryFilter.value = v ?? ''
+  }
+
+  // ─── KPI（契约字段驱动）──────────────────────────────────────────
+  const INITIAL_APP_KPIS: AdPlatformDetailKpiItem[] = [
+    {
+      id: 'revenue',
+      label: '收入',
+      valueText: '$937.5K',
+      changeText: '',
+      positive: true,
+      color: '#f59e0b',
+      chartData: [650, 720, 680, 800, 750, 820, 900, 780, 810, 850, 880, 937]
+    },
+    {
+      id: 'ecpm',
+      label: 'eCPM',
+      valueText: '¥3.10',
+      changeText: '+12.3%',
+      positive: true,
+      color: '#3b82f6',
+      chartData: [2.6, 2.7, 2.8, 2.9, 2.85, 2.95, 3.0, 2.98, 3.05, 3.08, 3.09, 3.1]
+    },
+    {
+      id: 'fill',
+      label: '填充率',
+      valueText: '98%',
+      changeText: '-3.2%',
+      positive: false,
+      color: '#10b981',
+      chartData: [99, 98, 99, 97, 98, 98, 99, 97, 98, 98, 97, 98]
+    },
+    {
+      id: 'impressions',
+      label: '展示次数',
+      valueText: '302M',
+      changeText: '',
+      positive: true,
+      color: '#a855f7',
+      chartData: [260, 275, 268, 290, 285, 295, 300, 292, 298, 305, 310, 302]
+    }
+  ]
+
+  const appKpiCards = ref<AdPlatformDetailKpiItem[]>(
+    INITIAL_APP_KPIS.map((k) => ({ ...k, chartData: [...k.chartData] }))
+  )
+
   const activeKpi = ref('revenue')
+
+  function kpiCardRootClass(id: string) {
+    if (id === 'impressions') return 'kpi-impression'
+    return `kpi-${id}`
+  }
+
+  function kpiGlowClass(id: string) {
+    const map: Record<string, string> = {
+      revenue: 'revenue-glow',
+      ecpm: 'ecpm-glow',
+      fill: 'fill-glow',
+      impressions: 'impression-glow'
+    }
+    return map[id] ?? 'revenue-glow'
+  }
+
+  function kpiValueClass(id: string) {
+    const map: Record<string, string> = {
+      revenue: 'revenue-value',
+      ecpm: 'ecpm-value',
+      fill: 'fill-value',
+      impressions: 'impression-value'
+    }
+    return map[id] ?? 'revenue-value'
+  }
+
+  function sparkPolylinePoints(data: number[], w = 80, h = 24): string {
+    if (!data.length) return ''
+    const min = Math.min(...data)
+    const max = Math.max(...data)
+    return data
+      .map((v, i) => {
+        const x = (i / (data.length - 1 || 1)) * w
+        const y = h - 2 - ((v - min) / (max - min || 1)) * (h - 4)
+        return `${x},${y}`
+      })
+      .join(' ')
+  }
 
   // ─── 图表 ─────────────────────────────────────────────────────
   const chartRef = ref<HTMLElement | null>(null)
-  let chartInstance: echarts.ECharts | null = null
+  let chartInstance: ReturnType<typeof echarts.init> | null = null
 
   const legendItems = ref([
-    { key: 'revenue', label: 'Revenue', color: '#f59e0b', active: true },
+    { key: 'revenue', label: '广告收入', color: '#f59e0b', active: true },
     { key: 'ecpm', label: 'eCPM', color: '#3b82f6', active: true },
-    { key: 'fill', label: 'Fill Rate', color: '#10b981', active: true }
+    { key: 'fill', label: '填充率', color: '#10b981', active: true }
   ])
 
   function toggleLegend(item: (typeof legendItems.value)[0]) {
@@ -385,7 +555,7 @@
       chartInstance.dispatchAction({ type: 'legendToggleSelect', name: item.label })
   }
 
-  const xAxisData = [
+  const xAxisData = ref([
     '10/1',
     '10/3',
     '10/5',
@@ -402,17 +572,17 @@
     '10/27',
     '10/29',
     '10/31'
-  ]
-  const revenueData = [
+  ])
+  const revenueData = ref([
     780, 650, 820, 590, 750, 680, 900, 620, 800, 720, 870, 640, 760, 810, 690, 937
-  ]
-  const ecpmData = [2.8, 2.6, 3.0, 2.5, 2.9, 2.7, 3.1, 2.6, 3.0, 2.8, 3.1, 2.6, 2.9, 3.0, 2.8, 3.1]
-  const fillData = [97, 96, 98, 95, 98, 97, 99, 96, 98, 97, 99, 96, 98, 98, 97, 98]
+  ])
+  const ecpmData = ref([
+    2.8, 2.6, 3.0, 2.5, 2.9, 2.7, 3.1, 2.6, 3.0, 2.8, 3.1, 2.6, 2.9, 3.0, 2.8, 3.1
+  ])
+  const fillData = ref([97, 96, 98, 95, 98, 97, 99, 96, 98, 97, 99, 96, 98, 98, 97, 98])
 
-  function initChart() {
-    if (!chartRef.value) return
-    chartInstance = echarts.init(chartRef.value, 'dark')
-    const option: echarts.EChartsOption = {
+  function buildAppPerfChartOption(): EChartsOption {
+    return {
       backgroundColor: 'transparent',
       tooltip: {
         trigger: 'axis',
@@ -423,17 +593,14 @@
         textStyle: { color: '#e2e8f0', fontSize: 12 },
         formatter(params: any) {
           const p = Array.isArray(params) ? params : [params]
+          const idx = typeof p[0]?.dataIndex === 'number' ? p[0].dataIndex : 0
+          const rev = revenueData.value[idx] ?? 0
+          const ecpm = ecpmData.value[idx] ?? 0
+          const fill = fillData.value[idx] ?? 0
           let html = `<div style="font-weight:600;margin-bottom:6px;color:#94a3b8">${p[0]?.axisValue}</div>`
-          p.forEach((s: any) => {
-            const dot = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${s.color};margin-right:6px"></span>`
-            const val =
-              s.seriesName === 'Revenue'
-                ? `$${s.value}K`
-                : s.seriesName === 'eCPM'
-                  ? `¥${s.value}`
-                  : `${s.value}%`
-            html += `<div style="display:flex;align-items:center;gap:4px;padding:2px 0">${dot}${s.seriesName}: <b style="margin-left:auto;padding-left:12px">${val}</b></div>`
-          })
+          html += `<div style="display:flex;align-items:center;gap:4px;padding:2px 0"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f59e0b;margin-right:6px"></span>Revenue: <b style="margin-left:auto;padding-left:12px">$${rev}K</b></div>`
+          html += `<div style="display:flex;align-items:center;gap:4px;padding:2px 0"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3b82f6;margin-right:6px"></span>eCPM: <b style="margin-left:auto;padding-left:12px">${ecpm.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</b></div>`
+          html += `<div style="display:flex;align-items:center;gap:4px;padding:2px 0"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#10b981;margin-right:6px"></span>Fill Rate: <b style="margin-left:auto;padding-left:12px">${fill}%</b></div>`
           return html
         },
         axisPointer: {
@@ -445,7 +612,7 @@
       grid: { left: 56, right: 56, top: 16, bottom: 36 },
       xAxis: {
         type: 'category',
-        data: xAxisData,
+        data: xAxisData.value,
         axisLine: { lineStyle: { color: 'rgba(255,255,255,0.06)' } },
         axisTick: { show: false },
         axisLabel: { color: '#64748b', fontSize: 11 }
@@ -480,7 +647,7 @@
         {
           name: 'Revenue',
           type: 'line',
-          data: revenueData,
+          data: revenueData.value,
           yAxisIndex: 0,
           smooth: 0.4,
           symbol: 'circle',
@@ -497,7 +664,7 @@
         {
           name: 'eCPM',
           type: 'line',
-          data: ecpmData,
+          data: ecpmData.value,
           yAxisIndex: 0,
           smooth: 0.4,
           symbol: 'circle',
@@ -514,7 +681,7 @@
         {
           name: 'Fill Rate',
           type: 'line',
-          data: fillData,
+          data: fillData.value,
           yAxisIndex: 1,
           smooth: 0.4,
           symbol: 'circle',
@@ -530,53 +697,18 @@
         }
       ]
     }
-    chartInstance.setOption(option)
   }
 
-  // ─── 瀑布流 ───────────────────────────────────────────────────
-  const waterfallTab = ref('banner')
-  const dragIdx = ref(-1)
-  const dragOverIdx = ref(-1)
-
-  const waterfallItems = ref<Record<string, any[]>>({
-    banner: [
-      { name: 'AppLovin', icon: 'A', color: '#e85d04', ecpm: '3.80', enabled: true },
-      { name: 'AppLovin', icon: 'A', color: '#e85d04', ecpm: '3.50', enabled: true },
-      { name: 'Facebook', icon: 'F', color: '#1877f2', ecpm: '3.20', enabled: false },
-      { name: 'Unity Ads', icon: 'U', color: '#222c37', ecpm: '2.90', enabled: true }
-    ],
-    interstitial: [
-      { name: 'AdMob', icon: 'G', color: '#4285f4', ecpm: '4.20', enabled: true },
-      { name: 'IronSource', icon: 'I', color: '#00b4d8', ecpm: '3.80', enabled: true },
-      { name: 'AppLovin', icon: 'A', color: '#e85d04', ecpm: '3.60', enabled: true },
-      { name: 'Unity Ads', icon: 'U', color: '#222c37', ecpm: '3.10', enabled: false }
-    ],
-    rewarded: [
-      { name: 'AppLovin', icon: 'A', color: '#e85d04', ecpm: '7.50', enabled: true },
-      { name: 'Unity Ads', icon: 'U', color: '#222c37', ecpm: '6.80', enabled: true },
-      { name: 'IronSource', icon: 'I', color: '#00b4d8', ecpm: '6.20', enabled: true }
-    ],
-    other: [
-      { name: 'Google Ads', icon: 'G', color: '#4285f4', ecpm: '2.10', enabled: true },
-      { name: 'Facebook', icon: 'F', color: '#1877f2', ecpm: '1.90', enabled: false }
-    ]
-  })
-
-  function dragStart(idx: number) {
-    dragIdx.value = idx
-  }
-  function dragDrop(targetIdx: number) {
-    if (dragIdx.value < 0 || dragIdx.value === targetIdx) return
-    const list = waterfallItems.value[waterfallTab.value]
-    const moved = list.splice(dragIdx.value, 1)[0]
-    list.splice(targetIdx, 0, moved)
-    dragIdx.value = -1
-    dragOverIdx.value = -1
+  function initChart() {
+    if (!chartRef.value) return
+    chartInstance = echarts.init(chartRef.value, 'dark')
+    if (!chartInstance) return
+    chartInstance.setOption(buildAppPerfChartOption())
   }
 
   // ─── 广告位表格 ───────────────────────────────────────────────
   const hoverRow = ref(-1)
-  const adUnitData = [
+  const adUnitData = ref<AppAdPlatformAdUnitRow[]>([
     {
       network: 'AdMob',
       format: '插屏',
@@ -647,7 +779,7 @@
       impressions: '12.0M',
       revenueHighlight: false
     }
-  ]
+  ])
 
   function getFillColor(fill: string) {
     const v = parseInt(fill)
@@ -658,7 +790,7 @@
 
   // ─── AI 洞察 ──────────────────────────────────────────────────
   const expandedInsight = ref(-1)
-  const insights = [
+  const insights = ref<AppAdPlatformAiInsightRow[]>([
     {
       type: '瀑布流优化',
       text: '在 Interstitial_LevelEnd 广告位中，AdMob 的填充率高达 99%，但 eCPM 低于 AppLovin，当前排序合理，可考虑提升 AppLovin floor price 以测试收益空间。'
@@ -671,7 +803,7 @@
       type: '填充率预警',
       text: 'Unity Ads 在激励视频广告位填充率仅为 92%，低于行业均值。建议补充备用广告网络或调整 waterfall 层级，避免库存浪费。'
     }
-  ]
+  ])
 
   // ─── resize ───────────────────────────────────────────────────
   function handleResize() {
@@ -681,32 +813,94 @@
   const pendingQuery = ref(false)
 
   const appliedFilters = ref({
-    dateRange: dateRange.value,
-    country: country.value
+    startDate: initialDateRange[0],
+    endDate: initialDateRange[1],
+    countryFilter: countryFilter.value
   })
 
-  const isQueryDirty = computed(() => {
-    return (
-      appliedFilters.value.dateRange !== dateRange.value ||
-      appliedFilters.value.country !== country.value
-    )
-  })
+  function resolveDateRangeYmd(): { startDate: string; endDate: string } {
+    const dr = dateRange.value
+    if (dr && dr.length === 2 && dr[0] && dr[1]) {
+      return { startDate: dr[0], endDate: dr[1] }
+    }
+    const [s, e] = buildDefaultDateRangeStrings()
+    return { startDate: s, endDate: e }
+  }
 
   async function runQuery() {
     if (pendingQuery.value) return
     pendingQuery.value = true
     try {
-      // TODO: 接真实接口时，把请求放到这里，然后刷新图表/列表等数据
-      appliedFilters.value = {
-        dateRange: dateRange.value,
-        country: country.value
+      const { startDate, endDate } = resolveDateRangeYmd()
+      const appId = routeAppIdForApi.value || ''
+      const sourceStr =
+        querySourceLabelString(route.query.source).trim() ||
+        querySourceLabelString(route.query.sourceLabel).trim()
+      const body = {
+        startDate,
+        endDate,
+        appId,
+        countryCode: toApiCountryCode(countryFilter.value),
+        ...(sourceStr ? { source: safeDecodeURIComponent(sourceStr) } : {})
       }
+
+      const [kpiR, trendR, tableR, aiR] = await Promise.allSettled([
+        fetchAppAdPlatformPerformanceOverviewKpis(body),
+        fetchAppAdPlatformPerformanceOverviewTrend(body),
+        fetchAppAdPlatformPerformanceTableAdUnits(body),
+        fetchAppAdPlatformPerformanceAiInsights(body)
+      ])
+
+      if (kpiR.status === 'fulfilled') {
+        const kpis = Array.isArray(kpiR.value.kpis) ? kpiR.value.kpis : []
+        appKpiCards.value = kpis.map((k) => ({ ...k, chartData: [...k.chartData] }))
+      } else {
+        console.error(kpiR.reason)
+        ElMessage.error('KPI 加载失败')
+      }
+
+      if (trendR.status === 'fulfilled') {
+        const t = trendR.value
+        xAxisData.value = Array.isArray(t.categories) ? [...t.categories] : []
+        revenueData.value = Array.isArray(t.revenue) ? [...t.revenue] : []
+        ecpmData.value = Array.isArray(t.d_ecpm) ? [...t.d_ecpm] : []
+        fillData.value = Array.isArray(t.d_fill_rate) ? [...t.d_fill_rate] : []
+      } else {
+        console.error(trendR.reason)
+        ElMessage.error('核心指标趋势加载失败')
+      }
+
+      if (tableR.status === 'fulfilled') {
+        const records = Array.isArray(tableR.value.records) ? tableR.value.records : []
+        adUnitData.value = records.map((r) => ({ ...r }))
+      } else {
+        console.error(tableR.reason)
+        ElMessage.error('广告位表现加载失败')
+      }
+
+      if (aiR.status === 'fulfilled') {
+        const list = Array.isArray(aiR.value.insights) ? aiR.value.insights : []
+        insights.value = list.map((x: AppAdPlatformAiInsightRow) => ({ ...x }))
+      } else {
+        console.error(aiR.reason)
+        ElMessage.error('AI 洞察加载失败')
+      }
+
+      appliedFilters.value = {
+        startDate,
+        endDate,
+        countryFilter: countryFilter.value
+      }
+
+      await nextTick()
+      chartInstance?.setOption(buildAppPerfChartOption(), true)
     } finally {
       pendingQuery.value = false
     }
   }
 
   onMounted(async () => {
+    await cockpitMetaStore.ensureLoaded()
     await nextTick()
     initChart()
     window.addEventListener('resize', handleResize)
@@ -721,7 +915,9 @@
   // 初始化会自动查询；之后仅点击「查询」按钮才触发 runQuery()
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+  @use '../../../user-growth/styles/filter-bar-theme.scss' as filterTheme;
+
   /* ═══════════════════════════════════════════════
    CSS 变量 & 基础
 ═══════════════════════════════════════════════ */
@@ -784,16 +980,16 @@
       color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
       background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
       border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-      box-shadow 0.25s cubic-bezier(0, 0, 0.2, 1),
-      transform 0.25s cubic-bezier(0, 0, 0.2, 1);
+      box-shadow 0.25s cubic-bezier(0, 0, 0.2, 1);
   }
 
   .back-btn:hover {
     color: var(--text-primary);
     background: var(--bg-hover);
     border-color: var(--border-light);
-    box-shadow: 0 0 18px color-mix(in srgb, var(--art-primary) 14%, transparent);
-    transform: translateX(-2px);
+    box-shadow:
+      0 0 22px color-mix(in srgb, var(--art-primary) 22%, transparent),
+      0 0 44px color-mix(in srgb, var(--art-primary) 10%, transparent);
   }
 
   .breadcrumb {
@@ -842,135 +1038,334 @@
     white-space: nowrap;
   }
 
-  .filters {
-    display: flex;
-    gap: 12px;
-    align-items: center;
+  .filters.aapp-filter-panel {
+    @include filterTheme.filter-panel(10px 14px);
+    @include filterTheme.filter-panel-children;
+    @include filterTheme.filter-row(12px);
+
+    min-width: 0;
   }
 
-  .filters-panel {
-    padding: 10px 14px;
-    overflow: hidden;
-    background:
-      radial-gradient(
-        circle at 20% 10%,
-        color-mix(in srgb, var(--art-primary) 16%, transparent) 0%,
-        transparent 58%
-      ),
-      radial-gradient(
-        circle at 82% 16%,
-        color-mix(in srgb, var(--art-success) 10%, transparent) 0%,
-        transparent 52%
-      ),
-      linear-gradient(180deg, rgb(0 0 0 / 22%) 0%, rgb(0 0 0 / 10%) 100%);
-    border: 1px solid color-mix(in srgb, var(--art-primary) 18%, var(--default-border));
-    border-radius: 16px;
-    box-shadow:
-      0 12px 40px rgb(0 0 0 / 44%),
-      0 0 0 1px color-mix(in srgb, var(--art-primary) 10%, transparent),
-      inset 0 1px 0 color-mix(in srgb, var(--art-primary) 10%, transparent);
-  }
-
-  .filter-item {
-    display: flex;
+  .filters.aapp-filter-panel > .filter-item.filter-field {
+    display: inline-flex;
     gap: 8px;
     align-items: center;
-  }
-
-  .filter-field {
-    min-height: 32px;
+    min-height: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
   }
 
   .filter-label {
     font-size: 12px;
-    color: var(--text-secondary);
+    color: var(--el-text-color-secondary);
     white-space: nowrap;
   }
 
-  .filter-select--date {
-    width: 220px;
+  .aapp-filter-select {
+    @include filterTheme.filter-select-size(150px, 130px, 150px);
   }
 
-  .filter-select--country {
-    width: 130px;
+  .filters.aapp-filter-panel :deep(.aapp-filter-date) {
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
   }
 
-  /* Element Plus select 深色适配 */
-  :deep(.custom-select .el-input__wrapper) {
-    min-height: 34px;
-    background: rgb(0 0 0 / 22%) !important;
-    border-radius: 10px !important;
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--art-primary) 22%, transparent) !important;
-    transition:
-      box-shadow 0.25s cubic-bezier(0, 0, 0.2, 1),
-      border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  @include filterTheme.date-trigger('.filters.aapp-filter-panel', '.aapp-filter-date', 280px);
+  @include filterTheme.element-select-trigger('.aapp-filter-select');
+  @include filterTheme.select-popper('aapp-filter__popper');
+  @include filterTheme.date-picker-popper('aapp-filter__popper');
+
+  :global(.aapp-filter__popper.el-popper),
+  :global(.aapp-filter__popper.el-select__popper),
+  :global(.aapp-filter__popper.el-picker__popper) {
+    z-index: 4000 !important;
   }
 
-  :deep(.custom-select .el-input__wrapper:hover) {
-    box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--art-primary) 44%, transparent) inset,
-      0 0 20px color-mix(in srgb, var(--art-primary) 12%, transparent) !important;
+  :deep(.aapp-filter-select) {
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
   }
 
-  :deep(.custom-select .el-input__inner) {
-    font-size: 12px;
-    color: var(--text-primary) !important;
-  }
-
-  :deep(.el-select__popper) {
-    background: var(--bg-panel) !important;
-    border: 1px solid var(--border) !important;
-  }
-
-  :deep(.el-select-dropdown__item) {
-    font-size: 12px;
-    color: var(--text-secondary) !important;
-  }
-
-  :deep(.el-select-dropdown__item.is-selected),
-  :deep(.el-select-dropdown__item:hover) {
-    color: var(--text-primary) !important;
-    background: var(--bg-hover) !important;
-  }
-
-  .filter-query-btn {
-    min-height: 34px;
-    padding: 0 16px;
+  .filters.aapp-filter-panel :deep(.aapp-query-btn.el-button) {
+    height: 36px;
+    padding: 0 18px;
     margin-left: 4px;
     font-weight: 600;
-    letter-spacing: 0.2px;
-    border: 1px solid color-mix(in srgb, var(--art-primary) 38%, transparent);
-    box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--art-primary) 10%, transparent) inset,
-      0 10px 28px color-mix(in srgb, var(--art-primary) 10%, transparent);
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: none;
     transition:
-      transform 0.25s cubic-bezier(0, 0, 0.2, 1),
+      border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
       box-shadow 0.25s cubic-bezier(0, 0, 0.2, 1),
-      border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      transform 0.25s cubic-bezier(0, 0, 0.2, 1);
   }
 
-  .filter-query-btn:hover:not(.is-disabled) {
-    border-color: color-mix(in srgb, var(--art-primary) 56%, transparent);
+  .filters.aapp-filter-panel :deep(.aapp-query-btn.el-button:hover:not(.is-disabled)) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
+  }
+
+  .filters.aapp-filter-panel :deep(.aapp-query-btn.el-button:focus-visible) {
+    outline: none;
     box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--art-primary) 16%, transparent) inset,
-      0 0 22px color-mix(in srgb, var(--art-primary) 18%, transparent),
-      0 12px 38px color-mix(in srgb, var(--art-primary) 12%, transparent);
-    transform: translateY(-1px);
-  }
-
-  .filter-query-btn:active:not(.is-disabled) {
-    transition-duration: 0.14s;
-    transform: translateY(0);
+      0 0 0 2px color-mix(in srgb, var(--el-color-primary) 35%, transparent),
+      0 0 0 4px color-mix(in srgb, var(--el-color-primary) 18%, transparent);
   }
 
   /* ═══════════════════════════════════════════════
    主体布局
 ═══════════════════════════════════════════════ */
   .main-layout {
+    position: relative;
     display: grid;
-    grid-template-columns: 1fr 440px;
+    grid-template-columns: 1fr 615px;
     gap: 16px;
     padding: 0 24px;
+  }
+
+  .left-panel.is-loading,
+  .right-panel.is-loading {
+    pointer-events: none;
+    opacity: 0;
+  }
+
+  .fishbone-skeleton {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: 1fr 615px;
+    gap: 16px;
+    padding: 0 24px;
+  }
+
+  .fishbone-skeleton__left,
+  .fishbone-skeleton__right {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+  }
+
+  .fishbone-skeleton__kpis {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(8px, 1.2vw, 12px);
+  }
+
+  .fishbone-card,
+  .fishbone-panel {
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(
+        circle at 20% 10%,
+        color-mix(in srgb, var(--art-primary) 10%, transparent) 0%,
+        transparent 58%
+      ),
+      linear-gradient(180deg, var(--bg-card) 0%, var(--bg-panel) 100%);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 18%, var(--default-border));
+    border-radius: var(--radius-lg);
+    box-shadow:
+      0 12px 40px rgb(0 0 0 / 44%),
+      inset 0 1px 0 color-mix(in srgb, var(--art-primary) 10%, transparent);
+  }
+
+  .fishbone-card {
+    min-height: 118px;
+    padding: 18px 16px 12px;
+  }
+
+  .fishbone-panel {
+    padding: 16px;
+  }
+
+  .fishbone-panel__header {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .fishbone-line,
+  .fishbone-chip,
+  .fishbone-dot {
+    position: relative;
+    overflow: hidden;
+    background: rgb(255 255 255 / 6%);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 12%, transparent);
+    border-radius: 9999px;
+  }
+
+  .fishbone-line::after,
+  .fishbone-chip::after,
+  .fishbone-dot::after {
+    position: absolute;
+    inset: -2px;
+    content: '';
+    background: linear-gradient(
+      120deg,
+      transparent 0%,
+      color-mix(in srgb, var(--art-primary) 22%, transparent) 40%,
+      color-mix(in srgb, var(--art-success) 18%, transparent) 55%,
+      transparent 70%
+    );
+    transform: translateX(-80%);
+    animation: fishbone-shimmer 1.25s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)) infinite;
+  }
+
+  .fishbone-line--sm {
+    width: 34%;
+    height: 10px;
+    margin-bottom: 10px;
+  }
+
+  .fishbone-line--md {
+    width: 42%;
+    height: 12px;
+  }
+
+  .fishbone-line--lg {
+    width: 66%;
+    height: 18px;
+    margin-bottom: 12px;
+  }
+
+  .fishbone-bones {
+    height: 24px;
+    background-image: repeating-linear-gradient(
+      120deg,
+      rgb(255 255 255 / 4%) 0,
+      rgb(255 255 255 / 4%) 10px,
+      transparent 10px,
+      transparent 18px
+    );
+    border: 1px solid color-mix(in srgb, var(--art-primary) 10%, transparent);
+    border-radius: 12px;
+    opacity: 0.9;
+  }
+
+  .fishbone-chip-row {
+    display: inline-flex;
+    gap: 6px;
+  }
+
+  .fishbone-chip {
+    width: 56px;
+    height: 20px;
+  }
+
+  .fishbone-chart {
+    height: clamp(200px, 22vw, 260px);
+    background-image:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--art-primary) 7%, transparent) 0%,
+        transparent 100%
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent 0,
+        transparent 32px,
+        rgb(255 255 255 / 3%) 32px,
+        rgb(255 255 255 / 3%) 33px
+      );
+    border: 1px solid color-mix(in srgb, var(--art-primary) 12%, transparent);
+    border-radius: 14px;
+  }
+
+  .fishbone-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .fishbone-row {
+    display: grid;
+    grid-template-columns: 12px 1fr 0.9fr;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .fishbone-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  .fishbone-line--row {
+    width: 100%;
+    height: 10px;
+  }
+
+  .fishbone-line--row2 {
+    width: 100%;
+    height: 10px;
+    opacity: 0.78;
+  }
+
+  .fishbone-table__head,
+  .fishbone-table__tr {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 8px;
+    align-items: center;
+  }
+
+  .fishbone-table__head {
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid color-mix(in srgb, var(--art-primary) 14%, transparent);
+  }
+
+  .fishbone-line--th {
+    height: 10px;
+  }
+
+  .fishbone-table__tr {
+    padding: 8px 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--art-primary) 10%, transparent);
+  }
+
+  .fishbone-line--td {
+    height: 10px;
+  }
+
+  .fishbone-ai {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .fishbone-ai__card {
+    padding: 10px 12px;
+    background: rgb(255 255 255 / 2.5%);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 14%, var(--default-border));
+    border-radius: var(--radius-md);
+  }
+
+  @keyframes fishbone-shimmer {
+    0% {
+      opacity: 0.85;
+      transform: translateX(-85%);
+    }
+
+    100% {
+      opacity: 1;
+      transform: translateX(85%);
+    }
   }
 
   .left-panel {
@@ -992,14 +1387,15 @@
 ═══════════════════════════════════════════════ */
   .kpi-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: clamp(10px, 1.6vw, 12px);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(8px, 1.2vw, 12px);
   }
 
   .kpi-card {
     --kpi-accent: var(--art-primary);
 
     position: relative;
+    min-width: 0;
     padding: 18px 16px 12px;
     overflow: hidden;
     cursor: pointer;
@@ -1022,21 +1418,20 @@
       0 0 0 1px color-mix(in srgb, var(--kpi-accent) 10%, transparent),
       inset 0 1px 0 color-mix(in srgb, var(--kpi-accent) 10%, transparent);
     transition:
-      transform 0.32s cubic-bezier(0, 0, 0.2, 1),
       box-shadow 0.32s cubic-bezier(0, 0, 0.2, 1),
       border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
       filter 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .kpi-card:hover {
-    filter: brightness(1.05);
-    border-color: color-mix(in srgb, var(--kpi-accent) 44%, var(--default-border));
+    filter: brightness(1.06);
+    border-color: color-mix(in srgb, var(--kpi-accent) 48%, var(--default-border));
     box-shadow:
-      0 20px 52px -14px rgb(0 0 0 / 62%),
-      0 0 0 1px color-mix(in srgb, var(--kpi-accent) 18%, transparent),
-      inset 0 1px 0 color-mix(in srgb, var(--kpi-accent) 14%, transparent),
-      0 0 40px color-mix(in srgb, var(--kpi-accent) 18%, transparent);
-    transform: translateY(-5px);
+      0 16px 48px -12px rgb(0 0 0 / 58%),
+      0 0 0 1px color-mix(in srgb, var(--kpi-accent) 22%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--kpi-accent) 16%, transparent),
+      0 0 36px color-mix(in srgb, var(--kpi-accent) 26%, transparent),
+      0 0 72px color-mix(in srgb, var(--kpi-accent) 12%, transparent);
   }
 
   .kpi-card.is-active {
@@ -1209,26 +1604,25 @@
       0 12px 40px rgb(0 0 0 / 44%),
       inset 0 1px 0 color-mix(in srgb, var(--art-primary) 10%, transparent);
     transition:
-      transform 0.32s cubic-bezier(0, 0, 0.2, 1),
       box-shadow 0.32s cubic-bezier(0, 0, 0.2, 1),
       border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .chart-panel:hover {
-    border-color: color-mix(in srgb, var(--art-primary) 32%, var(--default-border));
+    border-color: color-mix(in srgb, var(--art-primary) 38%, var(--default-border));
     box-shadow:
-      0 20px 52px -14px rgb(0 0 0 / 62%),
-      0 0 0 1px color-mix(in srgb, var(--art-primary) 16%, transparent),
-      inset 0 1px 0 color-mix(in srgb, var(--art-primary) 12%, transparent),
-      0 0 44px color-mix(in srgb, var(--art-primary) 14%, transparent);
-    transform: translateY(-4px);
+      0 16px 48px -12px rgb(0 0 0 / 58%),
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 22%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--art-primary) 14%, transparent),
+      0 0 40px color-mix(in srgb, var(--art-primary) 22%, transparent),
+      0 0 80px color-mix(in srgb, var(--art-primary) 10%, transparent);
   }
 
   .panel-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
   }
 
   .legend-list {
@@ -1271,160 +1665,6 @@
   }
 
   /* ═══════════════════════════════════════════════
-   瀑布流设置
-═══════════════════════════════════════════════ */
-  .waterfall-panel {
-    padding: 18px 16px;
-    background:
-      radial-gradient(
-        circle at 14% 10%,
-        color-mix(in srgb, var(--art-primary) 12%, transparent) 0%,
-        transparent 60%
-      ),
-      linear-gradient(180deg, var(--bg-card) 0%, var(--bg-panel) 100%);
-    border: 1px solid color-mix(in srgb, var(--art-primary) 18%, var(--default-border));
-    border-radius: var(--radius-lg);
-    box-shadow:
-      0 12px 40px rgb(0 0 0 / 44%),
-      inset 0 1px 0 color-mix(in srgb, var(--art-primary) 10%, transparent);
-    transition:
-      transform 0.32s cubic-bezier(0, 0, 0.2, 1),
-      box-shadow 0.32s cubic-bezier(0, 0, 0.2, 1),
-      border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .waterfall-panel:hover {
-    border-color: color-mix(in srgb, var(--art-primary) 32%, var(--default-border));
-    box-shadow:
-      0 20px 52px -14px rgb(0 0 0 / 62%),
-      0 0 0 1px color-mix(in srgb, var(--art-primary) 16%, transparent),
-      inset 0 1px 0 color-mix(in srgb, var(--art-primary) 12%, transparent),
-      0 0 44px color-mix(in srgb, var(--art-primary) 14%, transparent);
-    transform: translateY(-4px);
-  }
-
-  /* Tabs 深色适配 */
-  :deep(.custom-tabs .el-tabs__nav-wrap::after) {
-    display: none;
-  }
-
-  :deep(.custom-tabs .el-tabs__header) {
-    margin-bottom: 14px;
-  }
-
-  :deep(.custom-tabs .el-tabs__nav-wrap) {
-    border-bottom: 1px solid var(--border);
-  }
-
-  :deep(.custom-tabs .el-tabs__item) {
-    height: 32px;
-    padding: 0 14px;
-    font-size: 12px;
-    color: var(--text-muted) !important;
-  }
-
-  :deep(.custom-tabs .el-tabs__item.is-active) {
-    color: var(--text-primary) !important;
-  }
-
-  :deep(.custom-tabs .el-tabs__active-bar) {
-    background: var(--accent-blue) !important;
-  }
-
-  .waterfall-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 8px;
-  }
-
-  .waterfall-item {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    padding: 8px 10px;
-    cursor: grab;
-    user-select: none;
-    background: rgb(255 255 255 / 3%);
-    border: 1px solid color-mix(in srgb, var(--art-primary) 14%, var(--default-border));
-    border-radius: var(--radius-md);
-    transition:
-      background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-      border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-      box-shadow 0.25s cubic-bezier(0, 0, 0.2, 1),
-      transform 0.2s cubic-bezier(0, 0, 0.2, 1);
-  }
-
-  .waterfall-item:hover {
-    background: var(--bg-hover);
-    border-color: color-mix(in srgb, var(--art-primary) 26%, var(--default-border));
-    box-shadow:
-      0 12px 34px -16px rgb(0 0 0 / 58%),
-      0 0 0 1px color-mix(in srgb, var(--art-primary) 14%, transparent),
-      0 0 26px -10px color-mix(in srgb, var(--art-primary) 14%, transparent);
-    transform: translateY(-2px);
-  }
-
-  .waterfall-item:active {
-    cursor: grabbing;
-  }
-
-  .waterfall-item.drag-over {
-    background: color-mix(in srgb, var(--art-primary) 10%, transparent);
-    border-color: color-mix(in srgb, var(--art-primary) 40%, var(--default-border));
-    transform: scale(1.01);
-  }
-
-  .drag-handle {
-    flex-shrink: 0;
-    color: var(--text-muted);
-    opacity: 0.5;
-  }
-
-  .network-icon {
-    display: flex;
-    flex-shrink: 0;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    font-size: 11px;
-    font-weight: 700;
-    color: #fff;
-    border-radius: 6px;
-  }
-
-  .network-name {
-    flex: 1;
-    overflow: hidden;
-    font-size: 12px;
-    color: var(--text-primary);
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .item-actions {
-    display: flex;
-    flex-shrink: 0;
-    gap: 8px;
-    align-items: center;
-  }
-
-  .item-ecpm {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--accent-green);
-  }
-
-  :deep(.custom-switch .el-switch__core) {
-    background: rgb(255 255 255 / 10%) !important;
-    border-color: transparent !important;
-  }
-
-  :deep(.custom-switch.is-checked .el-switch__core) {
-    background: var(--accent-blue) !important;
-  }
-
-  /* ═══════════════════════════════════════════════
    广告位表格
 ═══════════════════════════════════════════════ */
   .table-panel {
@@ -1443,22 +1683,22 @@
       0 12px 40px rgb(0 0 0 / 44%),
       inset 0 1px 0 color-mix(in srgb, var(--art-primary) 10%, transparent);
     transition:
-      transform 0.32s cubic-bezier(0, 0, 0.2, 1),
       box-shadow 0.32s cubic-bezier(0, 0, 0.2, 1),
       border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .table-panel:hover {
-    border-color: color-mix(in srgb, var(--art-primary) 32%, var(--default-border));
+    border-color: color-mix(in srgb, var(--art-primary) 38%, var(--default-border));
     box-shadow:
-      0 20px 52px -14px rgb(0 0 0 / 62%),
-      0 0 0 1px color-mix(in srgb, var(--art-primary) 16%, transparent),
-      inset 0 1px 0 color-mix(in srgb, var(--art-primary) 12%, transparent),
-      0 0 44px color-mix(in srgb, var(--art-primary) 14%, transparent);
-    transform: translateY(-4px);
+      0 16px 48px -12px rgb(0 0 0 / 58%),
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 22%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--art-primary) 14%, transparent),
+      0 0 40px color-mix(in srgb, var(--art-primary) 22%, transparent),
+      0 0 80px color-mix(in srgb, var(--art-primary) 10%, transparent);
   }
 
   .custom-table {
+    max-height: 550px;
     margin-top: 12px;
     overflow: auto;
     -webkit-overflow-scrolling: touch;
@@ -1490,7 +1730,6 @@
     border-radius: var(--radius-sm);
     transition:
       background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1),
-      transform 0.2s cubic-bezier(0, 0, 0.2, 1),
       box-shadow 0.25s cubic-bezier(0, 0, 0.2, 1),
       border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
@@ -1501,16 +1740,32 @@
 
   .table-row.row-hover {
     background: var(--bg-hover);
-    border-color: color-mix(in srgb, var(--art-primary) 22%, transparent);
+    border-color: color-mix(in srgb, var(--art-primary) 28%, transparent);
     box-shadow:
-      0 12px 34px -18px rgb(0 0 0 / 58%),
-      0 0 0 1px color-mix(in srgb, var(--art-primary) 12%, transparent);
-    transform: translateY(-1px);
+      0 8px 28px -14px rgb(0 0 0 / 52%),
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 18%, transparent),
+      0 0 24px color-mix(in srgb, var(--art-primary) 14%, transparent);
+  }
+
+  .col-network-cell {
+    min-width: 0;
+    max-width: 120px;
+  }
+
+  .col-network-cell > :deep(.el-tooltip__trigger) {
+    display: block;
+    max-width: 100%;
   }
 
   .col-network {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
     font-weight: 500;
     color: var(--text-secondary);
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .format-tag {
@@ -1597,19 +1852,18 @@
       0 12px 40px rgb(0 0 0 / 44%),
       inset 0 1px 0 color-mix(in srgb, var(--art-primary) 10%, transparent);
     transition:
-      transform 0.32s cubic-bezier(0, 0, 0.2, 1),
       box-shadow 0.32s cubic-bezier(0, 0, 0.2, 1),
       border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .ai-insight-panel:hover {
-    border-color: color-mix(in srgb, var(--art-primary) 32%, var(--default-border));
+    border-color: color-mix(in srgb, var(--art-primary) 38%, var(--default-border));
     box-shadow:
-      0 20px 52px -14px rgb(0 0 0 / 62%),
-      0 0 0 1px color-mix(in srgb, var(--art-primary) 16%, transparent),
-      inset 0 1px 0 color-mix(in srgb, var(--art-primary) 12%, transparent),
-      0 0 44px color-mix(in srgb, var(--art-primary) 14%, transparent);
-    transform: translateY(-4px);
+      0 16px 48px -12px rgb(0 0 0 / 58%),
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 22%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--art-primary) 14%, transparent),
+      0 0 40px color-mix(in srgb, var(--art-primary) 22%, transparent),
+      0 0 80px color-mix(in srgb, var(--art-primary) 10%, transparent);
   }
 
   .ai-panel-header {
@@ -1662,17 +1916,17 @@
     transition:
       background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
       border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-      transform 0.2s cubic-bezier(0, 0, 0.2, 1),
       box-shadow 0.25s cubic-bezier(0, 0, 0.2, 1);
   }
 
   .insight-card:hover {
     background: var(--bg-hover);
-    border-color: color-mix(in srgb, var(--art-primary) 28%, var(--default-border));
+    border-color: color-mix(in srgb, var(--art-primary) 32%, var(--default-border));
     box-shadow:
-      0 12px 34px -18px rgb(0 0 0 / 58%),
-      0 0 0 1px color-mix(in srgb, var(--art-primary) 12%, transparent);
-    transform: translateY(-2px);
+      0 10px 32px -16px rgb(0 0 0 / 55%),
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 18%, transparent),
+      0 0 28px color-mix(in srgb, var(--art-primary) 18%, transparent),
+      0 0 52px color-mix(in srgb, var(--art-primary) 8%, transparent);
   }
 
   .insight-card.insight-expanded {
@@ -1756,15 +2010,7 @@
   }
 
   @media (width <= 900px) {
-    .kpi-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-
     .right-panel {
-      grid-template-columns: 1fr;
-    }
-
-    .waterfall-grid {
       grid-template-columns: 1fr;
     }
   }
@@ -1779,17 +2025,14 @@
       width: 100%;
     }
 
-    .filters-panel {
+    .aapp-filter-panel {
       width: 100%;
     }
 
-    .filter-select--date,
-    .filter-select--country {
+    .aapp-filter-date,
+    .aapp-filter-select {
       width: 100%;
-    }
-
-    .kpi-grid {
-      grid-template-columns: 1fr 1fr;
+      min-width: 0;
     }
 
     .main-layout {
@@ -1798,25 +2041,28 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .fishbone-line::after,
+    .fishbone-chip::after,
+    .fishbone-dot::after {
+      animation: none !important;
+    }
+
     .kpi-card,
     .chart-panel,
-    .waterfall-panel,
     .table-panel,
     .ai-insight-panel,
-    .waterfall-item,
-    .filter-query-btn,
+    .aapp-query-btn,
     .back-btn,
-    :deep(.custom-select .el-input__wrapper) {
+    :deep(.aapp-filter-select .el-select__wrapper),
+    :deep(.aapp-filter-date .el-input__wrapper) {
       transition: none !important;
     }
 
     .kpi-card:hover,
     .kpi-card:active,
     .chart-panel:hover,
-    .waterfall-panel:hover,
     .table-panel:hover,
-    .ai-insight-panel:hover,
-    .waterfall-item:hover {
+    .ai-insight-panel:hover {
       filter: none !important;
       box-shadow: none !important;
       transform: none !important;

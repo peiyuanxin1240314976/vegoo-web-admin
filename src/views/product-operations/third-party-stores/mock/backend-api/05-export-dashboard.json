@@ -1,0 +1,98 @@
+{
+  "_comment": "商品运营 - 三方商店管理：导出仪表盘（对应页面右上角「导出」）。对应 types.ts: ThirdPartyStoresExportResponse。",
+  "fieldDescription": {
+    "request": {
+      "exportType": {
+        "type": "string",
+        "required": true,
+        "enum": ["dashboard"],
+        "description": "导出类型：dashboard 导出当前筛选条件下的仪表盘数据。"
+      },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "description": "终端平台筛选：空为全部；android / ios。"
+      },
+      "appStore": {
+        "type": "string",
+        "required": false,
+        "description": "应用商店维度，空为全部。"
+      },
+      "appId": {
+        "type": "string",
+        "required": false,
+        "description": "应用筛选 id，空为全部。"
+      },
+      "source": {
+        "type": "string",
+        "required": false,
+        "description": "广告平台，空为全部。"
+      },
+      "channel": {
+        "type": "string",
+        "required": false,
+        "description": "推广渠道，空为全部。"
+      },
+      "startDate": {
+        "type": "string",
+        "required": false,
+        "description": "查询开始日期（含），YYYY-MM-DD。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": false,
+        "description": "查询结束日期（含），YYYY-MM-DD。"
+      },
+      "currency": {
+        "type": "string",
+        "required": false,
+        "description": "展示货币代码，如 USD。"
+      }
+    },
+    "response": {
+      "data": {
+        "type": "ThirdPartyStoresExportResponse",
+        "required": true,
+        "description": "导出结果。网关包裹时位于 data 内。"
+      }
+    },
+    "ThirdPartyStoresExportResponse": {
+      "downloadUrl": {
+        "type": "string",
+        "required": true,
+        "description": "可下载链接（短期有效）。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "exportType": "dashboard",
+    "platform": "",
+    "appStore": "",
+    "appId": "",
+    "source": "",
+    "channel": "",
+    "startDate": "2026-02-26",
+    "endDate": "2026-03-05",
+    "currency": "USD"
+  },
+  "sampleResponse": {
+    "data": {
+      "downloadUrl": "https://example.com/download/third-party-stores-dashboard-export.xlsx?expires=2026-04-09T00:00:00Z"
+    }
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "点击页面右上角「导出」触发；请求体建议沿用当前筛选条件 + exportType=dashboard。"
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/product-operations/third-party-stores/export/dashboard",
+    "method": "POST",
+    "priority": "P2",
+    "requestBody": "exportType（必填） + 筛选字段（可选）",
+    "responseBody": "ThirdPartyStoresExportResponse（或网关包裹于 data）"
+  }
+}

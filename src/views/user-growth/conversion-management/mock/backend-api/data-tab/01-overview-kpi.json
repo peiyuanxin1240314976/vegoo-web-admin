@@ -1,0 +1,103 @@
+{
+  "_comment": "转化管理 data Tab — 顶部 KPI（单接口）。与 `02-table-rows`、`03-side-panels` 共用同一套 request 筛选。",
+  "fieldDescription": {
+    "request": {
+      "startDate": {
+        "type": "string",
+        "required": false,
+        "description": "查询起始日期（含），YYYY-MM-DD。与 endDate 成对；见 backend-fields「接口请求 · 日期范围」。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": false,
+        "description": "查询结束日期（含），YYYY-MM-DD。"
+      },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "enum": ["", "android", "ios"],
+        "description": "终端平台筛选。空字符串表示全部。"
+      },
+      "appId": {
+        "type": "string",
+        "required": false,
+        "description": "应用筛选（自有应用 ID）。空字符串表示全部。见 backend-fields「接口请求 · 应用筛选（appId）」。"
+      },
+      "source": {
+        "type": "string",
+        "required": false,
+        "enum": ["", "google", "meta", "tiktok", "mintegral"],
+        "description": "广告平台筛选（推荐）。"
+      },
+      "adPlatform": { "type": "string", "required": false, "description": "兼容字段，同 source。" },
+      "conversionType": {
+        "type": "string",
+        "required": false,
+        "description": "平台转化类型筛选（与 `08-meta-conversion-type-options` 的 value 对齐）。空字符串表示全部。"
+      }
+    },
+    "response": {
+      "kpi": { "type": "ConversionKpi", "required": true, "description": "顶部 KPI。" }
+    },
+    "ConversionKpi": {
+      "conversionCount": {
+        "type": "ConversionKpiItem",
+        "required": true,
+        "description": "转化次数 KPI。"
+      },
+      "conversionValue": {
+        "type": "ConversionKpiItem",
+        "required": true,
+        "description": "转化价值 KPI。"
+      },
+      "averageValue": {
+        "type": "ConversionKpiItem",
+        "required": true,
+        "description": "平均价值 KPI。"
+      },
+      "activeTypeCount": {
+        "type": "ConversionKpiItem",
+        "required": true,
+        "description": "活跃转化类型数 KPI。"
+      }
+    },
+    "ConversionKpiItem": {
+      "value": { "type": "number", "required": true, "description": "当前值。" },
+      "deltaPercent": { "type": "number", "required": true, "description": "环比变化百分比。" }
+    }
+  },
+  "sampleRequest": {
+    "startDate": "2026-03-11",
+    "endDate": "2026-03-17",
+    "platform": "",
+    "appId": "",
+    "source": "",
+    "adPlatform": "",
+    "conversionType": ""
+  },
+  "sampleResponse": {
+    "kpi": {
+      "conversionCount": { "value": 240000, "deltaPercent": 6.3 },
+      "conversionValue": { "value": 1523401, "deltaPercent": -3.1 },
+      "averageValue": { "value": 6.35, "deltaPercent": -5.2 },
+      "activeTypeCount": { "value": 6, "deltaPercent": 2.4 }
+    }
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/user-growth/conversion-management/data-tab/overview-kpi",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "同 data-tab 三接口共用筛选",
+    "responseBody": "kpi: ConversionKpi"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "data Tab 首屏/刷新",
+        "detail": "与 `02-table-rows`、`03-side-panels` 并行请求；参数快照一致。",
+        "prerequisite": "登录态"
+      }
+    ],
+    "dedupe": "可与 02/03 共缓存键（hash 筛选 JSON）。"
+  }
+}

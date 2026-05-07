@@ -484,6 +484,51 @@ html.dark .el-card {
   .el-picker-panel__footer {
     border-radius: 0 0 var(--el-border-radius-base) var(--el-border-radius-base);
   }
+
+  // 左侧快捷日期：留白、圆角条、hover 与主题主色对齐
+  .el-picker-panel__sidebar {
+    padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3);
+    border-right: 1px solid var(--el-border-color-lighter);
+    background: var(--el-fill-color-blank);
+    box-sizing: border-box;
+  }
+
+  .el-picker-panel__shortcut {
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: var(--space-2) var(--space-3);
+    border: none;
+    border-radius: var(--el-border-radius-base);
+    background: transparent;
+    color: var(--el-text-color-regular);
+    font-size: var(--el-font-size-small);
+    font-weight: 500;
+    line-height: 1.35;
+    text-align: left;
+    cursor: pointer;
+    transition:
+      background-color var(--duration-fast) var(--ease-default),
+      color var(--duration-fast) var(--ease-default);
+
+    + .el-picker-panel__shortcut {
+      margin-top: 2px;
+    }
+
+    &:hover {
+      background-color: var(--el-fill-color-light);
+      color: var(--el-color-primary);
+    }
+
+    &:focus-visible {
+      outline: 2px solid color-mix(in srgb, var(--el-color-primary) 45%, transparent);
+      outline-offset: 1px;
+    }
+
+    &:active {
+      background-color: color-mix(in srgb, var(--el-color-primary) 12%, var(--el-fill-color-blank));
+    }
+  }
 }
 
 // 优化树型菜单样式

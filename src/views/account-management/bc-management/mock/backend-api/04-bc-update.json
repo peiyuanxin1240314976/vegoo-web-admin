@@ -1,0 +1,55 @@
+{
+  "_comment": "BC 管理页面 - 编辑 BC。",
+  "fieldDescription": {
+    "request": {
+      "id": { "type": "string", "required": true, "description": "BC 记录 ID。" },
+      "bmName": { "type": "string", "required": false, "description": "BM 名称。" },
+      "group": { "type": "string", "required": false, "description": "归属组。" },
+      "status": { "type": "string", "required": false, "description": "状态。" },
+      "ownerType": { "type": "string", "required": false, "description": "开户主体。" },
+      "manager": { "type": "string", "required": false, "description": "管理员。" },
+      "banRecord": { "type": "string", "required": false, "description": "封户记录。" },
+      "banDesc": { "type": "string", "required": false, "description": "封户说明。" },
+      "remark": { "type": "string", "required": false, "description": "备注。" }
+    },
+    "response": {
+      "data": { "type": "BcItem", "required": true, "description": "更新后的 BC 数据。" }
+    }
+  },
+  "sampleRequest": { "id": "BM-102", "status": "可用", "remark": "已复核" },
+  "sampleResponse": {
+    "code": 200,
+    "message": "success",
+    "data": {
+      "id": "BM-102",
+      "bmId": "834567890123456",
+      "bmName": "Agency-A-BM",
+      "source": "Meta Ads",
+      "group": "Agency-A组",
+      "status": "可用",
+      "ownerType": "企业户",
+      "manager": "李四",
+      "banRecord": "有",
+      "banDesc": "历史封户已解封",
+      "createTime": "2026-01-08",
+      "remark": "已复核",
+      "linkedAccounts": 26,
+      "activeAccounts": 22,
+      "inactiveAccounts": 4,
+      "monthSpend": 78320,
+      "monthOpenCount": 4
+    }
+  },
+  "api": {
+    "url": "POST /api/account-management/bc-management/update",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "{ id, ...partialFields }",
+    "responseBody": "BcItem"
+  },
+  "interaction": {
+    "triggers": [{ "moment": "用户操作", "detail": "编辑弹窗提交后调用。" }],
+    "defaultSelection": "无",
+    "dedupe": "无"
+  }
+}

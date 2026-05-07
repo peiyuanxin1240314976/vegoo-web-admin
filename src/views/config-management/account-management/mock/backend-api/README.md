@@ -33,6 +33,7 @@
 - `18-open-account-create.json`：新建开户记录（P0）
 - `19-open-account-assign.json`：分配凭据并激活（P0）
 - `20-open-account-delete.json`：删除开户记录（P0）
+- `21-open-account-overview-stats.json`：开户统计卡片（P0）
 - `21-account-import.json`：广告账户批量导入（P1）
 - `22-agency-export.json`：代理商导出（P1）
 - `23-credential-export.json`：凭据导出（P1）
@@ -59,6 +60,7 @@
 | 凭据列表与 CRUD、验证 | 「凭据管理」Tab | `12` ~ `16` | `fetchCredentialTable` / `createCredential` / … / `deleteCredential` |
 | 凭据导出 / 批量验证 | Tab 内按钮 | `23` / `24` | `exportCredentialList` / `validateCredentialBatch` |
 | 开户列表与 CRUD | 「开户管理」Tab | `17` ~ `20` | `fetchOpenAccountTable` / `createOpenAccount` / `assignOpenAccountCredential` / `deleteOpenAccount` |
+| 开户统计卡片 | 「开户管理」Tab | `21-open-account-overview-stats.json` | `fetchOpenAccountOverviewStats` |
 | 飞书推送设置 | 开户 Tab 设置入口 | `25` / `26` | `fetchOpenAccountFeishuConfig` / `saveOpenAccountFeishuConfig` |
 | 开户记录导出 | 开户 Tab 导出 | `27` | `exportOpenAccountList` |
 

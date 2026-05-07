@@ -2,13 +2,36 @@
   "_comment": "代投分析 - 代投方消耗占比图。对应 types.ts: DonutChartItem[]。",
   "fieldDescription": {
     "request": {
-      "t_date": { "type": "string", "required": true, "description": "查询日期 YYYY-MM-DD。" }
+      "t_date": { "type": "string", "required": true, "description": "查询日期 YYYY-MM-DD。" },
+      "s_app_id": {
+        "type": "string",
+        "required": false,
+        "default": "all",
+        "description": "应用筛选（all=全部）。"
+      },
+      "agency_id": {
+        "type": "string",
+        "required": false,
+        "default": "all",
+        "description": "代投方筛选（all=全部）。"
+      },
+      "source": {
+        "type": "string",
+        "required": false,
+        "default": "all",
+        "description": "广告平台筛选（all=全部；值来自 meta/filter-options）。"
+      }
     },
     "response": {
       "donut": { "type": "DonutChartItem[]", "required": true, "description": "环形图数据。" }
     }
   },
-  "sampleRequest": { "t_date": "2026-03-07" },
+  "sampleRequest": {
+    "t_date": "2026-03-07",
+    "s_app_id": "all",
+    "agency_id": "all",
+    "source": "all"
+  },
   "sampleResponse": {
     "donut": [
       { "name": "GatherOne", "value": 198420, "color": "#3b82f6" },
@@ -20,7 +43,7 @@
     "url": "POST /api/v1/datacenter/analysis/business-insight/agency-analysis/chart/donut-spend-share",
     "method": "POST",
     "priority": "P1",
-    "requestBody": "t_date",
+    "requestBody": "t_date, s_app_id?, agency_id?, source?",
     "responseBody": "donut"
   }
 }

@@ -1,0 +1,142 @@
+{
+  "_comment": "账户管理 · 代理商 — 分页列表。对应 AgencyTableQuery / AgencyItem。",
+  "fieldDescription": {
+    "request": {
+      "current": {
+        "type": "number",
+        "required": true,
+        "description": "当前页码，从 1 开始。",
+        "default": 1
+      },
+      "size": { "type": "number", "required": true, "description": "每页条数。", "default": 20 },
+      "keyword": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "关键词，匹配代理商名称或 ID。"
+      },
+      "source": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "广告平台筛选，空字符串表示全部。"
+      },
+      "coopMode": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "合作模式筛选，空字符串表示全部。"
+      },
+      "status": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "状态筛选，空字符串表示全部。"
+      }
+    },
+    "response": {
+      "records": { "type": "AgencyItem[]", "required": true, "description": "当前页记录。" },
+      "total": { "type": "number", "required": true, "description": "总条数。" },
+      "current": { "type": "number", "required": true, "description": "当前页码。" },
+      "size": { "type": "number", "required": true, "description": "每页条数。" }
+    }
+  },
+  "sampleRequest": {
+    "current": 1,
+    "size": 20,
+    "keyword": "",
+    "source": "",
+    "coopMode": "",
+    "status": ""
+  },
+  "sampleResponse": {
+    "code": 200,
+    "message": "success",
+    "data": {
+      "records": [
+        {
+          "id": "AGY-001",
+          "agencyName": "星达传媒",
+          "source": "Meta Ads",
+          "coopMode": "授权代理",
+          "managedAccounts": 32,
+          "monthSpend": 128450,
+          "expireDate": "2025-01-14",
+          "status": "已合作",
+          "contact": "张三",
+          "email": "zhang3@xingda.com",
+          "phone": "+86 138-0000-1234",
+          "startDate": "2023-01-15",
+          "remark": "主要负责Meta平台开户",
+          "activeAccounts": 28,
+          "pausedAccounts": 4,
+          "monthRevenue": 8991,
+          "bcBmList": []
+        },
+        {
+          "id": "AGY-006",
+          "agencyName": "新兴传媒",
+          "source": "Kwai Ads",
+          "coopMode": "授权代理",
+          "managedAccounts": 4,
+          "monthSpend": 0,
+          "expireDate": "--",
+          "status": "洽谈中",
+          "contact": "周八",
+          "email": "zhou8@xinxing.com",
+          "phone": "+86 134-0000-1122",
+          "startDate": "",
+          "remark": "正在洽谈合作条款",
+          "activeAccounts": 0,
+          "pausedAccounts": 0,
+          "monthRevenue": 0,
+          "bcBmList": []
+        },
+        {
+          "id": "AGY-007",
+          "agencyName": "海外传媒",
+          "source": "Meta Ads",
+          "coopMode": "授权代理",
+          "managedAccounts": 6,
+          "monthSpend": 0,
+          "expireDate": "2024-12-31",
+          "status": "已终止",
+          "contact": "吴九",
+          "email": "wu9@haiwai.com",
+          "phone": "+86 133-0000-3344",
+          "startDate": "2022-01-01",
+          "remark": "合同到期后未续约",
+          "activeAccounts": 0,
+          "pausedAccounts": 6,
+          "monthRevenue": 0,
+          "bcBmList": []
+        }
+      ],
+      "total": 8,
+      "current": 1,
+      "size": 20
+    }
+  },
+  "api": {
+    "url": "POST /api/config-management/agency/table",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "AgencyTableQuery",
+    "responseBody": "PaginatedResponse<AgencyItem>"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "进入 `/account-management/agency` 后，`agency-tab.vue` 在 onMounted 时加载列表。",
+        "prerequisite": "`AccountApiSource.agencyTable === true` 时走本地 mock；为 false 时请求网关。"
+      },
+      {
+        "moment": "用户操作",
+        "detail": "关键词、广告平台、合作模式、状态变化时触发列表重算或刷新。"
+      }
+    ],
+    "defaultSelection": "current=1，size=20，筛选默认空字符串。",
+    "dedupe": "可按页面实现做请求防抖。"
+  }
+}

@@ -25,7 +25,7 @@
           "spend": 4800,
           "cpi": 2.25,
           "roi": 96,
-          "n_source": 1
+          "n_source": "1"
         },
         {
           "name": "Meta Ads",
@@ -33,7 +33,7 @@
           "spend": 2500,
           "cpi": 2.48,
           "roi": 91,
-          "n_source": 2
+          "n_source": "2"
         },
         {
           "name": "Pangle",
@@ -41,7 +41,7 @@
           "spend": 1072,
           "cpi": 2.61,
           "roi": 89,
-          "n_source": 7
+          "n_source": "7"
         }
       ],
       "hourlyData": [30, 60, 100, 220, 380, 620, 520, 650],

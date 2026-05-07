@@ -1,0 +1,326 @@
+{
+  "_comment": "付费分析 - 广告平台 IAP 转化 Tab · 表格。契约文件：02-tab-channel-tables.json。types: PaidAnalysisChannelTabTablesData。",
+  "fieldDescription": {
+    "request": {
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "起始日 YYYY-MM-DD（含）。"
+      },
+      "endDate": { "type": "string", "required": true, "description": "结束日 YYYY-MM-DD（含）。" },
+      "appId": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "应用 ID；与公用 meta appOptions.value 一致；空为全部。"
+      },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "终端平台；空为不限。"
+      },
+      "s_country_code": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "国家小写码；空为全部。"
+      },
+      "n_source": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "广告平台枚举 string；空为全部。"
+      }
+    },
+    "response": {
+      "channelRows": { "type": "array", "required": true, "description": "广告平台对比主表。" },
+      "roiCohortRows": { "type": "array", "required": true, "description": "ROI 区间表。" },
+      "retentionRows": {
+        "type": "array",
+        "required": true,
+        "description": "续订热力档位（按渠道）。"
+      }
+    },
+    "PaidAnalysisChannelRow": {
+      "channelName": { "type": "string", "required": true, "description": "广告平台名称。" },
+      "iapRevenue": { "type": "number", "required": true, "description": "IAP 收入 USD。" },
+      "revenueSharePercent": {
+        "type": "number",
+        "required": true,
+        "description": "收入占比 0–100。"
+      },
+      "payingUsers": { "type": "number", "required": true, "description": "付费人数。" },
+      "arppu": { "type": "number", "required": true, "description": "ARPPU USD。" },
+      "firstPayPeriodDays": {
+        "type": "number",
+        "required": true,
+        "description": "首次付费周期天。"
+      },
+      "retentionPercent": { "type": "number", "required": true, "description": "续订率 0–100。" },
+      "qualityScore": {
+        "type": "string",
+        "required": true,
+        "enum": ["★A+", "★A", "★B-", "★B+"],
+        "description": "质量评分展示文案。"
+      }
+    },
+    "PaidAnalysisRoiCohortRow": {
+      "periodLabel": {
+        "type": "string",
+        "required": true,
+        "description": "区间标签（如首日、7日）。"
+      },
+      "roiPercent": { "type": "number", "required": true, "description": "ROI 百分比数值。" },
+      "cpaPercent": { "type": "number", "required": true, "description": "CPA 相关占比。" },
+      "paidRevenue": { "type": "number", "required": true, "description": "付费收入。" },
+      "paidUsers": { "type": "number", "required": true, "description": "付费用户数。" },
+      "renewRatePercent": { "type": "number", "required": true, "description": "续订率。" },
+      "iapRevenue": { "type": "number", "required": true, "description": "IAP 收入。" },
+      "iapSharePercent": { "type": "number", "required": true, "description": "IAP 占比。" },
+      "iapOrders": { "type": "number", "required": true, "description": "IAP 订单数。" },
+      "iapUsers": { "type": "number", "required": true, "description": "IAP 用户数。" }
+    },
+    "PaidAnalysisChannelRetentionRow": {
+      "channelName": { "type": "string", "required": true, "description": "渠道名。" },
+      "month1Bucket": { "type": "string", "required": true, "description": "第 1 档展示桶。" },
+      "month2Bucket": { "type": "string", "required": true, "description": "第 2 档展示桶。" },
+      "month5Bucket": { "type": "string", "required": true, "description": "第 5 档展示桶。" }
+    }
+  },
+  "sampleRequest": {
+    "startDate": "2026-04-01",
+    "endDate": "2026-04-03",
+    "appId": "",
+    "platform": "",
+    "s_country_code": "",
+    "n_source": ""
+  },
+  "sampleResponse": {
+    "channelRows": [
+      {
+        "channelName": "Google",
+        "iapRevenue": 98420,
+        "revenueSharePercent": 72.4,
+        "payingUsers": 9234,
+        "arppu": 30.82,
+        "firstPayPeriodDays": 2.4,
+        "retentionPercent": 68.4,
+        "qualityScore": "★A+"
+      },
+      {
+        "channelName": "Facebook",
+        "iapRevenue": 98420,
+        "revenueSharePercent": 68.2,
+        "payingUsers": 1208,
+        "arppu": 30.82,
+        "firstPayPeriodDays": 1.3,
+        "retentionPercent": 69.2,
+        "qualityScore": "★A"
+      },
+      {
+        "channelName": "TikTok",
+        "iapRevenue": 17280,
+        "revenueSharePercent": 66.1,
+        "payingUsers": 833,
+        "arppu": 30.82,
+        "firstPayPeriodDays": 3.0,
+        "retentionPercent": 63.4,
+        "qualityScore": "★A+"
+      },
+      {
+        "channelName": "Mintegral",
+        "iapRevenue": 13630,
+        "revenueSharePercent": 81.3,
+        "payingUsers": 882,
+        "arppu": 30.82,
+        "firstPayPeriodDays": 2.4,
+        "retentionPercent": 54.3,
+        "qualityScore": "★B-"
+      },
+      {
+        "channelName": "AppLovin",
+        "iapRevenue": 17000,
+        "revenueSharePercent": 79.5,
+        "payingUsers": 509,
+        "arppu": 30.82,
+        "firstPayPeriodDays": 1.3,
+        "retentionPercent": 52.5,
+        "qualityScore": "★B-"
+      },
+      {
+        "channelName": "Organic",
+        "iapRevenue": 29990,
+        "revenueSharePercent": 72.4,
+        "payingUsers": 807,
+        "arppu": 30.82,
+        "firstPayPeriodDays": 2.4,
+        "retentionPercent": 72.1,
+        "qualityScore": "★B+"
+      },
+      {
+        "channelName": "其他",
+        "iapRevenue": 9800,
+        "revenueSharePercent": 52.4,
+        "payingUsers": 190,
+        "arppu": 12.41,
+        "firstPayPeriodDays": 1.8,
+        "retentionPercent": 52.4,
+        "qualityScore": "★B-"
+      }
+    ],
+    "roiCohortRows": [
+      {
+        "periodLabel": "首日",
+        "roiPercent": 32,
+        "cpaPercent": 6.3,
+        "paidRevenue": 16.58,
+        "paidUsers": 433,
+        "renewRatePercent": 79.6,
+        "iapRevenue": 16.92,
+        "iapSharePercent": 18.3,
+        "iapOrders": 10,
+        "iapUsers": 15
+      },
+      {
+        "periodLabel": "3日",
+        "roiPercent": 32,
+        "cpaPercent": 1.6,
+        "paidRevenue": 9.65,
+        "paidUsers": 263,
+        "renewRatePercent": 89.0,
+        "iapRevenue": 5.96,
+        "iapSharePercent": 46.8,
+        "iapOrders": 10,
+        "iapUsers": 32
+      },
+      {
+        "periodLabel": "7日",
+        "roiPercent": 32,
+        "cpaPercent": 8.2,
+        "paidRevenue": 7.95,
+        "paidUsers": 188,
+        "renewRatePercent": 77.5,
+        "iapRevenue": 9.99,
+        "iapSharePercent": 59.3,
+        "iapOrders": 12,
+        "iapUsers": 47
+      },
+      {
+        "periodLabel": "14日",
+        "roiPercent": 35,
+        "cpaPercent": 6.6,
+        "paidRevenue": 6.58,
+        "paidUsers": 262,
+        "renewRatePercent": 90.6,
+        "iapRevenue": 8.86,
+        "iapSharePercent": 50.6,
+        "iapOrders": 10,
+        "iapUsers": 38
+      },
+      {
+        "periodLabel": "30日",
+        "roiPercent": 90,
+        "cpaPercent": 10.0,
+        "paidRevenue": 7.68,
+        "paidUsers": 392,
+        "renewRatePercent": 78.7,
+        "iapRevenue": 9.99,
+        "iapSharePercent": 50.8,
+        "iapOrders": 21,
+        "iapUsers": 25
+      },
+      {
+        "periodLabel": "45日",
+        "roiPercent": 100,
+        "cpaPercent": 3.3,
+        "paidRevenue": 32.31,
+        "paidUsers": 387,
+        "renewRatePercent": 86.6,
+        "iapRevenue": 20.56,
+        "iapSharePercent": 30.1,
+        "iapOrders": 18,
+        "iapUsers": 17
+      },
+      {
+        "periodLabel": "60日",
+        "roiPercent": 100,
+        "cpaPercent": 20.3,
+        "paidRevenue": 36.39,
+        "paidUsers": 252,
+        "renewRatePercent": 87.9,
+        "iapRevenue": 12.96,
+        "iapSharePercent": 60.2,
+        "iapOrders": 10,
+        "iapUsers": 15
+      },
+      {
+        "periodLabel": "75日",
+        "roiPercent": 103,
+        "cpaPercent": 8.7,
+        "paidRevenue": 15.67,
+        "paidUsers": 127,
+        "renewRatePercent": 88.6,
+        "iapRevenue": 13.86,
+        "iapSharePercent": 70.9,
+        "iapOrders": 8,
+        "iapUsers": 5
+      }
+    ],
+    "retentionRows": [
+      {
+        "channelName": "Google",
+        "month1Bucket": ">65%",
+        "month2Bucket": ">65%",
+        "month5Bucket": ">65%"
+      },
+      {
+        "channelName": "Facebook",
+        "month1Bucket": ">65%",
+        "month2Bucket": "50%",
+        "month5Bucket": "65%"
+      },
+      {
+        "channelName": "Organic",
+        "month1Bucket": "50%",
+        "month2Bucket": "65%",
+        "month5Bucket": "65%"
+      },
+      {
+        "channelName": "TikTok",
+        "month1Bucket": "65%",
+        "month2Bucket": "65%",
+        "month5Bucket": "<50%"
+      },
+      {
+        "channelName": "Mintegral",
+        "month1Bucket": "<50%",
+        "month2Bucket": "50%",
+        "month5Bucket": "<50%"
+      },
+      {
+        "channelName": "AppLovin",
+        "month1Bucket": "<50%",
+        "month2Bucket": "<50%",
+        "month5Bucket": "<50%"
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/user-growth/paid-analysis/tab-channel/tables",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "startDate, endDate, appId?, platform?, s_country_code?, n_source?",
+    "responseBody": "PaidAnalysisChannelTabTablesData"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "进入 channel Tab 或点击检索",
+        "detail": "与 overview、charts 并行；表格区可紧跟首屏渲染。",
+        "prerequisite": "同 overview"
+      }
+    ],
+    "dedupe": "channelRows 需覆盖 qualityScore 全枚举以利 UI 色条联调。"
+  }
+}

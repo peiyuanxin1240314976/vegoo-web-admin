@@ -1,0 +1,161 @@
+{
+  "_comment": "付费分析 - 广告平台 IAP 转化 Tab · 概览。契约文件：本目录 02-tab-channel-overview.json（与 tables/charts 契约并列，无子文件夹）。types: PaidAnalysisChannelTabOverviewData。",
+  "fieldDescription": {
+    "request": {
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "起始日 YYYY-MM-DD（含）。"
+      },
+      "endDate": { "type": "string", "required": true, "description": "结束日 YYYY-MM-DD（含）。" },
+      "appId": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "应用 ID；与公用 meta appOptions.value 一致；空为全部。"
+      },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "终端平台；空为不限。"
+      },
+      "s_country_code": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "国家小写码；空为全部。"
+      },
+      "n_source": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "广告平台枚举 string；空为全部。"
+      }
+    },
+    "response": {
+      "kpis": {
+        "type": "array",
+        "required": true,
+        "description": "KPI 卡片（含 sparkData、sparkType）。"
+      },
+      "aiTips": {
+        "type": "array",
+        "required": true,
+        "description": "AI 洞察条目（id/color/text）。"
+      }
+    },
+    "PaidAnalysisChannelKpiItem": {
+      "label": { "type": "string", "required": true, "description": "KPI 标题。" },
+      "value": { "type": "string", "required": true, "description": "主展示值（可预格式化）。" },
+      "trendUp": { "type": "boolean", "required": true, "description": "趋势方向。" },
+      "trendVal": { "type": "string", "required": true, "description": "环比等文案。" },
+      "sub": { "type": "string", "required": true, "description": "副文案。" },
+      "color": { "type": "string", "required": true, "description": "主题色 CSS。" },
+      "sparkData": { "type": "array", "required": true, "description": "迷你序列数值。" },
+      "sparkType": {
+        "type": "string",
+        "required": true,
+        "enum": ["line", "bar"],
+        "description": "迷你图类型。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "startDate": "2026-04-01",
+    "endDate": "2026-04-03",
+    "appId": "",
+    "platform": "",
+    "s_country_code": "",
+    "n_source": ""
+  },
+  "sampleResponse": {
+    "kpis": [
+      {
+        "label": "IAP总收入",
+        "value": "$284,520",
+        "trendUp": true,
+        "trendVal": "18.4% vs.上月",
+        "sub": "",
+        "color": "#22d3ee",
+        "sparkData": [6800, 7200, 6900, 8100, 7600, 8400, 9200],
+        "sparkType": "line"
+      },
+      {
+        "label": "付费用户数",
+        "value": "9,234人",
+        "trendUp": true,
+        "trendVal": "",
+        "sub": "占DAU 5.4%",
+        "color": "#3b82f6",
+        "sparkData": [5800, 6200, 7100, 6500, 7800, 8100, 8900],
+        "sparkType": "bar"
+      },
+      {
+        "label": "平均ARPPU",
+        "value": "$30.82",
+        "trendUp": true,
+        "trendVal": "12.3% vs.上月",
+        "sub": "",
+        "color": "#8b5cf6",
+        "sparkData": [26, 28, 27, 29, 30, 28, 31],
+        "sparkType": "line"
+      },
+      {
+        "label": "订阅续订率",
+        "value": "68.4%",
+        "trendUp": true,
+        "trendVal": "3.2pp vs.上月",
+        "sub": "",
+        "color": "#f59e0b",
+        "sparkData": [62, 64, 63, 65, 67, 66, 68],
+        "sparkType": "line"
+      },
+      {
+        "label": "首次付费周期",
+        "value": "2.4天",
+        "trendUp": false,
+        "trendVal": "",
+        "sub": "中位数",
+        "color": "#10b981",
+        "sparkData": [3.1, 2.9, 2.8, 3.0, 2.7, 2.5, 2.4],
+        "sparkType": "bar"
+      }
+    ],
+    "aiTips": [
+      {
+        "id": 1,
+        "color": "#10b981",
+        "text": "Organic用户续订率最高(78.6%)，远高于付费广告平台，建议加大自然量运营"
+      },
+      {
+        "id": 2,
+        "color": "#f59e0b",
+        "text": "Mintegral用户首次付费周期最长(3.2天)，建议优化新手引导流程"
+      },
+      {
+        "id": 3,
+        "color": "#22d3ee",
+        "text": "ROI在45日达到回本点(100%)，建议广告预算以45天为优化周期"
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/user-growth/paid-analysis/tab-channel/overview",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "startDate, endDate, appId?, platform?, s_country_code?, n_source?",
+    "responseBody": "PaidAnalysisChannelTabOverviewData"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "进入 channel Tab 或点击检索",
+        "detail": "与 tables、charts 可并行请求；首屏优先渲染本段。",
+        "prerequisite": "日期合法；筛选「全部」映射空串"
+      }
+    ],
+    "defaultSelection": "与顶栏 filters 一致；单日筛选时 startDate=endDate。",
+    "dedupe": "kpis 与 aiTips 仅随筛选变更；可单独缓存 TTL。"
+  }
+}

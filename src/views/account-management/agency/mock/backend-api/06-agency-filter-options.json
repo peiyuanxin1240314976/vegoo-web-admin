@@ -1,0 +1,56 @@
+{
+  "_comment": "账户管理 · 代理商 — 页面独有筛选项（合作模式、状态）。广告平台选项复用 cockpit meta-filter store，不在此重复定义。",
+  "fieldDescription": {
+    "request": {},
+    "response": {
+      "coopModeOptions": {
+        "type": "OptionItem[]",
+        "required": true,
+        "description": "合作模式筛选项（value 为空字符串表示全部）。"
+      },
+      "statusOptions": {
+        "type": "OptionItem[]",
+        "required": true,
+        "description": "状态筛选项（value 为空字符串表示全部）。"
+      }
+    },
+    "OptionItem": {
+      "label": { "type": "string", "required": true, "description": "选项展示文案。" },
+      "value": { "type": "string", "required": true, "description": "选项值，全部为 \"\"。" }
+    }
+  },
+  "sampleRequest": {},
+  "sampleResponse": {
+    "data": {
+      "coopModeOptions": [
+        { "label": "全部", "value": "" },
+        { "label": "授权代理", "value": "授权代理" },
+        { "label": "直接开户", "value": "直接开户" }
+      ],
+      "statusOptions": [
+        { "label": "全部", "value": "" },
+        { "label": "已合作", "value": "已合作" },
+        { "label": "待开通", "value": "洽谈中" },
+        { "label": "已到期", "value": "已到期" },
+        { "label": "已终止", "value": "已终止" }
+      ]
+    }
+  },
+  "api": {
+    "url": "POST /api/config-management/agency/filter-options",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "{}",
+    "responseBody": "{ coopModeOptions, statusOptions }"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面初始化（可选）",
+        "detail": "页面加载时获取独有筛选项；也可前端静态维护。"
+      }
+    ],
+    "defaultSelection": "各筛选默认选中 value = \"\"。",
+    "dedupe": "无"
+  }
+}

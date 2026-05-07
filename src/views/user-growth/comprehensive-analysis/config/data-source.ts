@@ -1,14 +1,14 @@
 /**
- * 综合分析 - 数据源开关（小模块内 config，与 `mock/backend-api` 契约 1:1）
+ * 综合分析 - 数据源开关（小模块内 config，与 `mock/backend-api` 契约 **02～08** 对应）
  *
- * - `true` = 使用本地 Mock（`views/user-growth/comprehensive-analysis/mock/comprehensive-analysis-api-mock.ts`）
- * - `false` = 走真实 HTTP（`src/api/user-growth/comprehensive-analysis.ts`）
+ * - `true` = 使用本地 Mock（`mock/comprehensive-analysis-api-mock.ts`）
+ * - `false` = 走真实 HTTP（`src/api/user-growth/comprehensive-analysis.ts` 内 `request.post`）
  *
- * 默认全部为 `false`，统一走线上 HTTP；本地调试可将对应项改为 `true`。
+ * 筛选项 **不在此枚举**：公用 **`GET .../cockpit/meta-filter-options`** 由 `useCockpitMetaFilterStore` 拉取。
+ *
+ * 当前默认全部为 `true`（离线开发）；联调网关时将对应 endpoint 改为 `false`。
  */
 export enum ComprehensiveAnalysisEndpoint {
-  /** 01-meta-filter-options */
-  MetaFilterOptions = 'metaFilterOptions',
   /** 02-kpi */
   Kpi = 'kpi',
   /** 03-platform-cpi-bar */
@@ -26,7 +26,6 @@ export enum ComprehensiveAnalysisEndpoint {
 }
 
 export const COMPREHENSIVE_ANALYSIS_USE_MOCK: Record<ComprehensiveAnalysisEndpoint, boolean> = {
-  [ComprehensiveAnalysisEndpoint.MetaFilterOptions]: false,
   [ComprehensiveAnalysisEndpoint.Kpi]: false,
   [ComprehensiveAnalysisEndpoint.PlatformCpiBar]: false,
   [ComprehensiveAnalysisEndpoint.AppCpiRank]: false,

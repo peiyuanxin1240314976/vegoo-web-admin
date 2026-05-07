@@ -13,14 +13,32 @@ export enum TextManagementEndpoint {
   /** 02-audit-word-lists.json */
   AuditWordLists = 'auditWordLists',
   /** 03-translate.json */
-  Translate = 'translate'
+  Translate = 'translate',
+  /** 04-audit-confirm.json */
+  AuditConfirm = 'auditConfirm',
+  /** 05-audit-rerun.json */
+  AuditRerun = 'auditRerun',
+  /** 06-translations-import.json */
+  TranslationsImport = 'translationsImport',
+  /** 07-translations-export.json */
+  TranslationsExport = 'translationsExport',
+  /** 08-translation-edit-save.json */
+  TranslationEditSave = 'translationEditSave',
+  /** 09-submit-store.json */
+  SubmitStore = 'submitStore'
 }
 
 /** 是否对该接口使用 Mock（逐项修改） */
 export const TEXT_MANAGEMENT_USE_MOCK: Record<TextManagementEndpoint, boolean> = {
-  [TextManagementEndpoint.StoreListingDraft]: true,
-  [TextManagementEndpoint.AuditWordLists]: true,
-  [TextManagementEndpoint.Translate]: true
+  [TextManagementEndpoint.StoreListingDraft]: false,
+  [TextManagementEndpoint.AuditWordLists]: false,
+  [TextManagementEndpoint.Translate]: false,
+  [TextManagementEndpoint.AuditConfirm]: false,
+  [TextManagementEndpoint.AuditRerun]: false,
+  [TextManagementEndpoint.TranslationsImport]: false,
+  [TextManagementEndpoint.TranslationsExport]: false,
+  [TextManagementEndpoint.TranslationEditSave]: false,
+  [TextManagementEndpoint.SubmitStore]: false
 }
 
 export function isTextManagementEndpointMock(endpoint: TextManagementEndpoint): boolean {

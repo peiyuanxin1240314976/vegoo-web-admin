@@ -1,10 +1,10 @@
 /**
- * 应用分配接口 Mock，与 `mock/backend-api` 契约 sample 形态一致（unwrap 后的 data）。
+ * 应用分配接口 Mock，与 `mock/backend-api` 契约 sample 形态一致（unwrap 后的 data；export 为本地 blob 模拟）。
  */
-import { getAppTodayYYYYMMDD } from '@/utils/app-now'
+import FileSaver from 'file-saver'
+import { getAppNow, getAppTodayYYYYMMDD } from '@/utils/app-now'
 import type {
   AppAssignableAppMetaItem,
-  AppAssignmentExportResponse,
   AppAssignmentMetaAssignableAppsResponse,
   AppAssignmentItem,
   AppAssignmentMetaFilterResponse,
@@ -15,8 +15,8 @@ import type {
   AssignmentUpdatePayload
 } from '../types'
 import {
-  adPlatformOptions,
   appOptions,
+  assignmentAdPlatformLabel,
   assignmentMockList,
   optimizerOptions,
   versionsByApp
@@ -32,7 +32,7 @@ function filterAssignments(q: AssignmentTableQuery): AppAssignmentItem[] {
   return assignmentMockList.filter((item) => {
     if (!matchKeyword(item, q.keyword ?? '')) return false
     if (q.platform && item.platform !== q.platform) return false
-    if (q.source && item.adPlatform !== q.source) return false
+    if (q.source && item.source !== q.source) return false
     if (q.optimizer && item.optimizer !== q.optimizer) return false
     if (q.status && item.status !== q.status) return false
     return true
@@ -53,7 +53,6 @@ export function mockFetchAppAssignmentOverview(): Promise<AppAssignmentOverviewR
 
 export function mockFetchAppAssignmentMetaFilterOptions(): Promise<AppAssignmentMetaFilterResponse> {
   return Promise.resolve({
-    adPlatformOptions,
     optimizerOptions
   })
 }
@@ -112,7 +111,8 @@ export function mockCreateAppAssignment(data: AssignmentCreatePayload): Promise<
     appId: data.appId,
     iconColor: appMeta?.iconColor ?? '#3b82f6',
     platform: data.platform,
-    adPlatform: data.adPlatform,
+    source: data.source,
+    adPlatform: assignmentAdPlatformLabel(data.source),
     optimizer: data.optimizer,
     configVersionId: data.configVersionId,
     configVersionLabel: labelForVersion(data.configVersionId, versions),
@@ -128,7 +128,7 @@ export function mockCreateAppAssignment(data: AssignmentCreatePayload): Promise<
         time: `${now} 10:00:00`,
         type: '初始分配',
         operator: '当前用户',
-        content: `初始分配：应用 ${appMeta?.appName ?? data.appId}-${data.platform}-${data.adPlatform} 分配给 ${data.optimizer}`,
+        content: `初始分配：应用 ${appMeta?.appName ?? data.appId}-${data.platform}-${assignmentAdPlatformLabel(data.source)} 分配给 ${data.optimizer}`,
         note: data.changeReason || '-',
         status: '有效'
       }
@@ -146,7 +146,8 @@ export function mockUpdateAppAssignment(data: AssignmentUpdatePayload): Promise<
   const versions = structuredClone(prev.availableVersions)
   const next: AppAssignmentItem = {
     ...prev,
-    adPlatform: data.adPlatform,
+    source: data.source,
+    adPlatform: assignmentAdPlatformLabel(data.source),
     optimizer: data.optimizer,
     note: data.note,
     configVersionId: data.configVersionId,
@@ -171,9 +172,34 @@ export function mockUpdateAppAssignment(data: AssignmentUpdatePayload): Promise<
   return Promise.resolve(next)
 }
 
-export function mockExportAppAssignmentList(
+function csvCell(value: string) {
+  if (/[,"\n\r]/.test(value)) return `"${value.replace(/"/g, '""')}"`
+  return value
+}
+
+/** Mock：生成与列表筛选一致的 CSV 并触发下载（模拟文件流） */
+export async function mockExportAppAssignmentList(
   params: Partial<AssignmentTableQuery>
-): Promise<AppAssignmentExportResponse> {
-  void params
-  return Promise.resolve({ fileToken: 'app-assignment-export-20260327' })
+): Promise<void> {
+  const q: AssignmentTableQuery = {
+    keyword: params.keyword ?? '',
+    platform: params.platform ?? '',
+    source: params.source ?? '',
+    optimizer: params.optimizer ?? '',
+    status: params.status ?? '',
+    current: 1,
+    size: 10000
+  }
+  const rows = filterAssignments(q)
+  const header = '应用名称,应用ID,平台,广告平台编码,广告平台,优化师,状态,分配时间'
+  const lines = [
+    '\uFEFF' + header,
+    ...rows.map((r) =>
+      [r.appName, r.appId, r.platform, r.source, r.adPlatform, r.optimizer, r.status, r.assignTime]
+        .map((c) => csvCell(String(c)))
+        .join(',')
+    )
+  ]
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' })
+  FileSaver.saveAs(blob, `app-assignment-mock_${getAppNow().getTime()}.csv`)
 }

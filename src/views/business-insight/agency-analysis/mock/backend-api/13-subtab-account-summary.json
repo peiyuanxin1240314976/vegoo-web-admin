@@ -1,0 +1,130 @@
+{
+  "_comment": "代投分析 - 非汇总子 Tab：账户汇总表。对应 types.ts: AgencySubTabAccountSummaryPayload。",
+  "fieldDescription": {
+    "request": {
+      "agencyTab": {
+        "type": "string",
+        "required": true,
+        "enum": ["gatherone", "kuainiao", "chuhai"],
+        "description": "当前子 Tab（后三个 Tab）标识。"
+      },
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "开始日期 YYYY-MM-DD（汇总区间起始）。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": true,
+        "description": "结束日期 YYYY-MM-DD（汇总区间结束）。"
+      },
+      "appId": {
+        "type": "string",
+        "required": false,
+        "default": "all",
+        "description": "应用 ID；all 代表全部。"
+      },
+      "source": {
+        "type": "string",
+        "required": false,
+        "default": "all",
+        "description": "广告平台（source）；all 代表全部。"
+      }
+    },
+    "response": {
+      "rows": {
+        "type": "AgencySubTabAccountSummaryRow[]",
+        "required": true,
+        "description": "账户汇总表格行；按 app/platform/source 进行 UI 合并展示。"
+      }
+    },
+    "AgencySubTabAccountSummaryRow": {
+      "app": { "type": "string", "required": true, "description": "应用名称（展示）。" },
+      "platform": {
+        "type": "string",
+        "required": true,
+        "description": "平台（展示：安卓/iOS 等）。"
+      },
+      "source": { "type": "string", "required": true, "description": "广告平台（展示名）。" },
+      "accountId": { "type": "string", "required": true, "description": "广告账户 ID（展示）。" },
+      "accountName": {
+        "type": "string",
+        "required": true,
+        "description": "广告账户名称（展示）。"
+      },
+      "spend": { "type": "string", "required": true, "description": "广告支出（展示字符串）。" },
+      "roi1": { "type": "string", "required": true, "description": "首日 ROI（展示字符串）。" },
+      "cpa": { "type": "string", "required": true, "description": "CPA（展示字符串；无则 '-'）。" },
+      "cpi": { "type": "string", "required": true, "description": "CPI（展示字符串）。" },
+      "installs": {
+        "type": "string",
+        "required": true,
+        "description": "代投买量用户数（展示字符串）。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "agencyTab": "gatherone",
+    "startDate": "2026-03-04",
+    "endDate": "2026-03-10",
+    "appId": "all",
+    "source": "all"
+  },
+  "sampleResponse": {
+    "rows": [
+      {
+        "app": "FileRecovery",
+        "platform": "安卓",
+        "source": "Facebook",
+        "accountId": "1196169169136013",
+        "accountName": "GO_FB_FR1_ZL_PG03",
+        "spend": "$2259",
+        "roi1": "101%",
+        "cpa": "-",
+        "cpi": "0.09",
+        "installs": "26526"
+      },
+      {
+        "app": "FileRecovery",
+        "platform": "安卓",
+        "source": "Facebook",
+        "accountId": "1643261666838590",
+        "accountName": "GO_FB_FR1_ZL_PG04",
+        "spend": "$586",
+        "roi1": "100%",
+        "cpa": "-",
+        "cpi": "0.03",
+        "installs": "21926"
+      },
+      {
+        "app": "FileRecovery",
+        "platform": "安卓",
+        "source": "Facebook",
+        "accountId": "0000000000000000",
+        "accountName": "GO_FB_FR1_ZL_PG05",
+        "spend": "$0",
+        "roi1": "0%",
+        "cpa": "-",
+        "cpi": "-",
+        "installs": "0"
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/business-insight/agency-analysis/subtab/table/account-summary",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "agencyTab, startDate, endDate, appId?, source?",
+    "responseBody": "rows"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户切换到非汇总子 Tab",
+        "detail": "加载「账户汇总」表格。",
+        "prerequisite": "依赖当前筛选条件（agencyTab/日期范围/应用/广告平台）。"
+      }
+    ],
+    "defaultSelection": "agencyTab 由 Tab 决定；appId/source 默认 all；日期范围由页面选择器确定。"
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "_comment": "月报-广告平台分国家。",
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/report/monthly/platform-country",
+    "method": "POST",
+    "priority": "P1"
+  },
+  "interaction": {
+    "triggers": [{ "moment": "切换月报平台分国家 Tab", "detail": "加载树形与平铺结构" }]
+  },
+  "sampleRequest": {
+    "startDate": "2026-04-01",
+    "endDate": "2026-04-30",
+    "appId": "",
+    "appIds": [],
+    "platformList": [],
+    "sourceList": [],
+    "countryCodeList": [],
+    "account": ""
+  },
+  "sampleResponse": {
+    "osEntries": [
+      {
+        "id": "android",
+        "name": "安卓",
+        "platforms": [
+          {
+            "id": "android-google",
+            "name": "Google",
+            "spend": "$1,245,600",
+            "change": "+8.1%",
+            "countries": [{ "id": "g-de", "name": "德国", "flag": "🇩🇪", "spend": "$387,300" }]
+          }
+        ]
+      }
+    ],
+    "flatRows": [
+      {
+        "id": "android",
+        "level": "os",
+        "osPlatform": "安卓",
+        "adSpend": "$2,564,400",
+        "cpi": "$1.62",
+        "cpm": "$9.40",
+        "cpc": "$0.37",
+        "roi1d": "35%",
+        "roi3d": "63%",
+        "roi7d": "91%",
+        "roi14d": "94%",
+        "roi30d": "104%",
+        "profit": "$2,206,500"
+      },
+      {
+        "id": "android-google",
+        "level": "platform",
+        "platform": "Google",
+        "adSpend": "$1,245,600",
+        "change": "+8.1%",
+        "cpi": "$1.26",
+        "cpm": "$9.80",
+        "cpc": "$0.38",
+        "roi1d": "38%",
+        "roi3d": "68%",
+        "roi7d": "98%",
+        "roi14d": "101%",
+        "roi30d": "113%",
+        "profit": "$963,400"
+      },
+      {
+        "id": "android-google-de",
+        "level": "country",
+        "country": "德国",
+        "countryFlag": "🇩🇪",
+        "adSpend": "$387,300",
+        "change": "+7.4%",
+        "cpi": "$1.26",
+        "cpm": "$9.20",
+        "cpc": "$0.36",
+        "roi1d": "37%",
+        "roi3d": "66%",
+        "roi7d": "96%",
+        "roi14d": "99%",
+        "roi30d": "110%",
+        "profit": "$262,000"
+      }
+    ],
+    "totalPlatforms": 8,
+    "totalCountries": 22
+  }
+}

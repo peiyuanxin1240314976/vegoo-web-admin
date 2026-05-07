@@ -24,15 +24,15 @@ type UseMock = boolean
 
 /** 列表页 / 弹窗 / 抽屉涉及的接口与契约 JSON 一一对应 */
 const AppAssignmentApiMockDefaults: Record<AppAssignmentEndpoint, UseMock> = {
-  [AppAssignmentEndpoint.Overview]: true,
-  [AppAssignmentEndpoint.MetaFilterOptions]: true,
-  [AppAssignmentEndpoint.MetaAssignableApps]: true,
-  [AppAssignmentEndpoint.MetaPerformanceVersions]: true,
-  [AppAssignmentEndpoint.Table]: true,
-  [AppAssignmentEndpoint.Detail]: true,
-  [AppAssignmentEndpoint.Create]: true,
-  [AppAssignmentEndpoint.Update]: true,
-  [AppAssignmentEndpoint.Export]: true
+  [AppAssignmentEndpoint.Overview]: false,
+  [AppAssignmentEndpoint.MetaFilterOptions]: false,
+  [AppAssignmentEndpoint.MetaAssignableApps]: false,
+  [AppAssignmentEndpoint.MetaPerformanceVersions]: false,
+  [AppAssignmentEndpoint.Table]: false,
+  [AppAssignmentEndpoint.Detail]: false,
+  [AppAssignmentEndpoint.Create]: false,
+  [AppAssignmentEndpoint.Update]: false,
+  [AppAssignmentEndpoint.Export]: false
 }
 
 export function isAppAssignmentEndpointMock(endpoint: AppAssignmentEndpoint): boolean {

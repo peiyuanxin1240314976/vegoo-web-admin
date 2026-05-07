@@ -2,7 +2,11 @@
   import { ref, computed, watch } from 'vue'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import type { AppContent, Translation, AIModel } from './types'
-  import { fetchTextManagementTranslate } from './api/text-management'
+  import {
+    fetchTextManagementTranslate,
+    fetchTranslationEditSave,
+    fetchTranslationsExport
+  } from './api/text-management'
 
   const props = defineProps<{
     appContent: AppContent
@@ -203,7 +207,7 @@
     editingFull.value = t.fullDesc
   }
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (!editorLang.value) return
     editorLang.value.appName = editingName.value
     editorLang.value.shortDesc = editingShort.value
@@ -211,8 +215,13 @@
     editorLang.value.appNameCount = editingName.value.length
     editorLang.value.shortDescCount = editingShort.value.length
     editorLang.value.fullDescCount = editingFull.value.length
-    emit('update:translations', [...localTranslations.value])
-    ElMessage.success('译文已保存')
+    try {
+      await fetchTranslationEditSave({ translation: editorLang.value })
+      emit('update:translations', [...localTranslations.value])
+      ElMessage.success('译文已保存')
+    } catch {
+      ElMessage.error('保存失败，请检查接口后重试')
+    }
   }
 
   const discardEdit = () => {
@@ -252,17 +261,8 @@
       t.fullDescCount = res.fullDesc.length
       t.status = t.appNameCount > t.appNameLimit ? 'over_limit' : 'completed'
     } catch {
-      await new Promise((r) => setTimeout(r, 1200 + Math.random() * 800))
-      const mockAppName = `[${t.langCode}] ` + props.appContent.appName.substring(0, 12)
-      const mockShort = `[${t.langCode}] ` + props.appContent.shortDesc.substring(0, 40)
-      const mockFull = `[${t.langCode}] ` + props.appContent.fullDesc.substring(0, 200)
-      t.appName = mockAppName
-      t.shortDesc = mockShort
-      t.fullDesc = mockFull
-      t.appNameCount = mockAppName.length
-      t.shortDescCount = mockShort.length
-      t.fullDescCount = mockFull.length
-      t.status = t.appNameCount > t.appNameLimit ? 'over_limit' : 'completed'
+      t.status = 'pending'
+      ElMessage.error(`译化失败：${t.lang}，请检查接口后重试`)
     }
 
     emit('update:translations', [...localTranslations.value])
@@ -278,16 +278,18 @@
   }
 
   // ─── Export ───────────────────────────────────────────────────────────────────
-  const exportSelected = () => {
+  const exportSelected = async () => {
     const selected = localTranslations.value.filter((t) => t.selected)
-    const data = JSON.stringify(selected, null, 2)
-    const blob = new Blob([data], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'translations.json'
-    a.click()
-    URL.revokeObjectURL(url)
+    try {
+      await fetchTranslationsExport({
+        format: 'json',
+        scope: 'selected',
+        langCodes: selected.map((t) => t.langCode)
+      })
+      ElMessage.success(`已发起导出，语种数：${selected.length}`)
+    } catch {
+      ElMessage.error('导出失败，请检查接口后重试')
+    }
   }
 
   // 点击行空白区域切换选中，与左侧语种标签联动（避免与按钮、勾选框重复触发）
@@ -317,7 +319,7 @@
       <div class="config-block">
         <div class="block-label">应用信息</div>
         <div class="app-info-row">
-          <span class="app-name">PeopleSearch - People Finder</span>
+          <span class="app-name">{{ appContent.appName || '--' }}</span>
           <span class="platform-badge gplay">▶ Google Play</span>
         </div>
       </div>

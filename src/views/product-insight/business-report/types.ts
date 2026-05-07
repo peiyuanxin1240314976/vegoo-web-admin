@@ -36,10 +36,13 @@ export interface AppListItem {
   adSpendChange?: number // 广告支出环比变化率
   activeCampaigns?: number // 在投广告系列数
   pausedCampaigns?: number // 已暂停广告系列数
+  campaignCount?: number // 广告系列数（new, from API field campaignCount）
   countries?: number // 投放国家数
+  countryCount?: number // 投放国家数（new, from API field countryCount）
   isOverall?: boolean // 是否为整体汇总行
   sparkline?: number[] // 迷你图数据（8 个点）
-  paidUsers?: number // 买量用户（万）；对应其他接口的 acquisitions 字段
+  paidUsers?: number // 买量用户（万）(legacy)
+  buyingUsers?: number // 买量用户（万）(new, from API field buyingUsers)
   platformBreakdown?: Array<{
     name: string
     color: string
@@ -260,35 +263,14 @@ export interface ApcOsEntry {
   platforms: ApcPlatformEntry[]
 }
 
-// ── 月报对比模式 ──────────────────────────────────────────────
-export interface CompareAppData {
-  id: string
-  name: string
-  color: string
-  revenue: string
-  revenueChange: number
-  mau: string
-  mauChange: number
-  profit: string
-  profitChange: number
-  fee: string
-  feeChange: number
-  paid: string
-  paidChange: number
-  ad: string
-  adChange: number
-}
-
-export interface CompareMetricRow {
-  metric: string
-  values: Record<string, string> // appId → 展示值
-  bestId: string
-}
-
 // ── 飞书推送配置 ──────────────────────────────────────────────
 export interface LarkPushConfig {
   groups: LarkTarget[] // 飞书群列表
   persons: LarkTarget[] // 指定人员列表
+  /** 可选：后端返回的最近一次推送时间（ISO 字符串或展示文本） */
+  lastPushAt?: string
+  /** 可选：后端返回的最近一次推送目标（群名称） */
+  lastPushTarget?: string
   daily: {
     enabled: boolean
     day: string // '每天' / '工作日'
@@ -328,17 +310,45 @@ export interface ApiResponse<T> {
   timestamp: number // Unix 时间戳（ms）
 }
 
+/** 顶栏筛选：`appIds` 为应用 id 列表（页面单选时长度 0～1，`[]` 不限）；`platformList` 等空数组表示不限 */
+export type ReportTopBarFilterArrays = {
+  appIds: string[]
+  platformList: string[]
+  sourceList: string[]
+  countryCodeList: string[]
+}
+
 /** 报告查询参数（所有模块通用） */
-export interface ReportQueryParams {
+export interface ReportQueryParams extends ReportTopBarFilterArrays {
   period: ReportPeriod // 'daily' | 'weekly' | 'monthly'
-  appId?: string // 不传则返回整体数据
-  date?: string // ISO 日期（'2026-03-23'）；不传取最新可用日期
+  startDate: string // YYYY-MM-DD
+  endDate: string // YYYY-MM-DD
+  /** 侧栏当前选中应用；整体为 \"\" */
+  appId: string
+  account?: string // 广告账户；不限传 ""
+  currentPage?: number // 分页页码（从 0 开始，仅在需要分页的接口使用）
+  pageSize?: number // 每页条数（仅在需要分页的接口使用）
   tab?: ReportTab
+}
+
+/** 侧栏应用列表（独立接口；`appId` 固定空串表示拉列表，与侧栏选中无关） */
+export interface ReportAppListQueryParams extends ReportTopBarFilterArrays {
+  period: ReportPeriod
+  startDate: string
+  endDate: string
+  /** 与页面二级 Tab 一致，用于侧栏卡片次要指标口径 */
+  tab: ReportTab
+  account?: string
+}
+
+/** POST …/report/{period}/app-list 业务体 */
+export interface ReportAppListResponse {
+  items: AppListItem[]
 }
 
 // ── 各模块接口响应类型 ────────────────────────────────────────
 
-/** GET /api/v1/datacenter/analysis/report/summary */
+/** POST /api/v1/datacenter/analysis/report/{period}/overview */
 export interface SummaryResponse {
   kpis: KpiMetric[]
   userMetrics: UserMetricRow[]
@@ -346,23 +356,20 @@ export interface SummaryResponse {
   roiMetrics: RoiRow[]
   retentionMetrics: RetentionRow[]
   feeDeductions?: FeeItem[] // 仅月报（period='monthly'）时返回
-  appList: AppListItem[]
 }
 
-/** GET /api/v1/datacenter/analysis/report/ad-platform */
+/** POST /api/v1/datacenter/analysis/report/{period}/ad-platform */
 export interface AdPlatformResponse {
   platforms: AdPlatformCard[]
-  appList: AppListItem[]
 }
 
-/** GET /api/v1/datacenter/analysis/report/by-country */
+/** POST /api/v1/datacenter/analysis/report/{period}/by-country */
 export interface ByCountryResponse {
   rows: CountryRow[]
   othersRow: CountryRow // 合并的"其他 N 个国家"行
-  appList: AppListItem[]
 }
 
-/** GET /api/v1/datacenter/analysis/report/platform-country */
+/** POST /api/v1/datacenter/analysis/report/{period}/platform-country */
 export interface PlatformCountryResponse {
   osEntries: ApcOsEntry[] // AdPlatformByCountry 组件使用（结构化）
   flatRows: PlatformCountryRow[] // DailyPlatformCountry 等组件使用（平铺层级）
@@ -370,10 +377,12 @@ export interface PlatformCountryResponse {
   totalCountries: number
 }
 
-/** GET /api/v1/datacenter/analysis/report/campaigns */
+/** POST /api/v1/datacenter/analysis/report/{period}/campaigns */
 export interface CampaignsResponse {
+  currentPage: number
+  pageSize: number
+  total: number
   rows: CampaignRow[]
-  appList: AppListItem[]
 }
 
 /** GET /api/v1/lark/push-config */
@@ -384,3 +393,55 @@ export interface CampaignsResponse {
 
 /** POST /api/v1/lark/push-now → 立即推送一次 */
 // 请求体为 LarkPushConfig，响应体为 ApiResponse<null>
+
+/** 对比模式请求参数（三周期通用） */
+export interface CompareQueryParams extends ReportQueryParams {
+  /** 对比勾选的应用 id（最多 5 个）；与顶栏范围 `appIds` 分列，避免请求体键名冲突 */
+  compareAppIds: string[]
+  compareEnabled: boolean
+  compareStartDate: string // YYYY-MM-DD
+  compareEndDate: string // YYYY-MM-DD
+}
+
+export interface CompareOverviewMetric {
+  label: string
+  value: string
+  change: string
+  changeType: 'positive' | 'negative' | 'neutral'
+}
+
+export interface CompareOverviewAppCard {
+  id: string
+  name: string
+  color: string
+  revenue: string
+  revenueChange: number
+  metrics: CompareOverviewMetric[]
+}
+
+export interface CompareTrendSeries {
+  id: string
+  name: string
+  color: string
+  values: number[]
+}
+
+export interface CompareMetricsRow {
+  metric: string
+  values: Record<string, string>
+  bestId: string
+}
+
+export interface CompareOverviewResponse {
+  apps: CompareOverviewAppCard[]
+}
+
+export interface CompareTrendsResponse {
+  labels: string[]
+  revenueSeries: CompareTrendSeries[]
+  userSeries: CompareTrendSeries[]
+}
+
+export interface CompareMetricsResponse {
+  rows: CompareMetricsRow[]
+}

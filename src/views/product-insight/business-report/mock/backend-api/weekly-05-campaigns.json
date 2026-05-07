@@ -1,0 +1,96 @@
+{
+  "_comment": "周报-在投广告系列。",
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/report/weekly/campaigns",
+    "method": "POST",
+    "priority": "P1"
+  },
+  "interaction": {
+    "triggers": [{ "moment": "切换周报在投广告系列 Tab", "detail": "按周聚合加载列表" }]
+  },
+  "sampleRequest": {
+    "startDate": "2026-04-06",
+    "endDate": "2026-04-12",
+    "appId": "",
+    "appIds": [],
+    "platformList": [],
+    "sourceList": [],
+    "countryCodeList": [],
+    "account": "",
+    "currentPage": 0,
+    "pageSize": 20
+  },
+  "sampleResponse": {
+    "currentPage": 0,
+    "pageSize": 20,
+    "total": 3,
+    "rows": [
+      {
+        "id": "camp_001",
+        "app": "VG Weather",
+        "platform": "安卓",
+        "campaignName": "VG_Android_DE_Brand",
+        "status": "active",
+        "adPlatform": "Google",
+        "adPlatformColor": "#4285F4",
+        "country": "德国",
+        "countryFlag": "🇩🇪",
+        "adSpend": "$72,400",
+        "adSpendChange": 7.4,
+        "cpi": "$1.26",
+        "cpm": "$8.42",
+        "cpc": "$0.68",
+        "acquisitions": "5.7万",
+        "roi1d": "37%",
+        "roi3d": "62%",
+        "roi7d": "96%",
+        "roi14d": "112%",
+        "roi30d": "136%"
+      },
+      {
+        "id": "camp_002",
+        "app": "VG Fit",
+        "platform": "iOS",
+        "campaignName": "VG_iOS_US_UAC",
+        "status": "active",
+        "adPlatform": "Google",
+        "adPlatformColor": "#4285F4",
+        "country": "美国",
+        "countryFlag": "🇺🇸",
+        "adSpend": "$58,600",
+        "adSpendChange": 5.2,
+        "cpi": "$1.28",
+        "cpm": "$9.16",
+        "cpc": "$0.73",
+        "acquisitions": "4.6万",
+        "roi1d": "39%",
+        "roi3d": "66%",
+        "roi7d": "100%",
+        "roi14d": "116%",
+        "roi30d": "142%"
+      },
+      {
+        "id": "camp_003",
+        "app": "VG Sleep",
+        "platform": "安卓",
+        "campaignName": "VG_Android_JP_Retarget",
+        "status": "paused",
+        "adPlatform": "Facebook",
+        "adPlatformColor": "#1877F2",
+        "country": "日本",
+        "countryFlag": "🇯🇵",
+        "adSpend": "$0",
+        "adSpendChange": -100,
+        "cpi": "-",
+        "cpm": "-",
+        "cpc": "-",
+        "acquisitions": "0",
+        "roi1d": "34%",
+        "roi3d": "52%",
+        "roi7d": "88%",
+        "roi14d": "95%",
+        "roi30d": "101%"
+      }
+    ]
+  }
+}

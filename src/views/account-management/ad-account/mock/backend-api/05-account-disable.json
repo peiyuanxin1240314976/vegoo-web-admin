@@ -1,0 +1,40 @@
+{
+  "_comment": "账户管理 - 停用广告账户。停用后状态变为「已停用」，可随时调启用接口恢复。",
+  "fieldDescription": {
+    "request": {
+      "id": { "type": "string", "required": true, "description": "账户ID，如 ACC-067。" }
+    },
+    "response": {
+      "data": {
+        "id": { "type": "string", "description": "账户ID。" },
+        "status": { "type": "string", "description": "已停用。" }
+      }
+    }
+  },
+  "sampleRequest": {
+    "id": "ACC-067"
+  },
+  "sampleResponse": {
+    "data": {
+      "id": "ACC-067",
+      "status": "已停用"
+    }
+  },
+  "api": {
+    "url": "POST /api/config-management/account/disable",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "{ id }",
+    "responseBody": "{ id, status }"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "停用确认框确认后 `disableAccount`；前端可本地更新行状态。"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "无"
+  }
+}

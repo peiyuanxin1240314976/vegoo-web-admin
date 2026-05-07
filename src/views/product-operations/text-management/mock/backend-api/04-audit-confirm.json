@@ -1,0 +1,53 @@
+{
+  "_comment": "文本审核 - 确认全部审核结果，写入步骤状态。",
+  "fieldDescription": {
+    "request": {
+      "appContent": { "type": "AppContent", "required": true, "description": "当前主文案内容。" },
+      "repeatWords": { "type": "string[]", "required": true, "description": "待确认叠词列表。" },
+      "bannedWords": { "type": "string[]", "required": true, "description": "待确认禁用词列表。" },
+      "brandWords": { "type": "string[]", "required": true, "description": "待确认品牌词列表。" }
+    },
+    "response": {
+      "data": { "type": "AuditConfirmResult", "required": true, "description": "确认结果。" }
+    },
+    "AuditConfirmResult": {
+      "pendingCount": {
+        "type": "number",
+        "required": true,
+        "description": "确认后剩余待处理问题数。"
+      },
+      "step1Done": { "type": "boolean", "required": true, "description": "步骤一是否完成。" }
+    }
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "文本审核页点击“全部确认”或“确认全部审核结果”",
+        "detail": "提交待确认问题并更新步骤一完成状态。"
+      }
+    ]
+  },
+  "sampleRequest": {
+    "appContent": {
+      "appName": "People Search, People Finder",
+      "shortDesc": "AI People Search, People Finder",
+      "fullDesc": "information across multiple open sources."
+    },
+    "repeatWords": ["search"],
+    "bannedWords": ["fucking"],
+    "brandWords": ["Facebook"]
+  },
+  "sampleResponse": {
+    "data": {
+      "pendingCount": 0,
+      "step1Done": true
+    }
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/product-operations/text-management/action/audit-confirm",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "appContent, repeatWords, bannedWords, brandWords",
+    "responseBody": "AuditConfirmResult"
+  }
+}

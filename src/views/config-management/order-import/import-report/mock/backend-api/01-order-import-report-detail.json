@@ -1,0 +1,65 @@
+{
+  "_comment": "导入报告任务头信息，供 `import-report/index.vue` 顶部任务信息与状态卡片使用。",
+  "fieldDescription": {
+    "request": {
+      "taskId": { "type": "string", "required": true, "description": "任务 ID。" }
+    },
+    "response": {
+      "taskId": { "type": "string", "required": true, "description": "任务 ID。" },
+      "dataSource": {
+        "type": "string",
+        "required": true,
+        "enum": ["appstore", "googleplay"],
+        "description": "数据源。"
+      },
+      "fileName": { "type": "string", "required": true, "description": "导入文件名。" },
+      "uploadTime": {
+        "type": "string",
+        "required": true,
+        "description": "上传时间 YYYY-MM-DD HH:mm。"
+      },
+      "completedTime": {
+        "type": "string",
+        "required": true,
+        "description": "完成时间 YYYY-MM-DD HH:mm。"
+      },
+      "durationSec": { "type": "number", "required": true, "description": "任务耗时（秒）。" },
+      "status": {
+        "type": "string",
+        "required": true,
+        "enum": ["completed", "processing", "partial", "failed"],
+        "description": "任务状态。"
+      }
+    }
+  },
+  "sampleRequest": { "taskId": "IMP-020" },
+  "sampleResponse": {
+    "data": {
+      "taskId": "IMP-020",
+      "dataSource": "googleplay",
+      "fileName": "imp020_googleplay_20260223.csv",
+      "uploadTime": "2026-02-23 15:45",
+      "completedTime": "2026-02-23 15:58",
+      "durationSec": 802,
+      "status": "partial"
+    }
+  },
+  "api": {
+    "url": "POST /api/config-management/order-import/report/task-info",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "{ taskId }",
+    "responseBody": "ImportReportTaskInfo"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "`import-report/index.vue` 并行调用 `fetchOrderImportReportTaskInfo(taskId)`。",
+        "prerequisite": "`OrderImportReportApiSource.reportTaskInfo`；taskId 来自路由参数。"
+      }
+    ],
+    "defaultSelection": "taskId 必填。",
+    "dedupe": "taskId 不变时可复用缓存。"
+  }
+}

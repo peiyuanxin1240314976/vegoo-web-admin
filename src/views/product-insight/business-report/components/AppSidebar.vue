@@ -38,11 +38,15 @@
             </div>
             <div class="ad-metric">
               <div class="ad-metric-label">买量用户</div>
-              <div class="ad-metric-value">{{ overallItem.paidUsers }}万</div>
+              <div class="ad-metric-value">{{
+                overallItem.buyingUsers ?? overallItem.paidUsers ?? 0
+              }}</div>
             </div>
             <div class="ad-metric">
               <div class="ad-metric-label">广告系列数</div>
-              <div class="ad-metric-value">{{ overallItem.activeCampaigns }}</div>
+              <div class="ad-metric-value">
+                {{ overallItem.campaignCount ?? overallItem.activeCampaigns ?? 0 }}
+              </div>
             </div>
           </div>
           <div class="platform-bar">
@@ -96,7 +100,7 @@
               </div>
               <div class="major-metric major-metric-right">
                 <div class="major-metric-label">买量用户</div>
-                <div class="major-metric-value">{{ item.paidUsers }}万</div>
+                <div class="major-metric-value">{{ item.buyingUsers ?? item.paidUsers ?? 0 }}</div>
               </div>
             </div>
           </div>
@@ -160,12 +164,15 @@
             </div>
             <div class="wap-ov-meta">
               <span
-                >买量用户 <strong>{{ overallItem.paidUsers }}</strong
-                >万</span
+                >买量用户
+                <strong>{{ overallItem.buyingUsers ?? overallItem.paidUsers ?? 0 }}</strong></span
               >
               <span class="wap-ov-meta-sep">|</span>
               <span
-                >广告系列数 <strong>{{ overallItem.activeCampaigns }}</strong></span
+                >广告系列数
+                <strong>{{
+                  overallItem.campaignCount ?? overallItem.activeCampaigns ?? 0
+                }}</strong></span
               >
             </div>
             <div class="wap-pbar">
@@ -263,93 +270,38 @@
           v-if="overallItem"
           class="camp-overall"
           :class="{
-            'camp-selected': selectedId === overallItem.id,
-            'wc-camp-overall':
-              sidebarKey === 'weekly-campaigns' || sidebarKey === 'monthly-campaigns'
+            'camp-selected': selectedId === overallItem.id
           }"
           @click="$emit('select', overallItem.id)"
         >
-          <!-- 周报/月报：左侧文案 + 右侧迷你分组柱 -->
-          <div
-            v-if="sidebarKey === 'weekly-campaigns' || sidebarKey === 'monthly-campaigns'"
-            class="wc-camp-ov-body"
-          >
-            <div class="wc-camp-ov-main">
-              <div class="camp-ov-title-row">
-                <div class="camp-ov-name-block">
-                  <span class="camp-ov-name">整体</span>
-                  <span class="camp-ov-cat">全部平台</span>
-                </div>
-                <span v-if="selectedId === overallItem.id" class="camp-selected-badge"
-                  >SELECTED</span
-                >
-              </div>
-              <div class="camp-ov-spend-label">广告支出</div>
-              <div class="camp-ov-spend-row">
-                <span class="camp-ov-amount">${{ formatNum(overallItem.adSpend ?? 0) }}</span>
-                <span :class="['camp-ov-change', changeClass(overallItem.adSpendChange ?? 0)]">
-                  {{ changeStr(overallItem.adSpendChange ?? 0) }}
-                </span>
-              </div>
-              <div class="camp-ov-stats">
-                <span class="camp-stat-item">
-                  <span class="camp-stat-dot active"></span>
-                  在投系列 <b>{{ overallItem.activeCampaigns }}个</b>
-                </span>
-                <span class="camp-stat-sep">|</span>
-                <span class="camp-stat-item">
-                  <span class="camp-stat-dot paused"></span>
-                  已暂停 <b class="camp-paused-val">{{ overallItem.pausedCampaigns ?? 3 }}个</b>
-                </span>
-              </div>
+          <div class="camp-ov-title-row">
+            <div class="camp-ov-name-block">
+              <span class="camp-ov-name">整体</span>
+              <span class="camp-ov-cat">全部平台</span>
             </div>
-            <div class="wc-mini-chart" aria-hidden="true">
-              <div v-for="lab in wcMiniChartLabels" :key="lab" class="wc-mini-group">
-                <div class="wc-mini-bars">
-                  <span class="wc-bar wc-bar--teal" />
-                  <span class="wc-bar wc-bar--orange" />
-                </div>
-                <span class="wc-mini-lab">{{ lab }}</span>
-              </div>
-            </div>
+            <span v-if="selectedId === overallItem.id" class="camp-selected-badge">SELECTED</span>
           </div>
-
-          <!-- 日报：原布局 + 底部分平台条 -->
-          <template v-else>
-            <div class="camp-ov-title-row">
-              <div class="camp-ov-name-block">
-                <span class="camp-ov-name">整体</span>
-                <span class="camp-ov-cat">全部平台</span>
-              </div>
-              <span v-if="selectedId === overallItem.id" class="camp-selected-badge">SELECTED</span>
-            </div>
-            <div class="camp-ov-spend-label">广告支出</div>
-            <div class="camp-ov-spend-row">
-              <span class="camp-ov-amount">${{ formatNum(overallItem.adSpend ?? 0) }}</span>
-              <span :class="['camp-ov-change', changeClass(overallItem.adSpendChange ?? 0)]">
-                {{ changeStr(overallItem.adSpendChange ?? 0) }}
-              </span>
-            </div>
-            <div class="camp-ov-stats">
-              <span class="camp-stat-item">
-                <span class="camp-stat-dot active"></span>
-                在投系列 <b>{{ overallItem.activeCampaigns }}个</b>
-              </span>
-              <span class="camp-stat-sep">|</span>
-              <span class="camp-stat-item">
-                <span class="camp-stat-dot paused"></span>
-                已暂停 <b>{{ overallItem.pausedCampaigns ?? 3 }}个</b>
-              </span>
-            </div>
-            <div class="camp-platform-bar">
-              <div
-                v-for="seg in overallItem.platformBreakdown ?? []"
-                :key="seg.name"
-                class="camp-seg"
-                :style="{ width: seg.percent + '%', background: seg.color }"
-              ></div>
-            </div>
-          </template>
+          <div class="camp-ov-spend-label">广告支出</div>
+          <div class="camp-ov-spend-row">
+            <span class="camp-ov-amount">${{ formatNum(overallItem.adSpend ?? 0) }}</span>
+            <span :class="['camp-ov-change', changeClass(overallItem.adSpendChange ?? 0)]">
+              {{ changeStr(overallItem.adSpendChange ?? 0) }}
+            </span>
+          </div>
+          <div class="camp-ov-stats">
+            <span class="camp-stat-item">
+              <span class="camp-stat-dot active"></span>
+              在投系列 <b>{{ overallItem.campaignCount ?? overallItem.activeCampaigns ?? 0 }}个</b>
+            </span>
+          </div>
+          <div class="camp-platform-bar">
+            <div
+              v-for="seg in overallItem.platformBreakdown ?? []"
+              :key="seg.name"
+              class="camp-seg"
+              :style="{ width: seg.percent + '%', background: seg.color }"
+            ></div>
+          </div>
         </div>
 
         <!-- 日报：单列列表 / 月报复用 -->
@@ -367,7 +319,9 @@
             </div>
             <div class="camp-row-right">
               <span class="camp-row-amount">${{ formatNum(item.adSpend ?? 0) }}</span>
-              <span class="camp-row-count">{{ item.activeCampaigns ?? 0 }}个在投</span>
+              <span class="camp-row-count"
+                >{{ item.campaignCount ?? item.activeCampaigns ?? 0 }}个在投</span
+              >
             </div>
           </div>
         </div>
@@ -386,7 +340,9 @@
               <span class="wc-tile-cat">{{ item.category }}</span>
             </div>
             <div class="wc-tile-amt">${{ formatNum(item.adSpend ?? 0) }}</div>
-            <div class="wc-tile-foot">{{ item.activeCampaigns ?? 0 }} 个在投</div>
+            <div class="wc-tile-foot"
+              >{{ item.campaignCount ?? item.activeCampaigns ?? 0 }} 个在投</div
+            >
           </div>
         </div>
       </template>
@@ -440,7 +396,9 @@
             </span>
           </div>
           <div class="nm-ov-footer">
-            <span class="nm-ov-countries">分布国家：{{ overallItem.countries ?? 22 }}个</span>
+            <span class="nm-ov-countries"
+              >分布国家：{{ overallItem.countryCount ?? overallItem.countries ?? 22 }}个</span
+            >
           </div>
           <div class="nm-ov-globe">🌍</div>
         </div>
@@ -464,7 +422,9 @@
                 {{ item.revenueChange >= 0 ? '+' : '' }}{{ item.revenueChange }}%
               </span>
             </div>
-            <div class="nm-gc-countries">{{ item.countries ?? 0 }}个国家</div>
+            <div class="nm-gc-countries">
+              {{ item.countryCount ?? item.countries ?? 0 }}个国家
+            </div>
           </div>
         </div>
 
@@ -480,7 +440,7 @@
             <div class="nm-sc-name">{{ item.name }}</div>
             <div class="nm-sc-cat">{{ item.category }}</div>
             <div class="nm-sc-amount">${{ formatNum(item.revenue) }}</div>
-            <div class="nm-sc-countries">{{ item.countries ?? 0 }}个国家</div>
+            <div class="nm-sc-countries">{{ item.countryCount ?? item.countries ?? 0 }}个国家</div>
           </div>
         </div>
       </template>
@@ -489,54 +449,82 @@
          日报·广告平台分国家
          ═══════════════════════════════════════════════════ -->
       <template v-else-if="sidebarKey === 'daily-platformCountry'">
-        <div class="nm-grid">
+        <!-- 与“月报·广告平台分国家”一致：整体卡 + 两列网格 -->
+        <div class="wap-section wap-section--platform-country">
           <div
-            v-for="item in groupApps"
-            :key="item.id"
-            :class="['nm-card', 'nm-card--group', { 'is-selected': selectedId === item.id }]"
-            @click="$emit('select', item.id)"
+            v-if="overallItem"
+            class="wap-overall"
+            :class="{ 'is-selected': selectedId === overallItem.id }"
+            @click="$emit('select', overallItem.id)"
           >
-            <div class="nm-gc-head">
-              <span class="nm-gc-dot" :style="{ background: item.iconColor }" />
-              <span class="nm-gc-name2">{{ item.name }}</span>
-              <span class="nm-gc-cat2">{{ item.category }}</span>
+            <div class="wap-ov-title">
+              <span class="wap-ov-name">{{ overallItem.name }}</span>
+              <span class="wap-ov-cat">{{ overallItem.category }}</span>
             </div>
-            <div class="nm-gc-revenue">
-              <span class="nm-gc-amount2">${{ formatNum(item.revenue) }}</span>
-              <span :class="['nm-gc-change2', item.revenueChange >= 0 ? 'is-up' : 'is-down']">
-                环比 {{ item.revenueChange >= 0 ? '+' : '' }}{{ item.revenueChange }}%
+            <div class="wap-ov-spend-row">
+              <span class="wap-ov-spend-lbl">广告支出</span>
+              <span class="wap-ov-amount">${{ formatNum(overallItem.adSpend ?? 0) }}</span>
+              <span
+                class="wap-ov-change"
+                :class="(overallItem.adSpendChange ?? 0) >= 0 ? 'wap-up' : 'wap-down'"
+              >
+                {{ changeStr(overallItem.adSpendChange ?? 0) }}
               </span>
             </div>
-            <div class="nm-gc-meta">
-              <div>预估利润 ${{ formatNum(item.profit) }}</div>
-              <div>{{ showField === 'mau' ? 'MAU' : 'DAU' }} {{ item.dau }}万</div>
+            <div class="wap-ov-meta">
+              <span
+                >买量用户
+                <strong>{{ overallItem.buyingUsers ?? overallItem.paidUsers ?? 0 }}</strong></span
+              >
+              <span class="wap-ov-meta-sep">|</span>
+              <span
+                >广告系列数
+                <strong>{{
+                  overallItem.campaignCount ?? overallItem.activeCampaigns ?? 0
+                }}</strong></span
+              >
             </div>
-            <SparklineChart
-              class="nm-gc-spark"
-              :data="item.sparkline ?? sparkData"
-              :color="item.iconColor"
-              :width="110"
-              :height="26"
-            />
-            <div v-if="item.platforms?.length" class="nm-gc-tags">
-              <span v-for="p in item.platforms" :key="p" class="nm-gc-tag">{{ p }}</span>
+            <div class="wap-pbar">
+              <div
+                v-for="seg in overallItem.platformBreakdown ?? []"
+                :key="seg.name"
+                class="wap-pbar-seg"
+                :style="{ width: seg.percent + '%', background: seg.color }"
+              ></div>
+            </div>
+            <div class="wap-legend">
+              <span
+                v-for="seg in overallItem.platformBreakdown ?? []"
+                :key="'wap-lg-dpc-' + seg.name"
+                class="wap-legend-item"
+              >
+                <span class="wap-legend-sq" :style="{ background: seg.color }" />
+                {{ seg.name }} {{ seg.percent }}%
+              </span>
             </div>
           </div>
-          <div
-            v-for="item in singleApps"
-            :key="item.id"
-            :class="['nm-card', 'nm-card--single', { 'is-selected': selectedId === item.id }]"
-            @click="$emit('select', item.id)"
-          >
-            <div class="nm-sc2-name">
-              {{ item.name }}
-              <span class="nm-sc2-cat">{{ item.category }}</span>
-            </div>
-            <div class="nm-sc2-bottom">
-              <span class="nm-sc2-amount">${{ formatNum(item.revenue) }}</span>
-              <span :class="['nm-sc2-change', item.revenueChange >= 0 ? 'is-up' : 'is-down']">
-                {{ item.revenueChange >= 0 ? '+' : '' }}{{ item.revenueChange }}%
-              </span>
+
+          <div class="wpc-app-grid">
+            <div
+              v-for="item in flatAdSpendAppsSorted"
+              :key="item.id"
+              class="wpc-app-tile"
+              :class="{ 'is-selected': selectedId === item.id }"
+              @click="$emit('select', item.id)"
+            >
+              <div class="wpc-tile-top">
+                <span class="wpc-tile-name">{{ item.name }}</span>
+                <span class="wpc-tile-cat">{{ item.category }}</span>
+              </div>
+              <div
+                class="wpc-tile-amt"
+                :class="wpcAmountStressClass(item.adSpend ?? 0, item.adSpendChange ?? 0)"
+              >
+                ${{ formatNum(item.adSpend ?? 0) }}
+              </div>
+              <div class="wpc-tile-pct" :class="adSpendChangeInvertClass(item.adSpendChange ?? 0)">
+                {{ changeStr(item.adSpendChange ?? 0) }}
+              </div>
             </div>
           </div>
         </div>
@@ -572,7 +560,7 @@
             <SparklineChart
               class="nm-gc-spark"
               :data="item.sparkline ?? sparkData"
-              :color="item.iconColor"
+              color="#10b981"
               :width="110"
               :height="26"
             />
@@ -772,7 +760,7 @@
             <SparklineChart
               class="mss-gc-spark"
               :data="item.sparkline ?? sparkData"
-              :color="item.iconColor"
+              color="#10b981"
               :width="110"
               :height="22"
             />
@@ -815,7 +803,8 @@
     >
       <template v-if="sidebarKey === 'daily-campaigns' || sidebarKey === 'weekly-campaigns'">
         <span class="app-count">
-          共 {{ appList.length - 1 }} 个应用 | {{ overallItem?.activeCampaigns ?? 14 }} 个在投系列
+          共 {{ appList.length - 1 }} 个应用 |
+          {{ overallItem?.campaignCount ?? overallItem?.activeCampaigns ?? 14 }} 个在投系列
         </span>
       </template>
       <template v-else>
@@ -869,9 +858,6 @@
   const toggleSort = () => {
     sortDir.value = sortDir.value === 'desc' ? 'asc' : 'desc'
   }
-
-  /** 周报在投侧栏迷你图横轴标签（与主内容区平台维度一致） */
-  const wcMiniChartLabels = ['安卓', 'iOS', '网站'] as const
 
   // ── Normal mode (汇总等旧样式) ──────────────────────────────
   const groupApps = computed(() => {
@@ -943,9 +929,11 @@
   const sparkData = [3800, 4000, 3900, 4200, 4100, 4350, 4400, 4521]
 
   /** Format with commas: 41100 → "41,100" */
-  const formatNum = (v: number) => {
-    if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + 'M'
-    return v.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  const formatNum = (v: number | null | undefined) => {
+    const num = Number(v ?? 0)
+    if (!Number.isFinite(num)) return '0'
+    if (num >= 1_000_000) return (num / 1_000_000).toFixed(1) + 'M'
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
   }
 
   const changeStr = (change: number) => (change >= 0 ? '+' : '') + change + '%'
@@ -965,6 +953,7 @@
   .app-sidebar {
     display: flex;
     flex-direction: column;
+    height: 100%;
     min-height: 0;
   }
 
@@ -1961,12 +1950,13 @@
      ════════════════════════════════════════════════════════ */
   .nm-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
     padding: 0 10px 10px;
   }
 
   .nm-card {
+    min-width: 0;
     padding: 10px;
     cursor: pointer;
     background: rgb(255 255 255 / 4%);

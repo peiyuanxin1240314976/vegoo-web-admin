@@ -1,0 +1,87 @@
+{
+  "_comment": "配置管理 - 用户管理 - 表单与筛选元数据（角色、状态）。",
+  "fieldDescription": {
+    "request": {
+      "scene": {
+        "type": "string",
+        "required": false,
+        "enum": ["listFilter", "dialogForm", "rightPanel", ""],
+        "description": "场景标识。空字符串表示返回全部选项。"
+      }
+    },
+    "response": {
+      "roleOptions": {
+        "type": "RoleOptionItem[]",
+        "required": true,
+        "description": "角色选项列表。无数据时返回 []。"
+      },
+      "statusOptions": {
+        "type": "StatusOptionItem[]",
+        "required": true,
+        "description": "状态选项列表。无数据时返回 []。"
+      }
+    },
+    "RoleOptionItem": {
+      "label": { "type": "string", "required": true, "description": "角色名称。" },
+      "value": {
+        "type": "string",
+        "required": true,
+        "enum": ["admin", "ops", "auditor"],
+        "description": "角色编码。"
+      }
+    },
+    "StatusOptionItem": {
+      "label": { "type": "string", "required": true, "description": "状态名称。" },
+      "value": {
+        "type": "string",
+        "required": true,
+        "enum": ["待激活", "活跃", "禁用"],
+        "description": "状态值，与列表行 status、筛选入参一致（待激活、活跃、禁用）。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "scene": ""
+  },
+  "sampleResponse": {
+    "roleOptions": [
+      { "label": "管理层/老板", "value": "admin" },
+      { "label": "投放人员", "value": "ops" },
+      { "label": "审计人员", "value": "auditor" }
+    ],
+    "statusOptions": [
+      { "label": "待激活", "value": "待激活" },
+      { "label": "活跃", "value": "活跃" },
+      { "label": "禁用", "value": "禁用" }
+    ]
+  },
+  "api": {
+    "url": "POST /api/config-management/user-management/meta-options",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "scene?",
+    "responseBody": "{ roleOptions: RoleOptionItem[]; statusOptions: StatusOptionItem[] }"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "该接口用于替换页面内硬编码角色与状态，保障后端统一维护可选项。",
+      "若角色来自组织权限中心，可在该接口内聚合后下发。"
+    ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "进入页面时拉取筛选和弹窗共用选项。",
+        "prerequisite": "登录态有效"
+      },
+      {
+        "moment": "用户操作",
+        "detail": "新增/编辑弹窗打开前可按需再次拉取以获取最新角色。",
+        "prerequisite": "无"
+      }
+    ],
+    "defaultSelection": "scene='' 返回全量选项。",
+    "dedupe": "可按页面缓存，切页后失效。"
+  }
+}

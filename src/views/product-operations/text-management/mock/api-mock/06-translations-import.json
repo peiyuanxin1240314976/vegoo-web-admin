@@ -1,0 +1,24 @@
+{
+  "data": {
+    "translations": [
+      {
+        "id": "11",
+        "lang": "英语",
+        "langCode": "en",
+        "status": "completed",
+        "appName": "People Search, People Finder",
+        "shortDesc": "AI people finder by name",
+        "fullDesc": "Discover public profile information from open sources.",
+        "appNameCount": 28,
+        "shortDescCount": 24,
+        "fullDescCount": 59,
+        "appNameLimit": 30,
+        "shortDescLimit": 80,
+        "fullDescLimit": 4000,
+        "selected": false
+      }
+    ],
+    "importedCount": 1,
+    "overwrittenCount": 1
+  }
+}

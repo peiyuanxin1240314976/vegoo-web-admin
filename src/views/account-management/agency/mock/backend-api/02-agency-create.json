@@ -1,0 +1,83 @@
+{
+  "_comment": "账户管理 · 代理商 — 新建。",
+  "fieldDescription": {
+    "request": {
+      "agencyName": { "type": "string", "required": true, "description": "代理商名称。" },
+      "source": { "type": "string", "required": true, "description": "广告平台。" },
+      "coopMode": {
+        "type": "string",
+        "required": true,
+        "enum": ["授权代理", "直接开户"],
+        "description": "合作模式。"
+      },
+      "contact": { "type": "string", "required": true, "description": "联系人。" },
+      "email": { "type": "string", "required": true, "description": "联系邮箱。" },
+      "phone": { "type": "string", "required": true, "description": "联系电话。" },
+      "agencyAccount": { "type": "string", "required": false, "description": "代理账户标识。" },
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "合作开始日期，YYYY-MM-DD。"
+      },
+      "expireDate": {
+        "type": "string",
+        "required": false,
+        "description": "到期日期，YYYY-MM-DD。"
+      },
+      "remark": { "type": "string", "required": false, "description": "备注。" }
+    },
+    "response": {
+      "data": { "type": "AgencyItem", "required": true, "description": "创建后的代理商完整信息。" }
+    }
+  },
+  "sampleRequest": {
+    "agencyName": "北极星代理",
+    "source": "Google Ads",
+    "coopMode": "授权代理",
+    "contact": "赵一",
+    "email": "zhaoyi@polaris.com",
+    "phone": "+86 131-0000-8888",
+    "agencyAccount": "POLARIS-001",
+    "startDate": "2026-04-01",
+    "expireDate": "2027-03-31",
+    "remark": "新签年度合作"
+  },
+  "sampleResponse": {
+    "data": {
+      "id": "AGY-009",
+      "agencyName": "北极星代理",
+      "source": "Google Ads",
+      "coopMode": "授权代理",
+      "managedAccounts": 0,
+      "monthSpend": 0,
+      "expireDate": "2027-03-31",
+      "status": "已合作",
+      "contact": "赵一",
+      "email": "zhaoyi@polaris.com",
+      "phone": "+86 131-0000-8888",
+      "startDate": "2026-04-01",
+      "remark": "新签年度合作",
+      "activeAccounts": 0,
+      "pausedAccounts": 0,
+      "monthRevenue": 0,
+      "bcBmList": []
+    }
+  },
+  "api": {
+    "url": "POST /api/config-management/agency",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "AgencyFormModel",
+    "responseBody": "AgencyItem"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "页头「新建代理商」按钮打开弹窗，提交后调用 `createAgency`。"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "提交按钮防重复。"
+  }
+}

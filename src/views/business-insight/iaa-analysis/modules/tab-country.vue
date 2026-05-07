@@ -105,6 +105,7 @@
   import type { ColumnOption } from '@/types'
   import type { IaaFilterState, IaaCountryTabData, IaaCountryTableRow } from '../types'
   import { fetchIaaCountryTabData } from '@/api/business-insight'
+  import { useIaaPageLoading } from '../composables/useIaaPageLoading'
   import 'flag-icons/css/flag-icons.min.css'
 
   const WORLD_JSON_URL = `${import.meta.env.BASE_URL}geo/world.json`
@@ -179,6 +180,15 @@
 
   const tabData = ref<IaaCountryTabData | null>(null)
   const loading = ref(false)
+  const pageLoading = useIaaPageLoading()
+
+  watch(loading, (v) => {
+    pageLoading?.setTabLoading('country', v)
+  })
+
+  onMounted(() => {
+    pageLoading?.setTabLoading('country', loading.value)
+  })
 
   const kpis = computed(() => tabData.value?.kpis ?? [])
   const allRows = computed(() => tabData.value?.tableRows ?? [])
@@ -265,6 +275,12 @@
     const values = mapData.map((d) => d.value).filter((v) => Number.isFinite(v))
     const dataMin = values.length ? Math.min(...values) : 0
     const dataMax = values.length ? Math.max(...values) : 10
+    const top10NameSet = new Set(
+      [...mapData]
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 10)
+        .map((d) => resolveWorldRegionName((d as any).s_country_code ?? d.name))
+    )
 
     return {
       backgroundColor: 'transparent',
@@ -288,7 +304,7 @@
       },
       visualMap: {
         type: 'continuous',
-        show: true,
+        show: false,
         min: dataMin,
         max: dataMax,
         text: ['High', 'Low'],
@@ -337,6 +353,7 @@
             fontSize: 10,
             fontWeight: 500,
             formatter: (params: any) => {
+              if (!top10NameSet.has(params.name)) return ''
               const item = mapData.find(
                 (d) => resolveWorldRegionName((d as any).s_country_code ?? d.name) === params.name
               )
@@ -430,6 +447,18 @@
     return {
       backgroundColor: 'transparent',
       grid: { left: 72, right: 56, top: 16, bottom: 16 },
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'shadow' },
+        backgroundColor: '#1e293b',
+        borderColor: '#334155',
+        textStyle: { color: '#f1f5f9' },
+        formatter: (params: Array<{ name: string; value: number }>) => {
+          const item = params?.[0]
+          if (!item) return ''
+          return `${item.name}<br/>渗透率：${Number(item.value ?? 0).toFixed(2)}%`
+        }
+      },
       xAxis: {
         type: 'value',
         max: 100,
@@ -517,6 +546,10 @@
     background: var(--default-box-color);
     border: 1px solid var(--default-border);
     border-radius: 8px;
+
+    &:not(.iaa-kpi--sk) {
+      @include iaa-panel-hover;
+    }
 
     &[data-accent='teal'] .iaa-kpi__value {
       color: #26c2ad;

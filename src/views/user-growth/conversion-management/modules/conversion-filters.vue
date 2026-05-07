@@ -2,34 +2,19 @@
   <div class="conversion-filters">
     <div class="conversion-filters__inner">
       <div class="conversion-filters__row">
-        <ElSelect
-          v-model="form.platform"
-          :placeholder="$t('conversionManagement.filterPlatform')"
-          clearable
-          class="conversion-name-filter-select"
-          :prefix-icon="Monitor"
-        >
-          <ElOption
-            v-for="opt in platformOptions"
-            :key="opt.value"
-            :label="opt.label"
-            :value="opt.value"
-          />
-        </ElSelect>
-        <ElSelect
-          v-model="form.app"
+        <AppPlatformSearchSelect
+          v-model="form.appId"
+          mode="app"
           :placeholder="$t('conversionManagement.filterApp')"
-          clearable
-          class="conversion-name-filter-select"
-          :prefix-icon="Grid"
-        >
-          <ElOption
-            v-for="opt in appOptions"
-            :key="opt.value"
-            :label="opt.label"
-            :value="opt.value"
-          />
-        </ElSelect>
+          :search-placeholder="$t('conversionManagement.filterApp')"
+          class="conversion-name-filter-select conversion-name-filter-select--app"
+          input-class="conversion-name-filter-select__input"
+          dropdown-class="conversion-name-filter-popper"
+          :setting-apps="settingAppsForSelect"
+          :height="36"
+          :min-width="140"
+          :max-width="220"
+        />
         <ElSelect
           v-model="form.conversionType"
           :placeholder="$t('conversionManagement.filterConversionType')"
@@ -68,22 +53,10 @@
             <ElIcon><Search /></ElIcon>
           </template>
         </ElInput>
-        <ElButton
-          type="primary"
-          round
-          class="conversion-name-filter-action-btn"
-          @click="doSearch"
-          v-ripple
-        >
+        <ElButton type="primary" plain round :icon="Search" @click="doSearch" v-ripple>
           {{ $t('conversionManagement.dataFilterSearch') }}
         </ElButton>
-        <ElButton
-          type="primary"
-          round
-          class="conversion-filters__add-btn"
-          @click="$emit('add-mapping')"
-          v-ripple
-        >
+        <ElButton type="primary" plain round @click="$emit('add-mapping')" v-ripple>
           <ElIcon class="mr-1"><Plus /></ElIcon>
           {{ $t('conversionManagement.addMapping') }}
         </ElButton>
@@ -93,16 +66,19 @@
 </template>
 
 <script setup lang="ts">
-  import { CircleCheck, CollectionTag, Grid, Monitor, Plus, Search } from '@element-plus/icons-vue'
+  import { CircleCheck, CollectionTag, Plus, Search } from '@element-plus/icons-vue'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
+  import { useCockpitMetaFilterOptions } from '@/composables/use-cockpit-meta-filter'
+  import type { CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
+  import { useConversionMetaConversionTypeOptions } from '@/composables/use-conversion-meta-conversion-type'
   import type { ConversionFilterParams } from '../types'
-  import {
-    MOCK_PLATFORM_OPTIONS,
-    MOCK_APP_OPTIONS,
-    MOCK_CONVERSION_TYPE_OPTIONS,
-    MOCK_STATUS_OPTIONS
-  } from '../mock/data'
+  import { MOCK_DATA_TAB_APP_OPTIONS, MOCK_STATUS_OPTIONS } from '../mock/data'
 
   defineOptions({ name: 'ConversionFilters' })
+
+  const { cockpitMeta, ensureCockpitMetaLoaded } = useCockpitMetaFilterOptions()
+  const { filterConversionTypeOptions, ensureLoaded: ensureConversionMetaConversionTypeLoaded } =
+    useConversionMetaConversionTypeOptions()
 
   const props = defineProps<{
     filter: ConversionFilterParams
@@ -117,19 +93,46 @@
     (e: 'add-mapping'): void
   }>()
 
-  const platformOptions = computed(() => props.platformOptions ?? MOCK_PLATFORM_OPTIONS)
-  const appOptions = computed(() => props.appOptions ?? MOCK_APP_OPTIONS)
+  /** 与公用 `cockpit/meta-filter-options` 的 `platformOptions` 一致；无数据时回退 mock，并保证含「全部」`value: ''` */
+  const settingAppsForSelect = computed<CockpitSettingAppItem[]>(() => {
+    const fromCockpit = cockpitMeta.value?.settingApps ?? []
+    if (fromCockpit.length) return fromCockpit
+
+    const fallback = props.appOptions ?? MOCK_DATA_TAB_APP_OPTIONS
+    return fallback
+      .filter((opt) => opt.value !== '')
+      .map((opt, index) => ({
+        sAppId: String(opt.value ?? ''),
+        nPlatform: '',
+        platformName: '',
+        sAppName: String(opt.label ?? ''),
+        sAppShortName: String(opt.label ?? ''),
+        nCategory: `fallback-${index}`,
+        categoryName: '应用'
+      }))
+  })
   const conversionTypeOptions = computed(
-    () => props.conversionTypeOptions ?? MOCK_CONVERSION_TYPE_OPTIONS
+    () => props.conversionTypeOptions ?? filterConversionTypeOptions.value
   )
   const statusOptions = computed(() => props.statusOptions ?? MOCK_STATUS_OPTIONS)
 
-  const form = reactive<Record<string, string>>({
+  const form = reactive<{
+    platform: string
+    appId: string | string[]
+    conversionType: string
+    status: string
+    keyword: string
+  }>({
     platform: String(props.filter?.platform ?? ''),
-    app: String(props.filter?.app ?? ''),
+    appId: props.filter?.appId ?? [],
     conversionType: String(props.filter?.conversionType ?? ''),
     status: String(props.filter?.status ?? ''),
     keyword: String(props.filter?.keyword ?? '')
+  })
+
+  onMounted(() => {
+    void ensureCockpitMetaLoaded()
+    void ensureConversionMetaConversionTypeLoaded()
   })
 
   watch(
@@ -137,7 +140,7 @@
     (v) => {
       if (v) {
         form.platform = v.platform ?? ''
-        form.app = v.app ?? ''
+        form.appId = v.appId ?? []
         form.conversionType = v.conversionType ?? ''
         form.status = v.status ?? ''
         form.keyword = v.keyword ?? ''
@@ -149,8 +152,7 @@
   function doSearch() {
     emit('search', {
       platform: form.platform,
-      appPackage: form.app,
-      app: form.app,
+      appId: form.appId,
       conversionType: form.conversionType,
       status: form.status,
       keyword: form.keyword
@@ -159,6 +161,8 @@
 </script>
 
 <style scoped lang="scss">
+  @use '../../styles/app-platform-select-ad-theme.scss' as apSelect;
+
   .conversion-filters__inner {
     display: flex;
     flex-direction: column;
@@ -216,19 +220,30 @@
     max-width: 100%;
   }
 
+  @include apSelect.apply-app-platform-select-ad-theme(
+    '.conversion-filters__row',
+    'conversion-name-filter-select__input',
+    'conversion-name-filter-popper',
+    220px,
+    140px,
+    220px
+  );
+
   :deep(.conversion-name-filter-select) {
-    --el-input-focus-border-color: #10b981;
-    --el-border-color-hover: rgb(16 185 129 / 75%);
-    --el-color-primary: #10b981;
-    --el-border-color-focus: #10b981;
-    --el-component-size: 40px;
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
   }
 
+  :deep(.conversion-name-filter-select .el-select__wrapper),
   :deep(.conversion-name-filter-select .el-input__wrapper) {
     padding: 0 12px;
-    background: rgb(16 185 129 / 6%);
-    border: 1px solid rgb(16 185 129 / 28%);
-    border-radius: 9999px;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
     box-shadow: none;
     transition:
       border-color 0.22s ease,
@@ -249,23 +264,30 @@
   :deep(.conversion-name-filter-select .el-input__prefix-inner svg) {
     width: 16px;
     height: 16px;
-    color: #10b981;
-    filter: drop-shadow(0 0 5px rgb(16 185 129 / 50%));
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   :deep(.conversion-name-filter-select .el-select__caret) {
-    color: #10b981;
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
+  :deep(.conversion-name-filter-select .el-select__wrapper.is-focused),
   :deep(.conversion-name-filter-select .el-input__wrapper.is-focus) {
-    background: rgb(16 185 129 / 10%) !important;
-    border-color: #10b981 !important;
-    box-shadow: 0 0 0 2px rgb(16 185 129 / 20%) !important;
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
   }
 
+  :deep(.conversion-name-filter-select .el-select__wrapper:hover),
   :deep(.conversion-name-filter-select .el-input__wrapper:hover) {
-    border-color: rgb(16 185 129 / 60%);
-    box-shadow: 0 0 12px rgb(16 185 129 / 18%);
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
   }
 
   .conversion-filters__search {
@@ -276,11 +298,11 @@
   }
 
   :deep(.conversion-name-filter-input .el-input__wrapper) {
-    min-height: 40px;
+    min-height: 36px;
     padding: 0 12px;
-    background: rgb(16 185 129 / 6%);
-    border: 1px solid rgb(16 185 129 / 28%);
-    border-radius: 9999px;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
     box-shadow: none;
     transition:
       border-color 0.22s ease,
@@ -289,14 +311,20 @@
   }
 
   :deep(.conversion-name-filter-input .el-input__wrapper.is-focus) {
-    background: rgb(16 185 129 / 10%) !important;
-    border-color: #10b981 !important;
-    box-shadow: 0 0 0 2px rgb(16 185 129 / 20%) !important;
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
   }
 
   :deep(.conversion-name-filter-input .el-input__wrapper:hover) {
-    border-color: rgb(16 185 129 / 60%);
-    box-shadow: 0 0 12px rgb(16 185 129 / 18%);
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
   }
 
   :deep(.conversion-name-filter-input .el-input__inner) {
@@ -306,29 +334,34 @@
 
   :deep(.conversion-name-filter-input .el-input__prefix-inner) {
     margin-right: 6px;
-    color: #10b981;
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   .conversion-filters__add-btn {
-    --el-button-size: 40px;
+    --el-button-size: 36px;
 
     flex-shrink: 0;
-    height: 40px;
+    height: 36px;
     padding: 0 20px;
     font-size: 14px;
-    background: linear-gradient(135deg, rgb(16 185 129 / 92%), rgb(5 150 105 / 88%));
-    border: 1px solid rgb(16 185 129 / 55%);
-    box-shadow:
-      0 0 18px rgb(16 185 129 / 28%),
-      inset 0 1px 0 rgb(255 255 255 / 12%);
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: 0 0 18px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 20%, transparent);
     transition:
       box-shadow 0.22s ease,
       transform 0.18s ease;
 
     &:hover {
-      box-shadow:
-        0 0 26px rgb(16 185 129 / 42%),
-        inset 0 1px 0 rgb(255 255 255 / 18%);
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 8%,
+        transparent
+      );
+      box-shadow: 0 0 26px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 28%, transparent);
       transform: translateY(-1px);
     }
 
@@ -338,24 +371,29 @@
   }
 
   .conversion-name-filter-action-btn {
-    --el-button-size: 40px;
+    --el-button-size: 36px;
 
-    height: 40px;
+    height: 36px;
     padding: 0 20px;
     font-size: 14px;
-    background: linear-gradient(135deg, rgb(16 185 129 / 92%), rgb(5 150 105 / 88%));
-    border: 1px solid rgb(16 185 129 / 55%);
-    box-shadow:
-      0 0 18px rgb(16 185 129 / 28%),
-      inset 0 1px 0 rgb(255 255 255 / 12%);
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: 0 0 18px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 20%, transparent);
     transition:
       box-shadow 0.22s ease,
       transform 0.18s ease;
 
     &:hover {
-      box-shadow:
-        0 0 26px rgb(16 185 129 / 42%),
-        inset 0 1px 0 rgb(255 255 255 / 18%);
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 8%,
+        transparent
+      );
+      box-shadow: 0 0 26px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 28%, transparent);
       transform: translateY(-1px);
     }
 

@@ -80,6 +80,7 @@ export const configManagementRoutes: AppRouteRecord = {
       component: '/config-management/ad-account-management',
       meta: {
         title: 'menus.configManagement.adAccountManagement',
+        isHide: true,
         keepAlive: true,
         roles: ['R_SUPER', 'R_ADMIN']
       }
@@ -130,6 +131,16 @@ export const configManagementRoutes: AppRouteRecord = {
       component: '/config-management/order-import',
       meta: {
         title: 'menus.configManagement.orderImport',
+        keepAlive: true,
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
+    },
+    {
+      path: 'notification-config',
+      name: 'NotificationConfig',
+      component: '/config-management/notification-config',
+      meta: {
+        title: 'menus.configManagement.notificationConfig',
         keepAlive: true,
         roles: ['R_SUPER', 'R_ADMIN']
       }
