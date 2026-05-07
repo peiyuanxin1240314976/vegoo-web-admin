@@ -18,7 +18,6 @@
       <div class="iap-tab-skeleton__grid">
         <div class="card"><ElSkeleton animated :rows="7" /></div>
         <div class="card"><ElSkeleton animated :rows="6" /></div>
-        <div class="card"><ElSkeleton animated :rows="6" /></div>
       </div>
       <div class="iap-tab-skeleton__grid iap-tab-skeleton__grid--bottom">
         <div class="card"><ElSkeleton animated :rows="8" /></div>
@@ -52,7 +51,7 @@
         </div>
       </div>
 
-      <!-- ── Middle Grid: Table + 2 Charts ─────────── -->
+      <!-- ── Middle Grid: Table + ARPPU 图 ─────────── -->
       <div class="mid-grid">
         <!-- Channel IAP Table -->
         <div class="card span-table">
@@ -120,12 +119,6 @@
           <div class="card-hd">广告平台 ARPPU 对比</div>
           <div ref="arppuRef" style="height: 230px"></div>
         </div>
-
-        <!-- Revenue Trend -->
-        <div class="card span-trend">
-          <div class="card-hd">IAP 收入趋势（近30天）</div>
-          <div ref="trendRef" style="height: 230px"></div>
-        </div>
       </div>
 
       <!-- ── Bottom Grid ────────────────────────────── -->
@@ -133,9 +126,6 @@
         <!-- ROI Cohort Table -->
         <div class="card roi-card">
           <div class="card-hd">ROI 队列分析（按日期区间）</div>
-          <div class="card-sub-hd"
-            >ROI = 付费入数的区间，ROI= 同期消费收入入数，N-day定义：扣期期期</div
-          >
           <table class="dt sm-dt">
             <thead>
               <tr>
@@ -237,7 +227,6 @@
 
   /* ── Refs ─────────────────────────────────────── */
   const arppuRef = ref<HTMLElement | null>(null)
-  const trendRef = ref<HTMLElement | null>(null)
   const donutRef = ref<HTMLElement | null>(null)
   const sparkRefs = ref<(HTMLElement | null)[]>([])
   const chartInstances: Array<ReturnType<typeof echarts.init>> = []
@@ -310,9 +299,6 @@
 
   const retenRows = ref<{ ch: string; m1: string; m2: string; m5: string }[]>([])
 
-  const trendSeries = ref<
-    { name: string; color: string; points: { t_date: string; revenue: number }[] }[]
-  >([])
   const arppuBar = ref<{ channelName: string; percentOfMax: number; arppu: number }[]>([])
   const productMixDonut = ref<{ name: string; value: number; color: string }[]>([])
   const donutCenterRevenueUsd = ref<number>(0)
@@ -407,7 +393,6 @@
         m5: r.month5Bucket
       }))
 
-      trendSeries.value = charts.trendSeries
       arppuBar.value = charts.arppuBar
       productMixDonut.value = charts.productMixDonut
       donutCenterRevenueUsd.value = charts.donutCenterRevenueUsd
@@ -457,7 +442,6 @@
     chartInstances.length = 0
     initSparklines()
     initArppu()
-    initTrend()
     initDonut()
   }
 
@@ -567,74 +551,6 @@
     })
   }
 
-  function initTrend() {
-    if (!trendRef.value) return
-    const c = echarts.init(trendRef.value)
-    chartInstances.push(c)
-
-    const mkArea = (name: string, data: number[], color: string) => ({
-      name,
-      type: 'line',
-      smooth: true,
-      data,
-      symbol: 'none',
-      lineStyle: { color, width: 2 },
-      areaStyle: {
-        color: {
-          type: 'linear',
-          x: 0,
-          y: 0,
-          x2: 0,
-          y2: 1,
-          colorStops: [
-            { offset: 0, color: color + '55' },
-            { offset: 1, color: color + '05' }
-          ]
-        }
-      },
-      itemStyle: { color }
-    })
-
-    const series = trendSeries.value
-    const xAxisDates = Array.from(
-      new Set(series.flatMap((s) => s.points.map((p) => p.t_date)))
-    ).sort()
-
-    c.setOption({
-      backgroundColor: 'transparent',
-      grid: { top: 10, right: 12, bottom: 36, left: 46 },
-      legend: {
-        bottom: 0,
-        textStyle: { color: '#8892a8', fontSize: 11 },
-        itemWidth: 12,
-        itemHeight: 6
-      },
-      xAxis: {
-        type: 'category',
-        data: xAxisDates,
-        axisLabel: { color: '#8892a8', fontSize: 11 },
-        axisLine: { lineStyle: { color: '#1e2540' } },
-        axisTick: { show: false }
-      },
-      yAxis: {
-        type: 'value',
-        min: 0,
-        max: 12000,
-        axisLabel: {
-          color: '#8892a8',
-          fontSize: 10,
-          formatter: (v: number) => (v === 0 ? '$0' : `$${v / 1000}K`)
-        },
-        splitLine: { lineStyle: { color: '#1a2240' } }
-      },
-      series: series.map((s) => {
-        const m = new Map(s.points.map((p) => [p.t_date, p.revenue]))
-        const data = xAxisDates.map((d) => m.get(d) ?? 0)
-        return mkArea(s.name, data, s.color)
-      })
-    })
-  }
-
   function initDonut() {
     if (!donutRef.value) return
     const c = echarts.init(donutRef.value)
@@ -713,7 +629,7 @@
 
   .iap-tab-skeleton__grid {
     display: grid;
-    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 71fr) minmax(0, 29fr);
     gap: 12px;
   }
 
@@ -806,9 +722,11 @@
   }
 
   /* Mid Grid */
+
+  /* 原三列 54:22:24；去掉趋势图后按 54:22 比例分摊原 24fr → 约 71:29 */
   .mid-grid {
     display: grid;
-    grid-template-columns: 54fr 22fr 24fr;
+    grid-template-columns: 71fr 29fr;
     gap: 12px;
   }
 
@@ -852,12 +770,6 @@
     margin-bottom: 12px;
     font-size: 14px;
     font-weight: 700;
-  }
-
-  .card-sub-hd {
-    margin-bottom: 8px;
-    font-size: 11px;
-    color: #5a6a8a;
   }
 
   /* ── Data Table ───────────────────────────────── */

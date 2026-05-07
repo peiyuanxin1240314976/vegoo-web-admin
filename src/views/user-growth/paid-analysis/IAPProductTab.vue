@@ -128,13 +128,15 @@
         <!-- Revenue Composition Donut -->
         <div class="card donut-card">
           <div class="card-hd">商品收入构成</div>
-          <div ref="donutRef" style="height: 200px"></div>
-          <div class="donut-legend">
-            <div v-for="item in donutLegend" :key="item.name" class="dl-item">
-              <span class="dl-dot" :style="{ background: item.color }"></span>
-              <span class="dl-name">{{ item.name }}</span>
-              <span class="dl-pct">{{ item.pct }}%</span>
-              <span class="dl-val">{{ item.val }}</span>
+          <div class="donut-card__body">
+            <div ref="donutRef" class="donut-chart-wrap"></div>
+            <div class="donut-legend">
+              <div v-for="item in donutLegend" :key="item.name" class="dl-item">
+                <span class="dl-dot" :style="{ background: item.color }"></span>
+                <span class="dl-name">{{ item.name }}</span>
+                <span class="dl-pct">{{ item.pct }}%</span>
+                <span class="dl-val">{{ item.val }}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -294,6 +296,7 @@
 
   /* ── Refs ─────────────────────────────────────── */
   const donutRef = ref<HTMLElement | null>(null)
+  const donutResizeObserver = ref<ResizeObserver | null>(null)
   const trendRef = ref<HTMLElement | null>(null)
   const countryRef = ref<HTMLElement | null>(null)
   const sparkRefs = ref<(HTMLElement | null)[]>([])
@@ -426,8 +429,14 @@
     return 'type-other'
   }
 
+  function disconnectDonutResizeObserver() {
+    donutResizeObserver.value?.disconnect()
+    donutResizeObserver.value = null
+  }
+
   async function load() {
     loadError.value = ''
+    disconnectDonutResizeObserver()
     chartInstances.forEach((c) => c.dispose())
     chartInstances.length = 0
     loading.value = true
@@ -509,6 +518,7 @@
   })
 
   onUnmounted(() => {
+    disconnectDonutResizeObserver()
     chartInstances.forEach((c) => c.dispose())
   })
 
@@ -612,15 +622,17 @@
   }
 
   function initDonut() {
-    if (!donutRef.value) return
-    const c = echarts.init(donutRef.value)
+    disconnectDonutResizeObserver()
+    const el = donutRef.value
+    if (!el) return
+    const c = echarts.init(el)
     chartInstances.push(c)
     c.setOption({
       backgroundColor: 'transparent',
       series: [
         {
           type: 'pie',
-          radius: ['45%', '70%'],
+          radius: ['38%', '88%'],
           center: ['50%', '50%'],
           data: donutLegend.value.map((d) => ({
             name: d.name,
@@ -638,13 +650,17 @@
               return formatUsd0(t)
             },
             color: '#e2e8f5',
-            fontSize: 12,
+            fontSize: 15,
             fontWeight: 'bold'
           },
           labelLine: { show: false }
         }
       ]
     })
+    donutResizeObserver.value = new ResizeObserver(() => {
+      c.resize()
+    })
+    donutResizeObserver.value.observe(el)
   }
 
   function initTrend() {
@@ -864,6 +880,43 @@
     display: grid;
     grid-template-columns: 62fr 38fr;
     gap: 12px;
+    align-items: stretch;
+  }
+
+  /* 商品收入构成：与左侧表格行高对齐，图 + 图例横向铺满，避免小图 + 底部留白 */
+  .donut-card {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    height: 100%;
+    min-height: 280px;
+  }
+
+  .donut-card .card-hd {
+    flex-shrink: 0;
+    margin-bottom: 8px;
+  }
+
+  .donut-card__body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: row;
+    gap: 14px 18px;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+  }
+
+  /* 饼图半径按 min(宽,高) 算：竖长容器会「上下留白」。用接近正方形占位，环可吃满可用边长 */
+  .donut-chart-wrap {
+    flex: 1 1 0;
+    align-self: center;
+    width: 100%;
+    min-width: 120px;
+    max-width: 100%;
+    min-height: 200px;
+    max-height: 100%;
+    aspect-ratio: 1;
   }
 
   /* Bottom Grid */
@@ -1072,42 +1125,50 @@
     color: #22d3ee;
   }
 
-  /* Donut legend */
+  /* Donut legend（与环形图同排；禁止 flex 挤压，避免中文名称被压成竖条） */
   .donut-legend {
     display: flex;
+    flex: 0 0 auto;
     flex-direction: column;
-    gap: 6px;
-    margin-top: 8px;
+    gap: 10px;
+    justify-content: center;
+    min-width: 228px;
+    max-width: 320px;
+    margin-top: 0;
   }
 
   .dl-item {
-    display: flex;
-    gap: 8px;
+    display: grid;
+    grid-template-columns: 10px minmax(72px, 1fr) auto auto;
+    gap: 8px 10px;
     align-items: center;
-    font-size: 11px;
+    min-width: 0;
+    font-size: 12px;
   }
 
   .dl-dot {
-    flex-shrink: 0;
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
     border-radius: 2px;
   }
 
   .dl-name {
-    flex: 1;
+    line-height: 1.4;
     color: #8892a8;
+    overflow-wrap: break-word;
   }
 
   .dl-pct {
-    width: 28px;
+    min-width: 44px;
     font-weight: 600;
+    font-variant-numeric: tabular-nums;
     color: #c4d0e8;
     text-align: right;
   }
 
   .dl-val {
-    width: 70px;
+    min-width: 72px;
+    font-variant-numeric: tabular-nums;
     color: #8892a8;
     text-align: right;
   }
@@ -1150,6 +1211,44 @@
 
     .btm-grid {
       grid-template-columns: 1fr;
+    }
+
+    .donut-card {
+      min-height: 320px;
+    }
+
+    .donut-card__body {
+      flex-direction: row;
+      gap: 20px 28px;
+    }
+
+    .donut-chart-wrap {
+      max-width: min(420px, 100%);
+      min-height: 240px;
+    }
+
+    .donut-legend {
+      min-width: 240px;
+      max-width: 360px;
+    }
+  }
+
+  @media (width <= 520px) {
+    .donut-card__body {
+      flex-direction: column;
+    }
+
+    .donut-chart-wrap {
+      flex: 0 1 auto;
+      width: 100%;
+      max-width: min(400px, 92vw);
+      min-height: 200px;
+    }
+
+    .donut-legend {
+      flex: 1 1 auto;
+      width: 100%;
+      max-width: none;
     }
   }
 
