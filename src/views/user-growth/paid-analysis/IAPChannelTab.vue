@@ -61,7 +61,7 @@
             <thead>
               <tr>
                 <th>广告平台</th><th>IAP收入</th><th>占比</th> <th>付费用户</th><th>ARPPU</th>
-                <th>首次付费周期</th><th>续订率</th><th>质量评分</th>
+                <th>首次付费周期</th><th>续订率</th>
               </tr>
             </thead>
             <tbody>
@@ -87,11 +87,6 @@
                     {{ r.retention }}%
                   </span>
                 </td>
-                <td>
-                  <span class="quality-tag" :class="r.quality.includes('A') ? 'q-a' : 'q-b'">
-                    {{ r.quality }}
-                  </span>
-                </td>
               </tr>
             </tbody>
             <tfoot>
@@ -115,7 +110,6 @@
                 <td
                   ><b>{{ totalRow.avgRetention.toFixed(1) }}%</b></td
                 >
-                <td>--</td>
               </tr>
             </tfoot>
           </table>
@@ -284,7 +278,6 @@
       arppu: string
       period: number
       retention: number
-      quality: string
     }[]
   >([])
 
@@ -379,8 +372,7 @@
         users: r.payingUsers.toLocaleString('en-US'),
         arppu: formatUsd(r.arppu),
         period: r.firstPayPeriodDays,
-        retention: r.retentionPercent,
-        quality: r.qualityScore
+        retention: r.retentionPercent
       }))
 
       roiRows.value = tables.roiCohortRows.map((r) => ({
@@ -891,24 +883,6 @@
 
   .badge {
     font-weight: 600;
-  }
-
-  .quality-tag {
-    display: inline-block;
-    padding: 1px 6px;
-    font-size: 11px;
-    font-weight: 600;
-    border-radius: 3px;
-  }
-
-  .q-a {
-    color: #22d3ee;
-    background: #22d3ee18;
-  }
-
-  .q-b {
-    color: #f59e0b;
-    background: #f59e0b18;
   }
 
   .total-row td {
