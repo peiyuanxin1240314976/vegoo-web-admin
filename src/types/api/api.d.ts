@@ -168,13 +168,13 @@ declare namespace Api {
     /**
      * 用户列表项（系统管理 · 用户管理）
      *
-     * status 约定：1=在线 2=离线 3=异常 4=已禁用（与列表筛选、标签展示一致）
+     * status：后端直接返回中文状态文案（如 待激活、活跃、禁用），与列表筛选、标签展示一致
      */
     interface UserListItem {
       id: number
       /** 头像 URL；缺省、空串或无效时前端使用统一占位图，不参与业务校验 */
       avatar?: string
-      /** 1=在线 2=离线 3=异常 4=已禁用 */
+      /** 待激活 | 活跃 | 禁用（以后端返回值为准） */
       status: string
       userName: string
       userGender: string

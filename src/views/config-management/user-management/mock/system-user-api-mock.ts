@@ -94,10 +94,9 @@ export function mockFetchMetaOptions(params?: {
       { label: '审计人员', value: 'auditor' }
     ],
     statusOptions: [
-      { label: '在线', value: '1' },
-      { label: '离线', value: '2' },
-      { label: '异常', value: '3' },
-      { label: '已禁用', value: '4' }
+      { label: '待激活', value: '待激活' },
+      { label: '活跃', value: '活跃' },
+      { label: '禁用', value: '禁用' }
     ]
   })
 }
@@ -112,7 +111,7 @@ export function mockCreateUser(payload: CreateUserPayload): Promise<SystemUserIt
   return Promise.resolve({
     id: Date.now(),
     avatar: '',
-    status: '1',
+    status: '待激活',
     userName: payload.userName,
     nickName: payload.nickName ?? '',
     userGender: payload.userGender,
@@ -187,7 +186,8 @@ export function mockDisableUser(payload: DisableUserPayload): Promise<DisableUse
   const now = new Date()
   const fmt = (d: Date) =>
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`
-  return Promise.resolve({ success: true, id: payload.id, status: '4', updateTime: fmt(now) })
+  patchSystemUserMockItem(payload.id, { status: '禁用' })
+  return Promise.resolve({ success: true, id: payload.id, status: '禁用', updateTime: fmt(now) })
 }
 
 // ==================== 07-user-app-permissions-options ====================

@@ -6,7 +6,7 @@ export function buildSystemUserMockSeed(): Api.SystemManage.UserListItem[] {
   const base = (i: number): Api.SystemManage.UserListItem => ({
     id: i,
     avatar: '',
-    status: (['1', '2', '3', '4'] as const)[i % 4],
+    status: (['待激活', '活跃', '禁用'] as const)[i % 3],
     userName: `user_${i}`,
     nickName: i % 2 === 0 ? `昵称${i}` : '',
     userGender: i % 2 === 0 ? '男' : '女',
@@ -29,7 +29,7 @@ export function buildSystemUserMockSeed(): Api.SystemManage.UserListItem[] {
   list[0] = {
     id: 1,
     avatar: '',
-    status: '1',
+    status: '活跃',
     userName: 'demo',
     nickName: '演示',
     userGender: '男',

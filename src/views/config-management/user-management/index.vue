@@ -157,13 +157,12 @@
     return Object.fromEntries(pairs)
   })
 
-  /** 列表状态标签（与 Api.SystemManage.UserListItem.status 约定一致） */
-  const USER_STATUS_CONFIG = {
-    '1': { type: 'success' as const, text: '在线' },
-    '2': { type: 'info' as const, text: '离线' },
-    '3': { type: 'warning' as const, text: '异常' },
-    '4': { type: 'danger' as const, text: '已禁用' }
-  } as const
+  /** 列表状态标签类型（文案直接用后端 status 字段） */
+  const USER_STATUS_TAG_TYPE: Record<string, 'success' | 'warning' | 'danger' | 'info'> = {
+    活跃: 'success',
+    待激活: 'warning',
+    禁用: 'danger'
+  }
 
   /** 无头像或空 URL 时使用 SVG 占位（不发起网络请求） */
   const USER_AVATAR_PLACEHOLDER =
@@ -183,18 +182,6 @@
 
   function hasRealUserAvatar(avatar?: string | null): boolean {
     return Boolean(avatar?.trim())
-  }
-
-  /**
-   * 获取用户状态配置
-   */
-  const getUserStatusConfig = (status: string) => {
-    return (
-      USER_STATUS_CONFIG[status as keyof typeof USER_STATUS_CONFIG] || {
-        type: 'info' as const,
-        text: '未知'
-      }
-    )
   }
 
   const {
@@ -249,11 +236,11 @@
           }
         },
         {
-          prop: 'nickName',
+          prop: 'name',
           label: '昵称',
           width: 100,
           showOverflowTooltip: true,
-          formatter: (row) => row.nickName || '—'
+          formatter: (row) => row.name || '—'
         },
         {
           prop: 'userRoles',
@@ -280,12 +267,13 @@
           prop: 'status',
           label: '状态',
           formatter: (row) => {
-            const statusConfig = getUserStatusConfig(row.status)
-            return h(ElTag, { type: statusConfig.type }, () => statusConfig.text)
+            const text = String(row.status ?? '').trim()
+            const type = text ? (USER_STATUS_TAG_TYPE[text] ?? 'info') : 'info'
+            return h(ElTag, { type }, () => text || '—')
           }
         },
         {
-          prop: 'createTime',
+          prop: 'joinTime',
           label: '创建日期',
           sortable: true
         },

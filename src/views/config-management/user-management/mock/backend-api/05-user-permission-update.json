@@ -25,8 +25,8 @@
       "status": {
         "type": "string",
         "required": true,
-        "enum": ["1", "2", "3", "4"],
-        "description": "用户状态。"
+        "enum": ["待激活", "活跃", "禁用"],
+        "description": "用户状态文案（待激活、活跃、禁用）。"
       },
       "userName": { "type": "string", "required": true, "description": "用户名。" },
       "nickName": { "type": "string", "required": true, "description": "昵称。" },
@@ -57,7 +57,7 @@
     "updatedUser": {
       "id": 101,
       "avatar": "",
-      "status": "1",
+      "status": "活跃",
       "userName": "alice",
       "nickName": "Alice",
       "userGender": "女",

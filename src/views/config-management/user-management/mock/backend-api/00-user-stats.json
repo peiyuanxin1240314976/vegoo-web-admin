@@ -11,17 +11,17 @@
       "active": {
         "type": "number",
         "required": true,
-        "description": "当前在线用户数（status=1），无数据时返回 0。"
+        "description": "活跃用户数（status=活跃），无数据时返回 0。"
       },
       "disabled": {
         "type": "number",
         "required": true,
-        "description": "已禁用用户数（status=4），无数据时返回 0。"
+        "description": "禁用用户数（status=禁用），无数据时返回 0。"
       },
       "pending": {
         "type": "number",
         "required": true,
-        "description": "离线或异常用户数（status=2 或 status=3 之和），无数据时返回 0。"
+        "description": "待激活用户数（status=待激活），无数据时返回 0。"
       }
     }
   },

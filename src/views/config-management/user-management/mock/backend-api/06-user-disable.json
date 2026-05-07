@@ -12,8 +12,8 @@
       "status": {
         "type": "string",
         "required": true,
-        "enum": ["4"],
-        "description": "禁用后固定为 4（已禁用）。"
+        "enum": ["禁用"],
+        "description": "禁用后固定为文案「禁用」。"
       },
       "updateTime": { "type": "string", "required": true, "description": "状态更新时间。" }
     }
@@ -26,7 +26,7 @@
   "sampleResponse": {
     "success": true,
     "id": 104,
-    "status": "4",
+    "status": "禁用",
     "updateTime": "2026-04-13 10:00:00"
   },
   "api": {

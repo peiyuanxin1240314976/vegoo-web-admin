@@ -12,8 +12,8 @@
       "status": {
         "type": "string",
         "required": false,
-        "enum": ["", "1", "2", "3", "4"],
-        "description": "状态筛选：空字符串=全部，1=在线，2=离线，3=异常，4=已禁用。"
+        "enum": ["", "待激活", "活跃", "禁用"],
+        "description": "状态筛选：空字符串=全部；其余与列表行 status 文案一致（待激活、活跃、禁用）。"
       },
       "role": {
         "type": "number",
@@ -61,8 +61,8 @@
       "status": {
         "type": "string",
         "required": true,
-        "enum": ["1", "2", "3", "4"],
-        "description": "状态：1=在线，2=离线，3=异常，4=已禁用。"
+        "enum": ["待激活", "活跃", "禁用"],
+        "description": "状态文案，由后端直接返回（待激活、活跃、禁用）。"
       },
       "userName": { "type": "string", "required": true, "description": "用户名（登录名）。" },
       "nickName": { "type": "string", "required": true, "description": "昵称，可为空字符串。" },
@@ -111,7 +111,7 @@
       {
         "id": 101,
         "avatar": "",
-        "status": "1",
+        "status": "活跃",
         "userName": "alice",
         "nickName": "Alice",
         "userGender": "女",
@@ -128,7 +128,7 @@
       {
         "id": 102,
         "avatar": "",
-        "status": "2",
+        "status": "待激活",
         "userName": "bob",
         "nickName": "",
         "userGender": "男",
@@ -145,7 +145,7 @@
       {
         "id": 103,
         "avatar": "",
-        "status": "3",
+        "status": "禁用",
         "userName": "charlie",
         "nickName": "风控观察员",
         "userGender": "男",
@@ -162,7 +162,7 @@
       {
         "id": 104,
         "avatar": "",
-        "status": "4",
+        "status": "活跃",
         "userName": "david",
         "nickName": "离职账号",
         "userGender": "男",

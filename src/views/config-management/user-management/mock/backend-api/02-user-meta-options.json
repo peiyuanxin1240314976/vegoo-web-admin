@@ -35,8 +35,8 @@
       "value": {
         "type": "string",
         "required": true,
-        "enum": ["1", "2", "3", "4"],
-        "description": "状态值：1=在线，2=离线，3=异常，4=已禁用。"
+        "enum": ["待激活", "活跃", "禁用"],
+        "description": "状态值，与列表行 status、筛选入参一致（待激活、活跃、禁用）。"
       }
     }
   },
@@ -50,10 +50,9 @@
       { "label": "审计人员", "value": "auditor" }
     ],
     "statusOptions": [
-      { "label": "在线", "value": "1" },
-      { "label": "离线", "value": "2" },
-      { "label": "异常", "value": "3" },
-      { "label": "已禁用", "value": "4" }
+      { "label": "待激活", "value": "待激活" },
+      { "label": "活跃", "value": "活跃" },
+      { "label": "禁用", "value": "禁用" }
     ]
   },
   "api": {

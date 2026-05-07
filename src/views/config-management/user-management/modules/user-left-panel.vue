@@ -121,10 +121,9 @@
       roleOptions: () => [{ label: '所有角色', value: '' }],
       statusOptions: () => [
         { label: '所有状态', value: '' },
-        { label: '在线', value: '1' },
-        { label: '离线', value: '2' },
-        { label: '异常', value: '3' },
-        { label: '已禁用', value: '4' }
+        { label: '待激活', value: '待激活' },
+        { label: '活跃', value: '活跃' },
+        { label: '禁用', value: '禁用' }
       ]
     }
   )
@@ -156,21 +155,21 @@
     },
     {
       key: 'active',
-      label: '在线',
+      label: '活跃',
       sublabel: '当前页',
       value: props.stats.active,
       icon: UserFilled
     },
     {
       key: 'disabled',
-      label: '已禁用',
+      label: '禁用',
       sublabel: '当前页',
       value: props.stats.disabled,
       icon: CircleCloseFilled
     },
     {
       key: 'pending',
-      label: '离线 / 异常',
+      label: '待激活',
       sublabel: '当前页',
       value: props.stats.pending,
       icon: Clock
