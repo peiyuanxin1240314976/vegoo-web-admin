@@ -3,13 +3,13 @@
   "fieldDescription": {
     "request": {
       "nSource": { "type": "number", "required": true, "description": "广告平台 n_source。" },
-      "tStart": { "type": "string", "required": true, "description": "生效日期 YYYY-MM-DD。" },
-      "dCostRatio": {
+      "tstart": { "type": "string", "required": true, "description": "生效日期 YYYY-MM-DD。" },
+      "dcostRatio": {
         "type": "number",
         "required": true,
         "description": "折算比例 d_cost_ratio。"
       },
-      "dInstallCost": {
+      "dinstallCost": {
         "type": "number",
         "required": true,
         "description": "安装成本 d_install_cost。"
@@ -27,13 +27,13 @@
       "id": { "type": "string", "required": true, "description": "记录 ID。" },
       "nSource": { "type": "number", "required": true, "description": "广告平台 n_source。" },
       "platformName": { "type": "string", "required": true, "description": "广告平台名称。" },
-      "tStart": { "type": "string", "required": true, "description": "生效起始日期 YYYY-MM-DD。" },
-      "dCostRatio": {
+      "tstart": { "type": "string", "required": true, "description": "生效起始日期 YYYY-MM-DD。" },
+      "dcostRatio": {
         "type": "number",
         "required": true,
         "description": "折算比例 d_cost_ratio。"
       },
-      "dInstallCost": {
+      "dinstallCost": {
         "type": "number",
         "required": true,
         "description": "安装成本 d_install_cost。"
@@ -50,9 +50,9 @@
   },
   "sampleRequest": {
     "nSource": 1,
-    "tStart": "2026-03-24",
-    "dCostRatio": 1.125,
-    "dInstallCost": 0.34567,
+    "tstart": "2026-03-24",
+    "dcostRatio": 1.125,
+    "dinstallCost": 0.34567,
     "remark": "Q2 调整"
   },
   "sampleResponse": {
@@ -61,9 +61,9 @@
         "id": "CC-009",
         "nSource": 1,
         "platformName": "Google Ads",
-        "tStart": "2026-03-24",
-        "dCostRatio": 1.125,
-        "dInstallCost": 0.34567,
+        "tstart": "2026-03-24",
+        "dcostRatio": 1.125,
+        "dinstallCost": 0.34567,
         "updatedAt": "2026-03-24 09:30",
         "updatedBy": "admin",
         "remark": "Q2 调整",

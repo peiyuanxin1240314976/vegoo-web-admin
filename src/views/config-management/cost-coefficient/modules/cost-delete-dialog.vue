@@ -14,7 +14,7 @@
       <div class="del-title">确认要删除该成本系数配置吗？</div>
       <div v-if="item" class="del-meta">
         <span>广告平台：{{ item.platformName }} (n_source={{ item.nSource }})</span>
-        <span>生效日期：{{ item.tStart }} | 折算比例：{{ item.dCostRatio.toFixed(3) }}</span>
+        <span>生效日期：{{ item.tstart }} | 折算比例：{{ item.dcostRatio.toFixed(3) }}</span>
       </div>
       <div class="del-warning">
         <span class="warning-icon">ℹ</span>
@@ -64,8 +64,8 @@
   .del-body {
     display: flex;
     flex-direction: column;
-    align-items: center;
     gap: 12px;
+    align-items: center;
     text-align: center;
   }
 
@@ -95,18 +95,18 @@
     width: 100%;
     padding: 10px 14px;
     font-size: 12px;
+    line-height: 1.6;
     color: #93c5fd;
     text-align: left;
     background: rgb(59 130 246 / 10%);
     border: 1px solid rgb(59 130 246 / 20%);
     border-radius: 8px;
-    line-height: 1.6;
   }
 
   .warning-icon {
     flex-shrink: 0;
-    font-weight: 700;
     font-style: normal;
+    font-weight: 700;
   }
 </style>
 

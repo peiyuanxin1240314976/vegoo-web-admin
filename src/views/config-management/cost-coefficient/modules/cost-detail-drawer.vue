@@ -30,13 +30,14 @@
                   <span
                     class="platform-icon"
                     :style="{ background: item ? getPlatform(item.nSource).color : '#475569' }"
-                  >{{ item ? getPlatform(item.nSource).abbr : '' }}</span>
+                    >{{ item ? getPlatform(item.nSource).abbr : '' }}</span
+                  >
                   {{ item?.platformName }} (n_source={{ item?.nSource }})
                 </div>
               </div>
               <div class="info-item">
                 <div class="info-label">生效起始日期</div>
-                <div class="info-value">{{ item?.tStart }}</div>
+                <div class="info-value">{{ item?.tstart }}</div>
               </div>
               <div class="info-item">
                 <div class="info-label">状态</div>
@@ -48,11 +49,11 @@
               </div>
               <div class="info-item">
                 <div class="info-label">折算比例 (d_cost_ratio)</div>
-                <div class="info-value info-value--mono">{{ item?.dCostRatio.toFixed(3) }}</div>
+                <div class="info-value info-value--mono">{{ item?.dcostRatio.toFixed(3) }}</div>
               </div>
               <div class="info-item">
                 <div class="info-label">安装成本 (d_install_cost)</div>
-                <div class="info-value info-value--mono">{{ item?.dInstallCost.toFixed(5) }}</div>
+                <div class="info-value info-value--mono">{{ item?.dinstallCost.toFixed(5) }}</div>
               </div>
               <div class="info-item">
                 <div class="info-label">创建时间</div>
@@ -75,9 +76,7 @@
 
           <!-- 调整历史 -->
           <div class="detail-section">
-            <div class="section-title">
-              <span class="section-icon">🕐</span>调整历史
-            </div>
+            <div class="section-title"> <span class="section-icon">🕐</span>调整历史 </div>
             <div class="history-list">
               <div v-for="(h, i) in history" :key="i" class="history-item">
                 <div class="history-dot" />
@@ -125,7 +124,7 @@
 
   const isActive = computed(() => {
     if (!props.item) return false
-    return props.item.tStart <= getAppNow().toISOString().slice(0, 10)
+    return props.item.tstart <= getAppNow().toISOString().slice(0, 10)
   })
 </script>
 
@@ -156,11 +155,11 @@
   // ─── 头部 ───────────────────────────────────────────────
   .drawer-header {
     display: flex;
+    flex-shrink: 0;
     align-items: center;
     justify-content: space-between;
     padding: 18px 20px;
     border-bottom: 1px solid rgb(255 255 255 / 8%);
-    flex-shrink: 0;
   }
 
   .drawer-title {
@@ -171,9 +170,15 @@
     font-weight: 600;
   }
 
-  .title-nsource { color: #94a3b8; }
-  .title-sep     { color: #475569; }
-  .title-platform { color: #e2e8f0; }
+  .title-nsource {
+    color: #94a3b8;
+  }
+  .title-sep {
+    color: #475569;
+  }
+  .title-platform {
+    color: #e2e8f0;
+  }
 
   .drawer-close {
     display: flex;
@@ -182,8 +187,8 @@
     width: 28px;
     height: 28px;
     font-size: 14px;
-    cursor: pointer;
     color: #64748b;
+    cursor: pointer;
     background: none;
     border: none;
     border-radius: 5px;
@@ -198,12 +203,21 @@
   // ─── 内容 ───────────────────────────────────────────────
   .drawer-body {
     flex: 1;
-    overflow-y: auto;
     padding: 16px 20px;
+    overflow-y: auto;
 
-    &::-webkit-scrollbar { width: 4px; }
-    &::-webkit-scrollbar-track { background: transparent; }
-    &::-webkit-scrollbar-thumb { background: rgb(255 255 255 / 10%); border-radius: 2px; }
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgb(255 255 255 / 10%);
+      border-radius: 2px;
+    }
   }
 
   .detail-section {
@@ -220,7 +234,9 @@
     color: #e2e8f0;
   }
 
-  .section-icon { font-size: 14px; }
+  .section-icon {
+    font-size: 14px;
+  }
 
   .info-grid {
     display: grid;
@@ -229,7 +245,9 @@
   }
 
   .info-item {
-    &--full { grid-column: 1 / -1; }
+    &--full {
+      grid-column: 1 / -1;
+    }
   }
 
   .info-label {
@@ -275,16 +293,23 @@
     font-size: 12px;
     border-radius: 4px;
 
-    &.status--active  { color: #22c55e; background: rgb(34 197 94 / 12%); }
-    &.status--pending { color: #f59e0b; background: rgb(245 158 11 / 12%); }
+    &.status--active {
+      color: #22c55e;
+      background: rgb(34 197 94 / 12%);
+    }
+
+    &.status--pending {
+      color: #f59e0b;
+      background: rgb(245 158 11 / 12%);
+    }
   }
 
   .status-dot {
+    flex-shrink: 0;
     width: 6px;
     height: 6px;
-    border-radius: 50%;
     background: currentcolor;
-    flex-shrink: 0;
+    border-radius: 50%;
   }
 
   // ─── 调整历史 ────────────────────────────────────────────
@@ -297,7 +322,9 @@
     position: relative;
     padding: 0 0 16px 16px;
 
-    &:last-child { padding-bottom: 0; }
+    &:last-child {
+      padding-bottom: 0;
+    }
   }
 
   .history-dot {
@@ -307,24 +334,41 @@
     width: 8px;
     height: 8px;
     background: #2dd4bf;
-    border-radius: 50%;
     border: 2px solid #111827;
+    border-radius: 50%;
   }
 
-  .history-body { display: flex; flex-direction: column; gap: 2px; }
+  .history-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
 
-  .history-time     { font-size: 12px; color: #64748b; }
-  .history-operator { font-size: 13px; font-weight: 600; color: #94a3b8; }
-  .history-change   { font-size: 12px; color: #64748b; line-height: 1.6; }
+  .history-time {
+    font-size: 12px;
+    color: #64748b;
+  }
+
+  .history-operator {
+    font-size: 13px;
+    font-weight: 600;
+    color: #94a3b8;
+  }
+
+  .history-change {
+    font-size: 12px;
+    line-height: 1.6;
+    color: #64748b;
+  }
 
   // ─── 底部 ───────────────────────────────────────────────
   .drawer-footer {
     display: flex;
+    flex-shrink: 0;
     gap: 10px;
     justify-content: flex-end;
     padding: 14px 20px;
     border-top: 1px solid rgb(255 255 255 / 8%);
-    flex-shrink: 0;
   }
 
   .btn-edit {
@@ -334,7 +378,9 @@
     background: #2dd4bf !important;
     border: none !important;
 
-    &:hover { filter: brightness(1.1); }
+    &:hover {
+      filter: brightness(1.1);
+    }
   }
 
   .btn-del {

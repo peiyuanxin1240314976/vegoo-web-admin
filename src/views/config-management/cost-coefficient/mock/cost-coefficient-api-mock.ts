@@ -18,12 +18,12 @@ function filterRows(params: CostCoefficientQuery): CostCoefficientItem[] {
     if (params.nSource != null && params.nSource !== '' && row.nSource !== params.nSource) {
       return false
     }
-    if (params.tStartYear && !row.tStart.startsWith(String(params.tStartYear))) return false
+    if (params.tStartYear && !row.tstart.startsWith(String(params.tStartYear))) return false
     if (params.keyword) {
       const kw = params.keyword.toLowerCase()
       if (
         !row.platformName.toLowerCase().includes(kw) &&
-        !row.tStart.includes(kw) &&
+        !row.tstart.includes(kw) &&
         !row.updatedBy.toLowerCase().includes(kw)
       ) {
         return false
@@ -61,7 +61,7 @@ export function mockFetchCostCoefficientOverviewKpi(
   const monthPrefix = today.slice(0, 7)
   return Promise.resolve({
     total: filtered.length,
-    active: filtered.filter((row) => row.tStart <= today).length,
+    active: filtered.filter((row) => row.tstart <= today).length,
     platforms: new Set(filtered.map((row) => row.nSource)).size,
     monthChanges: filtered.filter((row) => row.updatedAt.startsWith(monthPrefix)).length
   })
@@ -80,9 +80,9 @@ export function mockCreateCostCoefficient(
     id: `mock-${getAppNow().getTime()}`,
     nSource: data.nSource ?? 1,
     platformName: platform.name,
-    tStart: data.tStart,
-    dCostRatio: Number(data.dCostRatio),
-    dInstallCost: Number(data.dInstallCost),
+    tstart: data.tstart,
+    dcostRatio: Number(data.dcostRatio),
+    dinstallCost: Number(data.dinstallCost),
     remark: data.remark,
     updatedAt: timeStr,
     updatedBy: 'admin',
@@ -107,15 +107,15 @@ export function mockUpdateCostCoefficient(
   mockList = mockList.slice()
   mockList[idx] = {
     ...prev,
-    tStart: data.tStart ?? prev.tStart,
-    dCostRatio:
-      data.dCostRatio !== undefined && data.dCostRatio !== ''
-        ? Number(data.dCostRatio)
-        : prev.dCostRatio,
-    dInstallCost:
-      data.dInstallCost !== undefined && data.dInstallCost !== ''
-        ? Number(data.dInstallCost)
-        : prev.dInstallCost,
+    tstart: data.tstart ?? prev.tstart,
+    dcostRatio:
+      data.dcostRatio !== undefined && data.dcostRatio !== ''
+        ? Number(data.dcostRatio)
+        : prev.dcostRatio,
+    dinstallCost:
+      data.dinstallCost !== undefined && data.dinstallCost !== ''
+        ? Number(data.dinstallCost)
+        : prev.dinstallCost,
     remark: data.remark ?? prev.remark,
     updatedAt: timeStr,
     updatedBy: 'admin'

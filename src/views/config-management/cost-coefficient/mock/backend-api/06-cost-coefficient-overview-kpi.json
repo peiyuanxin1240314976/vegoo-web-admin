@@ -23,7 +23,7 @@
       "active": {
         "type": "number",
         "required": true,
-        "description": "已启用条数（tStart 小于等于今天）。"
+        "description": "已启用条数（tstart 小于等于今天）。"
       },
       "platforms": {
         "type": "number",

@@ -4,18 +4,18 @@
     "request": {
       "id": { "type": "string", "required": true, "description": "记录 ID（路径参数）。" },
       "nSource": { "type": "number", "required": false, "description": "广告平台 n_source。" },
-      "tStart": { "type": "string", "required": false, "description": "生效日期。" },
-      "dCostRatio": { "type": "number", "required": false, "description": "折算比例。" },
-      "dInstallCost": { "type": "number", "required": false, "description": "安装成本。" },
+      "tstart": { "type": "string", "required": false, "description": "生效日期。" },
+      "dcostRatio": { "type": "number", "required": false, "description": "折算比例。" },
+      "dinstallCost": { "type": "number", "required": false, "description": "安装成本。" },
       "remark": { "type": "string", "required": false, "description": "备注。" }
     },
     "response": {}
   },
   "sampleRequest": {
     "id": "CC-001",
-    "tStart": "2026-04-01",
-    "dCostRatio": 1.2,
-    "dInstallCost": 0.35678,
+    "tstart": "2026-04-01",
+    "dcostRatio": 1.2,
+    "dinstallCost": 0.35678,
     "remark": "季度更新"
   },
   "sampleResponse": { "data": {} },

@@ -28,9 +28,9 @@ export interface CostCoefficientHistory {
 
 export interface CostCoefficientFormModel {
   nSource: number | null
-  tStart: string
-  dCostRatio: number | ''
-  dInstallCost: number | ''
+  tstart: string
+  dcostRatio: number | ''
+  dinstallCost: number | ''
   remark: string
 }
 

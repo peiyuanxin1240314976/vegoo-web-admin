@@ -57,9 +57,9 @@
         </el-form-item>
 
         <!-- 生效起始日期 -->
-        <el-form-item label="生效起始日期 (t_start)" prop="tStart" class="form-item">
+        <el-form-item label="生效起始日期 (t_start)" prop="tstart" class="form-item">
           <AppDatePicker
-            v-model="form.tStart"
+            v-model="form.tstart"
             type="date"
             placeholder="选择日期"
             value-format="YYYY-MM-DD"
@@ -68,9 +68,9 @@
         </el-form-item>
 
         <!-- 折算比例 -->
-        <el-form-item label="折算比例 (d_cost_ratio)" prop="dCostRatio" class="form-item">
+        <el-form-item label="折算比例 (d_cost_ratio)" prop="dcostRatio" class="form-item">
           <el-input
-            v-model="form.dCostRatio"
+            v-model="form.dcostRatio"
             placeholder="0.001 ~ 9.999"
             type="number"
             step="0.001"
@@ -79,9 +79,9 @@
         </el-form-item>
 
         <!-- 安装成本 -->
-        <el-form-item label="安装成本 (d_install_cost)" prop="dInstallCost" class="form-item">
+        <el-form-item label="安装成本 (d_install_cost)" prop="dinstallCost" class="form-item">
           <el-input
-            v-model="form.dInstallCost"
+            v-model="form.dinstallCost"
             placeholder="0.00001 ~ 9.99999"
             type="number"
             step="0.00001"
@@ -99,8 +99,8 @@
       <div v-if="isEdit && editData" class="current-values">
         <span class="cv-label">当前生效值</span>
         <span class="cv-text">
-          折算比例: {{ editData.dCostRatio.toFixed(3) }} | 安装成本:
-          {{ editData.dInstallCost.toFixed(5) }}
+          折算比例: {{ editData.dcostRatio.toFixed(3) }} | 安装成本:
+          {{ editData.dinstallCost.toFixed(5) }}
         </span>
       </div>
 
@@ -173,9 +173,9 @@
 
   const form = reactive<CostCoefficientFormModel>({
     nSource: null,
-    tStart: '2000-01-01',
-    dCostRatio: '',
-    dInstallCost: '',
+    tstart: '2000-01-01',
+    dcostRatio: '',
+    dinstallCost: '',
     remark: ''
   })
 
@@ -186,15 +186,15 @@
     (data) => {
       if (data) {
         form.nSource = data.nSource
-        form.tStart = data.tStart
-        form.dCostRatio = data.dCostRatio
-        form.dInstallCost = data.dInstallCost
+        form.tstart = data.tstart
+        form.dcostRatio = data.dcostRatio
+        form.dinstallCost = data.dinstallCost
         form.remark = data.remark
       } else {
         form.nSource = null
-        form.tStart = '2000-01-01'
-        form.dCostRatio = ''
-        form.dInstallCost = ''
+        form.tstart = '2000-01-01'
+        form.dcostRatio = ''
+        form.dinstallCost = ''
         form.remark = ''
       }
     },
@@ -209,8 +209,8 @@
 
   const rules: FormRules = {
     nSource: [{ required: true, message: '请选择广告平台', trigger: 'change' }],
-    tStart: [{ required: true, message: '请选择生效起始日期', trigger: 'change' }],
-    dCostRatio: [
+    tstart: [{ required: true, message: '请选择生效起始日期', trigger: 'change' }],
+    dcostRatio: [
       { required: true, message: '请输入折算比例', trigger: 'blur' },
       {
         validator: (_: unknown, value: number | '', cb: (e?: Error) => void) => {
@@ -228,7 +228,7 @@
         trigger: 'blur'
       }
     ],
-    dInstallCost: [
+    dinstallCost: [
       { required: true, message: '请输入安装成本', trigger: 'blur' },
       {
         validator: (_: unknown, value: number | '', cb: (e?: Error) => void) => {
