@@ -258,17 +258,32 @@
                 />
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="210" fixed="right" align="center">
+            <el-table-column label="操作" width="240" fixed="right" align="center">
               <template #default="{ row }">
-                <div class="action-btns">
-                  <button class="action-btn action-btn--edit" @click.stop="handleEdit(row)">
-                    <el-icon><EditPen /></el-icon>编辑
+                <div class="action-cell">
+                  <ElButton
+                    text
+                    type="primary"
+                    class="action-row-edit-btn"
+                    @click.stop="handleEdit(row)"
+                  >
+                    编辑
+                  </ElButton>
+                  <span class="action-sep" aria-hidden="true">|</span>
+                  <button
+                    type="button"
+                    class="action-btn action-btn--delete"
+                    @click.stop="handleDelete(row)"
+                  >
+                    删除
                   </button>
-                  <button class="action-btn action-btn--delete" @click.stop="handleDelete(row)">
-                    <el-icon><Delete /></el-icon>删除
-                  </button>
-                  <button class="action-btn action-btn--view" @click.stop="handleView(row)">
-                    <el-icon><View /></el-icon>查看
+                  <span class="action-sep" aria-hidden="true">|</span>
+                  <button
+                    type="button"
+                    class="action-btn action-btn--secondary"
+                    @click.stop="handleView(row)"
+                  >
+                    查看
                   </button>
                 </div>
               </template>
@@ -337,7 +352,7 @@
 <script setup lang="ts">
   import { computed, defineComponent, h, onMounted, reactive, ref, watch } from 'vue'
   import { useI18n } from 'vue-i18n'
-  import { Plus, Download, Search, EditPen, Delete, View } from '@element-plus/icons-vue'
+  import { Plus, Download, Search } from '@element-plus/icons-vue'
   import { ElMessage, ElTooltip } from 'element-plus'
   import {
     createApplication,
@@ -1472,21 +1487,32 @@
     }
   }
 
-  .action-btns {
-    display: flex;
+  .action-cell {
+    display: inline-flex;
     flex-wrap: wrap;
-    gap: 0;
+    gap: 10px;
     align-items: center;
     justify-content: center;
   }
 
-  .action-btn {
-    display: inline-flex;
-    gap: 4px;
-    align-items: center;
-    padding: 4px 8px;
+  /* 编辑：用 EP text primary，字色/悬停走 Element 主题变量，随设置里「系统主题色」联动 */
+  :deep(.action-row-edit-btn.el-button) {
+    height: auto;
+    min-height: 0;
+    padding: 4px 6px;
+    margin: 0;
     font-size: 12px;
     font-weight: 500;
+    line-height: 1.3;
+    border-radius: 6px;
+  }
+
+  .action-btn {
+    padding: 4px 6px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.3;
     cursor: pointer;
     background: none;
     border: none;
@@ -1495,11 +1521,17 @@
       color var(--duration-fast) var(--ease-out),
       background-color var(--duration-fast) var(--ease-out);
 
-    &--edit {
-      color: var(--el-color-primary);
+    &--secondary {
+      color: var(--text-secondary);
 
       &:hover {
-        background: var(--accent-dim);
+        color: var(--text-primary);
+        background: color-mix(in srgb, var(--default-box-color) 70%, transparent);
+      }
+
+      &:focus-visible {
+        outline: 2px solid color-mix(in srgb, var(--text-secondary) 35%, transparent);
+        outline-offset: 2px;
       }
     }
 
@@ -1509,16 +1541,21 @@
       &:hover {
         background: var(--red-dim);
       }
-    }
 
-    &--view {
-      color: var(--text-secondary);
-
-      &:hover {
-        color: var(--text-primary);
-        background: color-mix(in srgb, var(--default-box-color) 70%, transparent);
+      &:focus-visible {
+        outline: 2px solid color-mix(in srgb, var(--red) 45%, transparent);
+        outline-offset: 2px;
       }
     }
+  }
+
+  .action-sep {
+    flex-shrink: 0;
+    padding: 0 1px;
+    font-size: 12px;
+    line-height: 1;
+    color: color-mix(in srgb, var(--am-border) 90%, transparent);
+    user-select: none;
   }
 
   // ─── 分页 ──────────────────────────────────────────────
