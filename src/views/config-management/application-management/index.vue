@@ -133,7 +133,7 @@
         </div>
 
         <!-- 数据表格 -->
-        <div class="table-wrapper">
+        <div class="table-wrapper" @mouseleave="hideCellTooltip">
           <el-table
             v-loading="tableLoading"
             :data="tableRecords"
@@ -143,21 +143,24 @@
             :row-style="rowStyle"
             @row-click="handleRowClick"
           >
-            <el-table-column
-              prop="id"
-              label="ID"
-              min-width="90"
-              align="left"
-              show-overflow-tooltip
-            />
-            -->
-            <el-table-column
-              prop="appName"
-              label="应用名"
-              min-width="90"
-              align="left"
-              show-overflow-tooltip
-            />
+            <el-table-column prop="id" label="ID" min-width="90" align="left">
+              <template #default="{ row }">
+                <TableOverflowCell
+                  :content="row.id"
+                  @show-tooltip="showCellTooltip"
+                  @hide-tooltip="hideCellTooltip"
+                />
+              </template>
+            </el-table-column>
+            <el-table-column prop="appName" label="应用名" min-width="90" align="left">
+              <template #default="{ row }">
+                <TableOverflowCell
+                  :content="row.appName"
+                  @show-tooltip="showCellTooltip"
+                  @hide-tooltip="hideCellTooltip"
+                />
+              </template>
+            </el-table-column>
             <el-table-column label="图标" min-width="80" align="center">
               <template #default="{ row }">
                 <div class="app-icon" :style="{ background: row.iconColor }">
@@ -165,7 +168,7 @@
                 </div>
               </template>
             </el-table-column>
-            <el-table-column label="平台" min-width="110" align="left">
+            <el-table-column label="平台" min-width="115" align="left">
               <template #default="{ row }">
                 <span
                   :class="[
@@ -188,34 +191,42 @@
               align="left"
               show-overflow-tooltip
             /> -->
-            <el-table-column
-              prop="packageId"
-              label="软件包ID"
-              min-width="100"
-              align="left"
-              show-overflow-tooltip
-            />
-            <el-table-column
-              prop="shortName"
-              label="应用简称"
-              min-width="90"
-              align="left"
-              show-overflow-tooltip
-            />
-            <el-table-column
-              prop="category"
-              label="类别"
-              min-width="80"
-              align="left"
-              show-overflow-tooltip
-            />
-            <el-table-column
-              prop="timezone"
-              label="报表时区"
-              min-width="90"
-              align="left"
-              show-overflow-tooltip
-            />
+            <el-table-column prop="packageId" label="软件包ID" min-width="100" align="left">
+              <template #default="{ row }">
+                <TableOverflowCell
+                  :content="row.packageId"
+                  @show-tooltip="showCellTooltip"
+                  @hide-tooltip="hideCellTooltip"
+                />
+              </template>
+            </el-table-column>
+            <el-table-column prop="shortName" label="应用简称" min-width="90" align="left">
+              <template #default="{ row }">
+                <TableOverflowCell
+                  :content="row.shortName"
+                  @show-tooltip="showCellTooltip"
+                  @hide-tooltip="hideCellTooltip"
+                />
+              </template>
+            </el-table-column>
+            <el-table-column prop="category" label="类别" min-width="80" align="left">
+              <template #default="{ row }">
+                <TableOverflowCell
+                  :content="row.category"
+                  @show-tooltip="showCellTooltip"
+                  @hide-tooltip="hideCellTooltip"
+                />
+              </template>
+            </el-table-column>
+            <el-table-column prop="timezone" label="报表时区" min-width="90" align="left">
+              <template #default="{ row }">
+                <TableOverflowCell
+                  :content="row.timezone"
+                  @show-tooltip="showCellTooltip"
+                  @hide-tooltip="hideCellTooltip"
+                />
+              </template>
+            </el-table-column>
             <el-table-column prop="priority" label="优先级" min-width="80" align="left" />
             <el-table-column label="状态" min-width="80" align="center">
               <template #default="{ row }">
@@ -229,21 +240,25 @@
                 </span>
               </template>
             </el-table-column>
-            <el-table-column
-              prop="creator"
-              label="创建人"
-              min-width="80"
-              align="left"
-              show-overflow-tooltip
-            />
-            <el-table-column
-              prop="createTime"
-              label="创建时间"
-              min-width="100"
-              align="left"
-              show-overflow-tooltip
-            />
-            <el-table-column label="操作" width="260" fixed="right" align="center">
+            <el-table-column prop="creator" label="创建人" min-width="80" align="left">
+              <template #default="{ row }">
+                <TableOverflowCell
+                  :content="row.creator"
+                  @show-tooltip="showCellTooltip"
+                  @hide-tooltip="hideCellTooltip"
+                />
+              </template>
+            </el-table-column>
+            <el-table-column prop="createTime" label="创建时间" min-width="100" align="left">
+              <template #default="{ row }">
+                <TableOverflowCell
+                  :content="row.createTime"
+                  @show-tooltip="showCellTooltip"
+                  @hide-tooltip="hideCellTooltip"
+                />
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="210" fixed="right" align="center">
               <template #default="{ row }">
                 <div class="action-btns">
                   <button class="action-btn action-btn--edit" @click.stop="handleEdit(row)">
@@ -259,6 +274,17 @@
               </template>
             </el-table-column>
           </el-table>
+          <ElTooltip
+            :visible="cellTooltipVisible"
+            :content="cellTooltipContent"
+            :virtual-ref="cellTooltipRef"
+            virtual-triggering
+            placement="top"
+            :show-after="0"
+            :hide-after="0"
+            :enterable="false"
+            popper-class="application-management-page__cell-tooltip"
+          />
 
           <!-- 分页 -->
           <div class="pagination-bar">
@@ -309,10 +335,10 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, onMounted, reactive, ref, watch } from 'vue'
+  import { computed, defineComponent, h, onMounted, reactive, ref, watch } from 'vue'
   import { useI18n } from 'vue-i18n'
   import { Plus, Download, Search, EditPen, Delete, View } from '@element-plus/icons-vue'
-  import { ElMessage } from 'element-plus'
+  import { ElMessage, ElTooltip } from 'element-plus'
   import {
     createApplication,
     deleteApplication,
@@ -330,6 +356,56 @@
   import { type ApplicationAppItem, type ApplicationFormPayload, type OptionItem } from './types'
 
   defineOptions({ name: 'ApplicationManagement' })
+
+  const TableOverflowCell = defineComponent({
+    name: 'TableOverflowCell',
+    props: {
+      content: {
+        type: [String, Number],
+        default: ''
+      }
+    },
+    emits: ['show-tooltip', 'hide-tooltip'],
+    setup(props, { emit }) {
+      const cellRef = ref<HTMLElement>()
+      const contentText = computed(() => String(props.content ?? ''))
+
+      const handleMouseenter = () => {
+        const cell = cellRef.value
+        if (!cell || cell.scrollWidth <= cell.clientWidth) return
+        emit('show-tooltip', {
+          content: contentText.value,
+          reference: cell
+        })
+      }
+
+      return () =>
+        h(
+          'span',
+          {
+            ref: cellRef,
+            class: 'table-cell-ellipsis',
+            onMouseenter: handleMouseenter,
+            onMouseleave: () => emit('hide-tooltip')
+          },
+          contentText.value
+        )
+    }
+  })
+
+  const cellTooltipVisible = ref(false)
+  const cellTooltipContent = ref('')
+  const cellTooltipRef = ref<HTMLElement>()
+
+  function showCellTooltip(payload: { content: string; reference: HTMLElement }) {
+    cellTooltipContent.value = payload.content
+    cellTooltipRef.value = payload.reference
+    cellTooltipVisible.value = true
+  }
+
+  function hideCellTooltip() {
+    cellTooltipVisible.value = false
+  }
 
   const { t } = useI18n()
   const userStore = useUserStore()
@@ -453,6 +529,7 @@
   }
 
   async function loadTable() {
+    hideCellTooltip()
     tableLoading.value = true
     try {
       const res = await fetchApplicationTable({
@@ -1302,6 +1379,14 @@
       border-bottom: 1px solid var(--am-border) !important;
     }
 
+    :deep(.table-cell-ellipsis) {
+      display: block;
+      width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
     :deep(tr) {
       background: transparent !important;
     }
@@ -1390,7 +1475,7 @@
   .action-btns {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 0;
     align-items: center;
     justify-content: center;
   }

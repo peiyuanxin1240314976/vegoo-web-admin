@@ -174,7 +174,7 @@
                 <el-table-column
                   prop="assignTime"
                   label="分配时间"
-                  min-width="13%"
+                  min-width="16%"
                   align="center"
                 />
                 <el-table-column label="状态" min-width="12%" align="center">
@@ -184,11 +184,15 @@
                     </span>
                   </template>
                 </el-table-column>
-                <el-table-column label="操作" width="168" fixed="right" align="center">
+                <el-table-column label="操作" width="210" fixed="right" align="center">
                   <template #default="{ row }">
                     <div class="action-btns">
-                      <button class="view-btn" @click.stop="handleView(row)">查看</button>
-                      <button class="edit-btn" @click.stop="handleEdit(row)">编辑</button>
+                      <button class="action-btn action-btn--edit" @click.stop="handleEdit(row)">
+                        <el-icon><EditPen /></el-icon>编辑
+                      </button>
+                      <button class="action-btn action-btn--view" @click.stop="handleView(row)">
+                        <el-icon><View /></el-icon>查看
+                      </button>
                     </div>
                   </template>
                 </el-table-column>
@@ -239,7 +243,7 @@
 
 <script setup lang="ts">
   import { computed, reactive, ref, watch, onMounted } from 'vue'
-  import { Plus, Download, Search } from '@element-plus/icons-vue'
+  import { Plus, Download, Search, EditPen, View } from '@element-plus/icons-vue'
   import { ElMessage } from 'element-plus'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
@@ -557,11 +561,12 @@
     --bg-card: var(--as-surface);
     --border: color-mix(in srgb, var(--el-color-primary) 18%, transparent);
     --accent: var(--el-color-primary);
-    --accent-dim: color-mix(in srgb, var(--el-color-primary) 14%, transparent);
+    --accent-dim: color-mix(in srgb, var(--el-color-primary) 12%, transparent);
     --android-green: var(--art-success);
     --ios-blue: var(--el-color-info);
     --amber: var(--art-warning);
     --red: var(--art-danger);
+    --red-dim: color-mix(in srgb, var(--art-danger) 12%, transparent);
     --text-primary: var(--text-primary);
     --text-secondary: var(--text-secondary);
     --text-muted: var(--text-tertiary);
@@ -1204,32 +1209,52 @@
   }
 
   .action-btns {
-    display: inline-flex;
-    gap: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
     align-items: center;
     justify-content: center;
   }
 
-  .view-btn,
-  .edit-btn {
-    padding: 3px 10px;
+  .action-btn {
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+    padding: 4px 8px;
     font-size: 12px;
-    color: var(--accent);
+    font-weight: 500;
     cursor: pointer;
-    background: var(--accent-dim);
-    border: 1px solid color-mix(in srgb, var(--el-color-primary) 22%, transparent);
-    border-radius: 5px;
-    transition: all 0.15s;
+    background: none;
+    border: none;
+    border-radius: 6px;
+    transition:
+      color var(--duration-fast) var(--ease-out),
+      background-color var(--duration-fast) var(--ease-out);
 
-    &:hover {
-      background: color-mix(in srgb, var(--el-color-primary) 16%, transparent);
+    &--edit {
+      color: var(--el-color-primary);
+
+      &:hover {
+        background: var(--accent-dim);
+      }
     }
-  }
 
-  .view-btn {
-    color: color-mix(in srgb, var(--theme-color) 86%, white 14%);
-    background: color-mix(in srgb, var(--theme-color) 10%, transparent);
-    border-color: color-mix(in srgb, var(--theme-color) 28%, transparent);
+    &--delete {
+      color: var(--red);
+
+      &:hover {
+        background: var(--red-dim);
+      }
+    }
+
+    &--view {
+      color: var(--text-secondary);
+
+      &:hover {
+        color: var(--text-primary);
+        background: color-mix(in srgb, var(--default-box-color) 70%, transparent);
+      }
+    }
   }
 
   // ─── 分页 ──────────────────────────────────────────────

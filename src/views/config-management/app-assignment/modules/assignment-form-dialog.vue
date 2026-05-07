@@ -545,7 +545,7 @@
     }
 
     .el-dialog__body {
-      max-height: 70vh;
+      max-height: 55vh;
       padding: 0 !important;
       overflow-y: auto;
 
