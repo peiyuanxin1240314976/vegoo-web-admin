@@ -78,26 +78,33 @@
           </span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" min-width="160" fixed="right" align="center">
+      <el-table-column label="操作" min-width="200" fixed="right" align="center">
         <template #default="{ row }">
-          <div class="oa-table__actions">
-            <button type="button" class="oa-table__link" @click.stop="emit('rowClick', row)">
-              [查看]
-            </button>
+          <div class="action-cell">
             <button
-              v-if="row.status === '待分配'"
               type="button"
-              class="oa-table__link oa-table__link--assign"
-              @click.stop="emit('assign', row)"
+              class="action-btn action-btn--secondary"
+              @click.stop="emit('rowClick', row)"
             >
-              [分配凭据]
+              查看
             </button>
+            <template v-if="row.status === '待分配'">
+              <span class="action-sep" aria-hidden="true">|</span>
+              <button
+                type="button"
+                class="action-btn action-btn--secondary"
+                @click.stop="emit('assign', row)"
+              >
+                分配凭据
+              </button>
+            </template>
+            <span class="action-sep" aria-hidden="true">|</span>
             <button
               type="button"
-              class="oa-table__link oa-table__link--del"
+              class="action-btn action-btn--delete"
               @click.stop="emit('delete', row)"
             >
-              [删除]
+              删除
             </button>
           </div>
         </template>
@@ -329,41 +336,53 @@
     font-size: 10px;
   }
 
-  .oa-table__actions {
-    display: flex;
+  .action-cell {
+    display: inline-flex;
     flex-wrap: wrap;
-    gap: 4px;
+    gap: 10px;
+    align-items: center;
     justify-content: center;
   }
 
-  .oa-table__link {
-    padding: 2px 4px;
+  .action-btn {
+    padding: 4px 6px;
+    font-family: inherit;
     font-size: 12px;
-    color: var(--art-primary);
+    font-weight: 500;
+    line-height: 1.3;
     cursor: pointer;
     background: none;
     border: none;
-    transition: color var(--duration-fast) var(--ease-default);
+    border-radius: 6px;
+    transition:
+      color var(--duration-fast) var(--ease-out),
+      background-color var(--duration-fast) var(--ease-out);
 
-    &:hover {
-      color: #60a5fa;
-    }
-
-    &--assign {
-      color: #22d3ee;
+    &--secondary {
+      color: var(--text-secondary);
 
       &:hover {
-        color: #67e8f9;
+        color: var(--text-primary);
+        background: color-mix(in srgb, var(--default-box-color) 70%, transparent);
       }
     }
 
-    &--del {
+    &--delete {
       color: var(--art-danger);
 
       &:hover {
-        color: #fca5a5;
+        background: color-mix(in srgb, var(--art-danger) 12%, transparent);
       }
     }
+  }
+
+  .action-sep {
+    flex-shrink: 0;
+    padding: 0 1px;
+    font-size: 12px;
+    line-height: 1;
+    color: color-mix(in srgb, var(--default-border) 90%, transparent);
+    user-select: none;
   }
 
   .oa-table__pager {

@@ -184,14 +184,23 @@
                     </span>
                   </template>
                 </el-table-column>
-                <el-table-column label="操作" width="210" fixed="right" align="center">
+                <el-table-column label="操作" width="220" fixed="right" align="center">
                   <template #default="{ row }">
-                    <div class="action-btns">
-                      <button class="action-btn action-btn--edit" @click.stop="handleEdit(row)">
-                        <el-icon><EditPen /></el-icon>编辑
+                    <div class="action-cell">
+                      <button
+                        type="button"
+                        class="action-btn action-btn--primary"
+                        @click.stop="handleEdit(row)"
+                      >
+                        编辑
                       </button>
-                      <button class="action-btn action-btn--view" @click.stop="handleView(row)">
-                        <el-icon><View /></el-icon>查看
+                      <span class="action-sep" aria-hidden="true">|</span>
+                      <button
+                        type="button"
+                        class="action-btn action-btn--secondary"
+                        @click.stop="handleView(row)"
+                      >
+                        查看
                       </button>
                     </div>
                   </template>
@@ -243,7 +252,7 @@
 
 <script setup lang="ts">
   import { computed, reactive, ref, watch, onMounted } from 'vue'
-  import { Plus, Download, Search, EditPen, View } from '@element-plus/icons-vue'
+  import { Plus, Download, Search } from '@element-plus/icons-vue'
   import { ElMessage } from 'element-plus'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
@@ -1208,21 +1217,21 @@
     border-radius: 50%;
   }
 
-  .action-btns {
-    display: flex;
+  /* 与应用商店凭据：编辑＝主题色，其余＝次要色；无图标 */
+  .action-cell {
+    display: inline-flex;
     flex-wrap: wrap;
-    gap: 0;
+    gap: 10px;
     align-items: center;
     justify-content: center;
   }
 
   .action-btn {
-    display: inline-flex;
-    gap: 4px;
-    align-items: center;
-    padding: 4px 8px;
+    padding: 4px 6px;
+    font-family: inherit;
     font-size: 12px;
     font-weight: 500;
+    line-height: 1.3;
     cursor: pointer;
     background: none;
     border: none;
@@ -1231,11 +1240,30 @@
       color var(--duration-fast) var(--ease-out),
       background-color var(--duration-fast) var(--ease-out);
 
-    &--edit {
+    &--primary {
       color: var(--el-color-primary);
 
       &:hover {
-        background: var(--accent-dim);
+        background: color-mix(in srgb, var(--el-color-primary) 12%, transparent);
+      }
+
+      &:focus-visible {
+        outline: 2px solid color-mix(in srgb, var(--el-color-primary) 45%, transparent);
+        outline-offset: 2px;
+      }
+    }
+
+    &--secondary {
+      color: var(--text-secondary);
+
+      &:hover {
+        color: var(--text-primary);
+        background: color-mix(in srgb, var(--default-box-color) 70%, transparent);
+      }
+
+      &:focus-visible {
+        outline: 2px solid color-mix(in srgb, var(--text-secondary) 35%, transparent);
+        outline-offset: 2px;
       }
     }
 
@@ -1246,15 +1274,15 @@
         background: var(--red-dim);
       }
     }
+  }
 
-    &--view {
-      color: var(--text-secondary);
-
-      &:hover {
-        color: var(--text-primary);
-        background: color-mix(in srgb, var(--default-box-color) 70%, transparent);
-      }
-    }
+  .action-sep {
+    flex-shrink: 0;
+    padding: 0 1px;
+    font-size: 12px;
+    line-height: 1;
+    color: color-mix(in srgb, var(--border) 85%, transparent);
+    user-select: none;
   }
 
   // ─── 分页 ──────────────────────────────────────────────

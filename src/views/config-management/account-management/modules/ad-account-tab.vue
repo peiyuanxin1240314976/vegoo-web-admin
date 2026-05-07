@@ -156,22 +156,41 @@
             </span>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="200" fixed="right" align="center">
+        <el-table-column label="操作" width="260" fixed="right" align="center">
           <template #default="{ row }">
-            <div class="action-btns">
-              <button class="action-btn action-btn--view" @click.stop="emit('detail', row)">
+            <div class="action-cell">
+              <button
+                type="button"
+                class="action-btn action-btn--secondary"
+                @click.stop="emit('detail', row)"
+              >
                 查看
               </button>
               <template v-if="row.status !== '已停用'">
-                <button class="action-btn action-btn--recharge" @click.stop="emit('recharge', row)">
+                <span class="action-sep" aria-hidden="true">|</span>
+                <button
+                  type="button"
+                  class="action-btn action-btn--secondary"
+                  @click.stop="emit('recharge', row)"
+                >
                   充值
                 </button>
-                <button class="action-btn action-btn--edit" @click.stop="emit('edit', row)">
+                <span class="action-sep" aria-hidden="true">|</span>
+                <button
+                  type="button"
+                  class="action-btn action-btn--primary"
+                  @click.stop="emit('edit', row)"
+                >
                   编辑
                 </button>
               </template>
               <template v-else>
-                <button class="action-btn action-btn--enable" @click.stop="handleEnable(row)">
+                <span class="action-sep" aria-hidden="true">|</span>
+                <button
+                  type="button"
+                  class="action-btn action-btn--secondary"
+                  @click.stop="handleEnable(row)"
+                >
                   启用
                 </button>
               </template>
@@ -940,62 +959,53 @@
     }
   }
 
-  .action-btns {
-    display: flex;
-    gap: 6px;
+  .action-cell {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 10px;
     align-items: center;
     justify-content: center;
   }
 
   .action-btn {
-    padding: 4px 9px;
+    padding: 4px 6px;
+    font-family: inherit;
     font-size: 12px;
     font-weight: 500;
+    line-height: 1.3;
     cursor: pointer;
     background: none;
     border: none;
     border-radius: 6px;
     transition:
       color var(--duration-fast) var(--ease-out),
-      background-color var(--duration-fast) var(--ease-out),
-      transform var(--duration-fast) var(--ease-out);
+      background-color var(--duration-fast) var(--ease-out);
 
-    &--view {
-      color: var(--text-secondary);
-
-      &:hover {
-        color: var(--el-color-primary);
-        background: var(--accent-dim);
-        transform: translateY(-0.5px);
-      }
-    }
-
-    &--recharge {
-      color: var(--green);
-
-      &:hover {
-        background: var(--green-bg);
-        transform: translateY(-0.5px);
-      }
-    }
-
-    &--edit {
+    &--primary {
       color: var(--el-color-primary);
 
       &:hover {
-        background: var(--accent-dim);
-        transform: translateY(-0.5px);
+        background: color-mix(in srgb, var(--el-color-primary) 12%, transparent);
       }
     }
 
-    &--enable {
-      color: var(--amber);
+    &--secondary {
+      color: var(--text-secondary);
 
       &:hover {
-        background: var(--amber-bg);
-        transform: translateY(-0.5px);
+        color: var(--text-primary);
+        background: color-mix(in srgb, var(--default-box-color) 70%, transparent);
       }
     }
+  }
+
+  .action-sep {
+    flex-shrink: 0;
+    padding: 0 1px;
+    font-size: 12px;
+    line-height: 1;
+    color: color-mix(in srgb, var(--ad-border) 90%, transparent);
+    user-select: none;
   }
 
   // ─── 分页 ──────────────────────────────────────────────
@@ -1101,10 +1111,6 @@
 
   @media (prefers-reduced-motion: reduce) {
     .stat-card:hover {
-      transform: none;
-    }
-
-    .action-btn:hover {
       transform: none;
     }
   }
