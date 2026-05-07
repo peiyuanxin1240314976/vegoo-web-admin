@@ -95,13 +95,13 @@
             style="width: 100%"
             :row-class-name="getRowClass"
           >
-            <el-table-column label="任务ID" min-width="100">
+            <el-table-column label="任务ID" min-width="80">
               <template #default="{ row }">
                 <span class="task-id">{{ row.taskId }}</span>
               </template>
             </el-table-column>
 
-            <el-table-column label="数据源" min-width="140">
+            <el-table-column label="数据源" min-width="120">
               <template #default="{ row }">
                 <div class="source-cell">
                   <img
@@ -115,13 +115,13 @@
             </el-table-column>
 
             <el-table-column prop="uploadTime" label="上传时间" min-width="155" />
-            <el-table-column label="总记录数" min-width="100" align="right">
+            <el-table-column label="总记录数" min-width="100" align="left">
               <template #default="{ row }">{{ row.totalRecords.toLocaleString() }}</template>
             </el-table-column>
-            <el-table-column label="新增导入" min-width="100" align="right">
+            <el-table-column label="新增导入" min-width="90" align="left">
               <template #default="{ row }">{{ row.newImports.toLocaleString() }}</template>
             </el-table-column>
-            <el-table-column label="重复跳过" min-width="100" align="right">
+            <el-table-column label="重复跳过" min-width="90" align="left">
               <template #default="{ row }">
                 <span v-if="row.duplicateSkipped !== null">{{
                   row.duplicateSkipped.toLocaleString()
@@ -129,14 +129,14 @@
                 <span v-else class="text-muted">—</span>
               </template>
             </el-table-column>
-            <el-table-column label="失败数" min-width="80" align="right">
+            <el-table-column label="失败数" min-width="70" align="left">
               <template #default="{ row }">
                 <span v-if="row.failedCount !== null">{{ row.failedCount.toLocaleString() }}</span>
                 <span v-else class="text-muted">—</span>
               </template>
             </el-table-column>
 
-            <el-table-column label="状态" width="110" align="center">
+            <el-table-column label="状态" width="120" align="left">
               <template #default="{ row }">
                 <span :class="['status-badge', `status--${row.status}`]">
                   <span v-if="row.status === 'processing'" class="status-spinner" />
@@ -146,19 +146,32 @@
               </template>
             </el-table-column>
 
-            <el-table-column label="操作" width="140" align="center" fixed="right">
+            <el-table-column label="操作" min-width="200" align="center" fixed="right">
               <template #default="{ row }">
-                <div class="action-btns">
+                <div class="action-cell">
                   <template v-if="row.status === 'processing'">
-                    <button class="action-btn action-btn--warn" @click="handlePause(row)"
-                      >暂停</button
+                    <button
+                      type="button"
+                      class="action-btn action-btn--warning"
+                      @click.stop="handlePause(row)"
                     >
-                    <button class="action-btn action-btn--del" @click="handleCancel(row)"
-                      >取消</button
+                      暂停
+                    </button>
+                    <span class="action-sep" aria-hidden="true">|</span>
+                    <button
+                      type="button"
+                      class="action-btn action-btn--delete"
+                      @click.stop="handleCancel(row)"
                     >
+                      取消
+                    </button>
                   </template>
                   <template v-else>
-                    <button class="action-btn action-btn--view" @click="handleViewReport(row)">
+                    <button
+                      type="button"
+                      class="action-btn action-btn--secondary"
+                      @click.stop="handleViewReport(row)"
+                    >
                       查看报告
                     </button>
                   </template>
@@ -909,59 +922,79 @@
     }
   }
 
-  // ── 操作按钮 ────────────────────────────────────────────
-  .action-btns {
-    display: flex;
-    gap: 4px;
+  // ── 操作列（与配置管理其他页 action-cell 一致：ghost 文字链、| 分隔）──
+  .action-cell {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
     justify-content: center;
   }
 
   .action-btn {
-    padding: 3px 10px;
+    padding: 4px 6px;
+    font-family: inherit;
     font-size: 12px;
+    font-weight: 500;
+    line-height: 1.3;
+    white-space: nowrap;
     cursor: pointer;
-    border: 1px solid transparent;
-    border-radius: 4px;
+    background: none;
+    border: none;
+    border-radius: 6px;
     transition:
-      background-color var(--duration-normal) var(--ease-out),
-      border-color var(--duration-normal) var(--ease-out),
-      color var(--duration-normal) var(--ease-out);
+      color var(--duration-fast) var(--ease-out),
+      background-color var(--duration-fast) var(--ease-out);
 
-    &--view {
-      color: var(--accent);
-      background: color-mix(in srgb, var(--el-color-primary) 10%, transparent);
-      border: 1px solid color-mix(in srgb, var(--el-color-primary) 35%, transparent);
+    &--secondary {
+      color: var(--text-secondary);
 
       &:hover {
-        color: #fff;
-        background: var(--accent);
-        border-color: var(--accent);
+        color: var(--text-primary);
+        background: color-mix(in srgb, var(--default-box-color) 70%, transparent);
+      }
+
+      &:focus-visible {
+        outline: 2px solid color-mix(in srgb, var(--text-secondary) 35%, transparent);
+        outline-offset: 2px;
       }
     }
 
-    &--warn {
-      color: var(--art-warning);
-      background: color-mix(in srgb, var(--art-warning) 10%, transparent);
-      border: 1px solid color-mix(in srgb, var(--art-warning) 35%, transparent);
+    &--warning {
+      color: var(--text-warning);
 
       &:hover {
-        color: #fff;
-        background: var(--art-warning);
-        border-color: var(--art-warning);
+        color: var(--text-primary);
+        background: color-mix(in srgb, var(--art-warning) 18%, transparent);
+      }
+
+      &:focus-visible {
+        outline: 2px solid color-mix(in srgb, var(--art-warning) 40%, transparent);
+        outline-offset: 2px;
       }
     }
 
-    &--del {
-      color: var(--art-danger);
-      background: color-mix(in srgb, var(--art-danger) 10%, transparent);
-      border: 1px solid color-mix(in srgb, var(--art-danger) 35%, transparent);
+    &--delete {
+      color: var(--text-danger);
 
       &:hover {
-        color: #fff;
-        background: var(--art-danger);
-        border-color: var(--art-danger);
+        background: color-mix(in srgb, var(--art-danger) 16%, transparent);
+      }
+
+      &:focus-visible {
+        outline: 2px solid color-mix(in srgb, var(--art-danger) 40%, transparent);
+        outline-offset: 2px;
       }
     }
+  }
+
+  .action-sep {
+    flex-shrink: 0;
+    padding: 0 1px;
+    font-size: 12px;
+    line-height: 1;
+    color: color-mix(in srgb, var(--border) 85%, transparent);
+    user-select: none;
   }
 
   // ── 分页 ────────────────────────────────────────────────

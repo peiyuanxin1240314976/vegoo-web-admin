@@ -151,13 +151,23 @@
                   </span>
                 </template>
               </el-table-column>
-              <el-table-column label="操作" width="160" align="center" fixed="right">
+              <el-table-column label="操作" min-width="220" align="center" fixed="right">
                 <template #default="{ row }">
-                  <div class="action-btns">
-                    <button class="action-btn action-btn--edit" @click.stop="handleEdit(row)">
+                  <div class="action-cell">
+                    <ElButton
+                      text
+                      type="primary"
+                      class="action-row-edit-btn"
+                      @click.stop="handleEdit(row)"
+                    >
                       编辑
-                    </button>
-                    <button class="action-btn action-btn--del" @click.stop="handleDelete(row)">
+                    </ElButton>
+                    <span class="action-sep" aria-hidden="true">|</span>
+                    <button
+                      type="button"
+                      class="action-btn action-btn--delete"
+                      @click.stop="handleDelete(row)"
+                    >
                       删除
                     </button>
                   </div>
@@ -993,39 +1003,61 @@
     border-radius: 50%;
   }
 
-  .action-btns {
-    display: flex;
-    gap: 4px;
+  .action-cell {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
     justify-content: center;
   }
 
-  .action-btn {
-    padding: 3px 10px;
+  :deep(.action-row-edit-btn.el-button) {
+    height: auto;
+    min-height: 0;
+    padding: 4px 6px;
+    margin: 0;
     font-size: 12px;
+    font-weight: 500;
+    line-height: 1.3;
+    border-radius: 6px;
+  }
+
+  .action-btn {
+    padding: 4px 6px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.3;
+    white-space: nowrap;
     cursor: pointer;
+    background: none;
     border: none;
-    border-radius: 4px;
-    transition: all 0.15s;
+    border-radius: 6px;
+    transition:
+      color var(--duration-fast) var(--ease-out),
+      background-color var(--duration-fast) var(--ease-out);
 
-    &--edit {
-      color: var(--el-color-primary);
-      background: color-mix(in srgb, var(--el-color-primary) 12%, transparent);
-      border: 1px solid color-mix(in srgb, var(--el-color-primary) 35%, transparent);
-
-      &:hover {
-        background: color-mix(in srgb, var(--el-color-primary) 18%, transparent);
-      }
-    }
-
-    &--del {
-      color: var(--art-danger);
-      background: color-mix(in srgb, var(--art-danger) 10%, transparent);
-      border: 1px solid color-mix(in srgb, var(--art-danger) 35%, transparent);
+    &--delete {
+      color: var(--text-danger);
 
       &:hover {
         background: color-mix(in srgb, var(--art-danger) 16%, transparent);
       }
+
+      &:focus-visible {
+        outline: 2px solid color-mix(in srgb, var(--art-danger) 40%, transparent);
+        outline-offset: 2px;
+      }
     }
+  }
+
+  .action-sep {
+    flex-shrink: 0;
+    padding: 0 1px;
+    font-size: 12px;
+    line-height: 1;
+    color: color-mix(in srgb, var(--border) 85%, transparent);
+    user-select: none;
   }
 
   .pagination-bar {
