@@ -184,12 +184,26 @@
                 </span>
               </template>
             </el-table-column> -->
-            <el-table-column label="操作" min-width="180" align="center" fixed="right">
+            <el-table-column label="操作" min-width="220" align="center" fixed="right">
               <template #default="{ row }">
-                <button class="action-btn" @click.stop="handleEdit(row)">编辑</button>
-                <button class="action-btn action-btn--detail" @click.stop="handleRowClick(row)"
-                  >详情</button
-                >
+                <div class="action-cell">
+                  <ElButton
+                    text
+                    type="primary"
+                    class="action-row-edit-btn"
+                    @click.stop="handleEdit(row)"
+                  >
+                    编辑
+                  </ElButton>
+                  <span class="action-sep" aria-hidden="true">|</span>
+                  <button
+                    type="button"
+                    class="action-btn action-btn--secondary"
+                    @click.stop="handleRowClick(row)"
+                  >
+                    详情
+                  </button>
+                </div>
               </template>
             </el-table-column>
           </el-table>
@@ -1351,41 +1365,62 @@
     border-radius: 4px;
   }
 
-  .action-btn {
-    padding: 3px 10px;
+  .action-cell {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+  }
+
+  :deep(.action-row-edit-btn.el-button) {
+    height: auto;
+    min-height: 0;
+    padding: 4px 6px;
+    margin: 0;
     font-size: 12px;
-    color: var(--el-color-info);
+    font-weight: 500;
+    line-height: 1.3;
+    border-radius: 6px;
+  }
+
+  .action-btn {
+    padding: 4px 6px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.3;
     white-space: nowrap;
     cursor: pointer;
-    background: color-mix(in srgb, var(--el-color-info) 10%, transparent);
-    border: 1px solid color-mix(in srgb, var(--el-color-info) 35%, transparent);
-    border-radius: 4px;
+    background: none;
+    border: none;
+    border-radius: 6px;
     transition:
-      background-color var(--duration-normal) var(--ease-out),
-      border-color var(--duration-normal) var(--ease-out),
-      color var(--duration-normal) var(--ease-out);
+      color var(--duration-fast) var(--ease-out),
+      background-color var(--duration-fast) var(--ease-out);
 
-    & + & {
-      margin-left: 5px;
-    }
-
-    &:hover {
-      color: #fff;
-      background: var(--el-color-info);
-      border-color: var(--el-color-info);
-    }
-
-    &--detail {
-      color: var(--accent);
-      background: color-mix(in srgb, var(--el-color-primary) 10%, transparent);
-      border-color: color-mix(in srgb, var(--el-color-primary) 35%, transparent);
+    &--secondary {
+      color: var(--text-secondary);
 
       &:hover {
-        color: #fff;
-        background: var(--accent);
-        border-color: var(--accent);
+        color: var(--text-primary);
+        background: color-mix(in srgb, var(--default-box-color) 70%, transparent);
+      }
+
+      &:focus-visible {
+        outline: 2px solid color-mix(in srgb, var(--text-secondary) 35%, transparent);
+        outline-offset: 2px;
       }
     }
+  }
+
+  .action-sep {
+    flex-shrink: 0;
+    padding: 0 1px;
+    font-size: 12px;
+    line-height: 1;
+    color: color-mix(in srgb, var(--border) 85%, transparent);
+    user-select: none;
   }
 
   .pagination-bar {
