@@ -30,7 +30,7 @@
     </div>
     <template v-else>
       <!-- ── KPI Cards ─────────────────────────────── -->
-      <div class="kpi-row">
+      <div class="kpi-row" :style="{ '--kpi-count': kpiCards.length }">
         <div
           class="kpi-card"
           v-for="(kpi, i) in kpiCards"
@@ -245,6 +245,7 @@
     fetchPaidAnalysisTabProductOverview,
     fetchPaidAnalysisTabProductRanking
   } from '@/api/user-growth/paid-analysis'
+  import { getAppTodayYYYYMMDD } from '@/utils/app-now'
 
   defineOptions({ name: 'IAPProductTab' })
 
@@ -253,7 +254,8 @@
       appId: string | string[]
       platform: string
       country: string
-      date: string
+      startDate: string
+      endDate: string
     }
     searchToken: number
   }>()
@@ -262,10 +264,19 @@
   const loadError = ref('')
 
   function buildBody(): PaidAnalysisFilterBody {
-    const date = props.filters.date || ''
+    const today = getAppTodayYYYYMMDD()
+    let start = String(props.filters.startDate ?? '').trim()
+    let end = String(props.filters.endDate ?? '').trim()
+    if (!start && !end) {
+      start = today
+      end = today
+    } else {
+      if (!start) start = end
+      if (!end) end = start
+    }
     return {
-      startDate: date,
-      endDate: date,
+      startDate: start,
+      endDate: end,
       appId: props.filters.appId || '',
       platform: props.filters.platform || '',
       countryCode: props.filters.country || '',
@@ -777,7 +788,7 @@
   /* KPI */
   .kpi-row {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(min(6, max(1, var(--kpi-count, 1))), minmax(0, 1fr));
     gap: 12px;
   }
 

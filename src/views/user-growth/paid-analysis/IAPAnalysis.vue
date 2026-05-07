@@ -10,12 +10,15 @@
             <span class="iap-filter-chip__value">{{ dateChipText }}</span>
           </div> -->
           <AppDatePicker
-            v-model="filters.date"
-            type="date"
-            :shortcuts="dateShortcuts"
+            v-model="filters.dateRange"
+            type="daterange"
+            :shortcuts="dateRangeShortcuts"
+            unlink-panels
             value-format="YYYY-MM-DD"
             format="YYYY-MM-DD"
-            placeholder="选择日期"
+            range-separator="~"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
             class="iap-filter-date"
           />
           <AppPlatformSearchSelect
@@ -101,21 +104,21 @@
           v-if="activeTab === 'channel'"
           :key="`channel-${searchToken}`"
           class="iap-tab-panel"
-          :filters="appliedFilters"
+          :filters="tabFilters"
           :search-token="searchToken"
         />
         <IAPProductTab
           v-if="activeTab === 'product'"
           :key="`product-${searchToken}`"
           class="iap-tab-panel"
-          :filters="appliedFilters"
+          :filters="tabFilters"
           :search-token="searchToken"
         />
         <IAPOrderTab
           v-if="activeTab === 'order'"
           :key="`order-${searchToken}`"
           class="iap-tab-panel"
-          :filters="appliedFilters"
+          :filters="tabFilters"
           :search-token="searchToken"
         />
       </template>
@@ -130,7 +133,7 @@
   import { storeToRefs } from 'pinia'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import { getAppTodayYYYYMMDD } from '@/utils/app-now'
-  import { dateShortcuts } from '@/utils/form/date-shortcuts'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import type { CockpitMetaOptionItem, CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
   import IAPChannelTab from './IAPChannelTab.vue'
@@ -186,20 +189,68 @@
     { key: 'order' as const, label: '订单明细' }
   ]
 
+  function normalizeFilterDateRange(r: [string, string] | null | undefined): [string, string] {
+    const today = getAppTodayYYYYMMDD()
+    if (!r || !Array.isArray(r) || r.length < 2) return [today, today]
+    let a = String(r[0] ?? '').trim() || today
+    let b = String(r[1] ?? '').trim() || today
+    if (a > b) {
+      const t = a
+      a = b
+      b = t
+    }
+    return [a, b]
+  }
+
   const filters = reactive({
     appId: [] as string[],
     platform: '',
     country: '',
-    date: getAppTodayYYYYMMDD()
+    dateRange: [getAppTodayYYYYMMDD(), getAppTodayYYYYMMDD()] as [string, string] | null
   })
 
   function onCountryFilterUpdate(v: string | undefined | null) {
     filters.country = v ?? ''
   }
 
-  const appliedFilters = ref<{ appId: string[]; platform: string; country: string; date: string }>({
-    ...filters
+  const _initialRange = normalizeFilterDateRange(filters.dateRange)
+  const appliedFilters = ref<{
+    appId: string[]
+    platform: string
+    country: string
+    startDate: string
+    endDate: string
+  }>({
+    appId: [...filters.appId],
+    platform: filters.platform,
+    country: filters.country,
+    startDate: _initialRange[0],
+    endDate: _initialRange[1]
   })
+
+  /** 子 Tab 用纯对象，避免模板里直接传 ref 时个别环境下 props 形态异常；日期缺省回落到顶栏草稿范围 */
+  const tabFilters = computed(() => {
+    const v = appliedFilters.value
+    const draft = normalizeFilterDateRange(filters.dateRange)
+    const today = getAppTodayYYYYMMDD()
+    let sd = String(v.startDate ?? '').trim()
+    let ed = String(v.endDate ?? '').trim()
+    if (!sd) sd = draft[0] || today
+    if (!ed) ed = draft[1] || today
+    if (sd > ed) {
+      const t = sd
+      sd = ed
+      ed = t
+    }
+    return {
+      appId: v.appId,
+      platform: v.platform,
+      country: v.country,
+      startDate: sd,
+      endDate: ed
+    }
+  })
+
   const searchToken = ref(0)
   const hasSyncedInitialAutoApp = ref(false)
 
@@ -221,7 +272,14 @@
   })
 
   function handleSearch() {
-    appliedFilters.value = { ...filters }
+    const [startDate, endDate] = normalizeFilterDateRange(filters.dateRange)
+    appliedFilters.value = {
+      appId: [...filters.appId],
+      platform: filters.platform,
+      country: filters.country,
+      startDate,
+      endDate
+    }
     searchToken.value += 1
     bootLoading.value = true
     if (bootTimer != null) clearTimeout(bootTimer)

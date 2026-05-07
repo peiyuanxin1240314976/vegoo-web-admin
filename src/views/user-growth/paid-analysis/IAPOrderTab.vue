@@ -27,7 +27,7 @@
     </div>
     <template v-else>
       <!-- ── KPI Cards ─────────────────────────────── -->
-      <div class="kpi-row">
+      <div class="kpi-row" :style="{ '--kpi-count': displayKpiCards.length }">
         <div
           class="kpi-card"
           v-for="(kpi, i) in displayKpiCards"
@@ -552,7 +552,7 @@
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import type { CockpitMetaOptionItem, CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
   import { echarts } from '@/plugins/echarts'
-  import { cloneAppDate, formatYYYYMMDD, getAppTodayYYYYMMDD } from '@/utils/app-now'
+  import { getAppTodayYYYYMMDD } from '@/utils/app-now'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import type {
     PaidAnalysisFilterBody,
@@ -615,7 +615,8 @@
       appId: string | string[]
       platform: string
       country: string
-      date: string
+      startDate: string
+      endDate: string
     }
     searchToken: number
   }>()
@@ -712,18 +713,39 @@
     fail: '失败'
   }
 
-  function syncDateRangeFromParentDate(endYmd: string) {
-    if (!endYmd) return
-    const end = new Date(`${endYmd}T12:00:00`)
-    const s = cloneAppDate(end)
-    s.setDate(s.getDate() - 29)
-    orderDateRange.value = [formatYYYYMMDD(s), endYmd]
+  function syncDateRangeFromParentFilters() {
+    const today = getAppTodayYYYYMMDD()
+    let s = String(props.filters.startDate ?? '').trim() || today
+    let e = String(props.filters.endDate ?? '').trim() || today
+    if (s > e) {
+      const t = s
+      s = e
+      e = t
+    }
+    orderDateRange.value = [s, e]
+  }
+
+  /** 列表行与 applied 日期区间比较用；优先解析展示文案中的 YYYY-MM-DD 或 MM-DD */
+  function ymdFromOrderTimeLabel(label: string, refYmd: string): string {
+    const fallback = refYmd || getAppTodayYYYYMMDD()
+    const iso = label.match(/(\d{4})-(\d{2})-(\d{2})/)
+    if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`
+    const mmdd = label.match(/^(\d{1,2})-(\d{1,2})\b/)
+    if (mmdd) {
+      const y = Number(fallback.slice(0, 4))
+      const mo = String(mmdd[1]).padStart(2, '0')
+      const da = String(mmdd[2]).padStart(2, '0')
+      return `${y}-${mo}-${da}`
+    }
+    return fallback
   }
 
   function buildSummaryBody(): PaidAnalysisFilterBody {
     const r = orderDateRange.value
-    const startDate = r?.[0] ?? props.filters.date ?? getAppTodayYYYYMMDD()
-    const endDate = r?.[1] ?? props.filters.date ?? getAppTodayYYYYMMDD()
+    const ps = String(props.filters.startDate ?? '').trim() || getAppTodayYYYYMMDD()
+    const pe = String(props.filters.endDate ?? '').trim() || getAppTodayYYYYMMDD()
+    const startDate = r?.[0] ?? ps
+    const endDate = r?.[1] ?? pe
     return {
       startDate,
       endDate,
@@ -736,8 +758,10 @@
 
   function buildListParams(): Parameters<typeof fetchPaidAnalysisOrderList>[0] {
     const r = orderDateRange.value
-    const startDate = r?.[0] ?? props.filters.date ?? getAppTodayYYYYMMDD()
-    const endDate = r?.[1] ?? props.filters.date ?? getAppTodayYYYYMMDD()
+    const ps = String(props.filters.startDate ?? '').trim() || getAppTodayYYYYMMDD()
+    const pe = String(props.filters.endDate ?? '').trim() || getAppTodayYYYYMMDD()
+    const startDate = r?.[0] ?? ps
+    const endDate = r?.[1] ?? pe
     return {
       startDate,
       endDate,
@@ -757,8 +781,10 @@
 
   function pushAppliedFromForm() {
     const r = orderDateRange.value
-    const dateStart = r?.[0] ?? props.filters.date ?? getAppTodayYYYYMMDD()
-    const dateEnd = r?.[1] ?? props.filters.date ?? getAppTodayYYYYMMDD()
+    const ps = String(props.filters.startDate ?? '').trim() || getAppTodayYYYYMMDD()
+    const pe = String(props.filters.endDate ?? '').trim() || getAppTodayYYYYMMDD()
+    const dateStart = r?.[0] ?? ps
+    const dateEnd = r?.[1] ?? pe
     applied.value = {
       dateStart,
       dateEnd,
@@ -773,7 +799,7 @@
 
   function handleOrderSearch() {
     if (!orderDateRange.value?.[0]) {
-      syncDateRangeFromParentDate(props.filters.date || getAppTodayYYYYMMDD())
+      syncDateRangeFromParentFilters()
     }
     pushAppliedFromForm()
     selectedOrder.value = null
@@ -797,7 +823,11 @@
         fail: { label: '失败', cls: 'st-fail' }
       }
       const s = statusMap[r.status] ?? { label: String(r.status), cls: '' }
-      const sortDate = props.filters.date || ''
+      const refYmd =
+        String(props.filters.endDate ?? '').trim() ||
+        String(props.filters.startDate ?? '').trim() ||
+        getAppTodayYYYYMMDD()
+      const sortDate = ymdFromOrderTimeLabel(r.orderTimeLabel, refYmd)
       return {
         uid: `${r.s_order_id}-${idx}`,
         id: r.s_order_id,
@@ -917,7 +947,7 @@
   /* ── ECharts ──────────────────────────────────── */
   onMounted(() => {
     void metaStore.ensureLoaded()
-    syncDateRangeFromParentDate(props.filters.date || getAppTodayYYYYMMDD())
+    syncDateRangeFromParentFilters()
     fApp.value = normalizeAppFilterValue(props.filters.appId)
     fCountry.value = (props.filters.country || '').trim().toLowerCase()
     pushAppliedFromForm()
@@ -939,7 +969,7 @@
   watch(
     () => props.searchToken,
     () => {
-      syncDateRangeFromParentDate(props.filters.date || getAppTodayYYYYMMDD())
+      syncDateRangeFromParentFilters()
       fApp.value = normalizeAppFilterValue(props.filters.appId)
       fCountry.value = (props.filters.country || '').trim().toLowerCase()
       pushAppliedFromForm()
@@ -1125,7 +1155,7 @@
   /* KPI */
   .kpi-row {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(min(6, max(1, var(--kpi-count, 1))), minmax(0, 1fr));
     gap: 12px;
   }
 
