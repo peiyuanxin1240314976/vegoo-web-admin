@@ -161,11 +161,18 @@
                 </td>
                 <td>
                   <div class="action-cell">
-                    <button class="action-btn" @click="handleEdit(row)">编辑</button>
-                    <span class="action-sep">|</span>
                     <button
-                      class="action-btn"
-                      @click="row.status === '连接异常' ? handleRetry(row) : handleTest(row)"
+                      type="button"
+                      class="action-btn action-btn--primary"
+                      @click.stop="handleEdit(row)"
+                    >
+                      编辑
+                    </button>
+                    <span class="action-sep" aria-hidden="true">|</span>
+                    <button
+                      type="button"
+                      class="action-btn action-btn--secondary"
+                      @click.stop="row.status === '连接异常' ? handleRetry(row) : handleTest(row)"
                     >
                       {{
                         row.status === '连接异常'
@@ -207,294 +214,298 @@
     </section>
 
     <!-- ===== 新增 / 编辑 凭据弹窗（共用同一个表单结构） ===== -->
-    <Transition name="modal">
-      <div
-        v-if="showAddDialog || showEditDialog"
-        class="modal-overlay"
-        @click.self="closeFormDialog"
-      >
-        <div class="modal-box modal-form">
-          <!-- 顶栏 -->
-          <div class="modal-header">
-            <span>{{ showEditDialog ? '编辑应用商店凭据' : '新增应用商店凭据' }}</span>
-            <button class="modal-close" @click="closeFormDialog">✕</button>
-          </div>
-
-          <div class="modal-body">
-            <!-- 平台 -->
-            <div class="form-field">
-              <label class="form-label">平台 <span class="required">*</span></label>
-              <div class="custom-select-wrap">
-                <select v-model="credForm.platform" class="form-select">
-                  <option value="">请选择平台</option>
-                  <option
-                    v-for="platform in credentialPlatformOptions"
-                    :key="platform.value"
-                    :value="platform.value"
-                  >
-                    {{ platform.label }}
-                  </option>
-                </select>
-                <svg class="select-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <path
-                    d="M2 4l4 4 4-4"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
-              </div>
+    <Teleport to="body">
+      <Transition name="modal">
+        <div
+          v-if="showAddDialog || showEditDialog"
+          class="modal-overlay"
+          @click.self="closeFormDialog"
+        >
+          <div class="modal-box modal-form">
+            <!-- 顶栏 -->
+            <div class="modal-header">
+              <span>{{ showEditDialog ? '编辑应用商店凭据' : '新增应用商店凭据' }}</span>
+              <button class="modal-close" @click="closeFormDialog">✕</button>
             </div>
 
-            <!-- 应用 -->
-            <div class="form-field">
-              <label class="form-label">应用 <span class="required">*</span></label>
-              <div class="custom-select-wrap">
-                <select v-model="credForm.app" class="form-select">
-                  <option value="">请选择应用</option>
-                  <option v-for="app in credentialAppOptions" :key="app.value" :value="app.value">
-                    {{ app.label }}
-                  </option>
-                </select>
-                <svg class="select-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <path
-                    d="M2 4l4 4 4-4"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
-              </div>
-            </div>
-
-            <!-- 凭据类型 -->
-            <div class="form-field">
-              <label class="form-label">凭据类型</label>
-              <div class="cred-type-selector">
-                <!-- 上传文件 -->
-                <div
-                  :class="[
-                    'cred-type-option',
-                    credForm.credInputType === 'file' && 'cred-type-option--active'
-                  ]"
-                  @click="credForm.credInputType = 'file'"
-                >
-                  <input type="radio" :checked="credForm.credInputType === 'file'" readonly />
-                  <div class="upload-area" @click.stop="triggerFileInput">
-                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-                      <path
-                        d="M11 3v11M7 6l4-4 4 4"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                      <path
-                        d="M2 17h18"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                        stroke-linecap="round"
-                      />
-                    </svg>
-                    <span>{{ credForm.fileName || '点击上传 JSON 文件' }}</span>
-                    <input
-                      ref="fileInputRef"
-                      type="file"
-                      accept=".json"
-                      style="display: none"
-                      @change="handleFileChange"
+            <div class="modal-body">
+              <!-- 平台 -->
+              <div class="form-field">
+                <label class="form-label">平台 <span class="required">*</span></label>
+                <div class="custom-select-wrap">
+                  <select v-model="credForm.platform" class="form-select">
+                    <option value="">请选择平台</option>
+                    <option
+                      v-for="platform in credentialPlatformOptions"
+                      :key="platform.value"
+                      :value="platform.value"
+                    >
+                      {{ platform.label }}
+                    </option>
+                  </select>
+                  <svg class="select-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path
+                      d="M2 4l4 4 4-4"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
                     />
+                  </svg>
+                </div>
+              </div>
+
+              <!-- 应用 -->
+              <div class="form-field">
+                <label class="form-label">应用 <span class="required">*</span></label>
+                <div class="custom-select-wrap">
+                  <select v-model="credForm.app" class="form-select">
+                    <option value="">请选择应用</option>
+                    <option v-for="app in credentialAppOptions" :key="app.value" :value="app.value">
+                      {{ app.label }}
+                    </option>
+                  </select>
+                  <svg class="select-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path
+                      d="M2 4l4 4 4-4"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </div>
+              </div>
+
+              <!-- 凭据类型 -->
+              <div class="form-field">
+                <label class="form-label">凭据类型</label>
+                <div class="cred-type-selector">
+                  <!-- 上传文件 -->
+                  <div
+                    :class="[
+                      'cred-type-option',
+                      credForm.credInputType === 'file' && 'cred-type-option--active'
+                    ]"
+                    @click="credForm.credInputType = 'file'"
+                  >
+                    <input type="radio" :checked="credForm.credInputType === 'file'" readonly />
+                    <div class="upload-area" @click.stop="triggerFileInput">
+                      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                        <path
+                          d="M11 3v11M7 6l4-4 4 4"
+                          stroke="currentColor"
+                          stroke-width="1.8"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                        <path
+                          d="M2 17h18"
+                          stroke="currentColor"
+                          stroke-width="1.8"
+                          stroke-linecap="round"
+                        />
+                      </svg>
+                      <span>{{ credForm.fileName || '点击上传 JSON 文件' }}</span>
+                      <input
+                        ref="fileInputRef"
+                        type="file"
+                        accept=".json"
+                        style="display: none"
+                        @change="handleFileChange"
+                      />
+                    </div>
+                  </div>
+                  <!-- 粘贴 JSON -->
+                  <div
+                    :class="[
+                      'cred-type-option',
+                      credForm.credInputType === 'paste' && 'cred-type-option--active'
+                    ]"
+                    @click="credForm.credInputType = 'paste'"
+                  >
+                    <input type="radio" :checked="credForm.credInputType === 'paste'" readonly />
+                    <span>粘贴 JSON 内容</span>
                   </div>
                 </div>
-                <!-- 粘贴 JSON -->
-                <div
-                  :class="[
-                    'cred-type-option',
-                    credForm.credInputType === 'paste' && 'cred-type-option--active'
-                  ]"
-                  @click="credForm.credInputType = 'paste'"
-                >
-                  <input type="radio" :checked="credForm.credInputType === 'paste'" readonly />
-                  <span>粘贴 JSON 内容</span>
+                <Transition name="slide-down">
+                  <textarea
+                    v-if="credForm.credInputType === 'paste'"
+                    v-model="credForm.credContent"
+                    class="form-textarea"
+                    placeholder="粘贴 JSON 内容..."
+                    rows="4"
+                  />
+                </Transition>
+              </div>
+
+              <!-- 过期时间 -->
+              <div class="form-field form-field--row">
+                <label class="form-label">过期时间</label>
+                <div class="date-input-wrap">
+                  <AppDatePicker
+                    v-model="credForm.expiry"
+                    type="date"
+                    value-format="YYYY-MM-DD"
+                    format="YYYY-MM-DD"
+                    placeholder="请选择日期"
+                    class="form-date-picker"
+                  />
                 </div>
               </div>
-              <Transition name="slide-down">
+
+              <!-- 备注 -->
+              <div class="form-field form-field--row">
+                <label class="form-label">备注</label>
                 <textarea
-                  v-if="credForm.credInputType === 'paste'"
-                  v-model="credForm.credContent"
-                  class="form-textarea"
-                  placeholder="粘贴 JSON 内容..."
-                  rows="4"
-                />
-              </Transition>
-            </div>
-
-            <!-- 过期时间 -->
-            <div class="form-field form-field--row">
-              <label class="form-label">过期时间</label>
-              <div class="date-input-wrap">
-                <AppDatePicker
-                  v-model="credForm.expiry"
-                  type="date"
-                  value-format="YYYY-MM-DD"
-                  format="YYYY-MM-DD"
-                  placeholder="请选择日期"
-                  class="form-date-picker"
+                  v-model="credForm.remark"
+                  class="form-input form-textarea"
+                  rows="3"
+                  placeholder="请输入备注"
                 />
               </div>
             </div>
 
-            <!-- 备注 -->
-            <div class="form-field form-field--row">
-              <label class="form-label">备注</label>
-              <textarea
-                v-model="credForm.remark"
-                class="form-input form-textarea"
-                rows="3"
-                placeholder="请输入备注"
-              />
+            <div class="modal-footer">
+              <button type="button" class="btn btn-ghost" @click="closeFormDialog">取消</button>
+              <button type="button" class="btn btn-primary" @click="handleSaveForm">
+                {{ showEditDialog ? '保存' : '保存并测试' }}
+              </button>
             </div>
           </div>
-
-          <div class="modal-footer">
-            <button type="button" class="btn btn-ghost" @click="closeFormDialog">取消</button>
-            <button type="button" class="btn btn-primary" @click="handleSaveForm">
-              {{ showEditDialog ? '保存' : '保存并测试' }}
-            </button>
-          </div>
         </div>
-      </div>
-    </Transition>
+      </Transition>
 
-    <!-- ===== 连接成功弹窗 ===== -->
-    <!-- 图二样式：无 header，仅右上角浮动 × 按钮 -->
-    <Transition name="modal">
-      <div v-if="showSuccessDialog" class="modal-overlay" @click.self="showSuccessDialog = false">
-        <div class="modal-box modal-result modal-result--success">
-          <!-- 浮动关闭按钮，无 header 条 -->
-          <button class="result-close-btn" @click="showSuccessDialog = false">✕</button>
+      <!-- ===== 连接成功弹窗 ===== -->
+      <!-- 图二样式：无 header，仅右上角浮动 × 按钮 -->
+      <Transition name="modal">
+        <div v-if="showSuccessDialog" class="modal-overlay" @click.self="showSuccessDialog = false">
+          <div class="modal-box modal-result modal-result--success">
+            <!-- 浮动关闭按钮，无 header 条 -->
+            <button class="result-close-btn" @click="showSuccessDialog = false">✕</button>
 
-          <!-- 绿色圆圈图标 -->
-          <div class="result-icon result-icon--success">
-            <div class="result-icon-ring" />
-            <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-              <path
-                d="M7 18l7 7 15-14"
-                stroke="currentColor"
-                stroke-width="2.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </div>
-
-          <div class="result-title result-title--success">连接成功</div>
-          <div class="result-subtitle">{{ testingRow?.platform }} | {{ testingRow?.appName }}</div>
-
-          <div class="result-checks">
-            <div v-for="check in successChecks" :key="check.label" class="check-row">
-              <span class="check-label">{{ check.label }}</span>
-              <span class="check-value">{{ check.value }}</span>
-              <svg width="13" height="13" viewBox="0 0 13 13" fill="none" class="check-icon">
+            <!-- 绿色圆圈图标 -->
+            <div class="result-icon result-icon--success">
+              <div class="result-icon-ring" />
+              <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
                 <path
-                  d="M2 6.5l3 3 6-6"
+                  d="M7 18l7 7 15-14"
                   stroke="currentColor"
-                  stroke-width="1.8"
+                  stroke-width="2.8"
                   stroke-linecap="round"
                   stroke-linejoin="round"
                 />
               </svg>
             </div>
-          </div>
 
-          <div class="result-time">测试耗时：1.2s</div>
-
-          <div class="result-footer">
-            <button
-              class="btn-result-close btn-result-close--success"
-              @click="showSuccessDialog = false"
-              >关闭</button
+            <div class="result-title result-title--success">连接成功</div>
+            <div class="result-subtitle"
+              >{{ testingRow?.platform }} | {{ testingRow?.appName }}</div
             >
+
+            <div class="result-checks">
+              <div v-for="check in successChecks" :key="check.label" class="check-row">
+                <span class="check-label">{{ check.label }}</span>
+                <span class="check-value">{{ check.value }}</span>
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none" class="check-icon">
+                  <path
+                    d="M2 6.5l3 3 6-6"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            <div class="result-time">测试耗时：1.2s</div>
+
+            <div class="result-footer">
+              <button
+                class="btn-result-close btn-result-close--success"
+                @click="showSuccessDialog = false"
+                >关闭</button
+              >
+            </div>
           </div>
         </div>
-      </div>
-    </Transition>
+      </Transition>
 
-    <!-- ===== 连接失败弹窗 ===== -->
-    <!-- 图三样式：有 "连接异常" header 条 + × 按钮 -->
-    <Transition name="modal">
-      <div v-if="showErrorDialog" class="modal-overlay" @click.self="showErrorDialog = false">
-        <div class="modal-box modal-result modal-result--error">
-          <!-- 标准 header 条 -->
-          <div class="modal-header">
-            <span>连接异常</span>
-            <button class="modal-close" @click="showErrorDialog = false">✕</button>
-          </div>
+      <!-- ===== 连接失败弹窗 ===== -->
+      <!-- 图三样式：有 "连接异常" header 条 + × 按钮 -->
+      <Transition name="modal">
+        <div v-if="showErrorDialog" class="modal-overlay" @click.self="showErrorDialog = false">
+          <div class="modal-box modal-result modal-result--error">
+            <!-- 标准 header 条 -->
+            <div class="modal-header">
+              <span>连接异常</span>
+              <button class="modal-close" @click="showErrorDialog = false">✕</button>
+            </div>
 
-          <!-- 红色圆圈图标 -->
-          <div class="result-icon result-icon--error">
-            <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-              <path
-                d="M10 10l16 16M26 10L10 26"
-                stroke="currentColor"
-                stroke-width="2.8"
-                stroke-linecap="round"
-              />
-            </svg>
-          </div>
-
-          <div class="result-title result-title--error">连接失败</div>
-          <div v-if="activeErrorDetail" class="result-subtitle">
-            {{ activeErrorDetail.platform }} | {{ activeErrorDetail.credType }}
-          </div>
-
-          <div v-if="dialogAnomalyItems.length > 1" class="error-anomaly-select">
-            <span class="error-anomaly-label">异常连接</span>
-            <div class="custom-select-wrap custom-select-wrap--compact">
-              <select v-model="selectedAnomalyId" class="form-select">
-                <option v-for="it in dialogAnomalyItems" :key="it.id" :value="it.id">
-                  {{ it.platform }} · {{ it.appName }} · {{ it.account }}
-                </option>
-              </select>
-              <svg class="select-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <!-- 红色圆圈图标 -->
+            <div class="result-icon result-icon--error">
+              <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
                 <path
-                  d="M2 4l4 4 4-4"
+                  d="M10 10l16 16M26 10L10 26"
                   stroke="currentColor"
-                  stroke-width="1.5"
+                  stroke-width="2.8"
                   stroke-linecap="round"
-                  stroke-linejoin="round"
                 />
               </svg>
             </div>
-          </div>
 
-          <div v-if="activeErrorDetail" class="error-info">
-            <div class="error-row">
-              <span class="error-key">错误信息：</span>
-              <code class="error-code">{{ activeErrorDetail.errorMessage }}</code>
+            <div class="result-title result-title--error">连接失败</div>
+            <div v-if="activeErrorDetail" class="result-subtitle">
+              {{ activeErrorDetail.platform }} | {{ activeErrorDetail.credType }}
             </div>
-            <div class="error-row">
-              <span class="error-key">失效时间：</span>
-              <span class="error-val">{{ activeErrorDetail.expiredAt }}</span>
-            </div>
-            <div class="error-suggestions">
-              <div class="sug-title">建议操作：</div>
-              <div v-for="(sug, si) in activeErrorDetail.suggestions" :key="si" class="sug-item">
-                {{ si + 1 }}. {{ sug }}
+
+            <div v-if="dialogAnomalyItems.length > 1" class="error-anomaly-select">
+              <span class="error-anomaly-label">异常连接</span>
+              <div class="custom-select-wrap custom-select-wrap--compact">
+                <select v-model="selectedAnomalyId" class="form-select">
+                  <option v-for="it in dialogAnomalyItems" :key="it.id" :value="it.id">
+                    {{ it.platform }} · {{ it.appName }} · {{ it.account }}
+                  </option>
+                </select>
+                <svg class="select-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <path
+                    d="M2 4l4 4 4-4"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
               </div>
             </div>
-          </div>
 
-          <div class="error-footer">
-            <button class="btn btn-ghost" @click="showErrorDialog = false">关闭</button>
-            <button class="btn btn-danger" @click="handleReconfig">重新配置</button>
-            <button class="btn btn-warning" @click="handleRetryConn">重试连接</button>
+            <div v-if="activeErrorDetail" class="error-info">
+              <div class="error-row">
+                <span class="error-key">错误信息：</span>
+                <code class="error-code">{{ activeErrorDetail.errorMessage }}</code>
+              </div>
+              <div class="error-row">
+                <span class="error-key">失效时间：</span>
+                <span class="error-val">{{ activeErrorDetail.expiredAt }}</span>
+              </div>
+              <div class="error-suggestions">
+                <div class="sug-title">建议操作：</div>
+                <div v-for="(sug, si) in activeErrorDetail.suggestions" :key="si" class="sug-item">
+                  {{ si + 1 }}. {{ sug }}
+                </div>
+              </div>
+            </div>
+
+            <div class="error-footer">
+              <button class="btn btn-ghost" @click="showErrorDialog = false">关闭</button>
+              <button class="btn btn-danger" @click="handleReconfig">重新配置</button>
+              <button class="btn btn-warning" @click="handleRetryConn">重试连接</button>
+            </div>
           </div>
         </div>
-      </div>
-    </Transition>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -1645,31 +1656,64 @@
     border-color: color-mix(in srgb, var(--art-danger) 32%, transparent);
   }
 
-  /* ── 操作按钮 ── */
+  /* ── 操作按钮：编辑＝系统主题色；重试/续期/测试＝统一次要色；无图标 ── */
   .action-cell {
-    display: flex;
-    gap: 6px;
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 10px;
     align-items: center;
+    justify-content: center;
   }
 
   .action-btn {
-    padding: 0;
+    padding: 4px 6px;
     font-family: inherit;
-    font-size: 13px;
-    color: var(--teal);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.3;
     cursor: pointer;
     background: none;
     border: none;
-    transition: opacity 0.15s;
-  }
+    border-radius: 6px;
+    transition:
+      color var(--duration-fast) var(--ease-out),
+      background-color var(--duration-fast) var(--ease-out);
 
-  .action-btn:hover {
-    text-decoration: underline;
-    opacity: 0.7;
+    &--primary {
+      color: var(--el-color-primary);
+
+      &:hover {
+        background: color-mix(in srgb, var(--el-color-primary) 12%, transparent);
+      }
+
+      &:focus-visible {
+        outline: 2px solid color-mix(in srgb, var(--el-color-primary) 45%, transparent);
+        outline-offset: 2px;
+      }
+    }
+
+    &--secondary {
+      color: var(--text-secondary);
+
+      &:hover {
+        color: var(--text-primary);
+        background: color-mix(in srgb, var(--default-box-color) 70%, transparent);
+      }
+
+      &:focus-visible {
+        outline: 2px solid color-mix(in srgb, var(--text-secondary) 35%, transparent);
+        outline-offset: 2px;
+      }
+    }
   }
 
   .action-sep {
-    color: var(--border);
+    flex-shrink: 0;
+    padding: 0 1px;
+    font-size: 12px;
+    line-height: 1;
+    color: color-mix(in srgb, var(--border) 85%, transparent);
+    user-select: none;
   }
 
   /* ════════════════════════════════════════════════
@@ -1710,14 +1754,25 @@
    弹窗 Overlay
 ════════════════════════════════════════════════ */
   .modal-overlay {
+    --bg-modal: color-mix(in srgb, var(--default-box-color) 96%, transparent);
+    --bg-table: color-mix(in srgb, var(--default-box-color) 92%, transparent);
+    --bg-row-hover: color-mix(in srgb, var(--el-color-primary) 8%, transparent);
+    --border: color-mix(in srgb, var(--el-color-primary) 18%, transparent);
+    --border-light: color-mix(in srgb, var(--el-color-primary) 22%, transparent);
+    --teal: var(--el-color-primary);
+    --teal-dim: color-mix(in srgb, var(--el-color-primary) 14%, transparent);
+    --red: var(--art-danger);
+    --orange: var(--art-warning);
+
     position: fixed;
     inset: 0;
-    z-index: 1000;
+    z-index: 3000;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: color-mix(in srgb, var(--default-bg-color) 78%, black 22%);
-    backdrop-filter: blur(4px);
+    font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
+    background: color-mix(in srgb, var(--default-bg-color) 28%, transparent);
+    backdrop-filter: blur(1.5px);
   }
 
   .modal-box {
