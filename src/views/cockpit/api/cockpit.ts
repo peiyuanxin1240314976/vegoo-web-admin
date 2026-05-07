@@ -358,7 +358,7 @@ export function mapOverallDataToKpiCards(data: CockpitOverallData): CockpitKpiCa
       format: 'money',
       changeKey: 'payRevenueChange',
       listKey: 'payRevenueList',
-      detail: () => '未扣平台费用'
+      detail: () => '订阅收入及内购收入'
     },
     {
       type: 'adSpend',
@@ -575,7 +575,7 @@ export function mapOverallToKpiCards(
       label: '付费收入',
       valueKey: 'payRevenue',
       format: 'money',
-      detail: () => '未扣平台费用'
+      detail: () => '订阅收入及内购收入'
     },
     {
       type: 'adSpend',

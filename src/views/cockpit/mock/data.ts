@@ -18,7 +18,7 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
       type: 'paidRevenue',
       label: '付费收入',
       value: '$89,240',
-      detail: '未扣平台费用',
+      detail: '订阅收入及内购收入',
       compare: '昨日: $125,245 -2.6%↓',
       compareUp: false
     },
