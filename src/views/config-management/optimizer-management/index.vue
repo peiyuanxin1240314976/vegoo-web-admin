@@ -169,13 +169,25 @@
             </el-table-column>
 
             <!-- 操作 -->
-            <el-table-column label="操作" width="220" fixed="right" align="center">
+            <el-table-column label="操作" width="240" fixed="right" align="center">
               <template #default="{ row }">
-                <div class="action-btns">
-                  <button class="action-btn btn-edit" @click.stop="handleEdit(row)">编辑</button>
-                  <button class="action-btn btn-detail" @click.stop="handleDetail(row)"
-                    >详情</button
+                <div class="action-cell">
+                  <ElButton
+                    text
+                    type="primary"
+                    class="action-row-edit-btn"
+                    @click.stop="handleEdit(row)"
                   >
+                    编辑
+                  </ElButton>
+                  <span class="action-sep" aria-hidden="true">|</span>
+                  <button
+                    type="button"
+                    class="action-btn action-btn--secondary"
+                    @click.stop="handleDetail(row)"
+                  >
+                    详情
+                  </button>
                 </div>
               </template>
             </el-table-column>
@@ -1158,41 +1170,61 @@
     }
   }
 
-  .action-btns {
-    display: flex;
-    gap: 6px;
+  .action-cell {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 10px;
     align-items: center;
     justify-content: center;
   }
 
-  .action-btn {
-    padding: 4px 12px;
+  :deep(.action-row-edit-btn.el-button) {
+    height: auto;
+    min-height: 0;
+    padding: 4px 6px;
+    margin: 0;
     font-size: 12px;
     font-weight: 500;
+    line-height: 1.3;
+    border-radius: 6px;
+  }
+
+  .action-btn {
+    padding: 4px 6px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.3;
     cursor: pointer;
-    background: transparent;
-    border: 1px solid;
-    border-radius: 20px;
-    transition: all 0.15s;
+    background: none;
+    border: none;
+    border-radius: 6px;
+    transition:
+      color var(--duration-fast) var(--ease-out),
+      background-color var(--duration-fast) var(--ease-out);
 
-    &.btn-edit {
-      color: var(--accent);
-      border-color: var(--accent);
-
-      &:hover {
-        background: var(--accent-dim);
-      }
-    }
-
-    &.btn-detail {
+    &--secondary {
       color: var(--text-secondary);
-      border-color: color-mix(in srgb, var(--el-color-primary) 18%, transparent);
 
       &:hover {
         color: var(--text-primary);
-        border-color: var(--text-secondary);
+        background: color-mix(in srgb, var(--default-box-color) 70%, transparent);
+      }
+
+      &:focus-visible {
+        outline: 2px solid color-mix(in srgb, var(--text-secondary) 35%, transparent);
+        outline-offset: 2px;
       }
     }
+  }
+
+  .action-sep {
+    flex-shrink: 0;
+    padding: 0 1px;
+    font-size: 12px;
+    line-height: 1;
+    color: color-mix(in srgb, var(--border) 85%, transparent);
+    user-select: none;
   }
 
   // ─── 分页 ────────────────────────────────────────────────────────
