@@ -80,6 +80,7 @@
                   value-format="YYYY"
                   class="filter-year"
                   clearable
+                  @update:model-value="currentPage = 1"
                 />
                 <el-input
                   v-model="filterKeyword"
@@ -92,8 +93,12 @@
                     ><el-icon><Search /></el-icon
                   ></template>
                 </el-input>
-                <ElButton type="primary" round class="account-sub-page__btn-primary btn-query"
-                  >筛选</ElButton
+                <ElButton
+                  type="primary"
+                  round
+                  class="account-sub-page__btn-primary btn-query"
+                  @click="handleQuery"
+                  >查询</ElButton
                 >
               </div>
             </div>
@@ -124,19 +129,19 @@
                 </template>
               </el-table-column>
               <el-table-column
-                prop="tStart"
-                label="生效起始日期(t_start)"
+                prop="tstart"
+                label="生效起始日期"
                 min-width="155"
                 show-overflow-tooltip
               />
-              <el-table-column label="折算比例(d_cost_ratio)" min-width="160" align="right">
+              <el-table-column label="折算比例" min-width="160" align="left">
                 <template #default="{ row }">
-                  {{ formatRatio(row.dCostRatio) }}
+                  {{ formatRatio(row.dcostRatio) }}
                 </template>
               </el-table-column>
-              <el-table-column label="安装成本(d_install_cost)" min-width="170" align="right">
+              <el-table-column label="安装成本" min-width="170" align="left">
                 <template #default="{ row }">
-                  {{ formatInstallCost(row.dInstallCost) }}
+                  {{ formatInstallCost(row.dinstallCost) }}
                 </template>
               </el-table-column>
               <el-table-column prop="updatedAt" label="最后修改时间" min-width="155" />
@@ -183,6 +188,7 @@
                 :total="serverTotal"
                 layout="prev, pager, next"
                 class="cc-pagination"
+                @current-change="onTablePageChange"
               />
               <span class="total-text">共 {{ serverTotal }} 条</span>
             </div>
@@ -215,7 +221,7 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, onMounted, ref, watch } from 'vue'
+  import { computed, onMounted, ref } from 'vue'
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { Plus, Search } from '@element-plus/icons-vue'
   import { ElMessage } from 'element-plus'
@@ -264,7 +270,7 @@
 
   // 判断是否生效中（t_start <= today）
   const isActive = (row: CostCoefficientItem) => {
-    return row.tStart <= getAppNow().toISOString().slice(0, 10)
+    return row.tstart <= getAppNow().toISOString().slice(0, 10)
   }
 
   const kpiData = ref<CostCoefficientOverviewKpi>({
@@ -293,9 +299,9 @@
       id: String(raw.id ?? ''),
       nSource: pickFiniteNumber(raw.nSource ?? raw.n_source, 0),
       platformName: String(raw.platformName ?? raw.platform_name ?? ''),
-      tStart: String(raw.tStart ?? raw.t_start ?? ''),
-      dCostRatio: pickFiniteNumber(raw.dCostRatio ?? raw.d_cost_ratio, 0),
-      dInstallCost: pickFiniteNumber(raw.dInstallCost ?? raw.d_install_cost, 0),
+      tstart: String(raw.tstart ?? raw.t_start ?? ''),
+      dcostRatio: pickFiniteNumber(raw.dcostRatio ?? raw.d_cost_ratio, 0),
+      dinstallCost: pickFiniteNumber(raw.dinstallCost ?? raw.d_install_cost, 0),
       updatedAt: String(raw.updatedAt ?? raw.updated_at ?? ''),
       updatedBy: String(raw.updatedBy ?? raw.updated_by ?? ''),
       remark: String(raw.remark ?? ''),
@@ -343,21 +349,23 @@
     }
   }
 
-  watch([filterNSource, filterYear, filterKeyword], () => {
-    currentPage.value = 1
-  })
+  /** 仅翻页刷新列表；KPI 随「查询」与增删改刷新 */
+  function onTablePageChange() {
+    void loadTable()
+  }
 
-  watch([filterNSource, filterYear, filterKeyword, currentPage, pageSize], () => {
-    loadTable()
-    loadKpiFromApi()
-  })
+  /** 首屏与点击「查询」：列表 + KPI，筛选变更不会自动请求 */
+  function handleQuery() {
+    currentPage.value = 1
+    void loadTable()
+    void loadKpiFromApi()
+  }
 
   onMounted(() => {
     if (!cockpitMetaFilterStore.data) {
       void cockpitMetaFilterStore.ensureLoaded()
     }
-    loadTable()
-    loadKpiFromApi()
+    handleQuery()
   })
 
   // ─── 行高亮 ─────────────────────────────────────────────

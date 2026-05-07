@@ -11,9 +11,9 @@ export interface CostCoefficientItem {
   id: string
   nSource: number // 广告平台 n_source
   platformName: string // 广告平台名称
-  tStart: string // 生效起始日期 YYYY-MM-DD
-  dCostRatio: number // 折算比例 d_cost_ratio，3位小数
-  dInstallCost: number // 安装成本 d_install_cost，5位小数
+  tstart: string // 生效起始日期 YYYY-MM-DD
+  dcostRatio: number // 折算比例 d_cost_ratio，3位小数
+  dinstallCost: number // 安装成本 d_install_cost，5位小数
   updatedAt: string // 最后修改时间 YYYY-MM-DD HH:mm
   updatedBy: string // 操作人
   remark: string // 备注
