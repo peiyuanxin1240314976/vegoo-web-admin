@@ -15,7 +15,13 @@
             :style="{ width: `${tableMinWidth}px` }"
             class="ap-account-table"
           >
-            <ElTableColumn prop="appName" label="应用" min-width="128" align="center">
+            <ElTableColumn
+              prop="appName"
+              label="应用"
+              min-width="108"
+              align="center"
+              show-overflow-tooltip
+            >
               <template #default="{ row }">
                 <div class="ap-app-cell">
                   <span
@@ -47,7 +53,13 @@
               </template>
             </ElTableColumn>
 
-            <ElTableColumn prop="source" label="广告平台" min-width="132" align="center">
+            <ElTableColumn
+              prop="source"
+              label="广告平台"
+              min-width="102"
+              align="center"
+              show-overflow-tooltip
+            >
               <template #default="{ row }">
                 <div class="ap-platform-cell">
                   <span
@@ -65,7 +77,13 @@
             </ElTableColumn>
 
             <ElTableColumn label="广告账户" align="center">
-              <ElTableColumn prop="adAccount.accountId" label="ID" min-width="100" align="center">
+              <ElTableColumn
+                prop="adAccount.accountId"
+                label="ID"
+                min-width="70"
+                align="center"
+                show-overflow-tooltip
+              >
                 <template #default="{ row }">
                   <span class="ap-account-id ap-account-id--solo">
                     {{ row.adAccount?.accountId?.trim() || '—' }}
@@ -73,7 +91,13 @@
                 </template>
               </ElTableColumn>
 
-              <ElTableColumn prop="adAccount.name" align="center" label="名称" min-width="100">
+              <ElTableColumn
+                prop="adAccount.name"
+                align="center"
+                label="名称"
+                min-width="80"
+                show-overflow-tooltip
+              >
                 <template #default="{ row }">
                   <span class="ap-account-name">{{ row.adAccount?.name?.trim() || '—' }}</span>
                 </template>
@@ -104,7 +128,7 @@
               </ElTableColumn>
             </ElTableColumn>
 
-            <ElTableColumn prop="usageRate" label="使用率" min-width="140" align="center">
+            <ElTableColumn prop="usageRate" label="使用率" min-width="100" align="center">
               <template #default="{ row }">
                 <div class="ap-usage-cell">
                   <ElProgress
@@ -129,42 +153,38 @@
               </template>
             </ElTableColumn>
 
-            <ElTableColumn label="首日ROI" align="center">
-              <ElTableColumn :label="roiHeaderTitles[0]" width="108" align="center">
-                <template #default="{ row }">
-                  <span
-                    v-if="roiDayValue(row, 0) !== null"
-                    :class="getRoiClass(roiDayValue(row, 0) ?? 0)"
+            <ElTableColumn label="首日ROI趋势" width="268" align="center">
+              <template #default="{ row }">
+                <div class="ap-roi-trend-wrap">
+                  <svg
+                    class="ap-roi-trend-svg"
+                    viewBox="0 0 260 88"
+                    width="244"
+                    height="82"
+                    role="img"
+                    :aria-label="roiTrendAriaLabel(row)"
                   >
-                    {{ formatPercentFixed2OrEmpty(roiDayValue(row, 0)) }}
-                  </span>
-                  <span v-else class="ap-roi-empty">—</span>
-                </template>
-              </ElTableColumn>
-
-              <ElTableColumn :label="roiHeaderTitles[1]" width="108" align="center">
-                <template #default="{ row }">
-                  <span
-                    v-if="roiDayValue(row, 1) !== null"
-                    :class="getRoiClass(roiDayValue(row, 1) ?? 0)"
-                  >
-                    {{ formatPercentFixed2OrEmpty(roiDayValue(row, 1)) }}
-                  </span>
-                  <span v-else class="ap-roi-empty">—</span>
-                </template>
-              </ElTableColumn>
-
-              <ElTableColumn :label="roiHeaderTitles[2]" width="108" align="center">
-                <template #default="{ row }">
-                  <span
-                    v-if="roiDayValue(row, 2) !== null"
-                    :class="getRoiClass(roiDayValue(row, 2) ?? 0)"
-                  >
-                    {{ formatPercentFixed2OrEmpty(roiDayValue(row, 2)) }}
-                  </span>
-                  <span v-else class="ap-roi-empty">—</span>
-                </template>
-              </ElTableColumn>
+                    <template v-for="(seg, i) in roiTrendSegments(row)" :key="'s' + i">
+                      <line
+                        :x1="seg.x1"
+                        :y1="seg.y1"
+                        :x2="seg.x2"
+                        :y2="seg.y2"
+                        class="ap-roi-trend-line"
+                      />
+                    </template>
+                    <template v-for="(pt, i) in roiTrendPoints(row)" :key="'p' + i">
+                      <circle :cx="pt.x" :cy="pt.y" r="3.25" class="ap-roi-trend-dot" />
+                      <text :x="pt.x" :y="12" class="ap-roi-trend-val" text-anchor="middle">
+                        {{ pt.valueText }}
+                      </text>
+                      <text :x="pt.x" :y="82" class="ap-roi-trend-date" text-anchor="middle">
+                        {{ pt.dateText }}
+                      </text>
+                    </template>
+                  </svg>
+                </div>
+              </template>
             </ElTableColumn>
 
             <ElTableColumn prop="roi3" label="3日ROI" width="92" align="center">
@@ -316,7 +336,18 @@
   const total = ref(0)
   const EMPTY_TEXT = '无数据'
   const DEFAULT_ROI_DATES = ['2026-04-09', '2026-04-08', '2026-04-07'] as const
-  const tableMinWidth = 2184
+  /** 原 3×108 首日 ROI 列改为单折线列 268，总宽相应收窄 */
+  const tableMinWidth = 2128
+
+  const ROI_TREND_VB = {
+    w: 260,
+    h: 88,
+    /** 折线纵坐标区间（viewBox 内） */
+    lineYMin: 24,
+    lineYMax: 52,
+    /** 三个数据点水平位置 */
+    xs: [28, 130, 232] as const
+  } as const
 
   const PLATFORM_ICON_MAP: Record<string, PlatformIconConfig> = {
     TikTok: { bg: '#010101', color: '#ffffff', char: 'T' },
@@ -421,20 +452,84 @@
     return toFiniteNumber(arr[index])
   }
 
-  function formatRoiColumnTitle(isoDate: string | undefined, fallback: string): string {
-    if (!isoDate || !/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) return fallback
-    const [, month, day] = isoDate.split('-').map(Number)
-    return `${month}/${day}`
+  /** 趋势图：无数据或与「—」等价时按 0% 参与绘制 */
+  function roiDayValueForTrend(row: AccountRow, index: number): number {
+    return roiDayValue(row, index) ?? 0
   }
 
-  const roiHeaderTitles = computed(() => {
-    const roiDates = accounts.value[0]?.firstThreeDayRoi?.dates ?? [...DEFAULT_ROI_DATES]
-    return [
-      formatRoiColumnTitle(roiDates[0], 'D1'),
-      formatRoiColumnTitle(roiDates[1], 'D2'),
-      formatRoiColumnTitle(roiDates[2], 'D3')
-    ]
-  })
+  function formatRoiTrendDateLabel(isoDate: string | undefined): string {
+    if (!isoDate || !/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) return '—'
+    const [, month, day] = isoDate.split('-').map(Number)
+    return `${month}月${day}日`
+  }
+
+  interface RoiTrendPoint {
+    x: number
+    y: number
+    valueText: string
+    dateText: string
+  }
+
+  interface RoiTrendSegment {
+    x1: number
+    y1: number
+    x2: number
+    y2: number
+  }
+
+  function roiTrendAriaLabel(row: AccountRow): string {
+    const parts = [0, 1, 2].map((i) => {
+      const v = roiDayValueForTrend(row, i)
+      const d = row.firstThreeDayRoi?.dates?.[i]
+      return `${formatRoiTrendDateLabel(d)} ${v.toFixed(2)}%`
+    })
+    return `首日 ROI 趋势：${parts.join('，')}`
+  }
+
+  function valueToTrendY(v: number, minV: number, maxV: number): number {
+    const { lineYMin, lineYMax } = ROI_TREND_VB
+    if (!Number.isFinite(v)) return (lineYMin + lineYMax) / 2
+    if (maxV <= minV) return (lineYMin + lineYMax) / 2
+    const t = (v - minV) / (maxV - minV)
+    return lineYMax - t * (lineYMax - lineYMin)
+  }
+
+  function roiTrendPoints(row: AccountRow): RoiTrendPoint[] {
+    const datesRaw = row.firstThreeDayRoi?.dates
+    const dates =
+      Array.isArray(datesRaw) && datesRaw.length >= 3 ? datesRaw : [...DEFAULT_ROI_DATES]
+    const vals = [0, 1, 2].map((i) => roiDayValueForTrend(row, i))
+
+    let minV = Math.min(...vals)
+    let maxV = Math.max(...vals)
+    const span = maxV - minV
+    const pad = span > 1e-6 ? span * 0.12 : 8
+    minV -= pad
+    maxV += pad
+
+    const out: RoiTrendPoint[] = []
+    for (let i = 0; i < 3; i++) {
+      const v = vals[i]!
+      out.push({
+        x: ROI_TREND_VB.xs[i],
+        y: valueToTrendY(v, minV, maxV),
+        valueText: `${v.toFixed(2)}%`,
+        dateText: formatRoiTrendDateLabel(dates[i])
+      })
+    }
+    return out
+  }
+
+  function roiTrendSegments(row: AccountRow): RoiTrendSegment[] {
+    const pts = roiTrendPoints(row)
+    const segs: RoiTrendSegment[] = []
+    for (let i = 1; i < pts.length; i++) {
+      const a = pts[i - 1]
+      const b = pts[i]
+      if (a && b) segs.push({ x1: a.x, y1: a.y, x2: b.x, y2: b.y })
+    }
+    return segs
+  }
 
   function normalizeStatus(v: unknown): AccountRow['status'] {
     if (v === 'normal' || v === 'warning' || v === 'roi_low') return v
@@ -676,7 +771,7 @@
 
   .ap-account-table {
     width: max-content;
-    min-width: 2184px;
+    min-width: 2128px;
 
     --el-table-border-color: transparent;
     --el-table-header-bg-color: #18181b;
@@ -741,8 +836,47 @@
     }
 
     :deep(.el-table__row) {
-      height: 56px;
+      height: 72px;
     }
+  }
+
+  .ap-roi-trend-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 2px 0;
+    background: #141414;
+    border-radius: 6px;
+  }
+
+  .ap-roi-trend-svg {
+    display: block;
+    max-width: 100%;
+  }
+
+  .ap-roi-trend-line {
+    fill: none;
+    stroke: #52c41a;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+  }
+
+  .ap-roi-trend-dot {
+    fill: #52c41a;
+  }
+
+  .ap-roi-trend-val {
+    font-size: 11px;
+    font-weight: 500;
+    fill: #fff;
+  }
+
+  .ap-roi-trend-date {
+    font-size: 10px;
+    font-weight: 400;
+    fill: #8c8c8c;
   }
 
   html.dark .ap-account-table {
